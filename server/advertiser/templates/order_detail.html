@@ -1,0 +1,190 @@
+{% extends 'advertiser/base.html' %}
+
+{% load filters %}
+{% load elements %}
+
+{% block pageTitleTag %}
+ MoPub - Order {{ order.name }}
+{% endblock pageTitleTag %}
+
+{% block pageTitle %}
+  <h1><a href="{% url advertiser_order_index %}">Orders</a> / {{ order.name }}</h1>
+{% endblock pageTitle %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block content %}
+
+  
+  {# The stats breakdown and graph #}
+  <section class="offset" id="dashboard-stats">
+    <h3 class="stats-chart-title">
+      Realtime Stats for {{start_date|format_date_compact}} to
+      {{end_date|format_date_compact}}
+    </h3>
+
+    <div class="stats">
+      {% stats_breakdown stats %}
+      <div class="chart stats-chart" id="dashboard-stats-chart">
+        <img class="preload" src="/images/report-preloader.gif" />
+      </div>
+    </div>
+  </section>
+
+  <div class="new-rollup">
+    <div class="active rollup-box">
+      <h3 class="rollup-title">Impressions</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-impressions">
+          --
+        </div>
+        <div class="positive delta-value">
+          + 2.05%
+        </div>
+      </div>
+    </div>
+    <div class="rollup-box">
+      <h3 class="rollup-title">Clicks</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-clicks">
+          --
+        </div>
+        <div class="negative delta-value">
+          - 9.25%
+        </div>
+      </div>
+    </div>
+    <div class="rollup-box">
+      <h3 class="rollup-title">CTR</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-ctr">
+          --
+        </div>
+        <div class="negative delta-value">
+          - 4.41%
+        </div>
+      </div>
+    </div>
+    <div class="rollup-box">
+      <h3 class="rollup-title">Conversions</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-conversions">
+          --
+        </div>
+        <div class="positive delta-value">
+          + 0.41%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br />
+  
+  
+
+  {# The order edit form, hidden by default #}
+  <section class="offset hidden" id="order_form_container">
+    <form id="order_form" method="post" action="{% url advertiser_order_form_edit order.key %}">
+      {% include 'forms/order_form.html' %}
+      <a class="btn right" id="submit" href="#">Continue</a>
+    </form>
+  </section>
+
+
+  {# Table with all of the line items #}
+  <section>
+    <h3 class="left"> Status of {{ order.name }} </h3>
+    <div class="right">
+      <a class="btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
+        <i class="icon-pencil"></i>
+        Edit this order
+      </a>
+    </div>
+      
+  {% order_table order %}
+
+  <br />
+
+  <h3 class="left"> Line Items in {{ order.name }} </h3>
+  <div class="right">
+    <div class="btn-group">      
+      <a class="btn" href='{% url advertiser_line_item_form_new order.key %}'>
+        <i class="icon-plus"></i>
+        New Line Item
+      </a>
+    </div>
+    
+    <div class="btn-group">
+      <a class="btn" href="#">
+        <i class="icon-eye-open"></i>
+        Show All 
+      </a>
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="#" data-toggle="running"> Running </a> </li>
+        <li> <a href="#" data-toggle="running"> Scheduled </a> </li>
+        <li> <a href="#" data-toggle="running"> Paused </a> </li>
+        <li> <a href="#" data-toggle="running"> Completed </a> </li>
+        <li> <a href="#" data-toggle="running"> Archived </a> </li>
+      </ul>
+    </div>
+  </div>
+
+  {% line_item_table order.adgroups %}
+  
+  <br />
+  <div class="btn-group">
+    <button class="btn status_change" data-toggle="pause">
+      <i class="icon-pause"></i> Pause
+    </button>
+    <button class="btn status_change" data-toggle="play">
+      <i class="icon-play"></i> Resume
+    </button>
+    <button class="btn status_change" data-toggle="archive">
+      <i class="icon-stop"></i> Archive
+    </button>
+  </div>
+  </section>
+
+  {# Table that shows all of the adunits being targeted #}
+  <section>
+    <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
+    <div class="right">
+    <a class="btn" href='#'>
+      <i class="icon-random"></i>
+      Change 
+    </a>
+  </div>
+    
+    {% inventory_table targeted_apps %}
+  </section>
+
+{% endblock content %}
+
+{% block extraScripts %}
+{% include_script "models/inventory" %}
+{% include_script "views/inventory" %}
+{% include_script "controllers/orders" %}
+<script type="text/javascript">
+    $(function() {
+        var OrdersController = mopub.Controllers.OrdersController;
+        OrdersController.initializeOrderDetail({
+            order_key: "{{ order.key }}",
+            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
+            daily_stats: {
+                requests: {{ stats.requests.series }},
+                impressions: {{ stats.impressions.series }},
+                clicks: {{ stats.clicks.series }},
+                users: {{ stats.users.series }},
+            },
+            start_date:  Date.UTC({{ start_date.year }},
+                                  {{ start_date.month|add:"-1" }},
+                                  {{ start_date.day }})
+        });
+    });
+</script>
+{% endblock extraScripts %}

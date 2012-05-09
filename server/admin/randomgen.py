@@ -32,6 +32,7 @@ NUM_APPS = 2
 NUM_ADUNITS = 10
 NUM_CAMPAIGNS = 10
 NUM_CAMPAIGNS_PER_APP = 2
+NUM_ADGROUPS_PER_CAMPAIGN = 2
 NUM_CREATIVES_PER_ADGROUP = 20
 NUM_ADUNITS_PER_APP = 20
 NUM_ADGROUPS_PER_CAMPAIGN = 2
@@ -198,7 +199,7 @@ def generate_adgroup(campaign,
                      key=None):
     
 
-    rand_network_type = select_rand(NETWORK_TYPES)
+        rand_network_type = select_rand(NETWORK_TYPES)
 
     start, end = get_random_datetime_pair()
 
@@ -206,6 +207,8 @@ def generate_adgroup(campaign,
                       campaign=campaign,
                       network_type=network_type,
                       bid_strategy=bid_strategy,
+                      adgroup_type = adgroup_type,
+                      network_type=rand_network_type,
                       account=account,
                       site_keys=site_keys,
                       name=get_adgroup_name(),
@@ -218,7 +221,7 @@ def generate_adgroup(campaign,
     # update the account's NetworkConfig object as well, so that ad
     # network configuration is set properly.
     if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys() \
-       and adgroup.campaign.campaign_type=="network":
+       and adgroup.adgroup_type=="network":
         network_config = account.network_config
         setattr(network_config,
                 NETWORK_TYPE_TO_PUB_ID_ATTR[rand_network_type],
@@ -233,12 +236,12 @@ def generate_campaign(account,
                       campaign_type = None,
                       id=None,
                       key=None):
-    
+
     campaign = Campaign(key=_get_key(Campaign, id),
                         name=get_campaign_name(),
                         account = account,
-                        campaign_type = campaign_type,
                         advertiser = "John's Hat Co, Inc.",
+                        is_order=True)
                         is_order=True)
     campaign.put()
     return campaign
@@ -260,7 +263,14 @@ def generate_account(username=USERNAME,
                      marketplace_config=None,
                      network_config=None,
                      id=None):
+    return campaign
 
+
+def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketplace_config=None,network_config=None):
+                     password=PASSWORD,
+                     email=USERNAME,
+                     marketplace_config=None,
+                     network_config=None):
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
         marketplace_config.put()
@@ -356,7 +366,6 @@ def generate_creative(account, adgroup, id):
     return creative
 
 
-
 #Example Method to generate data. See top configuration contants for customizing result
 def main():
 
@@ -377,14 +386,12 @@ def main():
         adunits = [generate_adunit(app, account, id) for id in xrange(NUM_ADUNITS_PER_APP/(i+1))]
 
 
-
+            
     # for app in apps:
     #     for adunit_key in publisher_keys[str(app.external_key())]:
     #         adunits_per_app[app].append(generate_adunit(app, account, key=adunit_key))
-
     adunit_dict = dict([(a.key(), a) for a in AdUnit.all() if a._account == account.key()])
     all_adunit_keys = adunit_dict.keys()
-
     campaigns = []
     for i, campaign_type in enumerate(['gtee', 'gtee_high', 'gtee_low', 'promo', 'network', 'backfill_promo', 'marketplace']):
         campaigns += [generate_campaign(account, campaign_type, id) for id in xrange(NUM_CAMPAIGNS/(i+1))]
@@ -396,6 +403,8 @@ def main():
                          account,
                          network_type=NETWORK_TYPES[i % len(NETWORK_TYPES)] if campaign.campaign_type == 'network' else None,
                          id=i)]
+                for i in xrange(NUM_CREATIVES_PER_ADGROUP):
+                    creatives_per_adgroup[str(adgroup)].append(generate_creative(account, adgroup))
 
     for i, adgroup in enumerate(adgroups):
         [generate_creative(account, adgroup, (i*100 + id)) for id in xrange(NUM_CREATIVES_PER_ADGROUP/(i+1))]

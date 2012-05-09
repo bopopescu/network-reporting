@@ -4,7 +4,7 @@ import random
 from google.appengine.api import memcache, taskqueue
 from google.appengine.ext import db
 
-from common.utils.query_managers import QueryManager, CachedQueryManager
+from common.utils.query_managers import QueryManager
 from common.utils.decorators import wraps_first_arg
 
 from common.constants import CAMPAIGN_LEVELS, \
@@ -18,7 +18,6 @@ from advertiser.models import Campaign, AdGroup, \
                               ImageCreative, \
                               NetworkStates
 
-from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 import copy
@@ -98,6 +97,14 @@ class AdvertiserQueryManager(CachedQueryManager):
 
 class CampaignQueryManager(QueryManager):
     Model = Campaign
+
+    @classmethod
+    def get_order_campaigns(cls, account):
+        campaigns = cls.Model.all().filter('account =', account)\
+                                   .filter('deleted =', False)\
+                                   .filter('is_order =', True)
+
+        return campaigns
 
     @classmethod
     def get_campaigns_by_types(cls, account, types):
@@ -183,7 +190,7 @@ class CampaignQueryManager(QueryManager):
         if from_db:
             return Campaign.get_by_key_name(c_key_name)
         return Campaign(key_name=c_key_name,
-                        campaign_type='marketplace',
+                        advertiser='marketplace',
                         name='MarketPlace',
                         account=account_key)
 
@@ -251,7 +258,14 @@ class CampaignQueryManager(QueryManager):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
 
-        # Save campaigns.
+        #TODO_ADGROUPS:
+        # This needs to be moved into the AdgroupQueryManager.put method
+        # for camp in campaigns:
+        #     budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
+        #     camp.budget_obj = budg_obj
+    
+
+        # Put campaigns so if they're new they have a key
         put_response = db.put(campaigns)
 
         # Update campaign budgets asynchronously using a Task Queue.
@@ -332,7 +346,9 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup
 
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS, archived=False):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None,
+                     app=None, account=None, deleted=False, limit=MAX_OBJECTS,
+                     archived=False):
         """ archived=True means we only show archived adgroups. """
         adgroups = AdGroup.all()
         if not (deleted == None):
@@ -500,7 +516,7 @@ class CreativeQueryManager(QueryManager):
     Model = Creative
 
     @classmethod
-    def get_creatives(cls,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=MAX_OBJECTS):
+    def get_creatives(cls, adgroup=None, ad_type=None, ad_types=None, account=None, deleted=False, limit=MAX_OBJECTS):
         creatives = Creative.all()
         if not (deleted == None):
             creatives = creatives.filter("deleted =", deleted)
@@ -514,7 +530,7 @@ class CreativeQueryManager(QueryManager):
             creatives = creatives.filter("ad_type =", ad_type)
         return creatives.fetch(limit)
 
-    def put_creatives(self,creatives):
+    def put_creatives(self, creatives):
         return db.put(creatives)
 
     @classmethod
@@ -545,13 +561,11 @@ class CreativeQueryManager(QueryManager):
             else:
                 adgroups = pub_ags
         if adgroups:
-            return reduce(lambda x, y: x+y, [[c for c in ag.creatives] for ag in adgroups])
+            return reduce(lambda x, y: x + y, [[c for c in ag.creatives] for ag in adgroups])
         crtvs = Creative.all().filter('account =', account)
         if deleted is not None:
             crtvs = crtvs.filter('deleted =', deleted)
         return crtvs
-
-
 
     @classmethod
     @wraps_first_arg
@@ -571,11 +585,13 @@ class CreativeQueryManager(QueryManager):
         return put_response
 
 
-class TextCreativeQueryManager(CreativeQueryManager):
-    Model = TextCreative
 class TextAndTileCreativeQueryManager(CreativeQueryManager):
     Model = TextAndTileCreative
+
+
 class HtmlCreativeQueryManager(CreativeQueryManager):
     Model = HtmlCreative
+
+
 class ImageCreativeQueryManager(CreativeQueryManager):
     Model = ImageCreative

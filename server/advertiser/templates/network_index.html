@@ -10,7 +10,7 @@
 
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
-  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url advertiser_order_index %}">Orders</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url networks %}">Networks</a></li>
 {% endblock navLinks %}
@@ -107,10 +107,10 @@
 
 {% block extraScripts %}
   <script type="text/html" id="adgroups-rollup-template">
-    {% include "partials/adgroups_rollup.html" %}
+    {% include "common/partials/adgroups_rollup.html" %}
   </script>
   <script type="text/html" id="adgroups-table-template">
-    {% include "partials/adgroups_table.html" %}
+    {% include "common/partials/adgroups_table.html" %}
   </script>
 
   {% include_script "models/inventory" %}

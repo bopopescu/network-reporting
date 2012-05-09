@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends 'common/base.html' %}
 {% load filters %}
 {% load elements %}
 {% block pageTitle %}
@@ -7,7 +7,7 @@
 
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
-  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url advertiser_order_index %}">Orders</a></li>
   <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li><a href="{% url networks %}">Networks</a></li>
 {% endblock navLinks %}
@@ -108,7 +108,7 @@
             <th class="dataTable-data numeric">Revenue</th>
             <th class="dataTable-data numeric">Impressions</th>
             <th class="dataTable-data numeric">eCPM</th>
-            <th class="dataTable-data numeric" style="width:100px;">
+            <th class="dataTable-data numeric">
               <a href="#" id="price-floor-helpLink" class="whatsthis">
                 <div class="whatsthis-icon"></div>
               </a>
@@ -297,10 +297,10 @@
 
 {% block extraScripts %}
   <script type="text/html" id="app-template">
-    {% include "partials/app.html" %}
+    {% include "common/partials/app.html" %}
   </script>
   <script type="text/html" id="adunit-template">
-    {% include "partials/adunit.html" %}
+    {% include "common/partials/adunit.html" %}
   </script>
 
   {% include_script "models/inventory" %}

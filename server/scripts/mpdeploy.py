@@ -426,6 +426,13 @@ def main():
                 post_to_hipchat(message, room_id="21565") #mopub chat room
             post_to_hipchat(message, room_id="47652") #frontend chat room
 
+            if deploy_server == 'frontend-0':
+                # notify people of a successful deploy on hipichat
+                puts("Notifying hipchat")
+                post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
+                                                                         deploy_server,
+                                                                         deployer))
+
         except Exception, error:
             puts(colored.red("Deploy failed."))
             puts(colored.red(str(error)))

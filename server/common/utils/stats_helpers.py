@@ -9,20 +9,20 @@ from account.query_managers import AccountQueryManager
 from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
+
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager
 from common.constants import REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager,\
-     AdUnitQueryManager, \
-     AdUnitContextQueryManager
-from common_templates.templatetags.filters import currency, percentage, percentage_rounded
+     AdUnitQueryManager
+
+from common.templatetags.filters import currency, percentage
 from common.constants import MPX_DSP_IDS
 import logging
 
 from reporting.query_managers import StatsModelQueryManager
-from reporting.models import StatsModel, GEO_COUNTS
 
 try:
     import json
@@ -153,6 +153,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                 publisher=app)
         return app_stats
 
+    def _get_advertiser_stats(self, advertiser, start, end,
+                              publisher=None, *args, **kwargs):
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(advertiser.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=advertiser,
+                                                 days=days)
+        return self.format_stats(stats)
+
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)
@@ -165,6 +174,12 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         adunit_stats = self._get_publisher_stats(start, end, publisher=adunit)
         return adunit_stats
 
+    def get_adgroup_stats(self, adgroup, start, end, daily=False):
+        if isinstance(adgroup, str):
+            adgroup = AdGroupQueryManager.get(adgroup)
+        adgroup_stats = self._get_advertiser_stats(adgroup, start, end)
+        return adgroup_stats
+
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
         # mongo
@@ -172,6 +187,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         adgroup = AdGroupQueryManager.get(adgroup_key)
         app_stats = self._get_publisher_stats(start, end, publisher=app,
                                               advertiser=adgroup)
+        return app_stats
+
+    def get_campaign_specific_app_stats(self, app_key, campaign_key,
+                                        start, end, *args, **kwargs):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        app_stats = self._get_publisher_stats(app, start, end,
+                                              advertiser=campaign)
         return app_stats
 
 
@@ -184,6 +208,14 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                                  advertiser=adgroup)
         return adunit_stats
 
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign_key,
+                                        start, end, *args, **kwargs):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end,
+                                              advertiser=campaign)
+        return adunit_stats
 
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):

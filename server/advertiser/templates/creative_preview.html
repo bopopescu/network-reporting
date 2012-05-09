@@ -1,0 +1,8 @@
+<div class="creative_preview hidden">
+    <h3>{{ creative.name }}</h3>
+    {# TODO: this is dumb #}
+    <input type="hidden" name="src" value="{% url advertiser_creative_html creative.key %}">
+    <iframe frameborder="0" scrolling="no" {% if creative.size.2 %}width="{{ creative.size.0 }}" height="{{ creative.size.2 }}"{% else %} {% if creative.landscape %}width="480" height="320"{% else %}width="320" height="480"{% endif %}{% endif %}>
+        <p>Your browser does not support iframes.</p>
+    </iframe>
+</div>

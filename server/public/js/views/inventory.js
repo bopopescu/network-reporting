@@ -16,159 +16,6 @@ var mopub = window.mopub || {};
 
 (function ($, Backbone, _) {
     "use strict";
-    /*
-     * ## CampaignView
-     * Parameters:
-     * * model: Campaign
-     */
-    var CampaignView = Backbone.View.extend({
-        initialize: function () {
-            this.model.bind('change', this.render, this);
-        },
-        render: function () {
-            var metrics = ['att', 'imp', 'fill_rate', 'clk', 'ctr'];
-            var this_view = this;
-            var row = $("tr#" + this_view.model.id + "-row");
-
-            if (this_view.model.get('stats_endpoint') == 'networks') {
-                var selector = ' .network-data';
-
-                $('.rev', row).text(this_view.model.get_formatted_stat('rev'));
-                $('.cpm' + selector, row).text(this_view.model.get_formatted_stat('cpm'));
-            } else {
-                var selector = ' .mopub-data';
-            }
-
-            _.each(metrics, function (metric) {
-                var stat = this_view.model.get_stat(metric);
-                if ((stat || stat == 0) && (this_view.model.get('stats_endpoint') != 'networks'
-                        || this_view.model.get('network') != 'mobfox' || (metric != 'att' 
-                        && metric != 'fill_rate'))) {
-                    $('.' + metric + selector, row).text(this_view.model.get_formatted_stat(metric));
-                }
-            });
-
-            return this;
-        }
-    });
-
-    
-    /*
-     * ## AdGroupsView
-     * Parameters:
-     * * collection: AdGroups
-     * * el: element that will hold the content
-     * * title: title that will be an h2 at the top of the content
-     * * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
-     * * tables: mapping of... MAPPING OF WHAT? I'M DYING TO KNOW
-     */
-    var AdGroupsView = Backbone.View.extend({
-        initialize: function () {
-            this.collection.bind('change', this.render, this);
-        },
-        filtered_collection: function () {
-            // TODO: uses elements not in this view
-            var status = $('#campaigns-filterOptions').find(':checked').val();
-            var app = $('#campaigns-appFilterOptions').val();
-            return new AdGroups(this.collection.reject(function (adgroup) {
-                return (status && status !== adgroup.get('status')) ||
-                       (app && adgroup.get('apps').indexOf(app) === -1);
-            }));
-        },
-        render: function () {
-            var adgroups = this.filtered_collection();
-
-            // TODO: uses elements not in this view, with multiple views there are conflicts
-
-            var html;
-            if (adgroups.size() === 0) {
-                html = '<h2>No ' + this.options.title + '</h2>';
-            } else {
-                html = _.template($('#adgroups-rollup-template').html(), {
-                    adgroups: adgroups,
-                    title: this.options.title,
-                    type: this.options.type
-                });
-
-                if (this.options.tables) {
-                    var type = this.options.type;
-                    _.each(this.options.tables, function (filter, title) {
-                        var filtered_adgroups = new AdGroups(adgroups.filter(filter));
-                        if(filtered_adgroups.length) {
-                            html += _.template($('#adgroups-table-template').html(), {
-                                adgroups: filtered_adgroups,
-                                title: title,
-                                type: type,
-                            });
-                        }
-                    });
-                } else {
-                    html += _.template($('#adgroups-table-template').html(), {
-                        adgroups: adgroups,
-                        title: 'Name',
-                        type: this.options.type
-                    });
-                }
-            }
-            $(this.el).html(html);
-            return this;
-        }
-    });
-
-    var NetworkAdGroupsView = Backbone.View.extend({
-        initialize: function () {
-            this.collection.bind('change', this.render, this);
-        },
-        filtered_collection: function () {
-            // TODO: uses elements not in this view
-            var status = $('#campaigns-filterOptions').find(':checked').val();
-            var app = $('#campaigns-appFilterOptions').val();
-            return new AdGroups(this.collection.reject(function (adgroup) {
-                return (status && status !== adgroup.get('status')) ||
-                       (app && adgroup.get('apps').indexOf(app) === -1);
-            }));
-        },
-        render: function () {
-            var adgroups = this.filtered_collection();
-
-            // TODO: uses elements not in this view, with multiple views there are conflicts
-
-            var html;
-            if (adgroups.size() === 0) {
-                html = '<h2>No ' + this.options.title + '</h2>';
-            } else {
-                html = _.template($('#adgroups-rollup-template').html(), {
-                    adgroups: adgroups,
-                    title: this.options.title,
-                    type: this.options.type
-                });
-
-                if (this.options.tables) {
-                    var type = this.options.type;
-                    _.each(this.options.tables, function (filter, title) {
-                        var filtered_adgroups = new AdGroups(adgroups.filter(filter));
-                        if(filtered_adgroups.length) {
-                            html += _.template($('#adgroups-table-template').html(), {
-                                adgroups: filtered_adgroups,
-                                title: title,
-                                type: type
-                            });
-                        }
-                    });
-                } else {
-                    html += _.template($('#adgroups-table-template').html(), {
-                        adgroups: adgroups,
-                        title: 'Name',
-                        type: this.options.type
-                    });
-                }
-            }
-            $(this.el).html(html);
-            return this;
-        }
-    });
-
-
 
     /*
      * # CollectionGraphView
@@ -355,7 +202,7 @@ var mopub = window.mopub || {};
     /*
      * ## AppView
      *
-     * See templates/partials/app.html to see how this is rendered in HTML.
+     * See common/templates/partials/app.html to see how this is rendered in HTML.
      * This renders an app as a table row. It also adds the call to load
      * adunits over ajax and put them in the table.
      */
@@ -421,7 +268,7 @@ var mopub = window.mopub || {};
     /*
      * ## AdUnitView
      *
-     * See templates/partials/adunit.html to see how this is rendered in HTML
+     * See common/templates/partials/adunit.html to see how this is rendered in HTML
      * Renders an adunit as a row in a table. Also ads the event handler to
      * submit the price floor change over ajax when the price_floor field is changed.
      */
@@ -563,35 +410,79 @@ var mopub = window.mopub || {};
         }
     });
 
-    /*
-     * ## AdUnitCollectionView
-     */
-    var AdUnitCollectionView = Backbone.View.extend({
+    var CampaignView = Backbone.View.extend({
         initialize: function () {
-            this.collection.bind('reset', this.render, this);
-        },
-
-        render: function () {
-            if(this.collection.isFullyLoaded()) {
-                this.collection.each(function(adunit) {
-                    var adunit_view = new AdUnitView({model: adunit,
-                                                      el: 'div#content'});
-                    adunit_view.renderInline();
-                });
+            try {
+                this.template = _.template($('#campaign-template').html());
+            } catch (e) {
+                // you load the template partial in the page. ok if
+                // you intend to renderInline.
             }
-
-            // hide spinner
-            $('#' + this.options.campaign.id + '-loading').hide();
-
-            return this;
         },
+
+        renderInline: function () {
+            var current_model = this.model;
+            var order_row = $('tr.order-row#' + current_model.get('key'), this.el);
+
+            var display_fields = ['revenue',
+                                  'impressions',
+                                  'fill_rate',
+                                  'clicks',
+                                  'ctr'];
+            _.each(display_fields, function(field){
+                $("." + field, order_row).text(current_model.get_formatted_stat(field));
+            });
+            $(".lineitems", order_row).text(current_model.get('adgroups').length);
+            $(".loading-img", order_row).hide();
+        }
+
     });
 
-    window.NetworkDailyCountsView = NetworkDailyCountsView;
+    var AdGroupView = Backbone.View.extend({
+        initialize: function () {
+            try {
+                this.template = _.template($('#adgroup-template').html());
+            } catch (e) {
+                // you load the template partial in the page. ok if
+                // you intend to renderInline.
+            }
+        },
+
+        renderInline: function () {
+            var current_model = this.model;
+            var row = $('tr.lineitem-row#' + current_model.get('key'), this.el);
+            var display_fields = ['revenue',
+                                  'impressions',
+                                  'fill_rate',
+                                  'clicks',
+                                  'ctr'];
+            _.each(display_fields, function(field){
+                $("." + field, row).text(current_model.get_formatted_stat(field));
+            });
+
+//            var renderedContent = $(this.template(this.model.toJSON()));
+
+            var popover_template = _.template(""
+                                              + "<p>Ran from <%= start_datetime %> to <%= end_datetime %>. <br /> <br />"
+                                              + "It <strong>did/did not</strong> meet it's goal of [goal]. <br /> <br />"
+                                              + "Targeting 3 Ad Units"
+                                              + "</p>");
+
+            var popover_content = popover_template(current_model.toJSON());
+
+            $(".moreinfo", row).popover({
+                placement: 'bottom',
+                title: "About this line item",
+                content: popover_content,
+                delay: { hide: 250 }            
+            });
+        }
+    });
+
     window.AdUnitView = AdUnitView;
     window.AdUnitCollectionView = AdUnitCollectionView;
     window.AppView = AppView;
-    window.AdGroupsView = AdGroupsView;
+    window.AdGroupView = AdGroupView;
     window.CampaignView = CampaignView;
     window.CollectionGraphView = CollectionGraphView;
     window.NetworkGraphView = NetworkGraphView;

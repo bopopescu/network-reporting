@@ -18,8 +18,8 @@
               <form action="" method="POST" accept-charset="utf-8" id="accountForm">
                 <fieldset class="adForm alt">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-infoButton" href="#">More info</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                     <div class="accountInfoForm hidden">
                       <div class="accountInfoForm-container">
                         <div class="accountInfoForm-left">
@@ -55,14 +55,14 @@
                         {% endfor %}
 
                       </div>
-                      <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                      <dt><a class="btn btn-small adForm-fields-appButton" href="#">Show apps</a></dt>
                       <dd>&nbsp;</dd>
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.admob.com/" target="_blank">Go to AdMob<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset>
                 <fieldset class="adForm">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
                   <legend>AdSense {% if adsense_status == 1 or adsense_status == 2 or adsense_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
                                         {% if adsense_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
@@ -78,7 +78,7 @@
                 </fieldset>
                 <fieldset class="adForm alt">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
                   <legend>BrightRoll {% if brightroll_status == 1 or brightroll_status == 2 or brightroll_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
                                         {% if brightroll_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
@@ -94,7 +94,7 @@
                       <dd><input type="text" class="input-text" name="{{app.key}}-__-brightroll_pub_id" value="{{app.network_config.brightroll_pub_id|default_if_none:""}}"  placeholder="ex: 3836789"/></dd>
                       {% endfor %}
                     </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#"></a></dt>
+                    <dt><a class="btn btn-small adForm-fields-appButton" href="#"></a></dt>
                     <dd>&nbsp;</dd>
 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.brightroll.com/" target="_blank">Go to BrightRoll<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
@@ -103,7 +103,7 @@
 {% comment %}
                 <fieldset class="adForm">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
                   <legend>ChartBoost {% if chartboost_status == 1 or chartboost_status == 2 or chartboost_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
                                         {% if chartboost_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
@@ -119,7 +119,7 @@
                       <dd><input type="text" class="input-text" name="{{app.key}}-__-chartboost_pub_id" value="{{app.network_config.chartboost_pub_id|default_if_none:""}}"  placeholder="ex: 4cf55942bb93162f4500006g"/></dd>
                       {% endfor %}
                     </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#"></a></dt>
+                    <dt><a class="btn btn-small adForm-fields-appButton" href="#"></a></dt>
                     <dd>&nbsp;</dd>
 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.chartboost.com/" target="_blank">Go to ChartBoost<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
@@ -128,7 +128,7 @@
 {% endcomment %}
                 <fieldset class="adForm">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
                   <legend>TapIt {% if ejam_status == 1 or ejam_status == 2 or ejam_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
                                         {% if ejam_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
@@ -143,14 +143,14 @@
                       <dd><input type="text" class="input-text" name="{{app.key}}-__-ejam_pub_id" value="{{app.network_config.ejam_pub_id|default_if_none:""}}"  placeholder="ex: 23710"/></dd>
                       {% endfor %}
                     </div>
-                        <dt><a class="button button-small adForm-fields-appButton" href="#"> </a></dt>
+                        <dt><a class="btn btn-small adForm-fields-appButton" href="#"> </a></dt>
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.tapit.com/" target="_blank">Go to TapIt<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset>
                 <fieldset class="adForm alt">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-infoButton" href="#">More info</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                     <div class="accountInfoForm hidden">
                       <div class="accountInfoForm-container">
                         <div class="accountInfoForm-left">
@@ -181,15 +181,15 @@
                       <dd><input type="text" class="input-text" name="{{app.key}}-__-inmobi_pub_id" value="{{app.network_config.inmobi_pub_id|default_if_none:""}}"  placeholder="ex: 4028cb962b75ff06012b792fc5fb6789"/></dd>
                       {% endfor %}
                     </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                    <dt><a class="btn btn-small adForm-fields-appButton" href="#">Show apps</a></dt>
                     <dd>&nbsp;</dd>
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">Go to InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset>
                 <fieldset class="adForm">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-infoButton" href="#">More info</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                     <div class="accountInfoForm hidden">
                       <div class="accountInfoForm-container">
                         <div class="accountInfoForm-left">
@@ -229,15 +229,15 @@
                       {% endfor %}
 
                     </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                    <dt><a class="btn btn-small adForm-fields-appButton" href="#">Show apps</a></dt>
                     <dd>&nbsp;</dd>
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">Go to Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset>
                 <fieldset class="adForm alt">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-infoButton" href="#">More info</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                     <div class="accountInfoForm hidden">
                       <div class="accountInfoForm-container">
                         <div class="accountInfoForm-left">
@@ -274,14 +274,14 @@
                       {% endfor %}
 
                     </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                    <dt><a class="btn btn-small adForm-fields-appButton" href="#">Show apps</a></dt>
                     <dd>&nbsp;</dd>
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset>
                 <fieldset class="adForm">
                   <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
+                    <a class="btn btn-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
                   <legend>MobFox {% if mobfox_status == 1 or mobfox_status == 2 or mobfox_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
                                         {% if mobfox_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
@@ -295,7 +295,7 @@
                       <dd><input type="text" class="input-text" name="{{app.key}}-__-mobfox_pub_id" value="{{app.network_config.mobfox_pub_id|default_if_none:""}}"  placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/></dd>
                       {% endfor %}
                     </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
+                    <dt><a class="btn btn-small adForm-fields-appButton" href="#">Show apps</a></dt>
                     <dd>&nbsp;</dd>
 
                     <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.mobfox.com/" target="_blank">Go to MobFox<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
@@ -304,9 +304,9 @@
 
                 <div class="form-submit">
 {% ifequal account.status 'step3' %}
-                  <a class="button" id="accountForm-skip" href="{% url account_index %}?skip=true">Skip this step</a>
+                  <a class="btn" id="accountForm-skip" href="{% url account_index %}?skip=true">Skip this step</a>
 {% endifequal %}
-                  <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Submit</a></span>
+                  <span class="buttonWrap"><a href="#" class="btn" id="accountForm-submit">Submit</a></span>
                 </div>
               </form>
 

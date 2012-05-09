@@ -10,6 +10,21 @@
  */
 
 
+// GRID
+// --------------------------------------------------
+
+// Default 940px grid
+$gridColumns:             12 !default;
+$gridColumnWidth:         60px !default;
+$gridGutterWidth:         20px !default;
+$gridRowWidth:            ($gridColumns * $gridColumnWidth) + ($gridGutterWidth * ($gridColumns - 1)) !default;
+
+// Fluid grid
+$fluidGridColumnWidth:    6.382978723% !default;
+$fluidGridGutterWidth:    2.127659574% !default;
+
+
+
 html, body {
     margin: 0;
     padding: 0;
@@ -48,10 +63,12 @@ html.wf-loading #content * {
  * ## Header
  */
 header {
+
     width: 100%;
     height: 60px;
     background: $dark_gray url(../images/layout/header-bg.gif) repeat-x top left;
-    nav {
+    
+    #nav1 {
         ul {
             display: inline;
             margin: 0;
@@ -91,6 +108,7 @@ header {
     }
 }
 
+
 #logo {
     position: absolute;
     top: 4px;
@@ -127,6 +145,7 @@ header {
         margin: 13px 0 0 0;
         padding: 6px 12px 0 12px;
         font-size: 18px;
+        font-weight: 300;
         height: 27px;
     }
 }
@@ -136,49 +155,116 @@ header {
     top: 18px;
     right: 0;
     font-weight: 300;
+
+    span.dropdown-caret {
+        background: url("../images/ui/ui-icons-progress.png") no-repeat -69px -22px;
+        width: 7px;
+        height: 5px;
+        display: inline-block;
+    }
+    
     li {
+        display: inline;
         padding: 0 0 0 3px;
     }
-    a {
+    a, a:active, a:visited {
         padding: 3px 7px 4px 7px;
+        @include border-radius;
+        display: inline-block;
+        color: $light_blue;
+        text-shadow: $dark_gray 0 1px 0;
+        text-decoration: none;
+        line-height: 1em;
     }
-    #header-icons {
-        a {
-            float: left;
-            margin: 0 0 0 5px;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            background: url(../images/layout/header-icons.png) no-repeat top left;
-        }
+    a:hover, a.hovered {
+        color: $white;
+        text-shadow: $black 0 1px 0;
+        background: $darker_gray;
+        text-decoration: none;
     }
-
-    .dropdown {
+    ul.dropdown-menu {
         position: absolute;
-        display: block;
-        top: 20px;
-        background: #191919;
-        z-index: 10;
-        width: 130px;
-        -webkit-border-radius: 0 5px 5px 5px;
-        -moz-border-radius: 0 5px 5px 5px;
-        border-radius: 0 5px 5px 5px;
-        a:hover {
-            background-color: #444;
+        top: 100%;
+        left: 0;
+        z-index: $zindexDropdown;
+        float: left;
+        display: none; // none by default, but block on "open" of the menu
+        min-width: 160px;
+        _width: 160px;
+        padding: 4px 0;
+        margin: 0; // override default ul
+        list-style: none;
+        background-color: $white;
+        border-color: #ccc;
+        border-color: rgba(0,0,0,.2);
+        border-style: solid;
+        border-width: 1px;
+        @include border-radius(0 0 5px 5px);
+        @include box-shadow(0 5px 10px rgba(0,0,0,.2));
+        -webkit-background-clip: padding-box;
+        -moz-background-clip: padding;
+        background-clip: padding-box;
+        *border-right-width: 2px;
+        *border-bottom-width: 2px;
+
+        li {
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+        
+        // Links within the dropdown menu
+        a {
+            i {
+                display: inline;
+            }
+            display: block;            
+            clear: both;
+            font-weight: normal;
+            color: $dark_gray;
+            white-space: nowrap;
+            text-shadow:none;
         }
     }
+    .dropdown.open {
+        *z-index: $zindexDropdown;
+
+        .dropdown-toggle {
+            color: $white;
+            background: #ccc;
+            background: rgba(0,0,0,.3);
+        }
+        .dropdown-menu {
+            display: block;
+        }
+    }
+    .dropdown-menu li > a:hover, .dropdown-menu .active > a, .dropdown-menu .active > a:hover {
+        color: $white;
+        text-decoration: none;
+        background-color: $link_color;
+    }
+
+    // Dropdown arrow/caret
+    .caret {
+        display: inline-block;
+        width: 0;
+        height: 0;
+        text-indent: -99999px;
+        *text-indent: 0;
+        vertical-align: top;
+        border-left:  4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top:   4px solid $black;
+        //    @include opacity(0.3);
+        content: "\2193";
+    }
+    .dropdown .caret {
+        margin-top: 8px;
+        margin-left: 2px;
+    }
+    
 }
 
-a.dropdown-head, a.dropdown-head:active {
-    @include top-border-radius;
-}
-
-span.dropdown-icon {
-    background: url('../images/ui/ui-icons-progress.png') no-repeat -69px -22px;
-    width: 7px;
-    height: 5px;
-    display: inline-block;
-}
 
 
 /*
@@ -186,8 +272,8 @@ span.dropdown-icon {
  */
 
 #titlebar {
-    padding: 25px 0 0 0;
-    height: 36px;
+    padding: 20px 0 0 0;
+    height: 30px;
     border-bottom: 3px solid #ebf2f7;
     background: #f5f9fc;
     .pageWidth {
@@ -195,10 +281,10 @@ span.dropdown-icon {
     }
     h1 {
         margin: -6px 0 0 0;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 300;
         color: $dark_gray;
-        width: 340px;
+        //width: 340px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -265,7 +351,7 @@ span.dropdown-icon {
  */
 
 #content {
-  padding: 30px 0 235px 0;
+  padding: 10px 0 235px 0;
   float: left;
   width: 100%;
 }
@@ -289,6 +375,7 @@ section {
     @include border-radius(10px);
     padding: 25px;
     background: $off_white;
+    border-bottom: 1px solid darken($off_white, 5%);
 }
 
 .content-main {
@@ -713,33 +800,6 @@ a {
  * Miscellaneous
  */
 
-/* JavaScript warning */
-
-.js #jsnotice { display: none; }
-
-.no-js #jsnotice {
-  display: block;
-  padding: 5px 0 4px 0;
-  background: #c00;
-  color: $white;
-  font-size: 13px;
-  text-align: center;
-}
-
-.warning.notice {
-    padding: 5px;
-    background-color: #FCF6D6;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-}
-
-
-.no-js #jsnotice a {
-  color: $white;
-  text-decoration: underline;
-}
-
 .whatsthis{
 
 }
@@ -762,7 +822,7 @@ a {
 }
 
 #login-left dt{
-    width:50px;
+    width:70px;
 }
 
 

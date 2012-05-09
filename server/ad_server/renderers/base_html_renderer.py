@@ -5,19 +5,19 @@ from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from google.appengine.ext.webapp import template
 
 class BaseHtmlRenderer(BaseCreativeRenderer):
-    """ 
+    """
     All HTML renderers will need to subclass this.
 
-    Inheritance Hierarchy:  
+    Inheritance Hierarchy:
     BaseHtmlRenderer => BaseCreativeRenderer
 
     NOTE: If the creative type to be rendered has an html_data field
     you should subclass HtmlDataRenderer (which subclasses BaseHtmlRenderer)
     rather than subclassing BaseHtmlRenderer directly
     """
-    
-    TEMPLATE = 'base.html'
-    
+
+    TEMPLATE = 'common/base.html'
+
     def __init__(self, *args, **kwargs):
         """
         Calls super __init__ as well as initializes html_context.
@@ -25,10 +25,10 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         used for rendering the html via django template
         """
         super(BaseHtmlRenderer, self).__init__(*args, **kwargs)
-        
+
         self.html_context = {}
         self._setup_html_context()
-        
+
     def _get_creative_height(self):
         """
         Gets creative height from the creative object
@@ -65,7 +65,7 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
                                                 _should_use_impression_pixel()
         self.html_context['use_center_style'] = self.\
                                                 _should_use_center_style()
-        
+
     def _get_os_type(self):
         """
         Gets the os type based on how the app was registered in our
@@ -103,15 +103,15 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         os_type = self._get_os_type()
         is_fullscreen = self.adunit.is_fullscreen()
         return (os_type in ['mweb', 'android'] or not is_fullscreen)
-        
+
     def _get_ad_type(self):
         return 'html'
-        
+
     def _setup_headers(self):
         super(BaseHtmlRenderer, self)._setup_headers()
         self.header_context.ad_type = self._get_ad_type()
         self.header_context.full_ad_type = None
-        
+
     def _get_template(self):
         return self.TEMPLATE
 
@@ -123,9 +123,9 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         to provide specific context to the template. You can also
         override self.TEMPLATE to provide more flexibility/customization
         """
-        path = os.path.join(os.path.dirname(__file__), 
+        path = os.path.join(os.path.dirname(__file__),
                             'templates',
                             self._get_template()
                             )
         self.rendered_creative = template.render(path, self.html_context)
-    
+

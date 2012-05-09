@@ -1,0 +1,26 @@
+<fieldset id="order_fieldset">
+    <legend>
+        <h2>Order Details</h2>
+    </legend>
+
+    <ul class="form_fields">
+        <li>
+            {{ order_form.name.label_tag }}
+            <div>
+                {{ order_form.name }}
+            </div>
+        </li>
+        <li>
+            {{ order_form.advertiser.label_tag }}
+            <div>
+                {{ order_form.advertiser }}
+            </div>
+        </li>
+        <li>
+            {{ order_form.description.label_tag }}
+            <div>
+                {{ order_form.description }}
+            </div>
+        </li>
+    </ul>
+</fieldset>

@@ -1,0 +1,67 @@
+{% load filters %}
+  
+<div class="stats-breakdown">
+  <table>
+    <tbody>
+      {% if stats.revenue %}
+        <tr class="active" id="stats-breakdown-revenue">
+          <td class="stats-breakdown-value today">
+          <span class="inner">{{stats.revenue.total|currency}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Revenue</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.requests %}
+        <tr class="active" id="stats-breakdown-requests">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.requests.total|withsep}}</span>
+          </td>          
+          <th class="stats-breakdown-name">
+            <span class="inner">Requests</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.impressions %}
+        <tr id="stats-breakdown-impressions">
+          <td class="stats-breakdown-value today">
+          <span class="inner">{{stats.impressions.total|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Impressions</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.clicks %}
+        <tr id="stats-breakdown-clicks">
+          <td class="stats-breakdown-value today">
+            <span class="inner">
+              {% if stats.ctr.total >= 0 %}
+                <span class="muted unbold">({{stats.ctr.total|percentage}})</span>
+              {% endif %}
+              {{stats.clicks.total|withsep}}
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Clicks</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.ecpm %}
+        <tr id="stats-breakdown-ecpm">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.ecpm.total|currency}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">eCPM</span>
+          </th>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>

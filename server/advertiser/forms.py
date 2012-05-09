@@ -4,26 +4,25 @@ import re
 
 from django import forms
 from django.forms.util import ErrorList
+from django.utils.safestring import SafeString
 from google.appengine.api import images, files
 from google.appengine.ext import deferred
 from google.appengine.ext.db import Key
 
-from advertiser.models import (Campaign, AdGroup, Creative, TextCreative,
-                               TextAndTileCreative, HtmlCreative, ImageCreative)
-from budget.query_managers import BudgetQueryManager
+from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
+                               ImageCreative, HtmlCreative)
 from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
 from common.utils import helpers
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import UTC
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
-from widgets import CustomizableSplitDateTimeWidget
+from advertiser.widgets import CustomizableSplitDateTimeWidget
 
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
-
-import logging
 
 
 def get_filetype_extension(filename):
@@ -34,10 +33,51 @@ def get_filetype_extension(filename):
     return None
 
 
-class CampaignForm(forms.ModelForm):
-    campaign_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
+class OrderForm(forms.ModelForm):
+    name = forms.CharField(label='Name:',
+                           widget=forms.TextInput(attrs={'class': 'required',
+                                                         'placeholder': 'Order Name'}))
+    advertiser = forms.CharField(label='Advertiser:',
+                                 widget=forms.TextInput(attrs={'class': 'required',
+                                                               'placeholder': 'Order Advertiser'}))
+    description = forms.CharField(label='Description:', required=False,
+                                  widget=forms.Textarea(attrs={'cols': 50,
+                                                               'rows': 3,
+                                                               'placeholder': 'Order for My New App'}))
+
+    def __init__(self, *args, **kwargs):
+
+        # instance
+        instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
+
+        if instance and not instance.is_order:
+            # TODO: figure out what type of exception this should really be, ValueError?
+            raise Exception("Campaign instance must be an order.")
+
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        order = super(forms.ModelForm, self).save(*args, **kwargs)
+
+        # TODO: this is dumb, do something else
+        order.is_order = True
+        order.save()
+
+        return order
+
+    class Meta:
+        model = Order
+        fields = ('name',
+                  'advertiser',
+                  'description',)
+
+
+class LineItemForm(forms.ModelForm):
+    # TODO: include campaign and confirm campaign.is_order
+
+    adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
                                                ('promo', 'Promotional')),
-                                      label='Campaign Type:')
+                                      label='Line Item Type:')
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
                                                ('low', 'Low')),
@@ -49,12 +89,8 @@ class CampaignForm(forms.ModelForm):
                                        required=False)
     name = forms.CharField(label='Name:',
                            widget=forms.TextInput(attrs={'class': 'required',
-                                                         'placeholder': 'Campaign Name'}))
-    description = forms.CharField(label='Description:', required=False,
-                                  widget=forms.Textarea(attrs={'cols': 50,
-                                                               'rows': 3,
-                                                               'placeholder': 'Campaign for My New App'}))
-    start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+                                                         'placeholder': 'Line Item Name'}))
+    start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
                                          label='Start Time:', required=False,
                                          widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                             'placeholder': 'MM/DD/YYYY'},
@@ -62,7 +98,7 @@ class CampaignForm(forms.ModelForm):
                                                                                             'placeholder': 'HH:MM'},
                                                                                 date_format='%m/%d/%Y',
                                                                                 time_format='%I:%M %p'))
-    end_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+    end_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
                                        label='Stop Time:', required=False,
                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                           'placeholder': 'MM/DD/YYYY'},
@@ -71,11 +107,13 @@ class CampaignForm(forms.ModelForm):
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     required=False)
-    bid = forms.FloatField(required=False)
-    budget = forms.FloatField(label='Delivery Amount:', required=False,
-                              widget=forms.TextInput(attrs={'class': 'float'}))
+                                     label='Rate:', initial='cpm')
+    bid = forms.FloatField(initial=0.05,
+                           widget=forms.TextInput(attrs={'class': 'float required'}))
+    daily_budget = forms.FloatField(required=False)
     full_budget = forms.FloatField(required=False)
+    budget = forms.FloatField(required=False,
+                              widget=forms.TextInput(attrs={'class': 'float'}))
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
@@ -85,229 +123,6 @@ class CampaignForm(forms.ModelForm):
                                         initial='allatonce', required=False,
                                         widget=forms.RadioSelect)
 
-    def __init__(self, *args, **kwargs):
-        if len(args) > 5:
-            initial = args[5]
-        else:
-            if 'initial' not in kwargs or not kwargs['initial']:
-                kwargs['initial'] = {}
-            initial = kwargs['initial']
-
-        instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
-
-        if instance:
-            if 'gtee' in instance.campaign_type:
-                if 'high' in instance.campaign_type:
-                    initial['gtee_priority'] = 'high'
-                elif 'low' in instance.campaign_type:
-                    initial['gtee_priority'] = 'low'
-                initial['campaign_type'] = 'gtee'
-
-                # budget
-                if instance.budget_type == 'daily':
-                    budget = instance.budget if instance.budget else None
-                elif instance.budget_type == 'full_campaign':
-                    budget = instance.full_budget if instance.full_budget else None
-                else:
-                    budget = None
-                if budget and initial.get('bid_strategy', '') == 'cpm':
-                    if initial.get('bid', None):
-                        budget = int(1000.0 * budget / initial['bid'])
-                    else:
-                        budget = None
-                initial['budget'] = budget
-
-            elif instance.campaign_type == 'backfill_promo':
-                initial['campaign_type'] = 'promo'
-                initial['promo_priority'] = 'backfill'
-
-            # convert datetimes from offset-naive UTC to Pacific
-            if instance.start_datetime:
-                initial['start_datetime'] = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
-            if instance.end_datetime:
-                initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
-
-        is_staff = kwargs.pop('is_staff', False)
-        account = kwargs.pop('account', False)
-
-        super(forms.ModelForm, self).__init__(*args, **kwargs)
-
-        # show deprecated networks if user is staff or hasn't migrated
-        if (is_staff or (account and not account.display_new_networks)) and \
-                ('network', 'Network') not in self.fields['campaign_type']. \
-                choices:
-            self.fields['campaign_type'].choices.append(('network', 'Network'))
-
-        # hack to make the forms ordered correctly
-        # TODO: fix common.utils.djangoforms.ModelForm to conform to
-        # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
-        self.fields.keyOrder = self.Meta.fields
-
-    def _calculate_budget(self, budget):
-        if self.data.get('bid_strategy', 'cpm') == 'cpm':
-            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
-        else:
-            return budget
-
-    def clean_start_datetime(self):
-        start_datetime = self.cleaned_data.get('start_datetime', None)
-        if start_datetime:
-            # if this is a new campaign, it must start in the future
-            if not self.instance and start_datetime.date() < datetime.now(tz=Pacific_tzinfo()).date():
-                raise forms.ValidationError("Start time must be in the future")
-            # start_datetime is entered in Pacific Time
-            start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
-        return start_datetime
-
-    def clean_end_datetime(self):
-        end_datetime = self.cleaned_data.get('end_datetime', None)
-        if end_datetime:
-            # end_datetime is entered in Pacific Time
-            end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
-        return end_datetime
-
-    def clean(self):
-        cleaned_data = super(CampaignForm, self).clean()
-
-        # gtee, promo
-        if cleaned_data.get('campaign_type', '') in ('gtee', 'promo'):
-            # start and end datetimes
-            # if start_datetime is None, use the current time
-            if not cleaned_data.get('start_datetime', None):
-                cleaned_data['start_datetime'] = datetime.now()
-            start_datetime = cleaned_data['start_datetime']
-            end_datetime = cleaned_data.get('end_datetime', None)
-            # end_datetime must be after start_datetime
-            if end_datetime and end_datetime <= start_datetime:
-                if 'end_datetime' not in self._errors:
-                    self._errors['end_datetime'] = ErrorList()
-                self._errors['end_datetime'].append("Stop time must be after start time")
-
-            # gtee
-            if cleaned_data['campaign_type'] == 'gtee':
-                # campaign_type
-                if not cleaned_data.get('gtee_priority', None):
-                    if 'gtee_priority' not in self._errors:
-                        self._errors['gtee_priority'] = ErrorList()
-                    self._errors['gtee_priority'].append('This field is required')
-                elif cleaned_data['gtee_priority'] in ('low', 'high'):
-                    cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
-
-                # budget
-                if not cleaned_data.get('budget', None):
-                    cleaned_data['budget'] = None
-                    cleaned_data['full_budget'] = None
-                else:
-                    has_required = True
-                    for field in ('bid_strategy', 'bid', 'budget_type', 'budget_strategy'):
-                        if not cleaned_data.get(field, None):
-                            if field not in self._errors:
-                                self._errors[field] = ErrorList()
-                            self._errors[field].append("This field is required")
-                            has_required = False
-                    if has_required:
-                        # BEWARE HACKS
-                        # if the campaign is a cpm campaign, we need to calculate what the budget
-                        # will be, since budgets are stored in dollar amounts.
-                        if cleaned_data['budget_type'] == 'daily':
-                            cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
-                            cleaned_data['full_budget'] = None
-                        else:
-                            if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
-                                if 'budget_strategy' not in self._errors:
-                                    self._errors['budget_strategy'] = ErrorList()
-                                self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
-                            cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
-                            cleaned_data['budget'] = None
-
-            # promo
-            elif cleaned_data['campaign_type'] == 'promo':
-                # priority
-                if not cleaned_data.get('promo_priority', None):
-                    if 'promo_priority' not in self._errors:
-                        self._errors['promo_priority'] = ErrorList()
-                    self._errors['promo_priority'].append('This field is required')
-                elif cleaned_data['promo_priority'] == 'backfill':
-                    cleaned_data['campaign_type'] = 'backfill_promo'
-                # promo campaigns have no budget
-                cleaned_data['budget'] = None
-                cleaned_data['full_budget'] = None
-                cleaned_data['budget_type'] = None
-                cleaned_data['budget_strategy'] = None
-
-        # network
-        elif cleaned_data.get('campaign_type', '') == 'network':
-            # network campaigns have no start and end datetimes
-            cleaned_data['start_datetime'] = None
-            cleaned_data['end_datetime'] = None
-            # network campaigns have no budget
-            cleaned_data['budget'] = None
-            cleaned_data['full_budget'] = None
-            cleaned_data['budget_type'] = None
-            cleaned_data['budget_strategy'] = None
-
-        return cleaned_data
-
-    # It is not standard to override a ModelForm's save method, but we need to
-    # save the budget information.  TODO: find a better way to do this?
-    def save(self, *args, **kwargs):
-        campaign = super(CampaignForm, self).save(*args, **kwargs)
-
-        if kwargs.get('commit'):
-          # Update campaign budgets asynchronously using a Task Queue.
-          queue = taskqueue.Queue()
-          task = taskqueue.Task(params=dict(campaign_keys=[campaign.key()]),
-                                method='POST',
-                                url='/fetch_api/budget/update_or_create'
-                                )
-          queue.add(task)
-
-        return campaign
-
-    # TODO: doesn't work with djangoforms
-    class Media:
-        js = ('campaign_adgroup_form.js',)
-
-    class Meta:
-        model = Campaign
-        fields = ('campaign_type',
-                  'gtee_priority',
-                  'promo_priority',
-                  'name',
-                  'description',
-                  'start_datetime',
-                  'end_datetime',
-                  'budget',
-                  'full_budget',
-                  'budget_type',
-                  'budget_strategy',
-                  'bid',
-                  'bid_strategy')
-
-
-class AdGroupForm(forms.ModelForm):
-    name = forms.CharField()
-    network_type = forms.ChoiceField(choices=(('admob_native', 'AdMob'),
-                                              ('adsense', 'AdSense'),
-                                              ('brightroll', 'BrightRoll'),
-                                              ('ejam', 'TapIt'),
-                                              ('iAd', 'iAd'),
-                                              ('inmobi', 'InMobi'),
-                                              ('jumptap', 'Jumptap'),
-                                              ('millennial_native', 'Millennial Media'),
-                                              ('mobfox', 'MobFox'),
-                                              ('custom', 'Custom Network'),
-                                              ('custom_native', 'Custom Native Network')),
-                                     label='Network Type:', required=False)
-    custom_html = forms.CharField(label='Custom HTML:', required=False,
-                                  widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
-                                                               'rows': 3}))
-    custom_method = forms.CharField(label='Custom Method:', required=False,
-                                    widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
-    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpm')
-    bid = forms.FloatField(initial=0.05,
-                           widget=forms.TextInput(attrs={'class': 'float'}))
     # site_keys defined in __init__
     allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
                                              required=False,
@@ -354,54 +169,95 @@ class AdGroupForm(forms.ModelForm):
                                                             'rows': 3}))
 
     def __init__(self, *args, **kwargs):
-        initial = args[5] if len(args) > 5 else kwargs.get('initial', None)
+        # initial
+        if len(args) > 5:
+            initial = args[5]
+        else:
+            if 'initial' not in kwargs or not kwargs['initial']:
+                kwargs['initial'] = {}
+            initial = kwargs['initial']
+
+        # instance
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         if instance:
-            if not initial:
-                initial = {}
+            # TODO: make sure you cannot change adgroup_type except for priority
+            # gtee
+            if 'gtee' in instance.adgroup_type:
+                if 'high' in instance.adgroup_type:
+                    initial['gtee_priority'] = 'high'
+                elif 'low' in instance.adgroup_type:
+                    initial['gtee_priority'] = 'low'
+                initial['adgroup_type'] = 'gtee'
 
-            if instance.network_type == 'custom' and instance.net_creative:
-                initial.update(custom_html=instance.net_creative.html_data)
-            elif instance.network_type == 'custom_native' and instance.net_creative:
-                initial.update(custom_method=instance.net_creative.html_data)
+                if instance.budget_type == 'daily':
+                    initial['budget'] = instance.daily_budget
+                else:
+                    initial['budget'] = instance.full_budget
+
+                if initial['budget'] != None and instance.bid_strategy == 'cpm':
+                    initial['budget'] = int(1000.0 * initial['budget'] / instance.bid)
+            # promo
+            elif instance.adgroup_type == 'backfill_promo':
+                initial['adgroup_type'] = 'promo'
+                initial['promo_priority'] = 'backfill'
+
+            # convert datetimes from offset-naive UTC to Pacific
+            if instance.start_datetime:
+                initial['start_datetime'] = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+            if instance.end_datetime:
+                initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+
+            # TODO: can't change the start date after a campaign has started.
+            # TODO: not change the end date after a campaign has completed
 
             geo_predicates = []
             for geo_predicate in instance.geo_predicates:
                 preds = geo_predicate.split(',')
                 geo_predicates.append(','.join([str(pred.split('=')[1]) for pred in preds]))
-            initial.update(geo_predicates=geo_predicates)
+            initial['geo_predicates'] = geo_predicates
 
+            # TODO: seems like we don't need this?
+            """
             if len(geo_predicates) == 1 and len(instance.cities):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
-
-            initial['active'] = instance.active
-
-            kwargs.update(initial=initial)
-
-        is_staff = kwargs.pop('is_staff', False)
+            """
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
-        # show deprecated networks if user is staff or instance is that type
-        if is_staff or (instance and instance.network_type == 'admob'):
-            self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
-        if is_staff or (instance and instance.network_type == 'millennial'):
-            self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
-        if is_staff or (instance and instance.network_type == 'greystripe'):
-            self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
-
         # set choices based on the users adunits
+        # TODO: can we do this a nicer way so we can declare this field with the other fields?
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
-        # hack to make the forms ordered correctly
-        # TODO: fix common.utils.djangoforms.ModelForm to conform to
-        # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
-        self.fields.keyOrder = self.Meta.fields
+    def _calculate_budget(self, budget):
+        if self.data.get('bid_strategy', 'cpm') == 'cpm':
+            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
+        else:
+            return budget
+
+    def clean_start_datetime(self):
+        # TODO: if it is an existing campaign, you shouldn't be able to move the start date to the past
+        # TODO: can't change the start date after a campaign has started.
+        start_datetime = self.cleaned_data.get('start_datetime', None)
+        if start_datetime:
+            # if this is a new campaign, it must start in the future
+            if not self.instance and start_datetime.date() < datetime.now(tz=Pacific_tzinfo()).date():
+                raise forms.ValidationError("Start time must be in the future")
+            # start_datetime is entered in Pacific Time
+            start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
+        return start_datetime
+
+    def clean_end_datetime(self):
+        # TODO: not change the end date after a campaign has completed
+        end_datetime = self.cleaned_data.get('end_datetime', None)
+        if end_datetime:
+            # end_datetime is entered in Pacific Time
+            end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
+        return end_datetime
 
     def clean_allocation_percentage(self):
         allocation_percentage = self.cleaned_data.get('allocation_percentage', None)
@@ -423,20 +279,77 @@ class AdGroupForm(forms.ModelForm):
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
-        logging.warning("keywords: %s" % keywords)
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
         return keywords
 
-    def clean_bid(self):
-        bid = self.cleaned_data.get('bid', None)
-        if bid != None and bid <= 0.0:
-            raise forms.ValidationError("Bid must be greather than zero")
-        return bid
-
     def clean(self):
-        cleaned_data = super(AdGroupForm, self).clean()
+        cleaned_data = super(LineItemForm, self).clean()
+
+        # start and end datetimes
+        # if start_datetime is None, use the current time
+        if not cleaned_data.get('start_datetime', None):
+            cleaned_data['start_datetime'] = datetime.now()
+        start_datetime = cleaned_data['start_datetime']
+        end_datetime = cleaned_data.get('end_datetime', None)
+        # end_datetime must be after start_datetime
+        if end_datetime and end_datetime <= start_datetime:
+            if 'end_datetime' not in self._errors:
+                self._errors['end_datetime'] = ErrorList()
+            self._errors['end_datetime'].append("Stop time must be after start time")
+
+        # gtee
+        if cleaned_data['adgroup_type'] == 'gtee':
+            # adgroup_type
+            if not cleaned_data.get('gtee_priority', None):
+                if 'gtee_priority' not in self._errors:
+                    self._errors['gtee_priority'] = ErrorList()
+                self._errors['gtee_priority'].append('This field is required')
+            elif cleaned_data['gtee_priority'] in ('low', 'high'):
+                cleaned_data['adgroup_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
+
+            # budget
+            if not cleaned_data.get('budget', None):
+                cleaned_data['daily_budget'] = None
+                cleaned_data['full_budget'] = None
+            else:
+                has_required = True
+                for field in ('bid_strategy', 'bid', 'budget_type', 'budget_strategy'):
+                    if not cleaned_data.get(field, None):
+                        if field not in self._errors:
+                            self._errors[field] = ErrorList()
+                        self._errors[field].append("This field is required")
+                        has_required = False
+                if has_required:
+                    # BEWARE HACKS
+                    # if the campaign is a cpm campaign, we need to calculate what the budget
+                    # will be, since budgets are stored in dollar amounts.
+                    if cleaned_data['budget_type'] == 'daily':
+                        cleaned_data['daily_budget'] = self._calculate_budget(cleaned_data['budget'])
+                        cleaned_data['full_budget'] = None
+                    else:
+                        if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                            if 'budget_strategy' not in self._errors:
+                                self._errors['budget_strategy'] = ErrorList()
+                            self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
+                        cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
+                        cleaned_data['daily_budget'] = None
+
+        # promo
+        elif cleaned_data['adgroup_type'] == 'promo':
+            # priority
+            if not cleaned_data.get('promo_priority', None):
+                if 'promo_priority' not in self._errors:
+                    self._errors['promo_priority'] = ErrorList()
+                self._errors['promo_priority'].append('This field is required')
+            elif cleaned_data['promo_priority'] == 'backfill':
+                cleaned_data['adgroup_type'] = 'backfill_promo'
+            # promo campaigns have no budget
+            cleaned_data['daily_budget'] = None
+            cleaned_data['full_budget'] = None
+            cleaned_data['budget_type'] = None
+            cleaned_data['budget_strategy'] = None
 
         # don't store targeted cities unless region targeting for cities is selected
         if cleaned_data.get('region_targeting', None) != 'city':
@@ -444,15 +357,34 @@ class AdGroupForm(forms.ModelForm):
 
         return cleaned_data
 
+    def save(self, *args, **kwargs):
+        if self.instance and self.instance.site_keys:
+            adunits = AdUnitQueryManager.get(self.instance.site_keys)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        line_item = super(forms.ModelForm, self).save(*args, **kwargs)
+
+        if line_item.site_keys:
+            adunits = AdUnitQueryManager.get(line_item.site_keys)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        return line_item
+
     class Meta:
-        model = AdGroup
-        fields = ('name',
-                  'network_type',
-                  #'active',
-                  'custom_html',
-                  'custom_method',
+        model = LineItem
+        fields = ('adgroup_type',
+                  'gtee_priority',
+                  'promo_priority',
+                  'name',
+                  'start_datetime',
+                  'end_datetime',
                   'bid_strategy',
                   'bid',
+                  'daily_budget',
+                  'full_budget',
+                  'budget',
+                  'budget_type',
+                  'budget_strategy',
                   'site_keys',
                   'allocation_percentage',
                   'daily_frequency_cap',
@@ -474,15 +406,32 @@ class AdGroupForm(forms.ModelForm):
 
 
 class AbstractCreativeForm(forms.ModelForm):
-
-    def save(self, commit=True):
-        obj = super(AbstractCreativeForm, self).save(commit=False)
-        if not obj.conv_appid and obj.url:
-            obj.conv_appid = self._get_appid(obj.url)
-
-        if commit:
-            obj.put()
-        return obj
+    format = forms.ChoiceField(choices=(('320x50', '320 x 50 (Banner)'),
+                                        ('300x250', '300 x 250 (MRect)'),
+                                        ('full', 'Phone Full Screen'),
+                                        ('728x90', '728 x 90 (Tablet Leaderboard)'),
+                                        ('160x600', '160 x 600 (Tablet Skyscraper)'),
+                                        ('full_tablet', 'Tablet Full Screen'),
+                                        ('custom', 'Custom')),
+                               initial='320x50', label='Format:')
+    custom_width = forms.IntegerField(label='Custom Size:', required=False,
+                                      widget=forms.TextInput(attrs={'class': 'number'}))
+    custom_height = forms.IntegerField(required=False,
+                                       widget=forms.TextInput(attrs={'class': 'number'}))
+    landscape = forms.BooleanField(label='Landscape:', required=False)
+    ad_type = forms.ChoiceField(choices=(('image', 'Image'),
+                                       ('text_icon', 'Text and Tile'),
+                                       ('html', 'HTML')),
+                                initial='image', label='Creative Type:',
+                                widget=forms.RadioSelect)
+    name = forms.CharField(initial='Creative', label='Creative Name:',
+                           widget=forms.TextInput(attrs={'class': 'required'}))
+    url = forms.URLField(label='Click URL:', required=False)
+    launchpage = forms.URLField(label='Intercept URL:', required=False)
+    conv_appid = forms.CharField(label='Conversion Tracking ID:',
+                                 required=False)
+    tracking_url = forms.URLField(label='Impression Tracking URL:',
+                                  required=False)
 
     def _get_appid(self, url):
         # extracts the itunes appid from the url
@@ -516,26 +465,8 @@ class AbstractCreativeForm(forms.ModelForm):
         # return None if nothing was found
         return None
 
-
-class BaseCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/base_creative_form.html'
-
-    name = forms.CharField(initial="Creative",
-                           widget=forms.TextInput(attrs={
-                               'class': 'input-text required'
-                           }))
-
-    class Meta:
-        model = Creative
-        fields = ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
     def clean_name(self):
-        data = self.cleaned_data.get('name', None).strip()
-        if not data:
-            raise forms.ValidationError('You must give your creative a name.')
-        return data
+        return self.cleaned_data.get('name', '').strip()
 
     def clean_url(self):
         url = self.cleaned_data.get('url', None)
@@ -544,130 +475,10 @@ class BaseCreativeForm(AbstractCreativeForm):
                 raise forms.ValidationError("You need to specify a protocol (like http://) at the beginning of your url")
         return url
 
-
-class TextCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/text_creative_form.html'
-
-    class Meta:
-        model = TextCreative
-        fields = ('headline', 'line1', 'line2') + \
-                 ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
-
-class TextAndTileCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
-
-    image_url = forms.URLField(verify_exists=False, required=False)
-    image_file = forms.FileField(required=False)
-
-    class Meta:
-        model = TextAndTileCreative
-        fields = ('action_icon', 'color', 'font_color', 'gradient') + \
-                 ('line1', 'line2', 'ad_type', 'name', 'tracking_url', 'url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.get('instance', None)
-        initial = kwargs.get('initial', None)
-
-        if instance:
-            if instance.image_blob:
-                image_url = helpers.get_url_for_blob(instance.image_blob)  # reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
-            else:
-                image_url = ''
-            if not initial:
-                initial = {}
-            initial.update(image_url=image_url)
-            kwargs.update(initial=initial)
-        super(TextAndTileCreativeForm, self).__init__(*args, **kwargs)
-
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)
-
-        # Check the image file type. We only support png, jpg, jpeg, and gif.
-        if data:
-            img = self.files.get('image_file', None)
-            is_valid_image_type = any([str(img).lower().endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
-            if not (img and is_valid_image_type):
-                extension = get_filetype_extension(img)
-                if extension:
-                    raise forms.ValidationError('Filetype (.%s) not supported.' % extension)
-                else:
-                    raise forms.ValidationError('Filetype not supported.')
-
-        # Check to make sure an image file or url was provided.
-        # We only need to check this if it's a new form being submitted
-
-        if not self.instance:
-            if not (self.cleaned_data.get('image_file', None) or self.cleaned_data.get('image_url', None)):
-                raise forms.ValidationError('You must upload an image file for a creative of this type.')
-
-        return data
-
-    def save(self, commit=True):
-        obj = super(TextAndTileCreativeForm, self).save(commit=False)
-        if self.files.get('image_file', None):
-            image_data = self.files.get('image_file').read()
-            img = images.Image(image_data)
-            fname = files.blobstore.create(mime_type='image/png')
-            with files.open(fname, 'a') as f:
-                f.write(image_data)
-            files.finalize(fname)
-            blob_key = files.blobstore.get_blob_key(fname)
-            obj.image_blob = blob_key
-            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
-
-        if commit:
-            obj.put()
-        return obj
-
-
-class HtmlCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/html_creative_form.html'
-
-    class Meta:
-        model = HtmlCreative
-        fields = ('html_data', 'ormma_html') + \
-                 ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
-
-class ImageCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/image_creative_form.html'
-
-    image_url = forms.URLField(verify_exists=False, required=False)
-    image_file = forms.FileField(required=False)
-
-    class Meta:
-        model = ImageCreative
-        fields = ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.get('instance', None)
-        initial = kwargs.get('initial', None)
-
-        if instance:
-            if instance.image_blob:
-                try:
-                    image_url = instance.image_serve_url
-                except:
-                    image_url = None
-            else:
-                image_url = None
-            if not initial:
-                initial = {}
-            initial.update(image_url=image_url)
-            kwargs.update(initial=initial)
-        super(ImageCreativeForm, self).__init__(*args, **kwargs)
-
-    def clean_image_file(self):
-        data = self.cleaned_data.get('image_file', None)
+        import logging
+        logging.error(data)
 
         # Check the image file type. We only support png, jpg, jpeg, and gif.
         if data:
@@ -689,8 +500,65 @@ class ImageCreativeForm(AbstractCreativeForm):
 
         return data
 
+
+# TODO: fix so there are no repeated definition of form fields.  Is something
+#       weird with ModelForm inheritance?
+class NewCreativeForm(AbstractCreativeForm):
+    # text_icon
+    line1 = forms.CharField(label='Line 1:', required=False)
+    line2 = forms.CharField(label='Line 2:', required=False)
+    # image text_icon
+    image_file = forms.FileField(label='Image File:', required=False)
+    # text_icon
+    action_icon = forms.ChoiceField(choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
+                                             ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
+                                             ('none', 'None')),
+                                    initial='download_arrow4',
+                                    label='Action Icon:',
+                                    widget=forms.RadioSelect)
+    color = forms.Field(initial='000000', label='Background Color:')
+    font_color = forms.Field(initial='FFFFFF', label='Font Color:')
+    gradient = forms.BooleanField(initial=True, label='Gradient:')
+    # html
+    html_data = forms.CharField(label='HTML Body:', required=False,
+                                widget=forms.Textarea(attrs={'placeholder': 'HTML Body Content',
+                                                             'rows': 10}))
+    ormma_html = forms.BooleanField(label='MRAID Ad:', required=False)
+
+    class Meta:
+        model = Creative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'line1', 'line2', 'image_file', 'action_icon',
+                  'color', 'font_color', 'gradient', 'html_data', 'ormma_html')
+
+
+class ImageCreativeForm(AbstractCreativeForm):
+    image_file = forms.FileField(label='Image File:', required=False)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        initial = kwargs.get('initial', None)
+
+        if instance:
+            if instance.image_blob:
+                try:
+                    image_url = instance.image_serve_url
+                except:
+                    image_url = None
+            else:
+                image_url = None
+            if not initial:
+                initial = {}
+            initial.update(image_url=image_url)
+            kwargs.update(initial=initial)
+
+        super(ImageCreativeForm, self).__init__(*args, **kwargs)
+
     def save(self, commit=True):
+        # TODO: repeated code
         obj = super(ImageCreativeForm, self).save(commit=False)
+
         if self.files.get('image_file', None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
@@ -707,9 +575,105 @@ class ImageCreativeForm(AbstractCreativeForm):
         else:
             commit = False
 
+        if not obj.conv_appid and obj.url:
+            obj.conv_appid = self._get_appid(obj.url)
+
         if commit:
             obj.put()
+
         return obj
+
+    class Meta():
+        model = ImageCreative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'image_file')
+
+
+class TextAndTileCreativeForm(AbstractCreativeForm):
+    line1 = forms.CharField(label='Line 1:', required=False)
+    line2 = forms.CharField(label='Line 2:', required=False)
+    image_file = forms.FileField(label='Image File:', required=False)
+    action_icon = forms.ChoiceField(choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
+                                             ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
+                                             ('none', 'None')),
+                                    initial='download_arrow4',
+                                    label='Action Icon:',
+                                    widget=forms.RadioSelect)
+    color = forms.Field(initial='000000', label='Background Color:')
+    font_color = forms.Field(initial='FFFFFF', label='Font Color:')
+    gradient = forms.BooleanField(initial=True, label='Gradient:')
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        initial = kwargs.get('initial', None)
+
+        if instance:
+            if instance.image_blob:
+                image_url = helpers.get_url_for_blob(instance.image_blob)  # reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+            else:
+                image_url = ''
+            if not initial:
+                initial = {}
+            initial.update(image_url=image_url)
+            kwargs.update(initial=initial)
+
+        super(TextAndTileCreativeForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        # TODO: repeated code
+        obj = super(TextAndTileCreativeForm, self).save(commit=False)
+
+        if self.files.get('image_file', None):
+            image_data = self.files.get('image_file').read()
+            img = images.Image(image_data)
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key
+            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
+
+        if not obj.conv_appid and obj.url:
+            obj.conv_appid = self._get_appid(obj.url)
+
+        if commit:
+            obj.put()
+
+        return obj
+
+    class Meta:
+        model = TextAndTileCreative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'line1', 'line2', 'image_file', 'action_icon',
+                  'color', 'font_color', 'gradient')
+
+
+class HtmlCreativeForm(AbstractCreativeForm):
+    html_data = forms.CharField(label='HTML Body:', required=False,
+                                widget=forms.Textarea(attrs={'placeholder': 'HTML Body Content',
+                                                             'rows': 10}))
+    ormma_html = forms.BooleanField(label='MRAID Ad:', required=False)
+
+    def save(self, commit=True):
+        # TODO: repeated code
+        obj = super(HtmlCreativeForm, self).save(commit=False)
+
+        if not obj.conv_appid and obj.url:
+            obj.conv_appid = self._get_appid(obj.url)
+
+        if commit:
+            obj.put()
+
+        return obj
+
+    class Meta:
+        model = HtmlCreative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'html_data', 'ormma_html')
 
 
 # Marketplace
@@ -723,5 +687,3 @@ LEVELS = (
 
 class ContentFilterForm(forms.Form):
     level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
-
-

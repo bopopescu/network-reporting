@@ -50,8 +50,3 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         apps_dict = PublisherQueryManager.get_apps_dict_for_account(account=self.account)
         self.assertEqual(len(apps_dict), 4)
-
-
-
-if __name__ == '__main__':
-    unittest.main()

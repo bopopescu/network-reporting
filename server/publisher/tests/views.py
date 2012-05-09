@@ -12,24 +12,22 @@ from common.utils.test.views import BaseViewTestCase
 from publisher.query_managers import PublisherQueryManager
 
 
-class BasePublisherViewTestCase(BaseViewTestCase):
+class AppIndexViewTestCase(BaseViewTestCase):
+    def test_http_response_code(self):
+        url = reverse('app_index')
+        response = self.client.get(url)
+        self.assertTrue(response.status_code in [200, 302])
+
+
+class CreateAppViewTestCase(BaseViewTestCase):
     def setUp(self):
-        super(BasePublisherViewTestCase, self).setUp()
+        super(CreateAppViewTestCase, self).setUp()
 
         self.app1 = generate_app(self.account)
         self.app2 = generate_app(self.account)
         self.app3 = generate_app(self.account)
         self.adunit1 = generate_adunit(self.app1, self.account)
 
-
-class AppIndexViewTestCase(BasePublisherViewTestCase):
-    def test_http_response_code(self):
-        url = reverse('app_index')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-
-
-class CreateAppViewTestCase(BasePublisherViewTestCase):
     def test_create_app(self):
         apps_dict = PublisherQueryManager.get_apps_dict_for_account(account=self.account)
         self.assertEqual(len(apps_dict), 3)

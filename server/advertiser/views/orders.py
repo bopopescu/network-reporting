@@ -146,6 +146,7 @@ def line_item_detail(request, *args, **kwargs):
 class AdSourceStatusChangeHandler(RequestHandler):
     """
     Changes the status of a line item or list of line items.
+    Author: John Pena
     """
     def post(self):
         # Pull out the params

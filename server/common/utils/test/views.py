@@ -5,7 +5,6 @@ from google.appengine.ext import testbed
 
 from admin.randomgen import generate_account, USERNAME, PASSWORD
 
-
 class BaseViewTestCase(unittest.TestCase):
     def setUp(self):
         # setup the test environment

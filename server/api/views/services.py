@@ -1,7 +1,7 @@
 __doc__ = """
 API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
-from datetime import datetime, time, date
+import datetime
 from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager, \
@@ -251,6 +251,8 @@ class AdUnitService(RequestHandler):
                 except AttributeError, e:
                     logging.warn(e)
                     adunit.update(active = False)
+                    
+            return JSONResponse(response)
 
         # If an adgroup key was specified instead of an app key,
         # then we'll only get stats data from that adgroup. AdUnit

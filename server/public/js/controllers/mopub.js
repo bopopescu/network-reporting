@@ -181,47 +181,36 @@ if (window.console === undefined) {
          * ## Mixpanel Event Tracking
          */
 
-        if (typeof mpq.push != 'undefined') {
+        if (typeof mixpanel.push != 'undefined') {
             // Date options in dashboard
             try {
                 $("#dashboard-dateOptions-option-7").click(function(){
-                    mpq.push(['track', '7 Day Date-option clicked']);
+                    mixpanel.push(['track', '7 Day Date-option clicked']);
                 });
                 $("#dashboard-dateOptions-option-14").click(function(){
-                    mpq.push(['track', '14 Day Date-option clicked']);
+                    mixpanel.push(['track', '14 Day Date-option clicked']);
                 });
                 $("#dashboard-dateOptions-option-30").click(function(){
-                    mpq.push(['track', '30 Day Date-option clicked']);
+                    mixpanel.push(['track', '30 Day Date-option clicked']);
                 });
                 $("#dashboard-dateOptions-option-custom").click(function(){
-                    mpq.push(['track', 'Custom Date-option clicked']);
+                    mixpanel.push(['track', 'Custom Date-option clicked']);
                 });
                 // Today/Yesterday/All options in rollup
                 $("#stats-breakdown-dateOptions-option-0").click(function(){
-                    mpq.push(['track', '"Today" clicked in Stats Breakdown']);
+                    mixpanel.push(['track', '"Today" clicked in Stats Breakdown']);
                 });
                 $("#stats-breakdown-dateOptions-option-1").click(function(){
-                    mpq.push(['track', '"Yesterday" clicked in Stats Breakdown']);
+                    mixpanel.push(['track', '"Yesterday" clicked in Stats Breakdown']);
                 });
                 $("#stats-breakdown-dateOptions-option-2").click(function(){
-                    mpq.push(['track', '"All" clicked in Stats Breakdown']);
+                    mixpanel.push(['track', '"All" clicked in Stats Breakdown']);
                 });
-                output.body.push(row);
-            });
+            } catch (e) {
 
-            output = escape(JSON.stringify(output));
-            filename = escape(JSON.stringify(filename));
-
-            // add and submit a hidden form to propagate POST data
-            // submit 'table' (the json data), 'format' (xls or csv), and 'filename' (string including extension)
-            table_export_url = '/inventory/table_export/'
-            $table.append('<form id="hidden-export-form" action="' + table_export_url + '" method="POST">');
-            $hidden_export_form = $('#hidden-export-form');
-            $hidden_export_form.append($('<input type="hidden" name="table" value="' + output + '">'));
-            $hidden_export_form.append($('<input type="hidden" name="format" value="' + format + '">'));
-            $hidden_export_form.append($('<input type="hidden" name="filename" value="' + filename + '">'));
-            $hidden_export_form.submit();
+            }
         }
+
 
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
@@ -261,9 +250,6 @@ if (window.console === undefined) {
 
         // Set up text overflow elements
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
-
-        // Set up dropdowns
-        $(".dropdown-head").mopub_dropdown('.dropdown');
 
         //REFACTOR: replace this with something from bootstrap
         $("#account-dropdown").dropdown();

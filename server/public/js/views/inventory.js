@@ -480,7 +480,7 @@ var mopub = window.mopub || {};
     });
 
     window.AdUnitView = AdUnitView;
-    window.AdUnitCollectionView = AdUnitCollectionView;
+
     window.AppView = AppView;
     window.AdGroupView = AdGroupView;
     window.CampaignView = CampaignView;

@@ -186,7 +186,7 @@
         <script type="text/javascript">
           //<![CDATA[
           google.load("jquery", "1.7.1");
-          /* google.load("jqueryui", "1.8.7");*/
+          google.load("jqueryui", "1.8.7");
         </script>
         
         {# Plugins  aggregated from all the *.js files in /public/js/libs/*#}
@@ -199,31 +199,52 @@
         {% block extraScripts %}{% endblock extraScripts %}
 
         {# Mixpanel #}
-        
+
         <script type="text/javascript">
-          var mpq=[];
-          mpq.push(["init","2941bda924fcaaff6ec23f27b41f0129"]);
-          (function(){var a=document.createElement("script");a.type="text/javascript";a.async=true;a.src=(document.location.protocol==="https:"?"https:":"http:")+"//api.mixpanel.com/site_media/js/api/mixpanel.js";var b=document.getElementsByTagName("script")[0];b.parentNode.insertBefore(a,b)})();
-          {% if user.is_authenticated %}
-          // Track by name
-          mpq.push(["name_tag", "{{user.email}}"]);
-          {% endif %}
-    
-        </script>
-        {#  End Mixpanel #}
+          (function(d,c){var a,b,g,e;a=d.createElement("script");a.type="text/javascript";
+                         a.async=!0;a.src=("https:"===d.location.protocol?"https:":"http:")+
+                         '//api.mixpanel.com/site_media/js/api/mixpanel.2.js';b=d.getElementsByTagName("script")[0];
+                         b.parentNode.insertBefore(a,b);c._i=[];c.init=function(a,d,f){var b=c;
+    "undefined"!==typeof f?b=c[f]=[]:f="mixpanel";g=['disable','track','track_pageview',
+    'track_links','track_forms','register','register_once','unregister','identify',
+    'name_tag','set_config'];
+    for(e=0;e<g.length;e++)(function(a){b[a]=function(){b.push([a].concat(
+    Array.prototype.slice.call(arguments,0)))}})(g[e]);c._i.push([a,d,f])};window.mixpanel=c}
+    )(document,[]);
+    mixpanel.init("2941bda924fcaaff6ec23f27b41f0129");
+    mixpanel.name_tag('{{ user.email }}');
+  </script>
+
+  {#  End Mixpanel #}
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-20014961-2']);
+  _gaq.push(['_trackPageview']);
+  _gaq.push(['_trackPageLoadTime']);
+
+  (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+  </script>
+
+  <script type="text/javascript">
+    var _kmq = _kmq || [];
+    function _kms(u){
+        setTimeout(function(){
+            var s = document.createElement('script'); var f = document.getElementsByTagName('script')[0]; s.type = 'text/javascript'; s.async = true;
+            s.src = u; f.parentNode.insertBefore(s, f);
+        }, 1);
+    }
+    _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/df1cac838b87437e951e9a26136cc8ae203e052e.1.js');
+
+    _kmq.push(['identify', '{{ user.email }}']);
+
+  </script>
         
-        <script type="text/javascript">
-          var _gaq = _gaq || [];
-          _gaq.push(['_setAccount', 'UA-20014961-2']);
-          _gaq.push(['_trackPageview']);
-          _gaq.push(['_trackPageLoadTime']);
-  
-          (function() {
-              var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-              ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-              var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-          })();
-        </script>
+       
     </body>
   {% endblock body_content %}
 </html>

@@ -635,6 +635,7 @@ var mopub = mopub || {};
         },
 
         parse: function(response) {
+            var collection = this;
             // REFACTOR attempts vs requests
             _.each(response, function(adunit) {
                 if(adunit.req === null || adunit.req === undefined) {

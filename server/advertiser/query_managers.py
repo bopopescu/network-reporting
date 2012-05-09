@@ -4,7 +4,7 @@ import random
 from google.appengine.api import memcache, taskqueue
 from google.appengine.ext import db
 
-from common.utils.query_managers import QueryManager
+from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
 
 from common.constants import CAMPAIGN_LEVELS, \
@@ -12,7 +12,7 @@ from common.constants import CAMPAIGN_LEVELS, \
         NETWORK_ADGROUP_TRANSLATION
 
 from advertiser.models import Campaign, AdGroup, \
-                              Creative, TextCreative, \
+                              Creative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
                               ImageCreative, \

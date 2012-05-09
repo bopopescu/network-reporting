@@ -15,41 +15,6 @@ from common.constants import MIN_IOS_VERSION, \
 import datetime
 import time
 
-#from ad_server.renderers.creative_renderer import BaseCreativeRenderer
-#from ad_server.renderers.admob import AdMobRenderer
-#from ad_server.renderers.admob_native import AdMobNativeRenderer
-#from ad_server.renderers.text_and_tile import TextAndTileRenderer
-#from ad_server.renderers.adsense import AdSenseRenderer
-#from ad_server.renderers.image import ImageRenderer
-#from ad_server.renderers.millennial_native import MillennialNativeRenderer
-#from ad_server.renderers.millennial import MillennialRenderer
-#from ad_server.renderers.custom_native import CustomNativeRenderer
-#from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
-#from ad_server.renderers.html_data_renderer import HtmlDataRenderer
-#from ad_server.renderers.brightroll import BrightRollRenderer
-#from ad_server.renderers.inmobi import InmobiRenderer
-#from ad_server.renderers.greystripe import GreyStripeRenderer
-#from ad_server.renderers.appnexus import AppNexusRenderer
-#from ad_server.renderers.chartboost import ChartBoostRenderer
-#from ad_server.renderers.ejam import EjamRenderer
-#from ad_server.renderers.jumptap import JumptapRenderer
-#from ad_server.renderers.iad import iAdRenderer
-#from ad_server.renderers.mobfox import MobFoxRenderer
-
-
-#from ad_server.networks.appnexus import AppNexusServerSide
-#from ad_server.networks.jumptap import JumptapServerSide
-#from ad_server.networks.brightroll import BrightRollServerSide
-#from ad_server.networks.chartboost import ChartBoostServerSide
-#from ad_server.networks.ejam import EjamServerSide
-#from ad_server.networks.greystripe import GreyStripeServerSide
-#from ad_server.networks.inmobi import InMobiServerSide
-#from ad_server.networks.jumptap import JumptapServerSide
-#from ad_server.networks.millennial import MillennialServerSide
-#from ad_server.networks.mobfox import MobFoxServerSide
-#from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
-#                                                  DummyServerSideFailure
-#                                                 )
 
 from common.utils.helpers import to_uni
 
@@ -84,7 +49,7 @@ class Campaign(db.Model):
     and an account. All other information should be added to AdGroup.
     """
     name = db.StringProperty(required=True)
-    advertiser = db.StringProperty(required=True)
+    advertiser = db.StringProperty()
     description = db.TextProperty()
 
     # current state

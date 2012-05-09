@@ -1,26 +1,35 @@
+# Deployed Wednesday, May 09, 2012 at 05:33PM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-110
+### Bugs Fixed: []
+### Included Commits: 
+ * 4f8856a added default value for fetch context to allow for warmups
+ * 7e827da added target for adunit context pushes
+ * fc6c267 Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, May 09, 2012 at 01:04AM PST
 ### Deployed by Andrew He
 ### Tagged deploy-109
 ### Bugs Fixed: []
-### Included Commits: 
- * 4bf3197 Fix bugs relating to NetworkConfigs (losing pub IDs, being created without account references)
- * 8b779a4 merged in logging fixes
- * 8aa001a delete_multi takes a list of string keys not keys
- * a04a89f Removed all start_day and end_day references from mpx view, modified migrate networks script
- * ddf49c6 Merge
- * 57c7cb0 removed some more logging
- * 2fef87d Merge branch 'master' of github.com:mopub/mopub
- * 054abb5 send mpx reports to FT
- * db249bb Merge branch 'master' of github.com:mopub/mopub
- * ddf5aab added mapreduce yaml
- * f2f644c [#1193 state:resolved]
- * 98c10b9 Cleaned up the mpx view a bit
- * 2bbe46d fixed excessive logging in stats fetchers
- * fc19b79 fixed float division logging
- * ed0b7d5 Merge branch 'master' of github.com:mopub/mopub
- * fcb4d1c Merge branch 'master' of github.com:mopub/mopub
- * f3fc7c9 -- leverage inventory counts -> revforce
- 
+### Included Commits:
+* 4bf3197 Fix bugs relating to NetworkConfigs (losing pub IDs, being created without account references)
+* 8b779a4 merged in logging fixes
+* 8aa001a delete_multi takes a list of string keys not keys
+* a04a89f Removed all start_day and end_day references from mpx view, modified migrate networks script
+* ddf49c6 Merge
+* 57c7cb0 removed some more logging
+* 2fef87d Merge branch 'master' of github.com:mopub/mopub
+* 054abb5 send mpx reports to FT
+* db249bb Merge branch 'master' of github.com:mopub/mopub
+* ddf5aab added mapreduce yaml
+* f2f644c [#1193 state:resolved]
+* 98c10b9 Cleaned up the mpx view a bit
+* 2bbe46d fixed excessive logging in stats fetchers
+* fc19b79 fixed float division logging
+* ed0b7d5 Merge branch 'master' of github.com:mopub/mopub
+* fcb4d1c Merge branch 'master' of github.com:mopub/mopub
+* f3fc7c9 -- leverage inventory counts -> revforce
+
 # Deployed Tuesday, May 08, 2012 at 06:04PM PST
 ### Deployed by John Pena
 ### Tagged deploy-108

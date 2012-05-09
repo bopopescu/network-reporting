@@ -57,6 +57,10 @@ urlpatterns = patterns(
         'order_index',
         name='advertiser_order_index'),
 
+    # Status changing (active/pause/archive)
+    url('^ad_source/status/$',
+        'ad_source_status_change'),
+
     # Forms
     # Note: these need to come before the detail
     # pages, or else the wrong handler will be called.
@@ -102,11 +106,4 @@ urlpatterns = patterns(
     url('^creative/html/(?P<creative_key>[-\w\.]+)$',
         'creative_html',
         name='advertiser_creative_html'),
-
-    # Status changing (active/pause/archive)
-    url('^ad_source/status/$',
-        'ad_source_status_change'),
-
-    # Exporting
-    # coming soon
 )

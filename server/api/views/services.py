@@ -414,8 +414,6 @@ class AdGroupServiceHandler(RequestHandler):
 
             delivered_url = to_adserver + REMOTE_DELIVERED_URL + '?' + qs
 
-            logging.warn(summed_stats)
-            
             try:
                 delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
                 percent_delivered = delivered_data['percent_delivered']

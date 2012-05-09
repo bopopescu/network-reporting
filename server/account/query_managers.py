@@ -68,6 +68,7 @@ class AccountQueryManager(CachedQueryManager):
     @classmethod
     def update_config_and_put(cls, account, network_config):
         """ Updates the network config and the associated account"""
+        network_config.account = account
         NetworkConfigQueryManager.put(network_config)
         account.network_config = network_config
         cls.put_accounts(account)

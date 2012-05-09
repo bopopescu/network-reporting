@@ -20,15 +20,19 @@ class Command(BaseCommand):
         remote_api_stub.ConfigureRemoteDatastore(app_id,
                                                  '/remote_api',
                                                  auth_func,
-                                                 host)
+            host)
 
-
-
+    if len(argv) >= 3:
+        print "Running CUSTOM fake data generation script: %s" % argv[2]
+        _temp = __import__(argv[2], globals(), locals(), ['main'], -1)
+        main = _temp.main
+    else:
+        print "Running DEFAULT fake data script: admin.randomgen.main"
         from admin.randomgen import main
         main()
 
 
 
 
-
+    main()
 

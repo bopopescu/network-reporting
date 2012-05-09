@@ -510,7 +510,6 @@ def _transform_stats(stats_dict):
 
 def _fetch_and_decode(url):
     try:
-        logging.warn(url)
         response = urlopen(url).read()
         response_dict = json.loads(response)
     except Exception, ex:

@@ -41,7 +41,7 @@ class AUCFetchHandler(webapp.RequestHandler):
         # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.
         created_at = int(float(created_at))
         data_package = adunitcontext_fetch(adunit_key, created_at=created_at)
-        
+
         if data_package == EMPTY:
             # This is an empty response, don't do anything, keep old AUC
             return self.response.out.write(EMPTY)
@@ -60,7 +60,7 @@ class AUCFetchHandler(webapp.RequestHandler):
 class AUCUserPushHandler(webapp.RequestHandler):
 
     def get(self):
-        """ For the given adunit context key, push down the updated context 
+        """ For the given adunit context key, push down the updated context
         to ec2 """
         # Dont' handle errors because if there are errors the TQ will be readded
         rpc = urlfetch.create_rpc()

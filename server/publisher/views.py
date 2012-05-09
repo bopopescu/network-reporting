@@ -560,8 +560,8 @@ class AppDetailHandler(RequestHandler):
                     mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
                                                             self.start_date,
                                                             self.end_date)
-                except MPStatsAPIException, e:
-                    logging.warn(str(e))
+                except MPStatsAPIException, error:
+                    logging.warning("MPStatsAPIException: %s" % error)
                     mpx_stats = {}
 
                 campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
@@ -589,10 +589,7 @@ class AppDetailHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, campaigns = level_camps))
 
-
         # we don't include network or promo campaigns in the revenue totals
-        logging.warn(guarantee_campaigns)
-        logging.warn(marketplace_campaigns)
 
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
@@ -809,7 +806,8 @@ class AdUnitShowHandler(RequestHandler):
                     mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
                                                                self.start_date,
                                                                self.end_date)
-                except MPStatsAPIException, e:
+                except MPStatsAPIException, error:
+                    logging.warning("MPStatsAPIException: %s" % error)
                     mpx_stats = {}
                 ag.stats.revenue = float(mpx_stats.get('rev', 0.0))
                 ag.stats.impression_count = int(mpx_stats.get('imp', 0))
@@ -1407,13 +1405,9 @@ def calculate_ecpm(adgroup):
     Calculate the ecpm for a cpc campaign.
     REFACTOR: move this to the app/adunit models
     """
-    if adgroup.cpc:
-        try:
-            return float(adgroup.stats.click_count) * \
-                   float(adgroup.bid) * \
-                   1000.0 / float(adgroup.stats.impression_count)
-        except Exception, error:
-            logging.error(error)
+    if adgroup.cpc and adgroup.stats.impression_count:
+        return (float(adgroup.stats.click_count) * float(adgroup.bid) * 1000.0 /
+                float(adgroup.stats.impression_count))
     return adgroup.bid
 
 

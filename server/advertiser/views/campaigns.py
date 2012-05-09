@@ -37,6 +37,7 @@ from advertiser.query_managers import (AdvertiserQueryManager,
                                        TextAndTileCreativeQueryManager,
                                        HtmlCreativeQueryManager)
 from advertiser.models import Campaign, AdGroup, Creative
+from account.models import Account
 from ad_server.optimizer.optimizer import DEFAULT_CTR
 from budget import budget_service
 from common.ragendja.template import (JSONResponse, render_to_response,
@@ -48,7 +49,7 @@ from common.utils.stats_helpers import (MarketplaceStatsFetcher,
                                         MPStatsAPIException)
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import Pacific, utc
-from publisher.models import Site, App
+from publisher.models import Site, App, AdUnit
 from publisher.query_managers import (AdUnitQueryManager, AppQueryManager,
                                       AdUnitContextQueryManager, PublisherQueryManager)
 from reporting.models import StatsModel
@@ -325,15 +326,15 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         # Add network config forms to each app and adunit.
         for app in apps:
             app_network_config_key = str(App.network_config.get_value_for_datastore(app))
-            app_network_config = network_configs_dict.get(app_network_config_key)
+            app_network_config = network_configs_dict.get(app_network_config_key) or app.network_config
             app_key = str(app.key())
-            app.network_config_form = AppNetworkConfigForm(instance=app.network_config,
+            app.network_config_form = AppNetworkConfigForm(instance=app_network_config,
                                                            prefix="app_%s" % app_key)
             for adunit in app.adunits:
                 adunit_network_config_key = str(Site.network_config.get_value_for_datastore(adunit))
-                adunit_network_config = network_configs_dict.get(adunit_network_config_key)
+                adunit_network_config = network_configs_dict.get(adunit_network_config_key) or adunit.network_config
                 adunit_key = str(adunit.key())
-                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config,
+                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit_network_config,
                                                                      prefix="adunit_%s" % adunit_key)
         
         return apps
@@ -578,8 +579,8 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
         configs = []
         for app in apps:
-            app_key = str(app.key())
-            network_config = all_configs.get(app_key) or NetworkConfig(account=self.account)
+            app_network_config_key = str(App.network_config.get_value_for_datastore(app))
+            network_config = all_configs.get(app_network_config_key) or app.network_config or NetworkConfig(account=self.account)
             setattr(network_config, network_config_field, 
                     self.request.POST.get("app_%s-%s" % (app.key(), network_config_field), ''))
             configs.append(network_config)
@@ -604,8 +605,8 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
         configs = []
         for adunit in adunits:
-            adunit_key = str(adunit.key())
-            network_config = all_configs.get(adunit_key) or NetworkConfig(account=self.account)
+            adunit_network_config_key = str(AdUnit.network_config.get_value_for_datastore(adunit))
+            network_config = all_configs.get(adunit_network_config_key) or adunit.network_config or NetworkConfig(account=self.account)
             setattr(network_config, network_config_field,
                     self.request.POST.get("adunit_%s-%s" % (adunit.key(), network_config_field), ''))
             configs.append(network_config)
@@ -626,8 +627,8 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             return
         
         network_config_field = "%s_pub_id" % adgroup.network_type
-        account_key = str(account.key())
-        network_config = all_configs.get(account_key) or NetworkConfig(account=account)
+        account_network_config_key = str(Account.network_config.get_value_for_datastore(account))
+        network_config = all_configs.get(account_network_config_key) or account.network_config or NetworkConfig(account=account)
         setattr(network_config, network_config_field, self.request.POST.get('jumptap_pub_id', ''))
         AccountQueryManager.update_config_and_put(account, network_config)
     

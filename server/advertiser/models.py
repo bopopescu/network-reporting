@@ -373,13 +373,9 @@ class AdGroup(db.Model):
         """
         Calculate the ecpm for a cpc campaign.
         """
-        if self.cpc:
-            try:
-                return float(self.stats.click_count) * \
-                       float(self.bid) * \
-                       1000.0 / float(self.stats.impression_count)
-            except Exception, error:
-                logging.error(error)
+        if self.cpc and self.stats.impression_count:
+            return (float(self.stats.click_count) * float(self.bid) * 1000.0 /
+                    float(self.stats.impression_count))
         return self.bid
 
     def simplify(self):

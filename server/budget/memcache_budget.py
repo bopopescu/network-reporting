@@ -29,7 +29,7 @@ def remaining_ts_budget(budget):
 
     memc_budget = memcache.get(key, namespace='budget')
     if memc_budget is None:
-        logging.error("Budget cache miss budget with key: %s" % key)
+        logging.info("Budget cache miss budget with key: %s" % key)
 
         key = _make_budget_ts_key(budget)
 
@@ -50,7 +50,7 @@ def total_spent(budget):
     memc_total = memcache.get(key, namespace='budget')
 
     if memc_total is None:
-        logging.error("Spending cache miss for budget with key: %s" % key)
+        logging.info("Spending cache miss for budget with key: %s" % key)
 
         total = budget.total_spent
         if total is None:

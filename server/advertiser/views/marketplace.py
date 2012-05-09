@@ -21,7 +21,6 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      MPStatsAPIException
 
 
-
 class MarketplaceIndexHandler(RequestHandler):
     """
     Rendering of the Marketplace page. At this point, this is the only
@@ -51,7 +50,8 @@ class MarketplaceIndexHandler(RequestHandler):
         try:
             mpx_stats = stats_fetcher.get_account_stats(self.days[0],
                     self.days[-1], daily=True)
-        except MPStatsAPIException, e:
+        except MPStatsAPIException, error:
+            logging.warning("MPStatsAPIException: %s" % error)
             mpx_stats = {}
 
         # Set up the blocklist

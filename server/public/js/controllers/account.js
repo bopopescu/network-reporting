@@ -13,25 +13,14 @@ var mopub = mopub || {};
 		$('input:text').addClass('input-text');
 	    $('input:password').addClass('input-text');
 	    
-
-		$(".button.continue")
-    		.button({ 
-    			icons: { secondary: "ui-icon-circle-triangle-e" } 
-    		});
 		
     	$('#paymentchange-submit')
-    		.button({ 
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
             .click(function(e) {
 				e.preventDefault();
 				$('#paymentchange').submit();
 			});
 
 		$('#accountForm-submit')
-        	.button({ 
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
             .click(function(e) {
 				e.preventDefault();
 				$('#accountForm').submit();
@@ -68,14 +57,14 @@ var mopub = mopub || {};
 			function didShowContainer(container) {
 				container.removeClass('hide');
 				container.addClass('show');
-				container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+				//container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
 				setButtonTextElement(container.togglebutton, container.togglebutton.hideText);
 			}
 			
 			function didHideContainer(container) {
 				container.removeClass('show');
 				container.addClass('hide');
-				container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+				//container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
 				setButtonTextElement(container.togglebutton, container.togglebutton.showText);
 			}
 
@@ -99,10 +88,7 @@ var mopub = mopub || {};
 				}
 			});
 			
-			infobutton.button({ 
-				icons: { secondary: "ui-icon-info" } 
-			})
-			.click(function(e) {
+			infobutton.click(function(e) {
 				e.preventDefault();
 				infodialog.dialog({
 				  width: 570,
@@ -117,16 +103,12 @@ var mopub = mopub || {};
 				});
 			});
 			
-			appbutton.button({
-			  icons: { primary: "ui-icon-triangle-1-s" }
-			})
-			.click(function(e) {
-			  e.preventDefault();
+			appbutton.click(function(e) {
+			    e.preventDefault();
 				if(apps.hasClass('show')) {
 					apps.slideUp('fast');
 					didHideContainer(apps);
-				}
-				else {
+				} else {
 					apps.slideDown('fast');
 					didShowContainer(apps);
 				}
@@ -134,8 +116,7 @@ var mopub = mopub || {};
 			
             if (apps.hasClass('show')) {
                 didShowContainer(apps);
-            }
-            else {
+            } else {
                 apps.hide();
                 didHideContainer(apps);
             }

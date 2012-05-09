@@ -371,7 +371,9 @@ class AdGroup(db.Model):
             "marketplace": "Marketplace"
         }
 
-        return kinds[self.adgroup_type]
+        if self.adgroup_type:
+            return kinds[self.adgroup_type]
+        return ''
 
     def simplify(self):
         if self.start_date and not self.start_datetime:

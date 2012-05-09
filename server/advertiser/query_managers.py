@@ -477,6 +477,7 @@ class AdGroupQueryManager(QueryManager):
         adgroup = AdGroup(key_name=ag_key_name, name='Marketplace')
         # set up the rest of the properties
         adgroup.bid_strategy = 'cpm'
+        adgroup.adgroup_type = 'marketplace'
         adgroup.account = db.Key(account_key)
         adgroup.campaign = campaign
         # only targetted at one adunit

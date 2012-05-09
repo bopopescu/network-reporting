@@ -52,8 +52,6 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
 
 from budget import budget_service
 
-from google.appengine.api import memcache
-
 
 class DashboardHandler(RequestHandler):
     def get(self):
@@ -82,8 +80,6 @@ class DashboardHandler(RequestHandler):
 def dashboard(request, *args, **kwargs):
     handler = DashboardHandler(template="publisher/dashboard.html")
     return handler(request, use_cache=False, use_handshake=True, *args, **kwargs)
-
-
 
 
 
@@ -1210,6 +1206,7 @@ def enable_networks(adunit, account):
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
 
+    
 def enable_marketplace(adunit, account):
     """
     Gets/creates an adgroup and a default mpx creative for an adunit.
@@ -1219,8 +1216,13 @@ def enable_marketplace(adunit, account):
     mpx_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), account.key())
     AdGroupQueryManager.put(mpx_adgroup)
 
+    logging.warn('HERE')
+    logging.warn(mpx_adgroup.adgroup_type)
+    
     # create appropriate marketplace creative for this adunit / adgroup (same key_name)
     mpx_creative = mpx_adgroup.default_creative(key_name=mpx_adgroup.key().name())
+    logging.warn('HERE')
+    logging.warn(mpx_creative)
     mpx_creative.adgroup = mpx_adgroup
     mpx_creative.account = account
     CreativeQueryManager.put(mpx_creative)

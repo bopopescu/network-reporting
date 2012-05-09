@@ -162,11 +162,10 @@ mpv.loadAd();</pre>
               </li>
             </ol>
             <div class="form-submit">
-              <span class="buttonWrap">
               {% ifequal status 'welcome' %}
-                <a href="{% url app_index %}" class="button">Continue to Step 3</a>
+                <a href="{% url app_index %}" class="btn">Continue to Step 3</a>
               {% else %}
                 <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>
-              {% endifequal %}</span>
+              {% endifequal %}
             </div>
           </section>{% endblock content %}

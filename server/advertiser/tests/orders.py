@@ -22,6 +22,7 @@ from advertiser.query_managers import (AdvertiserQueryManager,
 setup_test_environment()
 
 class OrderViewTestCase(BaseViewTestCase):
+    
     def setUp(self):
         super(OrderViewTestCase, self).setUp()
         self.order = generate_campaign(self.account)
@@ -39,6 +40,11 @@ class OrderAndLineItemCreate(OrderViewTestCase):
         self.url = reverse('advertiser_order_and_line_item_form_new')
         
     def mptest_http_response_code(self):
+        """
+        Author: Haydn Dufrene
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
         response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
 
@@ -52,6 +58,11 @@ class NewLineItemTestCase(OrderViewTestCase):
         })
         
     def mptest_http_response_code(self):
+        """
+        Author: Haydn Dufrene
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
         response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
 
@@ -64,7 +75,12 @@ class EditLineItemTestCase(OrderViewTestCase):
             'line_item_key': unicode(self.line_item.key())
         })
         
-    def mptest_http_response_code(self):        
+    def mptest_http_response_code(self):
+        """
+        Author: Haydn Dufrene
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
         response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
 
@@ -112,10 +128,20 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         
     def mptest_fail_on_objects_not_owned(self):
+        """
+        Author: John Pena
+        Users should not be able to change the status of objects
+        they don't own. The view should return a 404.
+        """
         ok_(False)
 
         
     def mptest_creative_run(self):
+        """
+        Author: Haydn Dufrene
+        The ad source status change handler should set a creative as running
+        when 'run' is passed as the status.        
+        """
         self.creative.active = False
         CreativeQueryManager.put(self.creative)
         response = self.client.post(self.url, data={
@@ -129,7 +155,13 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         eq_(self.creative.active, True)
 
+        
     def mptest_creative_pause(self):
+        """
+        Author: Haydn Dufrene
+        The ad source status change handler should set a creative as paused
+        when 'pause' is passed as the status.        
+        """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.creative.key()),
             'status': 'pause'
@@ -143,6 +175,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
     def mptest_creative_delete(self):
+        """
+        Author: Haydn Dufrene
+        The ad source status change handler should set a creative as deleted
+        when 'delete' is passed as the status.        
+        """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.creative.key()),
             'status': 'delete'
@@ -246,6 +283,12 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
     def mp_test_order_run(self):
+        """
+        Author: Haydn Dufrene
+        The ad source status change handler should set an order as running
+        when 'run' is passed as the status. The order's line items should
+        not be affected.
+        """
         self.order.active = False
         CampaignQueryManager.put(self.order)
         
@@ -264,7 +307,13 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         eq_(self.line_item.active, True)
 
         
-    def mptest_order_pause(self):        
+    def mptest_order_pause(self):
+        """
+        Author: Haydn Dufrene
+        The ad source status change handler should set an order as paused
+        when 'pause' is passed as the status. The order's line items should
+        not be affected.
+        """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.order.key()),
             'status': 'pause'
@@ -279,6 +328,12 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         eq_(self.line_item.active, True)
 
     def mptest_order_archive(self):
+        """
+        Author: Haydn Dufrene
+        The ad source status change handler should set an order as archived
+        when 'archive' is passed as the status. The order's line items should
+        not be affected.
+        """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.order.key()),
             'status': 'archive'
@@ -293,7 +348,12 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         eq_(self.line_item.archived, False)
 
     def mptest_order_delete(self):      
-
+        """
+        Author: Haydn Dufrene
+        The ad source status change handler should set an order as deleted
+        when 'delete' is passed as the status. The order's line items should
+        not be affected.
+        """        
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.order.key()),
             'status': 'delete'
@@ -311,7 +371,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         
     def mptest_mixed_run(self):
-        
+        """
+        Author: John Pena
+        The ad source status change handler changes multiple objects
+        statuses to running when 'run' is passed as the status. 
+        """                
         # Set the line item as paused and put it in the db
         self.line_item.active = False
         self.line_item.archived = False
@@ -361,6 +425,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         
         
     def mptest_mixed_pause(self):
+        """
+        Author: John Pena
+        The ad source status change handler changes multiple objects
+        statuses to paused when 'pause' is passed as the status. 
+        """                
         
         AdGroupQueryManager.put(self.line_item)
         CampaignQueryManager.put(self.order)
@@ -397,7 +466,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         
     def mptest_mixed_archive(self):
-
+        """
+        Author: John Pena
+        The ad source status change handler changes multiple objects
+        statuses to archived when 'archive' is passed as the status. 
+        """                
         AdGroupQueryManager.put(self.line_item)
         CampaignQueryManager.put(self.order)
         CreativeQueryManager.put(self.creative)
@@ -433,6 +506,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         
     def mptest_mixed_delete(self):
+        """
+        Author: John Pena
+        The ad source status change handler changes multiple objects
+        statuses to deleted when 'delete' is passed as the status. 
+        """                
         AdGroupQueryManager.put(self.line_item)
         CampaignQueryManager.put(self.order)
         CreativeQueryManager.put(self.creative)
@@ -465,4 +543,3 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         eq_(actual_order.active, False)
         eq_(actual_order.archived, False)
         eq_(actual_order.deleted, True)
-

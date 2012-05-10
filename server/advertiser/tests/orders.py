@@ -33,25 +33,40 @@ class OrderViewTestCase(BaseViewTestCase):
 
 
 class OrderAndLineItemCreate(OrderViewTestCase):
+    
+    def setUp(self):
+        super(OrderAndLineItemCreate, self).setUp()
+        self.url = reverse('advertiser_order_and_line_item_form_new')
+        
     def mptest_http_response_code(self):
-        url = reverse('advertiser_order_and_line_item_form_new')
-        response = self.client.get(url)
+        response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
 
 
 class NewLineItemTestCase(OrderViewTestCase):
+    
+    def setUp(self):
+        super(NewLineItemTestCase, self).setUp()
+        self.url = reverse('advertiser_line_item_form_new', kwargs={
+            'order_key': unicode(self.order.key())
+        })
+        
     def mptest_http_response_code(self):
-        url = reverse('advertiser_line_item_form_new', kwargs={'order_key': unicode(self.order.key())})
-        response = self.client.get(url)
+        response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
 
 
 class EditLineItemTestCase(OrderViewTestCase):
-    def mptest_http_response_code(self):
-        url = reverse('advertiser_line_item_form_edit', kwargs={'line_item_key': unicode(self.line_item.key())})
-        response = self.client.get(url)
+    
+    def setUp(self):
+        super(EditLineItemTestCase, self).setUp()
+        self.url = reverse('advertiser_line_item_form_edit', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+        
+    def mptest_http_response_code(self):        
+        response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
-
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):
@@ -59,7 +74,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):
         super(AdSourceChangeTestCase, self).setUp()
         self.url = reverse('advertiser_ad_source_status_change')
-    
+        
     def mptest_http_response_code(self):
         """
         Author: Haydn Dufrene
@@ -96,18 +111,46 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         eq_(response_json['success'], False)
 
     def mptest_creative_run(self):
-        pass
-        
+        self.creative.active = False
+        CreativeQueryManager.put(self.creative)
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.creative.key()),
+            'status': 'run'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        eq_(self.creative.active, True)
+
     def mptest_creative_pause(self):
-        pass
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.creative.key()),
+            'status': 'pause'
+        })
         
-    def mptest_creative_archive(self):
-        pass
-        
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        eq_(self.creative.active, False)
+
+
     def mptest_creative_delete(self):
-        pass
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.creative.key()),
+            'status': 'delete'
+        })
 
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+        
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        eq_(self.creative.deleted, True)
+        eq_(self.creative.active, False)
 
+        
     def mptest_line_item_run(self):
         """
         Author: John Pena
@@ -198,14 +241,70 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
     def mp_test_order_run(self):
-        pass
-    def mptest_order_pause(self):
-        pass
-    def mptest_order_archive(self):
-        pass
-    def mptest_order_delete(self):      
-        pass
+        self.order.active = False
+        CampaignQueryManager.put(self.order)
+        
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'run'
+        })
 
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.active, True)
+        
+        eq_(self.line_item.active, True)
+
+        
+    def mptest_order_pause(self):        
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'pause'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+        
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.active, False)
+        
+        eq_(self.line_item.active, True)
+
+    def mptest_order_archive(self):
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'archive'
+        })
+        
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+        
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.archived, True)
+        
+        eq_(self.line_item.archived, False)
+
+    def mptest_order_delete(self):      
+
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'delete'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+        
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.deleted, True)
+        eq_(self.order.active, False)
+
+        eq_(self.line_item.deleted, False)
+        eq_(self.line_item.active, True)
+
+        
     def mptest_mixed_run(self):
         
         # Set the line item as paused and put it in the db
@@ -257,10 +356,108 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         
         
     def mptest_mixed_pause(self):
-        pass
+        
+        AdGroupQueryManager.put(self.line_item)
+        CampaignQueryManager.put(self.order)
+        CreativeQueryManager.put(self.creative)
+        
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'pause'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        eq_(actual_line_item.active, False)
+        eq_(actual_line_item.archived, False)
+        eq_(actual_line_item.deleted, False)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        eq_(actual_creative.active, False)
+        eq_(actual_creative.deleted, False)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        eq_(actual_order.active, False)
+        eq_(actual_order.archived, False)
+        eq_(actual_order.deleted, False)
+
         
     def mptest_mixed_archive(self):
-        pass
+
+        AdGroupQueryManager.put(self.line_item)
+        CampaignQueryManager.put(self.order)
+        CreativeQueryManager.put(self.creative)
+        
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'archive'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        eq_(actual_line_item.active, False)
+        eq_(actual_line_item.archived, True)
+        eq_(actual_line_item.deleted, False)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        eq_(actual_creative.active, False)
+        eq_(actual_creative.deleted, False)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        eq_(actual_order.active, False)
+        eq_(actual_order.archived, True)
+        eq_(actual_order.deleted, False)
+
         
     def mptest_mixed_delete(self):
-        pass
+        AdGroupQueryManager.put(self.line_item)
+        CampaignQueryManager.put(self.order)
+        CreativeQueryManager.put(self.creative)
+        
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'delete'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        eq_(actual_line_item.active, False)
+        eq_(actual_line_item.archived, False)
+        eq_(actual_line_item.deleted, True)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        eq_(actual_creative.active, False)
+        eq_(actual_creative.deleted, True)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        eq_(actual_order.active, False)
+        eq_(actual_order.archived, False)
+        eq_(actual_order.deleted, True)
+

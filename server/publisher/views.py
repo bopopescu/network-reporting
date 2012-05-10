@@ -30,15 +30,14 @@ from account.models import NetworkConfig
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
-from ad_network_reports.query_managers import AdNetworkMapperManager, \
-        AdNetworkLoginManager
+from ad_network_reports.query_managers import (AdNetworkMapperManager,
+                                               AdNetworkLoginManager)
 from advertiser.query_managers import (AdvertiserQueryManager,
                                        CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
-                                      AdUnitQueryManager,
-                                      AdUnitContextQueryManager)
+                                      AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
@@ -48,13 +47,11 @@ from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 #REFACTOR: only import what we need here
 from common.constants import *
-from common.utils.stats_helpers import MarketplaceStatsFetcher, \
-        MPStatsAPIException, \
-        SummedStatsFetcher
+from common.utils.stats_helpers import (MarketplaceStatsFetcher,
+                                        MPStatsAPIException,
+                                        SummedStatsFetcher)
 
 from budget import budget_service
-
-from google.appengine.api import memcache
 
 
 class DashboardHandler(RequestHandler):
@@ -277,8 +274,8 @@ class GeoPerformanceHandler(RequestHandler):
 
 
 @login_required
-def geo_performance(request,*args,**kwargs):
-    return GeoPerformanceHandler()(request,*args,**kwargs)
+def geo_performance(request, *args, **kwargs):
+    return GeoPerformanceHandler()(request, *args, **kwargs)
 
 
 class CreateAppHandler(RequestHandler):
@@ -309,13 +306,10 @@ class CreateAppHandler(RequestHandler):
         if reg_complete:
             self.account.reg_complete = 1
 
-        return render_to_response(self.request,
-                                  'publisher/create_app.html',
-                                  {
-                                      "app_form": app_form,
-                                      "adunit_form":adunit_form,
-                                      "account": self.account
-                                  })
+        return {
+            "app_form": app_form,
+            "adunit_form": adunit_form
+        }
 
     def post(self):
         app = None
@@ -388,7 +382,8 @@ class CreateAppHandler(RequestHandler):
 
 @login_required
 def create_app(request, *args, **kwargs):
-    return CreateAppHandler()(request, *args, **kwargs)
+    handler = CreateAppHandler(template='publisher/create_app.html')
+    return handler(request, *args, **kwargs)
 
 
 class AppDetailHandler(RequestHandler):
@@ -574,9 +569,9 @@ class AppDetailHandler(RequestHandler):
 
 
 @login_required
-def app_detail(request,*args,**kwargs):
-    t = 'publisher/app.html'
-    return AppDetailHandler(id="app_key", template=t)(request, use_cache=False, *args,**kwargs)
+def app_detail(request, *args, **kwargs):
+    handler = AppDetailHandler(id="app_key", template='publisher/app.html')
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class ExportFileHandler(RequestHandler):
@@ -664,8 +659,8 @@ class ExportFileHandler(RequestHandler):
 
 
 @login_required
-def export_file( request, *args, **kwargs ):
-    return ExportFileHandler()( request, *args, **kwargs )
+def export_file(request, *args, **kwargs):
+    return ExportFileHandler()(request, *args, **kwargs)
 
 
 class AdUnitShowHandler(RequestHandler):
@@ -823,7 +818,7 @@ class AdUnitShowHandler(RequestHandler):
 
 
 @login_required
-def adunit_show(request,*args,**kwargs):
+def adunit_show(request, *args, **kwargs):
     return AdUnitShowHandler(id='adunit_key')(request, use_cache=False, *args, **kwargs)
 
 
@@ -896,8 +891,8 @@ class AppUpdateAJAXHandler(RequestHandler):
 
 
 @login_required
-def app_update_ajax(request,*args,**kwargs):
-    return AppUpdateAJAXHandler()(request,*args,**kwargs)
+def app_update_ajax(request, *args, **kwargs):
+    return AppUpdateAJAXHandler()(request, *args, **kwargs)
 
 
 class AdUnitUpdateAJAXHandler(RequestHandler):
@@ -1000,8 +995,8 @@ class DeleteAdUnitHandler(RequestHandler):
 
 
 @login_required
-def delete_adunit(request,*args,**kwargs):
-    return DeleteAdUnitHandler()(request,*args,**kwargs)
+def delete_adunit(request, *args, **kwargs):
+    return DeleteAdUnitHandler()(request, *args, **kwargs)
 
 
 class DeleteAppHandler(RequestHandler):
@@ -1023,8 +1018,8 @@ class DeleteAppHandler(RequestHandler):
 
 
 @login_required
-def delete_app(request,*args,**kwargs):
-    return DeleteAppHandler()(request,*args,**kwargs)
+def delete_app(request, *args, **kwargs):
+    return DeleteAppHandler()(request, *args, **kwargs)
 
 
 class IntegrationHelpHandler(RequestHandler):
@@ -1048,8 +1043,8 @@ class IntegrationHelpHandler(RequestHandler):
 
 
 @login_required
-def integration_help(request,*args,**kwargs):
-    return IntegrationHelpHandler()(request,*args,**kwargs)
+def integration_help(request, *args, **kwargs):
+    return IntegrationHelpHandler()(request, *args, **kwargs)
 
 
 class AppExportHandler(RequestHandler):

@@ -21,76 +21,119 @@ from advertiser.models import NetworkStates
 from advertiser.query_managers import CampaignQueryManager, \
         AdGroupQueryManager
 
+DEFAULT_BID = 0.05
+
 class NetworkEditViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(NetworkEditViewTestCase, self).setUp()
 
-        self.app1 = generate_app(self.account)
-        self.adunit1 = generate_adunit(self.app1, self.account)
+        app1 = generate_app(self.account)
+        adunit1 = generate_adunit(app1, self.account)
 
-    def mptest_create_network(self):
-        apps_dict = PublisherQueryManager.get_objects_dict_for_account(
-                account=self.account)
-        self.assertEqual(len(apps_dict), 1)
+    def mptest_create_simple_default_admob_network(self):
+        """
+        Create a default admob campaign with one app and adunit.
 
-        # Set constants
+        Author: Tiago Bandeira
+        """
         network_type = 'admob'
-        campaign_name = NETWORKS[network_type]
-        default_bid = 0.05
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                account=self.account).values()
+        self.assertEqual(len(apps), 1)
 
-        url = reverse('edit_network', kwargs={'network': network_type})
+        response = setup_and_make_request(self, network_type, apps)
 
-        campaign_form = NetworkCampaignForm({'name': campaign_name})
-        default_adgroup_form = NetworkAdGroupForm()
+        check_response(self, response, network_type, apps)
 
-        # Create the adgroup forms, one per adunit
-        adgroup_forms = []
-        for app in apps_dict.values():
-            for adunit in app.adunits:
-                adgroup_form = AdUnitAdGroupForm({'bid': default_bid},
-                        prefix=str(adunit.key()))
-                adgroup_forms.append(adgroup_form)
+    def mptest_create_simple_custom_networks(self):
+        """
+        Create custom network campaigns of custom and custom_native types with
+        one app and adunit.
 
-        # Create the data dict, each adgroup form per adunit must have a prefix,
-        # so we can post multiple adgroup forms, which is the adunit key
-        adunit_data = [('%s-%s' % (adgroup_form.prefix, key), item) for \
-                adgroup_form in adgroup_forms for key, item in \
-                adgroup_form.data.items()]
-        data = campaign_form.data.items() + default_adgroup_form. \
-                data.items() + adunit_data
-        data = dict(data)
+        Author: Tiago Bandeira
+        """
+        pass
 
-        # Header HTTP_X_REQUESTED_WITH is set to XMLHttpRequest to mimic an
-        # ajax request
-        response = self.client.post(url, data, HTTP_X_REQUESTED_WITH=
-                'XMLHttpRequest')
+    def mptest_create_simple_defined_custom_networks(self):
+        """
+        Create custom network campaigns of all types excluding custom and
+        custom_native with one app and adunit.
 
-        # Print the response
-        print 'RESPONSE'
-        print response
-        print response.__dict__
+        Author: Tiago Bandeira
+        """
+        pass
 
-        self.assertEqual(response.status_code, 200)
+    def mptest_create_complex_default_networks(self):
+        """
+        Create default network campaigns of all types with multiple apps and
+        adunits.
 
-        # New campaign in memcache?
-        network_campaigns = CampaignQueryManager.get_network_campaigns(
-                self.account, is_new=True)
-        self.assertEqual(len(network_campaigns), 1)
+        Author: Tiago Bandeira
+        """
+        pass
 
-        # Is the campaign set up properly?
-        campaign = network_campaigns[0]
-        self.assertEqual(campaign.network_type, network_type)
-        self.assertEqual(campaign.network_state, NetworkStates.
-                DEFAULT_NETWORK_CAMPAIGN)
+## Helpers
+#
+def setup_and_make_request(test_case, network_type, apps, default_bid=
+        DEFAULT_BID):
+    # Set constants
+    campaign_name = NETWORKS[network_type]
+    url = reverse('edit_network', kwargs={'network': network_type})
 
-        # Was one adgroup per app created and are the created adgroups set up
-        # properly?
-        for app in apps_dict.values():
-            for adunit in app.adunits:
-                adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
-                        adunit.key(), self.account.key(), get_from_db=True)
-                self.assertTrue(adgroup)
-                self.assertEqual(adgroup.network_type,
-                        NETWORK_ADGROUP_TRANSLATION[network_type])
-                self.assertEqual(adgroup.bid, default_bid)
+    campaign_form = NetworkCampaignForm({'name': campaign_name})
+    default_adgroup_form = NetworkAdGroupForm()
 
+    # Create the adgroup forms, one per adunit
+    adgroup_forms = []
+    for app in apps:
+        for adunit in app.adunits:
+            adgroup_form = AdUnitAdGroupForm({'bid': default_bid},
+                    prefix=str(adunit.key()))
+            adgroup_forms.append(adgroup_form)
+
+    # Create the data dict, each adgroup form per adunit must have a prefix,
+    # so we can post multiple adgroup forms, which is the adunit key
+    adunit_data = [('%s-%s' % (adgroup_form.prefix, key), item) for \
+            adgroup_form in adgroup_forms for key, item in \
+            adgroup_form.data.items()]
+    data = campaign_form.data.items() + default_adgroup_form. \
+            data.items() + adunit_data
+    data = dict(data)
+
+    # Header HTTP_X_REQUESTED_WITH is set to XMLHttpRequest to mimic an
+    # ajax request
+    response = test_case.client.post(url, data, HTTP_X_REQUESTED_WITH=
+            'XMLHttpRequest')
+
+    # Print the response
+    print 'RESPONSE'
+    print response
+    print response.__dict__
+
+    return response
+
+def check_response(test_case, response, network_type, apps,
+        default_bid=DEFAULT_BID):
+    test_case.assertEqual(response.status_code, 200)
+
+    # New campaign in memcache?
+    network_campaigns = CampaignQueryManager.get_network_campaigns(
+            test_case.account, is_new=True)
+    test_case.assertEqual(len(network_campaigns), 1)
+
+    # Is the campaign set up properly?
+    campaign = network_campaigns[0]
+    test_case.assertEqual(campaign.network_type, network_type)
+    test_case.assertEqual(campaign.network_state, NetworkStates.
+            DEFAULT_NETWORK_CAMPAIGN)
+
+    # Was one adgroup per app created and are the created adgroups set up
+    # properly?
+    for app in apps:
+        for adunit in app.adunits:
+            adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                    adunit.key(), test_case.account.key(), get_from_db=True)
+            test_case.assertTrue(adgroup)
+            test_case.assertEqual(adgroup.network_type,
+                    NETWORK_ADGROUP_TRANSLATION[network_type])
+            test_case.assertEqual(adgroup.bid, default_bid)

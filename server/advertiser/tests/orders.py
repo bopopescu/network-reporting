@@ -61,16 +61,49 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.url = reverse('advertiser_ad_source_status_change')
     
     def mptest_http_response_code(self):
+        """
+        Author: Haydn Dufrene
+        A valid post should return a valid (200, 302) response (regardless
+        of params).
+        """
         response = self.client.post(self.url)
-        ok_(response.status_code in [200, 302])
+        ok_(response.status_code in [200, 302])        
 
+
+    def mptest_fails_on_missing_params(self):
+        """
+        Author: John Pena
+        The ad source status change handler should return success: false
+        if required parameters (ad_sources, status) are missing.
+        """
+        # test without params
+        response = self.client.post(self.url)
+        response_json = json.loads(response.content)
+        eq_(response_json['success'], False)
+
+        # test without the ad_sources param
+        response = self.client.post(self.url, {
+            'status': 'boomslam'
+        })
+        response_json = json.loads(response.content)
+        eq_(response_json['success'], False)
+
+        # test without the status param
+        response = self.client.post(self.url, {
+            'ad_sources[]': ['abcd']
+        })
+        response_json = json.loads(response.content)
+        eq_(response_json['success'], False)
 
     def mptest_creative_run(self):
         pass
+        
     def mptest_creative_pause(self):
         pass
+        
     def mptest_creative_archive(self):
         pass
+        
     def mptest_creative_delete(self):
         pass
 
@@ -164,7 +197,6 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         eq_(actual_line_item.deleted, True)
 
 
-
     def mp_test_order_run(self):
         pass
     def mptest_order_pause(self):
@@ -175,10 +207,60 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         pass
 
     def mptest_mixed_run(self):
-        pass
+        
+        # Set the line item as paused and put it in the db
+        self.line_item.active = False
+        self.line_item.archived = False
+        self.line_item.deleted = False
+        AdGroupQueryManager.put(self.line_item)
+
+        # set the order as paused and put it in the db
+        self.order.active = False
+        self.order.archived = False
+        self.order.deleted = False
+        CampaignQueryManager.put(self.order)
+
+        # set the creative as paused and put it in the db
+        self.creative.active = False
+        self.creative.deleted = False
+        CreativeQueryManager.put(self.creative)
+        
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'run'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        eq_(actual_line_item.active, True)
+        eq_(actual_line_item.archived, False)
+        eq_(actual_line_item.deleted, False)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        eq_(actual_creative.active, True)
+        eq_(actual_creative.deleted, False)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        eq_(actual_order.active, True)
+        eq_(actual_order.archived, False)
+        eq_(actual_order.deleted, False)
+        
+        
+        
     def mptest_mixed_pause(self):
         pass
+        
     def mptest_mixed_archive(self):
         pass
+        
     def mptest_mixed_delete(self):
         pass

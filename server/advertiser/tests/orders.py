@@ -46,29 +46,16 @@ class OrderAndLineItemCreate(OrderViewTestCase):
         ok_(response.status_code in [200, 302])
 
 
-class NewLineItemTestCase(OrderViewTestCase):
-    def setUp(self):
-        super(NewLineItemTestCase, self).setUp()
-        self.url = reverse('advertiser_line_item_form_new', kwargs={
-            'order_key': unicode(self.order.key())
-        })
-
-    def mptest_http_response_code(self):
-        """
-        Author: Haydn Dufrene
-        A valid get should return a valid (200, 302) response (regardless
-        of params).
-        """
-        response = self.client.get(self.url)
-        ok_(response.status_code in [200, 302])
-
-
-class EditLineItemTestCase(OrderViewTestCase):
+class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def setUp(self):
         super(EditLineItemTestCase, self).setUp()
         self.url = reverse('advertiser_line_item_form_edit', kwargs={
             'line_item_key': unicode(self.line_item.key())
         })
+        self.url = reverse('advertiser_line_item_form_new', kwargs={
+            'order_key': unicode(self.order.key())
+        })
+
 
     def mptest_http_response_code(self):
         """
@@ -76,8 +63,85 @@ class EditLineItemTestCase(OrderViewTestCase):
         A valid get should return a valid (200, 302) response (regardless
         of params).
         """
-        response = self.client.get(self.url)
-        ok_(response.status_code in [200, 302])
+        new_response = self.client.get(self.new_url)
+        edit_response = self.client.get(self.edit_url)
+        ok_(new_response.status_code in [200, 302])
+        ok_(edit_response.status_code in [200, 302])
+
+    def mptest_get_correct_order_form(self):
+        ok_(False)
+
+    def mptest_get_correct_line_item_form(self):
+        ok_(False)
+
+    def mptest_order_owns_line_item(self):
+        ok_(False)
+
+    def mptest_user_owns_order(self):
+        ok_(False)
+
+    def mptest_user_owns_line_item(self):
+        ok_(False)
+
+    def mptest_fail_on_unowned_order(self):
+        ok_(False)
+
+    def mptest_fail_on_unowned_line_item(self):
+        ok_(False)
+
+    def mptest_gets_correct_apps(self):
+        ok_(False)
+
+class NewOrEditLineItemPostTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(EditLineItemTestCase, self).setUp()
+        self.new_url = reverse('advertiser_line_item_form_new', kwargs={
+            'order_key': unicode(self.order.key())
+        })
+        self.edit_url = reverse('advertiser_line_item_form_edit', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+ 
+     def mptest_http_response_code(self):
+        """
+        Author: Haydn Dufrene
+        A valid post should return a valid (200, 302) response (regardless
+        of params).
+        """
+        new_response = self.client.post(self.new_url)
+        edit_response = self.client.post(self.edit_url)
+        ok_(new_response.status_code in [200, 302])
+        ok_(edit_response.status_code in [200, 302])
+
+    def mptest_graceful_fail_without_data(self):
+        ok_(False)
+
+    def mptest_graceful_fail_without_ajax(self):
+        ok_(False)
+
+    def mptest_graceful_fail_for_non_order(self):
+        ok_(False)
+
+    def mptest_puts_valid_order(self):
+        ok_(False)
+
+    def mptest_fails_gracefully_invalid_order(self):
+        ok_(False)
+
+    def mptest_puts_valid_line_item(self):
+        ok_(False)
+
+    def mptest_fails_gracefully_invalid_line_item(self):
+        ok_(False)
+
+    def mptest_complete_onboarding_after_first_campaign(self):
+        ok_(False)
+
+    def mptest_redirects_properly_after_success(self):
+        ok_(False)
+
+    def mptest_datetime_alias_for_jquery_on_fail(self):
+        ok_(False)
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):

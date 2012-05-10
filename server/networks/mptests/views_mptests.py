@@ -22,7 +22,7 @@ from advertiser.models import NetworkStates
 from advertiser.query_managers import CampaignQueryManager, \
         AdGroupQueryManager
 
-# Imports for tear down
+# Model imports
 from account.models import Account, \
         NetworkConfig
 from publisher.models import App, \
@@ -37,15 +37,10 @@ DEFAULT_BID = 0.05
 
 class NetworkEditViewTestCase(BaseViewTestCase):
     def setUp(self):
-        _clear_db()
         super(NetworkEditViewTestCase, self).setUp()
 
         app1 = generate_app(self.account)
         adunit1 = generate_adunit(app1, self.account)
-
-    def tearDown(self):
-        _clear_db()
-        super(NetworkEditViewTestCase, self).setUp()
 
     def mptest_create_simple_default_admob_network(self):
         """
@@ -185,22 +180,4 @@ def check_response(test_case, response, network_type, apps,
             test_case.assertEqual(adgroup.network_type,
                     NETWORK_ADGROUP_TRANSLATION.get(network_type, network_type))
             test_case.assertEqual(adgroup.bid, default_bid)
-
-def _clear_db():
-    # account models
-    db.delete(Account.all())
-    db.delete(NetworkConfig.all())
-
-    # publisher models
-    db.delete(App.all())
-    db.delete(AdUnit.all())
-
-    # advertiser models
-    db.delete(Campaign.all())
-    db.delete(AdGroup.all())
-    db.delete(Creative.all())
-
-    # ad_network_reports models
-    db.delete(AdNetworkLoginCredentials.all())
-    db.delete(AdNetworkAppMapper.all())
 

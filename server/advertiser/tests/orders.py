@@ -2,25 +2,24 @@
 import sys, os
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
+
 from common.utils.test.views import BaseViewTestCase
 
 import logging
 import unittest
-import random
-import datetime
+import simplejson as json
 
-from google.appengine.ext import testbed
-from google.appengine.api import memcache
 from django.core.urlresolvers import reverse
-from django.test import Client
 from django.test.utils import setup_test_environment
 from nose.tools import eq_, ok_
 
 from admin.randomgen import generate_campaign, generate_adgroup, generate_creative
-from advertiser.query_managers import AdvertiserQueryManager, CampaignQueryManager \
-                                      AdGroupQueryManager, CreativeQueryManager
+from advertiser.query_managers import (AdvertiserQueryManager,
+                                       CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
 
-# setup_test_environment()
+setup_test_environment()
 
 class OrderViewTestCase(BaseViewTestCase):
     def setUp(self):
@@ -56,9 +55,13 @@ class EditLineItemTestCase(OrderViewTestCase):
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):
+
+    def setUp(self):
+        super(AdSourceChangeTestCase, self).setUp()
+        self.url = reverse('advertiser_ad_source_status_change')
+    
     def mptest_http_response_code(self):
-        url = reverse('advertiser_ad_source_status_change')
-        response = self.client.post(url)
+        response = self.client.post(self.url)
         ok_(response.status_code in [200, 302])
 
 
@@ -72,14 +75,94 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         pass
 
 
-    def mp_test_line_item_run(self):
-        pass
+    def mptest_line_item_run(self):
+        """
+        Author: John Pena
+        The ad source status change handler should set a line item as running
+        when 'run' is passed as the status.
+        """
+        # Set the line item as paused
+        self.line_item.active = False
+        self.line_item.archived = False
+        self.line_item.deleted = False
+
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'run'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(actual_line_item.active)
+        eq_(actual_line_item.archived, False)
+        eq_(actual_line_item.deleted, False)
+        
+        
     def mptest_line_item_pause(self):
-        pass
+        """
+        Author: John Pena
+        The ad source status change handler should set a line item as paused
+        when 'pause' is passed as the status.
+        """
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'pause'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        eq_(actual_line_item.active, False)
+        eq_(actual_line_item.archived, False)
+        eq_(actual_line_item.deleted, False)
+
+        
     def mptest_line_item_archive(self):
-        pass
+        """
+        Author: John Pena
+        The ad source status change handler should set a line item as archived
+        when 'archive' is passed as the status.
+        """
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'archive'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        eq_(actual_line_item.active, False)
+        eq_(actual_line_item.archived, True)
+        eq_(actual_line_item.deleted, False)
+
+        
     def mptest_line_item_delete(self):
-        pass
+        """
+        Author: John Pena
+        The ad source status change handler should set a line item as deleted
+        when 'delete' is passed as the status.
+        """
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'delete'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        eq_(actual_line_item.active, False)
+        eq_(actual_line_item.archived, False)
+        eq_(actual_line_item.deleted, True)
+
 
 
     def mp_test_order_run(self):

@@ -166,7 +166,9 @@ def check_response(test_case, response, network_type, apps,
     test_case.assertEqual(len(network_campaigns) - len(other_campaigns), 1)
 
     # Is the campaign set up properly?
-    campaign = list(set(network_campaigns) - set(other_campaigns))[0]
+    campaign = [campaign for campaign in network_campaigns if campaign.key() \
+            not in [other_campaign.key() for other_campaign in \
+                    other_campaigns]][0]
     test_case.assertEqual(campaign.network_type, network_type)
     test_case.assertEqual(campaign.network_state, network_state)
 

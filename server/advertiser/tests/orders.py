@@ -14,8 +14,7 @@ from django.test.utils import setup_test_environment
 from nose.tools import eq_, ok_
 
 from admin.randomgen import generate_campaign, generate_adgroup, generate_creative
-from advertiser.query_managers import (AdvertiserQueryManager,
-                                       CampaignQueryManager,
+from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 

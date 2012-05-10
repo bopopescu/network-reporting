@@ -391,56 +391,6 @@ def create_app(request, *args, **kwargs):
     return CreateAppHandler()(request, *args, **kwargs)
 
 
-class CreateAdUnitHandler(RequestHandler):
-    """
-    Handles the creation of adunits from form data.
-    """
-    def post(self):
-        form = AdUnitForm(data=self.request.POST)
-        app = AppQueryManager.get(self.request.POST.get('id'))
-        if form.is_valid():
-
-            # Ensure form posts do not change ownership
-            if not form.instance:
-                account = self.account
-            else:
-                account = form.instance.account
-
-            # Add in the extra required fields before saving
-            adunit = form.save(commit=False)
-            adunit.account = account
-            adunit.app_key = app
-
-            # Save the adunit
-            AdUnitQueryManager.put(adunit)
-
-            # Update the cache as necessary
-            # replace=True means don't do anything if not already in the cache
-            AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
-
-            # Check if this is the first ad unit for this account.
-            # If so, create a demo campaign.
-            if len(AdUnitQueryManager.get_adunits(account=self.account, limit=2)) == 1:
-                add_demo_campaign(adunit)
-
-            # Redirect to the code snippet page
-            publisher_integration_url = reverse('publisher_integration_help',
-                                             kwargs = {
-                                                 'adunit_key': adunit.key()
-                                             })
-            publisher_integration_url = publisher_integration_url + '?status=' + status
-            return HttpResponseRedirect(publisher_integration_url)
-
-        else:
-            # REFACTOR -- these errors should go somewhere.
-            print form.errors
-
-
-@login_required
-def create_adunit(request,*args,**kwargs):
-    return CreateAdUnitHandler()(request,*args,**kwargs)
-
-
 class AppDetailHandler(RequestHandler):
     """
     REFACTOR
@@ -871,6 +821,7 @@ class AdUnitShowHandler(RequestHandler):
                                       'marketplace_activated': marketplace_activated
                                   })
 
+
 @login_required
 def adunit_show(request,*args,**kwargs):
     return AdUnitShowHandler(id='adunit_key')(request, use_cache=False, *args, **kwargs)
@@ -942,6 +893,7 @@ class AppUpdateAJAXHandler(RequestHandler):
 
         json_dict.update(success = False, errors = grouped_errors)
         return self.json_response(json_dict)
+
 
 @login_required
 def app_update_ajax(request,*args,**kwargs):
@@ -1046,6 +998,7 @@ class DeleteAdUnitHandler(RequestHandler):
                                                 'app_key': a.app.key()
                                             }))
 
+
 @login_required
 def delete_adunit(request,*args,**kwargs):
     return DeleteAdUnitHandler()(request,*args,**kwargs)
@@ -1067,6 +1020,7 @@ class DeleteAppHandler(RequestHandler):
             AdUnitQueryManager.put(adunits)
 
         return HttpResponseRedirect(reverse('app_index'))
+
 
 @login_required
 def delete_app(request,*args,**kwargs):
@@ -1091,6 +1045,7 @@ class IntegrationHelpHandler(RequestHandler):
                                       'height': adunit.get_height(),
                                       'account': self.account
                                   })
+
 
 @login_required
 def integration_help(request,*args,**kwargs):
@@ -1208,6 +1163,7 @@ class DashboardExportHandler(RequestHandler):
 def dashboard_export(request, *args, **kwargs):
     return DashboardExportHandler()(request, *args, **kwargs)
 
+
 class TableExportHandler(RequestHandler):
     def post(self):
         try:
@@ -1262,9 +1218,11 @@ class TableExportHandler(RequestHandler):
 
         raise Http404
 
+
 @login_required
 def table_export(request, *args, **kwargs):
     return TableExportHandler()(request, *args, **kwargs)
+
 
 # Helper methods
 def enable_networks(adunit, account):
@@ -1286,6 +1244,7 @@ def enable_networks(adunit, account):
         adgroup.target_other = preexisting_adgroup.target_other
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
+
 
 def enable_marketplace(adunit, account):
     """
@@ -1378,7 +1337,7 @@ def add_demo_campaign(site):
                          html_data=default_creative_html)
     CreativeQueryManager.put(h)
 
-## Helpers
+
 def create_iad_mapper(account, app):
     """
     Create AdNetworkAppMapper for iad if itunes url is input and iad
@@ -1400,6 +1359,7 @@ def create_iad_mapper(account, app):
                                           login=login,
                                           app=app)
 
+
 def calculate_ecpm(adgroup):
     """
     Calculate the ecpm for a cpc campaign.
@@ -1417,12 +1377,14 @@ def filter_adgroups(adgroups, cfilter):
     filtered_adgroups = sorted(filtered_adgroups, lambda x,y: cmp(y.bid, x.bid))
     return filtered_adgroups
 
+
 def filter_campaigns(campaigns, cfilter):
     filtered_campaigns = filter(lambda x: x.campaign_type in
             cfilter, campaigns)
     filtered_campaigns = sorted(filtered_campaigns, lambda x,y: cmp(y.name,
         x.name))
     return filtered_campaigns
+
 
 def set_column_widths(ws, headers, body):
     # xlwt defines the widtht of '0' character as 256, so let's give a bit

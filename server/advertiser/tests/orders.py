@@ -110,6 +110,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         eq_(response_json['success'], False)
 
+        
+    def mptest_fail_on_objects_not_owned(self):
+        ok_(False)
+
+        
     def mptest_creative_run(self):
         self.creative.active = False
         CreativeQueryManager.put(self.creative)

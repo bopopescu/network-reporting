@@ -17,7 +17,7 @@ from django.test.utils import setup_test_environment
 from nose.tools import eq_, ok_
 
 from admin.randomgen import generate_campaign, generate_adgroup, generate_creative
-from advertiser.query_managers import AdvertiserQueryManager, CampaignQueryManager \
+from advertiser.query_managers import AdvertiserQueryManager, CampaignQueryManager, \
                                       AdGroupQueryManager, CreativeQueryManager
 
 # setup_test_environment()
@@ -54,7 +54,6 @@ class EditLineItemTestCase(OrderViewTestCase):
         ok_(response.status_code in [200, 302])
 
 
-
 class AdSourceChangeTestCase(OrderViewTestCase):
     def mptest_http_response_code(self):
         url = reverse('advertiser_ad_source_status_change')
@@ -63,14 +62,28 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
     def mptest_creative_run(self):
-        pass
-    def mptest_creative_pause(self):
-        pass
-    def mptest_creative_archive(self):
-        pass
-    def mptest_creative_delete(self):
-        pass
+        self.creative.active = False
+        CreativeQueryManager.put(self.creative)
+        url = reverse('advertiser_ad_source_status_change')
+        response = self.client.post(url, data={'ad_sources[]': unicode(self.creative.key()),
+                                               'status': 'run'})
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        eq_(self.creative.active, True)
 
+    def mptest_creative_pause(self):
+        url = reverse('advertiser_ad_source_status_change')
+        response = self.client.post(url, data={'ad_sources[]': unicode(self.creative.key()),
+                                               'status': 'pause'})
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        eq_(self.creative.active, False)
+
+    def mptest_creative_delete(self):
+        url = reverse('advertiser_ad_source_status_change')
+        response = self.client.post(url, data={'ad_sources[]': unicode(self.creative.key()),
+                                               'status': 'delete'})
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        eq_(self.creative.deleted, True)
+        eq_(self.creative.active, False)
 
     def mp_test_line_item_run(self):
         pass
@@ -83,13 +96,44 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
     def mp_test_order_run(self):
-        pass
+        self.order.active = False
+        CampaignQueryManager.put(self.order)
+        url = reverse('advertiser_ad_source_status_change')
+        response = self.client.post(url, data={'ad_sources[]': unicode(self.order.key()),
+                                               'status': 'run'})
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.active, True)
+        
+        eq_(self.line_item.active, True)
+
     def mptest_order_pause(self):
-        pass
+        url = reverse('advertiser_ad_source_status_change')
+        response = self.client.post(url, data={'ad_sources[]': unicode(self.order.key()),
+                                               'status': 'pause'})
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.active, False)
+
+        eq_(self.line_item.active, True)
+
     def mptest_order_archive(self):
-        pass
+        url = reverse('advertiser_ad_source_status_change')
+        response = self.client.post(url, data={'ad_sources[]': unicode(self.order.key()),
+                                               'status': 'archive'})
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.archived, True)
+
+        eq_(self.line_item.archived, False)
+
     def mptest_order_delete(self):      
-        pass
+        url = reverse('advertiser_ad_source_status_change')
+        response = self.client.post(url, data={'ad_sources[]': unicode(self.order.key()),
+                                               'status': 'delete'})
+        self.order = CampaignQueryManager.get(self.order.key())
+        eq_(self.order.deleted, True)
+        eq_(self.order.active, False)
+
+        eq_(self.line_item.deleted, False)
+        eq_(self.line_item.active, True)
 
     def mptest_mixed_run(self):
         pass

@@ -3,19 +3,25 @@ import sys
 import os
 sys.path.append(os.environ['PWD'])
 
+import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
 
 import simplejson as json
 
+import logging
+
 from django.core.urlresolvers import reverse
 from django.test.utils import setup_test_environment
+from django.http import Http404
 from nose.tools import eq_, ok_
 
-from admin.randomgen import generate_campaign, generate_adgroup, \
-                            generate_creative
+from admin.randomgen import (generate_campaign, generate_adgroup, \
+                             generate_creative, generate_app, \
+                             generate_account)
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
+from publisher.query_managers import AppQueryManager
 
 setup_test_environment()
 
@@ -48,14 +54,13 @@ class OrderAndLineItemCreate(OrderViewTestCase):
 
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def setUp(self):
-        super(EditLineItemTestCase, self).setUp()
-        self.url = reverse('advertiser_line_item_form_edit', kwargs={
-            'line_item_key': unicode(self.line_item.key())
-        })
-        self.url = reverse('advertiser_line_item_form_new', kwargs={
+        super(NewOrEditLineItemGetTestCase, self).setUp()
+        self.new_url = reverse('advertiser_line_item_form_new', kwargs={
             'order_key': unicode(self.order.key())
         })
-
+        self.edit_url = reverse('advertiser_line_item_form_edit', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
 
     def mptest_http_response_code(self):
         """
@@ -68,81 +73,82 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         ok_(new_response.status_code in [200, 302])
         ok_(edit_response.status_code in [200, 302])
 
-    def mptest_get_correct_order_form(self):
-        ok_(False)
+    # def mptest_get_correct_order_form(self):
+    #     ## line_item_key, order_key, none
+    #     ok_(False)
 
-    def mptest_get_correct_line_item_form(self):
-        ok_(False)
+    # def mptest_get_correct_line_item_form(self):
+    #     ## line_item_key, order_key, none
+    #     ok_(False)
 
-    def mptest_order_owns_line_item(self):
-        ok_(False)
+    # def mptest_order_owns_line_item(self):
+    #     ok_(False)
 
-    def mptest_user_owns_order(self):
-        ok_(False)
+    # def mptest_user_owns_order(self):
+    #     ok_(False)
 
-    def mptest_user_owns_line_item(self):
-        ok_(False)
+    # def mptest_user_owns_line_item(self):
+    #     ok_(False)
 
     def mptest_fail_on_unowned_order(self):
-        ok_(False)
+        diff_acct = generate_account(username='diff')
+        diff_order = generate_campaign(account=diff_acct)
+        diff_url = reverse('advertiser_line_item_form_new',
+                           kwargs={'order_key':
+                                   unicode(diff_order.key())})
+        # Test passes if we receive the proper exception
+        # else the exception will fail loudly and the test will fail
+        try:
+            self.client.get(diff_url)
+        except Http404:
+            pass
 
     def mptest_fail_on_unowned_line_item(self):
-        ok_(False)
+        diff_acct = generate_account(username='diff')
+        diff_order = generate_campaign(account=diff_acct)
+        diff_line_item = generate_adgroup(diff_order,
+                                          [],
+                                          diff_acct,
+                                          'gtee')
+        diff_url = reverse('advertiser_line_item_form_edit',
+                           kwargs={'line_item_key': 
+                                   unicode(diff_line_item.key())})
+        try:
+            self.client.get(diff_url)
+        except Http404:
+            pass
 
     def mptest_gets_correct_apps(self):
-        ok_(False)
+        app1 = generate_app(self.account)
+        app2 = generate_app(self.account)
+        response = self.client.get(self.edit_url)
+
+        expected_apps = AppQueryManager.get_apps(account=self.account, 
+                                        alphabetize=True)
+        actual_apps = response.context['apps']
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            eq_(actual_app.key(), expected_app.key())
 
 class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     def setUp(self):
-        super(EditLineItemTestCase, self).setUp()
-        self.new_url = reverse('advertiser_line_item_form_new', kwargs={
-            'order_key': unicode(self.order.key())
-        })
-        self.edit_url = reverse('advertiser_line_item_form_edit', kwargs={
-            'line_item_key': unicode(self.line_item.key())
-        })
+        super(NewOrEditLineItemPostTestCase, self).setUp()
+        self.new_url = reverse('advertiser_line_item_form_new',
+                               kwargs={'order_key': unicode(self.order.key())})
+        self.edit_url = reverse('advertiser_line_item_form_edit',
+                               kwargs={'line_item_key': unicode(self.line_item.key())})
  
-     def mptest_http_response_code(self):
+    def mptest_http_response_code(self):
         """
         Author: Haydn Dufrene
         A valid post should return a valid (200, 302) response (regardless
         of params).
         """
-        new_response = self.client.post(self.new_url)
-        edit_response = self.client.post(self.edit_url)
+        new_response = self.client.post(self.new_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        edit_response = self.client.post(self.edit_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(new_response.status_code in [200, 302])
         ok_(edit_response.status_code in [200, 302])
 
-    def mptest_graceful_fail_without_data(self):
-        ok_(False)
-
-    def mptest_graceful_fail_without_ajax(self):
-        ok_(False)
-
-    def mptest_graceful_fail_for_non_order(self):
-        ok_(False)
-
-    def mptest_puts_valid_order(self):
-        ok_(False)
-
-    def mptest_fails_gracefully_invalid_order(self):
-        ok_(False)
-
-    def mptest_puts_valid_line_item(self):
-        ok_(False)
-
-    def mptest_fails_gracefully_invalid_line_item(self):
-        ok_(False)
-
-    def mptest_complete_onboarding_after_first_campaign(self):
-        ok_(False)
-
-    def mptest_redirects_properly_after_success(self):
-        ok_(False)
-
-    def mptest_datetime_alias_for_jquery_on_fail(self):
-        ok_(False)
-
+ 
 
 class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):

@@ -11,6 +11,7 @@ distribute==0.6.19
 entrypoint2==0.0.5
 multiprocessing==2.6.2.1
 nose==1.1.2
+nosexcover==1.0.7
 poster==0.8.1
 pycrypto==2.5
 pymongo==2.1.1

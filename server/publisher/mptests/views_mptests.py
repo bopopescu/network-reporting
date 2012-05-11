@@ -35,16 +35,18 @@ class CreateAppViewTestCase(BaseViewTestCase):
     author: Ignatius, Peter
     """
 
-    def mptest_create_app_success(self):
-        """
-        Confirm the entire app creation workflow by getting the creation form
-        page, ensuring that it has the appropriate context, submitting known
-        good parameters, and confirming the app and adunit were created as
-        expected.
-        """
-        url = reverse('publisher_create_app')
+    def setUp(self):
+        super(CreateAppViewTestCase, self).setUp()
 
-        get_response = self.client.get(url)
+        self.url = reverse('publisher_create_app')
+
+    def mptest_get(self):
+        """
+        Confirm that the create_app view returns the correct response to a GET
+        request by checking the status_code and context.
+        """
+
+        get_response = self.client.get(self.url)
         eq_(get_response.status_code, 200)
 
         # Check to make sure that AppForm and AdUnitForm are of hte appropriate
@@ -53,6 +55,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         ok_(get_response.context['app_form'].instance is None)
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
         ok_(get_response.context['adunit_form'].instance is None)
+
+    def mptest_create_app_success(self):
+        """
+        Confirm the entire app creation workflow by submitting known good
+        parameters, and confirming the app and adunit were created as expected.
+        """
 
         # Build a dictionary to submit as a POST that contains valid default
         # parameters.
@@ -75,7 +83,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
             u'adunit-refresh_interval': [u'0'],
         }
 
-        post_response = self.client.post(url, data)
+        post_response = self.client.post(self.url, data)
         eq_(post_response.status_code, 302)
 
         # Make sure there is exactly one app for this account.
@@ -165,7 +173,6 @@ class CreateAppViewTestCase(BaseViewTestCase):
         Confirm that create_app returns the appropriate validation errors when
         no app name is supplied and that the database state does not change.
         """
-        url = reverse('publisher_create_app')
 
         # Submit an invalid POST by not supplying the required app name.
         data = {
@@ -187,7 +194,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
             u'adunit-refresh_interval': [u'0'],
         }
 
-        post_response = self.client.post(url, data)
+        post_response = self.client.post(self.url, data)
         eq_(post_response.status_code, 200)
 
         # Make sure the response content reflects the validation errors.
@@ -215,12 +222,12 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account)
         self.adunit = generate_adunit(self.app, self.account)
 
-    def mptest_update_app_success(self):
-        url = reverse('publisher_app_update_ajax', args=(str(self.app.key()),))
+        self.url = reverse('publisher_app_update_ajax', args=(str(self.app.key()),))
 
+    def mptest_update_app_success(self):
         data = {}
 
-        response = self.client.post(url, data)
+        response = self.client.post(self.url, data)
         eq_(response.status_code, 200)
 
         eq_(simplejson.loads(response.content), {
@@ -325,13 +332,13 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         # will belong.
         self.app = generate_app(self.account)
 
+        self.url = reverse('publisher_adunit_update_ajax')
+
     def mptest_create_adunit_success(self):
         """
         Confirm that adunit creation works by submitting known good parameters,
         and confirming the adunit was created as expected.
         """
-
-        url = reverse('publisher_adunit_update_ajax')
 
         # Build a dictionary to submit as a POST that contains valid default
         # parameters.
@@ -348,7 +355,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             u'ajax': ['true'],
         }
 
-        response = self.client.post(url, data)
+        response = self.client.post(self.url, data)
         eq_(response.status_code, 200)
 
         # Confirm that the response content is exactly as we expect.
@@ -405,7 +412,6 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         when no adunit name is supplied and that the database state does not
         change.
         """
-        url = reverse('publisher_adunit_update_ajax')
 
         # We POST invalid data by not supplying the required name.
         data = {
@@ -421,7 +427,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             u'ajax': ['true'],
         }
 
-        response = self.client.post(url, data)
+        response = self.client.post(self.url, data)
         eq_(response.status_code, 200)
 
         # Confirm that the response content fails with an appropriate validation

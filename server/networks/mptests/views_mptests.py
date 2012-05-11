@@ -35,9 +35,9 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
 
 DEFAULT_BID = 0.05
 
-class NetworkEditViewTestCase(BaseViewTestCase):
+class CreateSimpleNetworkTestCase(BaseViewTestCase):
     def setUp(self):
-        super(NetworkEditViewTestCase, self).setUp()
+        super(CreateSimpleNetworkTestCase, self).setUp()
 
         app1 = generate_app(self.account)
         adunit1 = generate_adunit(app1, self.account)
@@ -96,14 +96,72 @@ class NetworkEditViewTestCase(BaseViewTestCase):
                 network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
                 other_campaigns=[default_campaign])
 
-    def mptest_create_complex_default_networks(self):
+NUM_APPS = 5
+NUM_ADUNITS_PER_APP = 5
+class CreateComplexNetworkTestCase(BaseViewTestCase):
+    def setUp(self):
+        super(CreateComplexNetworkTestCase, self).setUp()
+
+        for app_index in range(NUM_APPS):
+            app = generate_app(self.account)
+            for adunit_index in range(NUM_ADUNITS_PER_APP):
+                generate_adunit(app, self.account)
+
+    def mptest_create_complex_default_admob_network(self):
         """
-        Create default network campaigns of all types with multiple apps and
-        adunits.
+        Create default admob network campaign with multiple apps and adunits.
 
         Author: Tiago Bandeira
         """
-        pass
+        network_type = 'admob'
+
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                account=self.account).values()
+        self.assertEqual(len(apps), NUM_APPS)
+
+        response = setup_and_make_request(self, network_type, apps)
+
+        check_response(self, response, network_type, apps)
+
+    def mptest_create_complex_custom_network(self):
+        """
+        Create custom network campaign with multiple apps and adunits.
+
+        Author: Tiago Bandeira
+        """
+        network_type = 'custom'
+
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                account=self.account).values()
+        self.assertEqual(len(apps), NUM_APPS)
+
+        response = setup_and_make_request(self, network_type, apps)
+
+        check_response(self, response, network_type, apps,
+                network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN)
+
+    def mptest_create_complex_custom_admob_network(self):
+        """
+        Create custom network campaign with multiple apps and adunits.
+
+        Author: Tiago Bandeira
+        """
+        network_type = 'admob'
+
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                account=self.account).values()
+        self.assertEqual(len(apps), NUM_APPS)
+
+        # Create default admob campaign
+        default_campaign = CampaignQueryManager.get_default_network_campaign(
+                self.account, network_type)
+        default_campaign.put()
+
+        response = setup_and_make_request(self, network_type, apps)
+
+        check_response(self, response, network_type, apps,
+                network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
+                other_campaigns=[default_campaign])
 
 ## Helpers
 #
@@ -171,6 +229,10 @@ def check_response(test_case, response, network_type, apps,
                     other_campaigns]][0]
     test_case.assertEqual(campaign.network_type, network_type)
     test_case.assertEqual(campaign.network_state, network_state)
+
+    if campaign.network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+        # Is the key_name set for the default network campaign?
+        test_case.assertTrue(campaign.key().name())
 
     # Was one adgroup per app created and are the created adgroups set up
     # properly?

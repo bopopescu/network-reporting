@@ -83,7 +83,7 @@ handlers:
   login: admin
 
 - url: /_ah/warmup
-  script: ad_server/main.py
+  script: fetch_api/api_server.py
   login: admin
 
 - url: /fetch_api/.*
@@ -95,3 +95,7 @@ handlers:
 
 - url: /offline/.*
   script: reporting/aws_logging/blob_server.py
+
+- url: /api/.*
+  script: main.py
+  secure: optional

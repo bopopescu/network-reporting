@@ -1,4 +1,4 @@
-from interaction_tests.core import InteractionTestCase
+from interaction.core import InteractionTestCase
 
 class DirectSoldInteractionTestCase(InteractionTestCase):
     """

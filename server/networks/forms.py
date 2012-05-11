@@ -5,6 +5,9 @@ from advertiser.models import Campaign, AdGroup
 from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
 
+#THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
+GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
+
 class NetworkCampaignForm(forms.ModelForm):
     name = forms.CharField(label='Name:',
                            widget=forms.TextInput(attrs={'class': 'required',

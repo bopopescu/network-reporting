@@ -98,7 +98,7 @@ class BaseRegistrationForm(mpforms.MPForm):
             else:
                 setattr(account,prop_name,value)
 
-        network_config = NetworkConfig().put()
+        network_config = NetworkConfig(account=account).put()
         marketplace_config = MarketPlaceConfig().put()
         account.network_config = network_config
         account.marketplace_config = marketplace_config

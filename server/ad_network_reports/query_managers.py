@@ -675,14 +675,14 @@ def create_fake_data(account=None):
 
         app1 = App(account=account,
                 name='Hello Kitty Island Adventures')
-        nc1 = NetworkConfig()
+        nc1 = NetworkConfig(account=account)
         nc1.put()
         app1.network_config = nc1
         app1.put()
 
         app2 = App(account=account,
                 name='WoW')
-        nc2 = NetworkConfig()
+        nc2 = NetworkConfig(account=account)
         nc2.put()
         app2.network_config = nc2
         app2.put()

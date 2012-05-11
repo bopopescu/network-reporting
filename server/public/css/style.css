@@ -1663,7 +1663,12 @@ form#campaign_and_adgroup input.token-input-field.focused, form#network-login-fo
   *margin-left: 0;
   -webkit-border-radius: 0 3px 3px 0;
   -moz-border-radius: 0 3px 3px 0;
-  border-radius: 0 3px 3px 0; }
+  border-radius: 0 3px 3px 0;
+  height: 18px;
+  border: 1px solid #ccc;
+  padding: 4px 5px;
+  line-height: 18px;
+  margin-left: -3px; }
 
 .input-prepend input:focus,
 .input-append input:focus,
@@ -3870,6 +3875,83 @@ button.btn, input[type="submit"].btn {
 .icon-resize-horizontal {
   background-position: -456px -118px; }
 
+/*
+ * ## Colors
+ */
+/* tinges -- off white colors */
+/* font heights and other typography/spacing */
+/*
+ * ## Utility functions
+ */
+/*
+ * Visibility controls
+ */
+.left {
+  float: left; }
+
+.right {
+  float: right; }
+
+.ir {
+  display: block;
+  text-indent: -999em;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  text-align: left;
+  direction: ltr; }
+
+.hidden {
+  display: none; }
+
+.visuallyhidden {
+  position: absolute !important;
+  clip: rect(1px 1px 1px 1px);
+  /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px); }
+
+.invisible {
+  visibility: hidden; }
+
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
+/*
+ * Push floating elements into their containing box
+ */
+.clearfix {
+  zoom: 1; }
+  .clearfix:before, .clearfix:after {
+    content: "\0020";
+    display: block;
+    height: 0;
+    visibility: hidden; }
+  .clearfix:after {
+    clear: both; }
+
+.no-highlight {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none; }
+
+/*
+ * Alternating colors, often used for tables
+ */
+.alternating-color:nth-child(odd) {
+  background: #f7f7f7; }
+
+.alternating-color:nth-child(even) {
+  background: #ffffff; }
+
+.export-selectMenu {
+  width: 100px; }
+
+/*
+ * Corner rounding
+ */
 /* Rickshaw detail */
 .rickshaw_graph .detail {
   pointer-events: none;
@@ -3892,14 +3974,21 @@ button.btn, input[type="submit"].btn {
 
 .rickshaw_graph .detail .x_label {
   font-family: Arial, sans-serif;
-  border-radius: 3px;
+  border-bottom-left-radius: 3px;
+  -moz-border-radius-bottomleft: 3px;
+  -webkit-border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  -moz-border-radius-bottomright: 3px;
+  -webkit-border-bottom-right-radius: 3px;
   padding: 6px;
-  opacity: 0.5;
   border: 1px solid #e0e0e0;
   font-size: 12px;
   position: absolute;
+  left: 30px;
+  top: -5px;
   background: white;
-  white-space: nowrap; }
+  white-space: nowrap;
+  color: #333; }
 
 .rickshaw_graph .detail .item {
   position: absolute;
@@ -4482,14 +4571,16 @@ div#advertiser_filters, div#publisher_filters {
     div#advertiser_filters table#advertiser tbody tr, div#advertiser_filters table#publisher tbody tr, div#publisher_filters table#advertiser tbody tr, div#publisher_filters table#publisher tbody tr {
       cursor: pointer; }
       div#advertiser_filters table#advertiser tbody tr:hover, div#advertiser_filters table#publisher tbody tr:hover, div#publisher_filters table#advertiser tbody tr:hover, div#publisher_filters table#publisher tbody tr:hover {
-        background-color: rgba(64, 191, 191, 0.1); }
+        background-color: rgba(77, 169, 234, 0.1); }
       div#advertiser_filters table#advertiser tbody tr.selected, div#advertiser_filters table#publisher tbody tr.selected, div#publisher_filters table#advertiser tbody tr.selected, div#publisher_filters table#publisher tbody tr.selected {
-        background-color: rgba(64, 191, 191, 0.1); }
+        background-color: rgba(77, 169, 234, 0.1); }
       div#advertiser_filters table#advertiser tbody tr.source, div#advertiser_filters table#advertiser tbody tr.app, div#advertiser_filters table#publisher tbody tr.source, div#advertiser_filters table#publisher tbody tr.app, div#publisher_filters table#advertiser tbody tr.source, div#publisher_filters table#advertiser tbody tr.app, div#publisher_filters table#publisher tbody tr.source, div#publisher_filters table#publisher tbody tr.app {
         border-top: 2px solid #bbb;
         font-weight: bold; }
-      div#advertiser_filters table#advertiser tbody tr.campaign, div#advertiser_filters table#advertiser tbody tr.adunit, div#advertiser_filters table#publisher tbody tr.campaign, div#advertiser_filters table#publisher tbody tr.adunit, div#publisher_filters table#advertiser tbody tr.campaign, div#publisher_filters table#advertiser tbody tr.adunit, div#publisher_filters table#publisher tbody tr.campaign, div#publisher_filters table#publisher tbody tr.adunit {
+      div#advertiser_filters table#advertiser tbody tr.campaign, div#advertiser_filters table#advertiser tbody tr.adunit, div#advertiser_filters table#advertiser tbody tr.more, div#advertiser_filters table#publisher tbody tr.campaign, div#advertiser_filters table#publisher tbody tr.adunit, div#advertiser_filters table#publisher tbody tr.more, div#publisher_filters table#advertiser tbody tr.campaign, div#publisher_filters table#advertiser tbody tr.adunit, div#publisher_filters table#advertiser tbody tr.more, div#publisher_filters table#publisher tbody tr.campaign, div#publisher_filters table#publisher tbody tr.adunit, div#publisher_filters table#publisher tbody tr.more {
         border-top: 1px solid #ddd; }
+      div#advertiser_filters table#advertiser tbody tr.more, div#advertiser_filters table#publisher tbody tr.more, div#publisher_filters table#advertiser tbody tr.more, div#publisher_filters table#publisher tbody tr.more {
+        color: #348de5; }
       div#advertiser_filters table#advertiser tbody tr td, div#advertiser_filters table#publisher tbody tr td, div#publisher_filters table#advertiser tbody tr td, div#publisher_filters table#publisher tbody tr td {
         padding: 2px; }
         div#advertiser_filters table#advertiser tbody tr td.name span, div#advertiser_filters table#publisher tbody tr td.name span, div#publisher_filters table#advertiser tbody tr td.name span, div#publisher_filters table#publisher tbody tr td.name span {

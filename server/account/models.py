@@ -6,7 +6,6 @@ from common.ragendja.auth import hybrid_models
 from common.constants import ISO_COUNTRIES
 from simple_models import SimpleNetworkConfig, SimpleAccount
 
-
 class User(hybrid_models.User):
     title = db.StringProperty()
     company = db.StringProperty()
@@ -121,6 +120,7 @@ class NetworkConfig(db.Model):
                                           indexed=False,
                                           default=MODERATE_ATTRIBUTES)
     blind = db.BooleanProperty(default=False)
+    account = db.ReferenceProperty()
 
     def simplify(self):
         return SimpleNetworkConfig(admob_pub_id = self.admob_pub_id,

@@ -1,20 +1,193 @@
+# Deployed Friday, May 11, 2012 at 09:09PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-113
+### Bugs Fixed: []
+### Included Commits: 
+ * 8acb8aa Deployed without finding any bug fixes.
+ 
+# Deployed Friday, May 11, 2012 at 07:47PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-112
+### Bugs Fixed: []
+### Included Commits:
+* 4d04d97 Merge branch 'master' of github.com:mopub/mopub
+* d2a1d42 Added some comments to enable network and fixed it so it doesn't break on a case that should never happen, when the first adunit for an account is being created and network campaigns exist
+* 05aee6b added coverage.xml to git ignore
+* 7a46597 deleted __init__.py
+* 605f502 added back __init__.py
+* 8ced21f fixing tests
+* 9ec386e Deployed without finding any bug fixes.
+* e6bf2f2 moved file names
+* 2ed152c deleted unnecessary adserver tests
+
+# Deployed Friday, May 11, 2012 at 02:10AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-111
+### Bugs Fixed: []
+### Included Commits:
+* 314ab21 Fixed millennial mispelling bug
+* 503e8b0 added xcover
+* 97b006a added back in scraping tests
+* 93a160a Merge branch 'master' of github.com:mopub/mopub
+* e2d683a added scraper requirements
+* 5cdd73f made scrape test python2.5 compatible
+* 66a9f72 updated view testing, publisher view tests
+* 88f25f2 Merge branch 'master' of github.com:mopub/mopub
+* e837d05 added view testing module and publisher view tests
+* 136b2ad Generating test data can take in a variable name script
+* 1610278 decreased task retry limit
+* 0ef4f17 added a bunch of requirements
+* edb719e Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 09, 2012 at 05:33PM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-110
+### Bugs Fixed: []
+### Included Commits:
+* 4f8856a added default value for fetch context to allow for warmups
+* 7e827da added target for adunit context pushes
+* fc6c267 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 09, 2012 at 01:04AM PST
+### Deployed by Andrew He
+### Tagged deploy-109
+### Bugs Fixed: []
+### Included Commits:
+* 4bf3197 Fix bugs relating to NetworkConfigs (losing pub IDs, being created without account references)
+* 8b779a4 merged in logging fixes
+* 8aa001a delete_multi takes a list of string keys not keys
+* a04a89f Removed all start_day and end_day references from mpx view, modified migrate networks script
+* ddf49c6 Merge
+* 57c7cb0 removed some more logging
+* 2fef87d Merge branch 'master' of github.com:mopub/mopub
+* 054abb5 send mpx reports to FT
+* db249bb Merge branch 'master' of github.com:mopub/mopub
+* ddf5aab added mapreduce yaml
+* f2f644c [#1193 state:resolved]
+* 98c10b9 Cleaned up the mpx view a bit
+* 2bbe46d fixed excessive logging in stats fetchers
+* fc19b79 fixed float division logging
+* ed0b7d5 Merge branch 'master' of github.com:mopub/mopub
+* fcb4d1c Merge branch 'master' of github.com:mopub/mopub
+* f3fc7c9 -- leverage inventory counts -> revforce
+
+# Deployed Tuesday, May 08, 2012 at 06:04PM PST
+### Deployed by John Pena
+### Tagged deploy-108
+### Bugs Fixed: ['1193']
+### Included Commits:
+* e5eb9e9 Merge branch 'master' of github.com:mopub/mopub
+* 1f4b3de Merge branch 'master' of github.com:mopub/mopub
+* 6ad633a added script to account object to all network config objects
+* e0ed681 added script to account object to all network config objects
+* 055e56a Merge branch 'master' of github.com:mopub/mopub
+* 49d00c2 added script to account object to all network config objects
+* 60d131a fixed an issue where network config forms were being blanked out [#1193 state:fixed]
+* 1457d32 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, May 08, 2012 at 12:15AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-107
+### Bugs Fixed: []
+### Included Commits:
+* 75764c6 Fix wrong method signature preventing creation/editing of old-style network campaigns in advertiser/views/campaigns.py
+* c7e8336 fixed bug with mpx stats on adunit page
+* 003fe76 fixed bug with fetching mpx stats on adunit page
+* c723e04 [#1184 state:resolved]
+
+# Deployed Monday, May 07, 2012 at 08:17PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-106
+### Bugs Fixed: ['1184']
+### Included Commits:
+* d4c52ba [#1184 state:fixed]
+* 5eab7cc still resolving path issues with selenium tests for hudson
+* ef4beb4 resolving path issues with selenium tests for hudson
+* 7ba5051 Merge branch 'master' of github.com:mopub/mopub
+* 2056cc2 resolving path issues with selenium tests for hudson
+* 51d7877 Refactored and sped up campaign creation page. Modified NetworkConfig model to have an account reference. Changed all NetworkConfig constructor calls to take an account argument. Started caching NetworkConfigs on a per-account basis.
+* 1d0c5a6 Fix bug in CachedQueryManager.memcache_flush_entities_for_account_keys
+* 7542fcf fixed randomgen merge conflicts
+* ae6306a Merge branch 'master' of github.com:mopub/mopub
+* e381b47 Fixed nonetype error
+* 1378b02 added '/api/.*' to the adserver.yaml
+* 3cdc414 Speed ups to network migration script, addtional checks for creative migration
+* 34288f0 Fix CachedQueryManager to support entity fetches of unlimited size (rather than just 1000)
+* de1f4d4 Deployed without finding any bug fixes.
+
+# Deployed Thursday, May 03, 2012 at 09:20PM PST
+### Deployed by John Pena
+### Tagged deploy-105
+### Bugs Fixed: []
+### Included Commits:
+* 795597a versions conflict
+* 2ba6486 versions conflict
+* 8bcafbb Deployed without finding any bug fixes.
+* 6442b3d marketplace price floor change is now being recorded
+* 39286a8 versions
+* 5e68451 higher graph rigidity
+* 97798ed Merge branch 'explorer' of github.com:mopub/mopub into explorer
+* b9b6226 fixed the datepicker custom input field styles to be consistent
+* 4195ae5 refixed datepicker issue
+* 27db279 fixed datepicker issue
+* 038df4c versions merge conflict
+* 0165219 changed the rigidity to always be 1.0
+* 316239a fixed more link issue
+* 9b9b144 Merge branch 'explorer' of github.com:mopub/mopub into explorer
+* 55f2df3 regenerated plugins
+* b504b20 Merge branch 'explorer-peter' into explorer
+* e6ec443 multiple fixes
+* f900e31 using mopub blue more in the charts and tables
+* 75f5b48 renamed the dashboard as explorer, made a link from the inventory page, and removed the fill from the vs series
+* b9f6d87 tooltips in the upper left corner
+
+# Deployed Thursday, May 03, 2012 at 07:49PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-104
+### Bugs Fixed: []
+### Included Commits:
+* 4045de9 Merge branch 'master' into networks-page
+* 3b111c9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* 77b08bc Network views use key_names instead of memcache, added some formatting fixes to networks pages, modified migration script
+* 2a8da02 Fixed a terrible bug in new network campaign key naming, migration script deletes mal formatted old network campaigns and adgroups
+* bcf4b6d Modification to network views
+* 4999da8 default back to 38
+* c61c26b Deployed without finding any bug fixes.
+* 6e04cad Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* d6ddffd Modifications to check login tornado server for compatibility with new networks form
+
+# Deployed Wednesday, May 02, 2012 at 10:28PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-103
+### Bugs Fixed: []
+### Included Commits:
+* 1bd7030 Fixed a couple bugs in the network migration script removed some debugging print statements
+* b768c66 Merge branch 'master' into networks-page
+* af627af Fixed check login credentials for new networks form, added some debugging prints for the migration script
+* 25e5998 Merge branch 'master' of github.com:mopub/mopub
+* bc697f8 Merge branch 'notify-bad-keys'
+* 272aa63 Fixed ordering
+* 9c35e04 Deployed without finding any bug fixes.
+* 61b85fb Whoops
+* d797d05 Notify EC2 when it's sending bad keys so we dont' spam GAE trying to get data that will never, ever, ever work
+
 # Deployed Wednesday, May 02, 2012 at 07:54PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-102
 ### Bugs Fixed: []
-### Included Commits: 
- * 5b9e1a9 quick fix
- * 91f14d1 Merge
- * 7f1d333 Added print statement to migrate networks script
- * 18ede32 Networks migration script batches all puts, publisher app details and adunit show include legacy stats for new network campaigns
- * 7b4c51d Merge branch '1176-adgroup-no-percent-delivered'
- * b976e86 Merge branch 'master' of github.com:mopub/mopub
- * c56f860 versions upped
- * 3d2742f checking to see if a campaign has the attribute before trying to access it.
- * 7e7625b [#1176 state:resolved]
- * 3036d9b Merge
- * 7705862 Making networks migration script faster...
- 
+### Included Commits:
+* 5b9e1a9 quick fix
+* 91f14d1 Merge
+* 7f1d333 Added print statement to migrate networks script
+* 18ede32 Networks migration script batches all puts, publisher app details and adunit show include legacy stats for new network campaigns
+* 7b4c51d Merge branch '1176-adgroup-no-percent-delivered'
+* b976e86 Merge branch 'master' of github.com:mopub/mopub
+* c56f860 versions upped
+* 3d2742f checking to see if a campaign has the attribute before trying to access it.
+* 7e7625b [#1176 state:resolved]
+* 3036d9b Merge
+* 7705862 Making networks migration script faster...
+
 # Deployed Wednesday, May 02, 2012 at 06:09PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-101

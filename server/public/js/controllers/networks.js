@@ -50,7 +50,8 @@ $(function() {
                                            stats_endpoint: campaign.get('stats_endpoint')});
 
                 var app_view = new AppView({model: network_app,
-                             endpoint_specific: true});
+                             endpoint_specific: true,
+                             network: campaign.get('network')});
                 app_view.el = '.' + campaign.id + '-apps-div';
 
                 network_apps.push(network_app);
@@ -62,7 +63,8 @@ $(function() {
             adunits.campaign_id = mopub_campaign.id;
             adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
 
-            new AdUnitCollectionView({collection: adunits});
+            new AdUnitCollectionView({collection: adunits,
+                                      campaign: mopub_campaign});
 
             return [all_campaigns, network_apps, adunits];
         } else {
@@ -286,7 +288,6 @@ $(function() {
             var network_type = bootstrapping_data.network_type,
                 pretty_name = bootstrapping_data.pretty_name,
                 account_key = bootstrapping_data.account_key,
-                adunits = bootstrapping_data.adunits,
                 priors = bootstrapping_data.priors,
                 city_priors = bootstrapping_data.city_priors,
                 login_state = bootstrapping_data.login_state,
@@ -499,6 +500,7 @@ $(function() {
                         data: {ajax: true},
                         dataType: 'json',
                         success: function(jsonData, statusText, xhr, $form) {
+                            $('#loading').hide();
                             if(jsonData.success) {
                                 if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
                                     data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
@@ -524,12 +526,14 @@ $(function() {
                             }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
+                            $('#loading').hide();
                             $('form#campaign_and_adgroup #submit').button({
                                 label: 'Try Again',
                                 disabled: false
                             });
                         },
                         beforeSubmit: function(arr, $form, options) {
+                            $('#loading').css('display', 'inline');
                             $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
                                                                            disabled: true});
                         }
@@ -547,7 +551,7 @@ $(function() {
             function setupLoginForm() {
                 $('form#network-login-form .submit, form#campaign_and_adgroup .submit').click(function() {
                         if ($(this).closest('form').attr('id') == 'network-login-form') {
-                            var data = $(this).closest('.login-fields').serialize();
+                            var data = $(this).closest('form').serialize();
                         } else {
                             // Hack to serialize sub-section of forms data.
                             // Add a new form and hide it.
@@ -575,13 +579,13 @@ $(function() {
                                 if (valid) {
                                     $(message).html("MoPub is currently pulling data from "
                                                     + pretty_name + " using the following credentials.");
-                                    var username = $('#id_username_str').val();
-                                    var password = $('#id_password_str').val();
-                                    var client_key = $('#id_client_key').val();
+                                    var username = $('#id_' + network_type + '-username_str').val();
+                                    var password = $('#id_' + network_type + '-password_str').val();
+                                    var client_key = $('#id_' + network_type + '-client_key').val();
 
-                                    $('#id_username_str').hide();
-                                    $('#id_password_str').hide();
-                                    $('#id_client_key').hide();
+                                    $('#id_' + network_type + '-username_str').hide();
+                                    $('#id_' + network_type + '-password_str').hide();
+                                    $('#id_' + network_type + '-client_key').hide();
 
                                     $('#username').text(username);
                                     var hidden_password = "";
@@ -630,9 +634,9 @@ $(function() {
 
 
             $("#edit-login").click(function() {
-                $('#id_username_str').show();
-                $('#id_password_str').show();
-                $('#id_client_key').show();
+                $('#id_' + network_type + '-username_str').show();
+                $('#id_' + network_type + '-password_str').show();
+                $('#id_' + network_type + '-client_key').show();
 
                 $('#username').text('');
                 $('#password').text('');

@@ -5,6 +5,7 @@ import re
 from django import forms
 from django.forms.util import ErrorList
 from google.appengine.api import images, files
+from google.appengine.ext import deferred
 from google.appengine.ext.db import Key
 
 from advertiser.models import (Campaign, AdGroup, Creative, TextCreative,
@@ -252,9 +253,14 @@ class CampaignForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         campaign = super(CampaignForm, self).save(*args, **kwargs)
 
-        # budget
-        budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
-        campaign.budget_obj = budget_obj
+        if kwargs.get('commit'):
+          # Update campaign budgets asynchronously using a Task Queue.
+          queue = taskqueue.Queue()
+          task = taskqueue.Task(params=dict(campaign_keys=[campaign.key()]),
+                                method='POST',
+                                url='/fetch_api/budget/update_or_create'
+                                )
+          queue.add(task)
 
         return campaign
 

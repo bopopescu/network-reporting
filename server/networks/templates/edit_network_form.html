@@ -552,6 +552,9 @@
         </table>
     </div>
     <div class="form-submit">
+        <div id="loading" class="hidden">
+            <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+        </div>
         <a class="button" id="submit" href="#">Save</a>
         <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
@@ -687,9 +690,6 @@
                 network_type: '{{ network.name }}',
                 pretty_name: '{{ network.pretty_name }}',
                 account_key: '{{ account_key }}',
-                adunits: [{% for app in apps %}
-                    {% for adunit in app.adunits %}['{{ app.key }}', '{{ adunit.key }}'],{% endfor %}
-                {% endfor %}],
                 priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
                 city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},
                 login_state: {{ network.login_state }},

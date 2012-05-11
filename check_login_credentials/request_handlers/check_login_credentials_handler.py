@@ -70,18 +70,17 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
 
             # Can't have the same name as the model. Fixes unicode bug.
             if network + '-username' in args:
-                args[network + '-username_str'] = args[network +
-                        '-username']
-            else:
+                args[network + '-username_str'] = args[network + '-username']
+            elif network + '-username_str' not in args:
                 args[network + '-username_str'] = '-'
             if network + '-password' in args:
-                args[network + '-password_str'] = args[network +
-                        '-password']
-            else:
+                args[network + '-password_str'] = args[network + '-password']
+            elif network + '-password_str' not in args:
                 args[network + '-password_str'] = '-'
             form = LoginCredentialsForm(args, prefix=network)
 
             if form.is_valid():
+                logging.info("Form is valid")
                 login = Login()
                 login.ad_network_name = network
                 login.username = form.cleaned_data.get(

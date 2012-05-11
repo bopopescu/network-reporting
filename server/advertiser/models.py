@@ -121,7 +121,7 @@ class Campaign(db.Model):
     #
     # Compared to an AdGroup (network_type):
     #       admob = admob_native
-    #       millenial = millenial_native
+    #       millennial = millennial_native
     #       iad = iAd
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
     network_state = db.IntegerProperty(default=NetworkStates. \
@@ -373,13 +373,9 @@ class AdGroup(db.Model):
         """
         Calculate the ecpm for a cpc campaign.
         """
-        if self.cpc:
-            try:
-                return float(self.stats.click_count) * \
-                       float(self.bid) * \
-                       1000.0 / float(self.stats.impression_count)
-            except Exception, error:
-                logging.error(error)
+        if self.cpc and self.stats.impression_count:
+            return (float(self.stats.click_count) * float(self.bid) * 1000.0 /
+                    float(self.stats.impression_count))
         return self.bid
 
     def simplify(self):

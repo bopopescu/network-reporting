@@ -20,6 +20,7 @@ var mopub = mopub || {};
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
+            'hsla(205,79%,61%,0.1)',
             'hsla(180, 50%, 50%, 0.1)',
             'hsla(120, 50%, 50%, 0.1)',
             'hsla(60, 50%, 50%, 0.1)',
@@ -28,6 +29,7 @@ var mopub = mopub || {};
             'hsla(240, 50%, 50%, 0.1)'
         ],
         secondary: [
+            'hsla(200,77%,55%,1)',
             'hsla(180, 50%, 50%, 1)',
             'hsla(120, 50%, 50%, 1)',
             'hsla(60, 50%, 50%, 1)',
@@ -187,7 +189,7 @@ var mopub = mopub || {};
             return format_kmbt(value, true);
           case 'cpm':
           case 'rev':
-            return '$' + format_kmbt(value, true);
+            return '$' + format_kmbt(value, false);
           case 'conv_rate':
           case 'ctr':
           case 'fill_rate':
@@ -201,7 +203,7 @@ var mopub = mopub || {};
     // Formats a number in KMBT (thousands, millions, billions,
     // trillions) formatting with three significant digits.
     // Example: 1000000 -> 1M, 1230000000 -> 12.3B
-    function format_kmbt(number) {
+    function format_kmbt(number, integer) {
         if(number <= 0 || number >= 1000000000000000000000000) {
             return number;
         }
@@ -210,6 +212,9 @@ var mopub = mopub || {};
         }
         if(number < 1) {
             return number.toFixed(2);
+        }
+        if(number < 1000 && integer) {
+            return number;
         }
         var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
         var place = Math.floor(Math.floor(Math.log(number)/Math.log(10))/3);
@@ -348,7 +353,7 @@ var mopub = mopub || {};
             var color;
             if (range.id === 'vs') {
                 stroke = 'hsla(0, 0%, 75%, 1)';
-                color = 'hsla(0, 0%, 75%, 0.1)';
+                color = 'hsla(0, 0%, 75%, 0.0)';
             } else {
                 stroke = COLOR_THEME.secondary[i];
                 color = COLOR_THEME.primary[i];
@@ -378,9 +383,6 @@ var mopub = mopub || {};
         // renders a new one, so we have to do it manually.
         $(element).html('');
 
-        // If the graph has few points, make the graph rigid.
-        var graph_tension = all_chart_data[0].length > 7 ? 0.8 : 1.0;
-
         // Create the new chart with our series data
         var chart = new Rickshaw.Graph({
             element: document.querySelector(element),
@@ -388,7 +390,7 @@ var mopub = mopub || {};
             height: HEIGHT,
             renderer: 'area',
             stroke: true,
-            tension: 1.0,
+            interpolation: 'linear',
             series: all_chart_data,
             // Second part of the single value hack here --
             max: max > 0 ? max : undefined
@@ -804,7 +806,7 @@ var mopub = mopub || {};
                                 stats: STATS
                             }));
 
-                            $('tr.campaign', $advertiser_table).remove();
+                            $('tr.campaign, tr.more', $advertiser_table).remove();
 
                             _.each(source_data.query, function(query, index) {
                                 var id = query.source[0];
@@ -860,12 +862,17 @@ var mopub = mopub || {};
                             // defer so exceptions show up in the console
                             _.defer(function() {
                                 var $last = $('#' + source);
+                                var campaigns_hidden = false;
                                 _.each(json.top[0], function(top, index) {
                                     var id = top.campaign;
                                     var hidden = index >= MAX_CAMPAIGNS;
+                                    var selected = _.include(selected, id) || (!advertiser_comparison_shown() && _.include(selected, source));
+                                    if(hidden && !selected) {
+                                        campaigns_hidden = true;
+                                    }
                                     var context = {
                                         type: 'campaign',
-                                        selected: _.include(selected, id) || (!advertiser_comparison_shown() && _.include(selected, source)),
+                                        selected: selected,
                                         hidden: hidden,
                                         id: id,
                                         columns: ADVERTISER_COLUMNS,
@@ -884,6 +891,10 @@ var mopub = mopub || {};
                                     $last.after($campaign);
                                     $last = $campaign;
                                 });
+
+                                if(campaigns_hidden) {
+                                    $last.after('<tr class="more"><td>More...</td></tr>');
+                                }
 
                                 update_advertiser_stats_display();
 
@@ -1133,7 +1144,7 @@ var mopub = mopub || {};
             });
 
             // default start/end
-            update_start_end('last_14_days');
+            update_start_end('last_7_days');
 
             var valid_date_range = {
                 endDate: "0d"
@@ -1686,17 +1697,19 @@ var mopub = mopub || {};
             }
 
             function show_advertiser_rows() {
-                $('tr', $advertiser_table).show();
+                $('tr', $advertiser_table).not('.more').show();
+                $('tr.more', $advertiser_table).hide();
             }
 
             function hide_advertiser_rows() {
-                $('tbody tr.campaign', $advertiser_table).each(function () {
+                $('tr.campaign', $advertiser_table).each(function () {
                     var $campaign = $(this);
                     $campaign.toggle(!$campaign.hasClass('hidden') || $campaign.hasClass('selected'));
                 });
+                $('tr.more', $advertiser_table).show();
             }
 
-            $advertiser_rows.click(function () {
+            function toggle_advertiser_rows() {
                 if(advertiser_rows_shown()) {
                     $advertiser_rows.addClass('show');
                     $advertiser_rows.removeClass('hide');
@@ -1713,7 +1726,11 @@ var mopub = mopub || {};
 
                     record_metric('Showed advertiser rows');
                 }
-            });
+            }
+
+            $advertiser_rows.click(toggle_advertiser_rows);
+
+            $('tr.more', $advertiser_table).live('click', toggle_advertiser_rows);
 
             var $publisher_rows = $('#publisher_rows');
 
@@ -1758,6 +1775,9 @@ var mopub = mopub || {};
                     record_metric('Showed publisher rows');
                 }
             });
+
+            // default comparison
+            update_vs_start_end('week');
 
             update_dashboard(true, true, true);
         }

@@ -10,6 +10,10 @@ except ImportError:
 
 import datetime
 import urlparse
+try:
+    from urlparse import parse_qs
+except ImportError:
+    from cgi import parse_qs
 
 from google.appengine.ext import db
 from nose.tools import assert_equals
@@ -191,5 +195,5 @@ def api_url_mptest():
     assert_equals(parsed_url.path,
                   parsed_test_case.path)
 
-    assert_equals(urlparse.parse_qs(parsed_url.query),
-                  urlparse.parse_qs(parsed_test_case.query))
+    assert_equals(parse_qs(parsed_url.query),
+                  parse_qs(parsed_test_case.query))

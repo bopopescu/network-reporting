@@ -19,7 +19,7 @@ import json
 
 SENDER="jim@mopub.com"
 RCPT="billing@mopub.com"
-MPX_URL="http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf&.."
+MPX_URL="http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf&start=%s&end=%s"
 ADS_URL="http://read.mongostats.mopub.com/stats?pub=agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww&adv=agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww&acct=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww&hybrid=False&offline=False&start_date=%s&end_date=%s"
 ADS_KEY="agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww||agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww||agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww"
 
@@ -181,26 +181,49 @@ class CheckHandler(webapp.RequestHandler):
 
 
 class MpxReportHandler(webapp.RequestHandler):
-    def get(self):
-        now = datetime.datetime.now() + datetime.timedelta(hours=-8)
+    def ads_total(self, start, end):
+        ads = json.loads(urlfetch.fetch(ADS_URL % (start.strftime("%y%m%d"), end.strftime("%y%m%d"))).content)
+        return int(ads["all_stats"][ADS_KEY]["sum"]["request_count"])
         
-        # total inventory
-        ads = json.loads(urlfetch.fetch(ADS_URL % (now.strftime("%y%m%d"), now.strftime("%y%m%d"))).content)
-        request_count = int(ads["all_stats"][ADS_KEY]["daily_stats"][-1]["request_count"])
-
+    def mpx_total(self, start, end):
         # total spend
-        mpx = json.loads(urlfetch.fetch(MPX_URL).content)
+        mpx = json.loads(urlfetch.fetch(MPX_URL % (start.strftime("%m-%d-%Y"), end.strftime("%m-%d-%Y")), deadline=30).content)
         total = sum([x["spent"] for x in mpx.values()])
 
         # spend by DSP
         a=[(x["bidder_name"], x["spent"]) for x in mpx.values() if x["spent"] > 0]
         a.sort(lambda x,y: cmp(y[1],x[1]))
         
+        return (total, a)
+        
+    def get(self):
+        now = datetime.datetime.now() + datetime.timedelta(hours=-8)
+        week = [now + datetime.timedelta(days=-7), now]
+        month = [now + datetime.timedelta(days=-30), now]
+        
+        # total inventory
+        request_count = (self.ads_total(now, now) / 1000000.0, 
+            self.ads_total(week[0], week[1]) / 1000000000.0, 
+            self.ads_total(month[0], month[1]) / 1000000000.0)
+
+        # total spend
+        total, a = self.mpx_total(now, now)
+        mpx_spend = (total, 
+            self.mpx_total(week[0], week[1])[0] / 1000.0, 
+            self.mpx_total(month[0], month[1])[0] / 1000.0)
+            
+        # cpm
+        cpm = (mpx_spend[0] / request_count[0] / 1000.0, mpx_spend[1] / request_count[1] / 1000.0, mpx_spend[2] / request_count[2] / 1000.0)
+        
         # compute body
-        body = "Total Spend: $%.2f\nTotal Inventory: %.1fMM\n\n" % (total, request_count / 1000000.0)
-        body += "Top Bidders\n===========\n"
+        body = "Total Spend: $%.2f (7d: $%.1fK 30d: $%.1fK)\n" % mpx_spend
+        body += "Total Inventory: %.1fMM (7d: %.1fB 30d: %.1fB)\n" % request_count
+        body += "eCPM: $%.3f (7d: $%.2f 30d: $%.2f)\n" % cpm
+        
+        # bidders
+        body += "\nTop Bidders\n===========\n"
         for x in a:
-          body += "%s: $%.2f\n" % (x[0], x[1])
+          body += "%s: $%.2f\n" % x
 
         body += "\nData retrieved at %s UTC. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
         

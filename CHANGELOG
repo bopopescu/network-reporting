@@ -1,22 +1,37 @@
+# Deployed Friday, May 11, 2012 at 07:47PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-112
+### Bugs Fixed: []
+### Included Commits: 
+ * 4d04d97 Merge branch 'master' of github.com:mopub/mopub
+ * d2a1d42 Added some comments to enable network and fixed it so it doesn't break on a case that should never happen, when the first adunit for an account is being created and network campaigns exist
+ * 05aee6b added coverage.xml to git ignore
+ * 7a46597 deleted __init__.py
+ * 605f502 added back __init__.py
+ * 8ced21f fixing tests
+ * 9ec386e Deployed without finding any bug fixes.
+ * e6bf2f2 moved file names
+ * 2ed152c deleted unnecessary adserver tests
+ 
 # Deployed Friday, May 11, 2012 at 02:10AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-111
 ### Bugs Fixed: []
-### Included Commits: 
- * 314ab21 Fixed millennial mispelling bug
- * 503e8b0 added xcover
- * 97b006a added back in scraping tests
- * 93a160a Merge branch 'master' of github.com:mopub/mopub
- * e2d683a added scraper requirements
- * 5cdd73f made scrape test python2.5 compatible
- * 66a9f72 updated view testing, publisher view tests
- * 88f25f2 Merge branch 'master' of github.com:mopub/mopub
- * e837d05 added view testing module and publisher view tests
- * 136b2ad Generating test data can take in a variable name script
- * 1610278 decreased task retry limit
- * 0ef4f17 added a bunch of requirements
- * edb719e Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 314ab21 Fixed millennial mispelling bug
+* 503e8b0 added xcover
+* 97b006a added back in scraping tests
+* 93a160a Merge branch 'master' of github.com:mopub/mopub
+* e2d683a added scraper requirements
+* 5cdd73f made scrape test python2.5 compatible
+* 66a9f72 updated view testing, publisher view tests
+* 88f25f2 Merge branch 'master' of github.com:mopub/mopub
+* e837d05 added view testing module and publisher view tests
+* 136b2ad Generating test data can take in a variable name script
+* 1610278 decreased task retry limit
+* 0ef4f17 added a bunch of requirements
+* edb719e Deployed without finding any bug fixes.
+
 # Deployed Wednesday, May 09, 2012 at 05:33PM PST
 ### Deployed by Nafis Jamal
 ### Tagged deploy-110

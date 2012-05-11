@@ -60,8 +60,8 @@ class OrderAndLineItemCreate(OrderViewTestCase):
 
         no_key_url = reverse('advertiser_order_and_line_item_form_new')
         response = self.client.get(no_key_url)
-        eq_(response.context['order_form'].instance, order_form.instance)
-        eq_(response.context['line_item_form'].instance, line_item_form.instance)
+        eq_(response.context['order_form'].instance, None)
+        eq_(response.context['line_item_form'].instance, None)
 
 
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
@@ -87,19 +87,37 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         ok_(edit_response.status_code in [200, 302])
 
     def mptest_get_correct_forms_with_order(self):
-        ok_(False)
+        line_item = None
+        order_form = OrderForm(instance=self.order, prefix='order')
+        line_item_form = OrderForm(instance=line_item)
+
+        response = self.client.get(self.new_url)
+        eq_(response.context['order_form'].instance.key(),
+            order_form.instance.key())
+        eq_(response.context['line_item_form'].instance, None)
 
     def mptest_get_correct_forms_with_line_item(self):
+        order_form = OrderForm(instance=self.order, prefix='order')
+        line_item_form = LineItemForm(instance=self.line_item)
+
+        response = self.client.get(self.edit_url)
+        eq_(response.context['order_form'].instance.key(),
+            order_form.instance.key())
+        eq_(response.context['line_item_form'].instance.key(),
+            line_item_form.instance.key())
+
+    def mptest_order_owns_line_item(self):
+        response = self.client.get(self.edit_url)
+        eq_(response.context['order'],
+            response.context['line_item'].campaign)
+
+    # don't know if these will be necessary 
+    # we should just test that all models dont change state
+    def mptest_user_owns_order(self):
         ok_(False)
 
-    # def mptest_order_owns_line_item(self):
-    #     ok_(False)
-
-    # def mptest_user_owns_order(self):
-    #     ok_(False)
-
-    # def mptest_user_owns_line_item(self):
-    #     ok_(False)
+    def mptest_user_owns_line_item(self):
+        ok_(False)
 
     def mptest_fail_on_unowned_order(self):
         diff_acct = generate_account(username='diff')
@@ -146,29 +164,37 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
 
 class NewOrEditLineItemPostTestCase(OrderViewTestCase):
+    """
+    Tests for the new/edit line item POST method.
+    Author: John Pena
+    """
     
     def setUp(self):
+        """
+        Sets up the new and edit urls.
+        """
         super(NewOrEditLineItemPostTestCase, self).setUp()
-        self.new_url = reverse('advertiser_line_item_form_new',
-                               kwargs={'order_key': unicode(self.order.key())})
-        self.edit_url = reverse('advertiser_line_item_form_edit',
-                               kwargs={'line_item_key': unicode(self.line_item.key())})
+        self.new_url = reverse('advertiser_line_item_form_new', kwargs={
+            'order_key': unicode(self.order.key())
+        })
+        self.edit_url = reverse('advertiser_line_item_form_edit', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+
 
     def mptest_graceful_fail_without_data(self):
         """
-        Posting to the form handler should fail if there's no post body.
+        Posting to the form handler should fail if there's no post body.        
         """
-        response = self.client.post(self.new_url,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.client.post(self.new_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-        response = self.client.post(self.edit_url,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.client.post(self.edit_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
     def mptest_graceful_fail_without_ajax(self):
         """
-        Posting to the form handler without using an XHR (non-ajax requests) should fail.
+        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
         """
         response = self.client.post(self.new_url)
         eq_(response.status_code, 404)
@@ -181,7 +207,6 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         Posting to the edit form handler with a non-order campaign (marketplace
         or network) should fail gracefully.
         """
-        ok_(False)
         non_order_mpx = generate_marketplace_campaign(self.account, None)
         url = reverse('advertiser_line_item_form_new', kwargs = {
             'order_key': unicode(non_order_mpx.key())
@@ -197,25 +222,61 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         eq_(response.status_code, 404)
         
 
-    def mptest_puts_valid_order(self):
+    def mptest_puts_new_valid_order(self):
+        """
+        Posting valid form information to the view's POST method will create
+        a new order.
+        """
+        ok_(False)
+        
+    def mptest_puts_valid_changed_order(self):
+        """
+        Posting valid form data to the view's POST method should change
+        the same order.
+        """
         ok_(False)
 
     def mptest_fails_gracefully_invalid_order(self):
+        """
+        Posting invalid form data to th view's POST method should fail
+        gracefully.
+        """
         ok_(False)
 
-    def mptest_puts_valid_line_item(self):
+        
+    def mptest_puts_new_valid_line_item(self):
+        """
+        """
         ok_(False)
 
+        
+    def mptest_puts_changed_valid_line_item(self):
+        """
+        """
+        ok_(False)
+
+        
     def mptest_fails_gracefully_invalid_line_item(self):
+        """
+        """
         ok_(False)
 
+        
     def mptest_complete_onboarding_after_first_campaign(self):
+        """
+        """
         ok_(False)
 
+        
     def mptest_redirects_properly_after_success(self):
+        """
+        """
         ok_(False)
 
+        
     def mptest_datetime_alias_for_jquery_on_fail(self):
+        """
+        """        
         ok_(False)
 
 
@@ -259,13 +320,13 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         eq_(response_json['success'], False)
 
-    # def mptest_fail_on_unowned_objects(self):
-    #     """
-    #     Author: John Pena
-    #     Users should not be able to change the status of objects
-    #     they don't own. The view should return a 404.
-    #     """
-    #     ok_(False)
+    def mptest_fail_on_unowned_objects(self):
+        """
+        Author: John Pena
+        Users should not be able to change the status of objects
+        they don't own. The view should return a 404.
+        """
+        ok_(False)
 
     def mptest_creative_run(self):
         """

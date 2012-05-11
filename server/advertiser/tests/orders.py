@@ -149,7 +149,36 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     #     ok_(new_response.status_code in [200, 302])
     #     ok_(edit_response.status_code in [200, 302])
 
- 
+    def mptest_graceful_fail_without_data(self):
+        ok_(False)
+
+    def mptest_graceful_fail_without_ajax(self):
+        ok_(False)
+
+    def mptest_graceful_fail_for_non_order(self):
+        ok_(False)
+
+    def mptest_puts_valid_order(self):
+        ok_(False)
+
+    def mptest_fails_gracefully_invalid_order(self):
+        ok_(False)
+
+    def mptest_puts_valid_line_item(self):
+        ok_(False)
+
+    def mptest_fails_gracefully_invalid_line_item(self):
+        ok_(False)
+
+    def mptest_complete_onboarding_after_first_campaign(self):
+        ok_(False)
+
+    def mptest_redirects_properly_after_success(self):
+        ok_(False)
+
+    def mptest_datetime_alias_for_jquery_on_fail(self):
+        ok_(False)
+
 
 class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):
@@ -375,7 +404,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(response_json['success'])
 
-        self.order = CampaignQueryManager.get(self.order.key())
+        self.order = CampaignQueryManager.get(self.order.keycan ())
         eq_(self.order.active, False)
 
         eq_(self.line_item.active, True)

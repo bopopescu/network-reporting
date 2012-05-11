@@ -72,13 +72,13 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         ok_(new_response.status_code in [200, 302])
         ok_(edit_response.status_code in [200, 302])
 
-    # def mptest_get_correct_order_form(self):
-    #     ## line_item_key, order_key, none
-    #     ok_(False)
+    def mptest_get_correct_order_form(self):
+        ## line_item_key, order_key, none
+        ok_(False)
 
-    # def mptest_get_correct_line_item_form(self):
-    #     ## line_item_key, order_key, none
-    #     ok_(False)
+    def mptest_get_correct_line_item_form(self):
+        ## line_item_key, order_key, none
+        ok_(False)
 
     # def mptest_order_owns_line_item(self):
     #     ok_(False)
@@ -128,6 +128,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         for actual_app, expected_app in zip(actual_apps, expected_apps):
             eq_(actual_app.key(), expected_app.key())
 
+
 class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     
     def setUp(self):
@@ -137,16 +138,16 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         self.edit_url = reverse('advertiser_line_item_form_edit',
                                kwargs={'line_item_key': unicode(self.line_item.key())})
  
-    def mptest_http_response_code(self):
-        """
-        Author: Haydn Dufrene
-        A valid post should return a valid (200, 302) response (regardless
-        of params).
-        """
-        new_response = self.client.post(self.new_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        edit_response = self.client.post(self.edit_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        ok_(new_response.status_code in [200, 302])
-        ok_(edit_response.status_code in [200, 302])
+    # def mptest_http_response_code(self):
+    #     """
+    #     Author: Haydn Dufrene
+    #     A valid post should return a valid (200, 302) response (regardless
+    #     of params).
+    #     """
+    #     new_response = self.client.post(self.new_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #     edit_response = self.client.post(self.edit_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #     ok_(new_response.status_code in [200, 302])
+    #     ok_(edit_response.status_code in [200, 302])
 
  
 

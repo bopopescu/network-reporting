@@ -65,7 +65,7 @@ def order_index(request, *args, **kwargs):
     t = "advertiser/order_index.html"
     return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
-    
+
 class OrderDetailHandler(RequestHandler):
     """
     Top level stats rollup for all of the line items within the order.

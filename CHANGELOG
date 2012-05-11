@@ -1,18 +1,25 @@
+# Deployed Friday, May 11, 2012 at 09:09PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-113
+### Bugs Fixed: []
+### Included Commits: 
+ * 8acb8aa Deployed without finding any bug fixes.
+ 
 # Deployed Friday, May 11, 2012 at 07:47PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-112
 ### Bugs Fixed: []
-### Included Commits: 
- * 4d04d97 Merge branch 'master' of github.com:mopub/mopub
- * d2a1d42 Added some comments to enable network and fixed it so it doesn't break on a case that should never happen, when the first adunit for an account is being created and network campaigns exist
- * 05aee6b added coverage.xml to git ignore
- * 7a46597 deleted __init__.py
- * 605f502 added back __init__.py
- * 8ced21f fixing tests
- * 9ec386e Deployed without finding any bug fixes.
- * e6bf2f2 moved file names
- * 2ed152c deleted unnecessary adserver tests
- 
+### Included Commits:
+* 4d04d97 Merge branch 'master' of github.com:mopub/mopub
+* d2a1d42 Added some comments to enable network and fixed it so it doesn't break on a case that should never happen, when the first adunit for an account is being created and network campaigns exist
+* 05aee6b added coverage.xml to git ignore
+* 7a46597 deleted __init__.py
+* 605f502 added back __init__.py
+* 8ced21f fixing tests
+* 9ec386e Deployed without finding any bug fixes.
+* e6bf2f2 moved file names
+* 2ed152c deleted unnecessary adserver tests
+
 # Deployed Friday, May 11, 2012 at 02:10AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-111

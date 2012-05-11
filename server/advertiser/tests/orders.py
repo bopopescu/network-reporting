@@ -23,6 +23,7 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        CreativeQueryManager)
 from advertiser.forms import OrderForm, LineItemForm
 from publisher.query_managers import AppQueryManager
+from publisher.models import to_dict
 
 setup_test_environment()
 
@@ -60,8 +61,8 @@ class OrderAndLineItemCreate(OrderViewTestCase):
 
         no_key_url = reverse('advertiser_order_and_line_item_form_new')
         response = self.client.get(no_key_url)
-        eq_(response.context['order_form'].instance, None)
-        eq_(response.context['line_item_form'].instance, None)
+        ok_(response.context['order_form'].instance is None)
+        ok_(response.context['line_item_form'].instance is None)
 
 
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
@@ -93,7 +94,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         response = self.client.get(self.new_url)
         eq_(response.context['order_form'].instance.key(),
             order_form.instance.key())
-        eq_(response.context['line_item_form'].instance, None)
+        ok_(response.context['line_item_form'].instance is None)
 
     def mptest_get_correct_forms_with_line_item(self):
         order_form = OrderForm(instance=self.order, prefix='order')
@@ -112,11 +113,12 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
     # don't know if these will be necessary 
     # we should just test that all models dont change state
-    def mptest_user_owns_order(self):
-        ok_(False)
-
-    def mptest_user_owns_line_item(self):
-        ok_(False)
+    def mptest_models_do_not_change(self):
+        response = self.client.get(self.edit_url)
+        actual_order = response.context['order']
+        actual_line_item = response.context['line_item']
+        eq_(to_dict(self.order), to_dict(actual_order))
+        eq_(to_dict(self.line_item), to_dict(actual_line_item))
 
     def mptest_fail_on_unowned_order(self):
         diff_acct = generate_account(username='diff')
@@ -124,14 +126,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         diff_url = reverse('advertiser_line_item_form_new',
                            kwargs={'order_key':
                                    unicode(diff_order.key())})
-        # Test passes if we receive the proper exception
-        # else the exception will fail loudly and the test will fail
-        try:
-            self.client.get(diff_url)
-        except Http404:
-            pass
-        else:
-            ok_(False)
+
+        response = self.client.get(diff_url)
+        eq_(response.status_code, 404)
 
     def mptest_fail_on_unowned_line_item(self):
         diff_acct = generate_account(username='diff')
@@ -143,12 +140,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         diff_url = reverse('advertiser_line_item_form_edit',
                            kwargs={'line_item_key': 
                                    unicode(diff_line_item.key())})
-        try:
-            self.client.get(diff_url)
-        except Http404:
-            pass
-        else:
-            ok_(False)
+
+        response = self.client.get(diff_url)
+        eq_(response.status_code, 404)
 
     def mptest_gets_correct_apps(self):
         app1 = generate_app(self.account)
@@ -276,7 +270,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         self.creative = CreativeQueryManager.get(self.creative.key())
-        eq_(self.creative.active, True)
+        ok_(self.creative.active)
 
     def mptest_creative_pause(self):
         """
@@ -293,7 +287,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         self.creative = CreativeQueryManager.get(self.creative.key())
-        eq_(self.creative.active, False)
+        ok_(not self.creative.active)
 
     def mptest_creative_delete(self):
         """
@@ -310,8 +304,8 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         self.creative = CreativeQueryManager.get(self.creative.key())
-        eq_(self.creative.deleted, True)
-        eq_(self.creative.active, False)
+        ok_(self.creative.deleted)
+        ok_(not self.creative.active)
 
     def mptest_line_item_run(self):
         """
@@ -335,8 +329,8 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(actual_line_item.active)
-        eq_(actual_line_item.archived, False)
-        eq_(actual_line_item.deleted, False)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
 
     def mptest_line_item_pause(self):
         """
@@ -354,9 +348,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
-        eq_(actual_line_item.active, False)
-        eq_(actual_line_item.archived, False)
-        eq_(actual_line_item.deleted, False)
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
 
     def mptest_line_item_archive(self):
         """
@@ -374,9 +368,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
-        eq_(actual_line_item.active, False)
-        eq_(actual_line_item.archived, True)
-        eq_(actual_line_item.deleted, False)
+        ok_(not actual_line_item.active)
+        ok_(actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
 
     def mptest_line_item_delete(self):
         """
@@ -394,9 +388,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
-        eq_(actual_line_item.active, False)
-        eq_(actual_line_item.archived, False)
-        eq_(actual_line_item.deleted, True)
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(actual_line_item.deleted)
 
     def mp_test_order_run(self):
         """
@@ -417,9 +411,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         self.order = CampaignQueryManager.get(self.order.key())
-        eq_(self.order.active, True)
+        ok_(self.order.active)
 
-        eq_(self.line_item.active, True)
+        ok_(self.line_item.active)
 
     def mptest_order_pause(self):
         """
@@ -437,9 +431,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         self.order = CampaignQueryManager.get(self.order.key())
-        eq_(self.order.active, False)
+        ok_(not self.order.active)
 
-        eq_(self.line_item.active, True)
+        ok_(self.line_item.active)
 
     def mptest_order_archive(self):
         """
@@ -457,9 +451,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         self.order = CampaignQueryManager.get(self.order.key())
-        eq_(self.order.archived, True)
+        ok_(self.order.archived)
 
-        eq_(self.line_item.archived, False)
+        ok_(not self.line_item.archived)
 
     def mptest_order_delete(self):
         """
@@ -477,11 +471,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(response_json['success'])
 
         self.order = CampaignQueryManager.get(self.order.key())
-        eq_(self.order.deleted, True)
-        eq_(self.order.active, False)
+        ok_(self.order.deleted)
+        ok_(not self.order.active)
 
-        eq_(self.line_item.deleted, False)
-        eq_(self.line_item.active, True)
+        ok_(not self.line_item.deleted)
+        ok_(self.line_item.active)
 
     def mptest_mixed_run(self):
         """
@@ -520,20 +514,20 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         # Test the line item status
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
-        eq_(actual_line_item.active, True)
-        eq_(actual_line_item.archived, False)
-        eq_(actual_line_item.deleted, False)
+        ok_(actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
 
         # Test the creative status
         actual_creative = CreativeQueryManager.get(self.creative.key())
-        eq_(actual_creative.active, True)
-        eq_(actual_creative.deleted, False)
+        ok_(actual_creative.active)
+        ok_(not actual_creative.deleted)
 
         # Test the order status
         actual_order = CampaignQueryManager.get(self.order.key())
-        eq_(actual_order.active, True)
-        eq_(actual_order.archived, False)
-        eq_(actual_order.deleted, False)
+        ok_(actual_order.active)
+        ok_(not actual_order.archived)
+        ok_(not actual_order.deleted)
 
     def mptest_mixed_pause(self):
         """
@@ -560,20 +554,20 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         # Test the line item status
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
-        eq_(actual_line_item.active, False)
-        eq_(actual_line_item.archived, False)
-        eq_(actual_line_item.deleted, False)
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
 
         # Test the creative status
         actual_creative = CreativeQueryManager.get(self.creative.key())
-        eq_(actual_creative.active, False)
-        eq_(actual_creative.deleted, False)
+        ok_(not actual_creative.active)
+        ok_(not actual_creative.deleted)
 
         # Test the order status
         actual_order = CampaignQueryManager.get(self.order.key())
-        eq_(actual_order.active, False)
-        eq_(actual_order.archived, False)
-        eq_(actual_order.deleted, False)
+        ok_(not actual_order.active)
+        ok_(not actual_order.archived)
+        ok_(not actual_order.deleted)
 
     def mptest_mixed_archive(self):
         """
@@ -599,20 +593,20 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         # Test the line item status
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
-        eq_(actual_line_item.active, False)
-        eq_(actual_line_item.archived, True)
-        eq_(actual_line_item.deleted, False)
+        ok_(not actual_line_item.active)
+        ok_(actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
 
         # Test the creative status
         actual_creative = CreativeQueryManager.get(self.creative.key())
-        eq_(actual_creative.active, False)
-        eq_(actual_creative.deleted, False)
+        ok_(not actual_creative.active)
+        ok_(not actual_creative.deleted)
 
         # Test the order status
         actual_order = CampaignQueryManager.get(self.order.key())
-        eq_(actual_order.active, False)
-        eq_(actual_order.archived, True)
-        eq_(actual_order.deleted, False)
+        ok_(not actual_order.active)
+        ok_(actual_order.archived)
+        ok_(not actual_order.deleted)
 
     def mptest_mixed_delete(self):
         """
@@ -638,17 +632,17 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
         # Test the line item status
         actual_line_item = AdGroupQueryManager.get(self.line_item.key())
-        eq_(actual_line_item.active, False)
-        eq_(actual_line_item.archived, False)
-        eq_(actual_line_item.deleted, True)
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(actual_line_item.deleted)
 
         # Test the creative status
         actual_creative = CreativeQueryManager.get(self.creative.key())
-        eq_(actual_creative.active, False)
-        eq_(actual_creative.deleted, True)
+        ok_(not actual_creative.active)
+        ok_(actual_creative.deleted)
 
         # Test the order status
         actual_order = CampaignQueryManager.get(self.order.key())
-        eq_(actual_order.active, False)
-        eq_(actual_order.archived, False)
-        eq_(actual_order.deleted, True)
+        ok_(not actual_order.active)
+        ok_(not actual_order.archived)
+        ok_(actual_order.deleted)

@@ -24,7 +24,7 @@ import datetime
 import logging
 
 from account.query_managers import AccountQueryManager
-  
+
 
 
 class TestAccountQueryManager(unittest.TestCase):
@@ -39,37 +39,37 @@ class TestAccountQueryManager(unittest.TestCase):
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_memcache_stub()
         self.testbed.init_user_stub()
-        
+
         # Set up useful datetime
         self.dt = datetime.datetime(1987,4,4,4,4)# save some test time
-        
+
         # Set up default models
         self.account = Account(company="awesomecorp")
         self.account.put()
-        
+
         self.user1 = fake_user_factory("Long.Johnson@gmail.com")
         self.user2 = fake_user_factory("Don.Piano@mopub.com")
         # self.user1 = users.User("tomfeelslucky@gmail.com")
         # self.user2 = users.User("tom@mopub.com")
         # self.user1.put()
         # self.user2.put()
-        
+
         self.app = App(account=self.account, name="Test App")
         self.app.put()
-        
+
     def tearDown(self):
         self.testbed.deactivate()
-    
+
 
     # def mptest_get_basic(self):
     #     # Create an account with the default user and put it in both memcache and the datastore
     #     account = AccountQueryManager.get_current_account(user=self.user1)
-    #     
+
     #     eq_(account.company, "awesomecorp")
-    #     
-        
-        
-        
-        
-        
- 
+
+
+
+
+
+
+

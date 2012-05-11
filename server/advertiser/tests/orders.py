@@ -60,8 +60,8 @@ class OrderAndLineItemCreate(OrderViewTestCase):
 
         no_key_url = reverse('advertiser_order_and_line_item_form_new')
         response = self.client.get(no_key_url)
-        eq_(response.context['order_form'].instance, order_form.instance)
-        eq_(response.context['line_item_form'].instance, line_item_form.instance)
+        eq_(response.context['order_form'].instance, None)
+        eq_(response.context['line_item_form'].instance, None)
 
 
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
@@ -86,19 +86,37 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         ok_(edit_response.status_code in [200, 302])
 
     def mptest_get_correct_forms_with_order(self):
-        ok_(False)
+        line_item = None
+        order_form = OrderForm(instance=self.order, prefix='order')
+        line_item_form = OrderForm(instance=line_item)
+
+        response = self.client.get(self.new_url)
+        eq_(response.context['order_form'].instance.key(),
+            order_form.instance.key())
+        eq_(response.context['line_item_form'].instance, None)
 
     def mptest_get_correct_forms_with_line_item(self):
+        order_form = OrderForm(instance=self.order, prefix='order')
+        line_item_form = LineItemForm(instance=self.line_item)
+
+        response = self.client.get(self.edit_url)
+        eq_(response.context['order_form'].instance.key(),
+            order_form.instance.key())
+        eq_(response.context['line_item_form'].instance.key(),
+            line_item_form.instance.key())
+
+    def mptest_order_owns_line_item(self):
+        response = self.client.get(self.edit_url)
+        eq_(response.context['order'],
+            response.context['line_item'].campaign)
+
+    # don't know if these will be necessary 
+    # we should just test that all models dont change state
+    def mptest_user_owns_order(self):
         ok_(False)
 
-    # def mptest_order_owns_line_item(self):
-    #     ok_(False)
-
-    # def mptest_user_owns_order(self):
-    #     ok_(False)
-
-    # def mptest_user_owns_line_item(self):
-    #     ok_(False)
+    def mptest_user_owns_line_item(self):
+        ok_(False)
 
     def mptest_fail_on_unowned_order(self):
         diff_acct = generate_account(username='diff')
@@ -152,46 +170,46 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         self.edit_url = reverse('advertiser_line_item_form_edit',
                                kwargs={'line_item_key': unicode(self.line_item.key())})
  
-    # def mptest_http_response_code(self):
-    #     """
-    #     Author: Haydn Dufrene
-    #     A valid post should return a valid (200, 302) response (regardless
-    #     of params).
-    #     """
-    #     new_response = self.client.post(self.new_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #     edit_response = self.client.post(self.edit_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #     ok_(new_response.status_code in [200, 302])
-    #     ok_(edit_response.status_code in [200, 302])
+    def mptest_http_response_code(self):
+        """
+        Author: Haydn Dufrene
+        A valid post should return a valid (200, 302) response (regardless
+        of params).
+        """
+        new_response = self.client.post(self.new_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        edit_response = self.client.post(self.edit_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(new_response.status_code in [200, 302])
+        ok_(edit_response.status_code in [200, 302])
 
-    # def mptest_graceful_fail_without_data(self):
-    #     ok_(False)
+    def mptest_graceful_fail_without_data(self):
+        ok_(False)
 
-    # def mptest_graceful_fail_without_ajax(self):
-    #     ok_(False)
+    def mptest_graceful_fail_without_ajax(self):
+        ok_(False)
 
-    # def mptest_graceful_fail_for_non_order(self):
-    #     ok_(False)
+    def mptest_graceful_fail_for_non_order(self):
+        ok_(False)
 
-    # def mptest_puts_valid_order(self):
-    #     ok_(False)
+    def mptest_puts_valid_order(self):
+        ok_(False)
 
-    # def mptest_fails_gracefully_invalid_order(self):
-    #     ok_(False)
+    def mptest_fails_gracefully_invalid_order(self):
+        ok_(False)
 
-    # def mptest_puts_valid_line_item(self):
-    #     ok_(False)
+    def mptest_puts_valid_line_item(self):
+        ok_(False)
 
-    # def mptest_fails_gracefully_invalid_line_item(self):
-    #     ok_(False)
+    def mptest_fails_gracefully_invalid_line_item(self):
+        ok_(False)
 
-    # def mptest_complete_onboarding_after_first_campaign(self):
-    #     ok_(False)
+    def mptest_complete_onboarding_after_first_campaign(self):
+        ok_(False)
 
-    # def mptest_redirects_properly_after_success(self):
-    #     ok_(False)
+    def mptest_redirects_properly_after_success(self):
+        ok_(False)
 
-    # def mptest_datetime_alias_for_jquery_on_fail(self):
-    #     ok_(False)
+    def mptest_datetime_alias_for_jquery_on_fail(self):
+        ok_(False)
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):
@@ -233,13 +251,13 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         eq_(response_json['success'], False)
 
-    # def mptest_fail_on_unowned_objects(self):
-    #     """
-    #     Author: John Pena
-    #     Users should not be able to change the status of objects
-    #     they don't own. The view should return a 404.
-    #     """
-    #     ok_(False)
+    def mptest_fail_on_unowned_objects(self):
+        """
+        Author: John Pena
+        Users should not be able to change the status of objects
+        they don't own. The view should return a 404.
+        """
+        ok_(False)
 
     def mptest_creative_run(self):
         """
@@ -418,7 +436,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(response_json['success'])
 
-        self.order = CampaignQueryManager.get(self.order.keycan ())
+        self.order = CampaignQueryManager.get(self.order.key())
         eq_(self.order.active, False)
 
         eq_(self.line_item.active, True)

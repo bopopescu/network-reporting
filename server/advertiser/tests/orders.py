@@ -46,7 +46,7 @@ class OrderAndLineItemCreate(OrderViewTestCase):
         """
         A valid get should return a valid (200, 302) response (regardless
         of params).
-        
+
         Author: Haydn Dufrene
         """
         response = self.client.get(self.url)
@@ -78,8 +78,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         """
         A valid get should return a valid (200, 302) response (regardless
         of params).
-        
-        Author: Haydn Dufrene        
+
+        Author: Haydn Dufrene
         """
         new_response = self.client.get(self.new_url)
         edit_response = self.client.get(self.edit_url)
@@ -111,7 +111,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         eq_(response.context['order'],
             response.context['line_item'].campaign)
 
-    # don't know if these will be necessary 
+    # don't know if these will be necessary
     # we should just test that all models dont change state
     def mptest_user_owns_order(self):
         ok_(False)
@@ -142,7 +142,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
                                           diff_acct,
                                           'gtee')
         diff_url = reverse('advertiser_line_item_form_edit',
-                           kwargs={'line_item_key': 
+                           kwargs={'line_item_key':
                                    unicode(diff_line_item.key())})
         try:
             self.client.get(diff_url)
@@ -156,7 +156,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         app2 = generate_app(self.account)
         response = self.client.get(self.edit_url)
 
-        expected_apps = AppQueryManager.get_apps(account=self.account, 
+        expected_apps = AppQueryManager.get_apps(account=self.account,
                                         alphabetize=True)
         actual_apps = response.context['apps']
         for actual_app, expected_app in zip(actual_apps, expected_apps):
@@ -168,7 +168,6 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     Tests for the new/edit line item POST method.
     Author: John Pena
     """
-    
     def setUp(self):
         """
         Sets up the new and edit urls.
@@ -184,13 +183,14 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
     def mptest_graceful_fail_without_data(self):
         """
-        Posting to the form handler should fail if there's no post body.        
+        Posting to the form handler should fail if there's no post body.
         """
         response = self.client.post(self.new_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
         response = self.client.post(self.edit_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
+
 
     def mptest_graceful_fail_without_ajax(self):
         """
@@ -201,7 +201,8 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         response = self.client.post(self.edit_url)
         eq_(response.status_code, 404)
-        
+
+
     def mptest_graceful_fail_for_non_order(self):
         """
         Posting to the edit form handler with a non-order campaign (marketplace
@@ -220,63 +221,100 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         })
         response = self.client.post(url)
         eq_(response.status_code, 404)
-        
 
-    def mptest_puts_new_valid_order(self):
-        """
-        Posting valid form information to the view's POST method will create
-        a new order.
-        """
-        ok_(False)
-        
-    def mptest_puts_valid_changed_order(self):
-        """
-        Posting valid form data to the view's POST method should change
-        the same order.
-        """
-        ok_(False)
 
-    def mptest_fails_gracefully_invalid_order(self):
+    def mptest_fail_when_line_item_not_owned(self):
         """
-        Posting invalid form data to th view's POST method should fail
-        gracefully.
+        A line item should not be editable by accounts that don't
+        own it.
         """
-        ok_(False)
+        diff_account = generate_account(username='diff')
+        order = generate_campaign(diff_account)
+        line_item = generate_adgroup(order, [], diff_account, 'gtee')
+        url = reverse('advertiser_line_item_form_edit', kwargs = {
+            'line_item_key': unicode(line_item.key())
+        })
 
-        
+        post_body = {
+
+            # common form parameters
+            u'ajax': [u'true'],
+
+            # order form parameters
+            u'order-advertiser': [u'Testingco'],
+            u'order-description': [u''],
+            u'order-name': [u'Test Order'],
+
+            # line item form parameters
+            u'adgroup_type': [u'gtee'],
+            u'allocation_percentage': [u'100.0'],
+            u'android_version_max': [u'999'],
+            u'android_version_min': [u'1.5'],
+            u'bid': [u'0.05'],
+            u'bid_strategy': [u'cpm'],
+            u'budget': [u''],
+            u'budget_strategy': [u'allatonce'],
+            u'budget_type': [u'daily'],
+            u'daily_frequency_cap': [u'0'],
+            u'device_targeting': [u'0'],
+            u'end_datetime_0': [u'05/31/2012'],
+            u'end_datetime_1': [u'11:59 PM'],
+            u'gtee_priority': [u'normal'],
+            u'hourly_frequency_cap': [u'0'],
+            u'ios_version_max': [u'999'],
+            u'ios_version_min': [u'2.0'],
+            u'keywords': [u''],
+            u'name': [u'Test Line Item'],
+            u'promo_priority': [u'normal'],
+            u'region_targeting': [u'all'],
+            u'start_datetime_0': [u'05/30/2012'],
+            u'start_datetime_1': [u'12:00 AM'],
+            u'target_android': [u'on'],
+            u'target_ipad': [u'on'],
+            u'target_iphone': [u'on'],
+            u'target_ipod': [u'on'],
+            u'target_other': [u'on']
+        }
+
+        response = self.client.post(url, post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        eq_(response.status_code, 404)
+
+
     def mptest_puts_new_valid_line_item(self):
         """
         """
         ok_(False)
 
-        
+
     def mptest_puts_changed_valid_line_item(self):
         """
         """
         ok_(False)
 
-        
+
     def mptest_fails_gracefully_invalid_line_item(self):
         """
         """
         ok_(False)
 
-        
+
     def mptest_complete_onboarding_after_first_campaign(self):
         """
         """
         ok_(False)
 
-        
+
     def mptest_redirects_properly_after_success(self):
         """
         """
         ok_(False)
 
-        
+
     def mptest_datetime_alias_for_jquery_on_fail(self):
         """
-        """        
+        """
         ok_(False)
 
 
@@ -289,7 +327,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         """
         A valid post should return a valid (200, 302) response (regardless
         of params).
-        
+
         Author: Haydn Dufrene
         """
         response = self.client.post(self.url)

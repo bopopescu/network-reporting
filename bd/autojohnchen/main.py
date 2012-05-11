@@ -218,7 +218,7 @@ class MpxReportHandler(webapp.RequestHandler):
         # compute body
         body = "Total Spend: $%.2f (7d: $%.1fK 30d: $%.1fK)\n" % mpx_spend
         body += "Total Inventory: %.1fMM (7d: %.1fB 30d: %.1fB)\n" % request_count
-        body += "eCPM: $%.3f (7d: $%.2f 30d: $%.2f)\n" % cpm
+        body += "eCPM: $%.3f (7d: $%.3f 30d: $%.3f)\n" % cpm
         
         # bidders
         body += "\nTop Bidders\n===========\n"

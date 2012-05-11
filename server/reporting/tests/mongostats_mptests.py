@@ -168,7 +168,7 @@ def mongostats_server_error_mptest():
     assert(False, 'APIException not raised')
 
 def api_url_mptest():
-    TEST_CASE_URL = "http://mongostats.mopub.com/stats?start_date=111220&end_date=111222&acct=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww&pub=agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw&adv=agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw"
+    TEST_CASE_URL = "http://mongostats.mopub.com/stats?start_date=111220&end_date=111222&acct=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww&pub=agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw&adv=agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw&hybrid=True"
     url = _generate_api_url(advertiser_key=db.Key('agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw'),
                             publisher_key=db.Key('agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw'),
                             account_key=db.Key('agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww'),

@@ -4,7 +4,6 @@ PIL==1.1.7
 PyYAML==3.10
 coverage==3.5.1
 distribute==0.6.19
-mongoengine==0.5.2
 multiprocessing==2.6.2.1
 nose==1.1.2
 poster==0.8.1

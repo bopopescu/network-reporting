@@ -11,11 +11,11 @@ import simplejson as json
 from django.core.urlresolvers import reverse
 from django.test.utils import setup_test_environment
 from django.http import Http404
-from nose.tools import eq_, ok_
+from nose.tools import eq_, ok_, assert_raises
 
 from admin.randomgen import (generate_campaign, generate_adgroup, \
                              generate_creative, generate_app, \
-                             generate_account)
+                             generate_account, generate_marketplace_campaign)
 
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
@@ -44,9 +44,10 @@ class OrderAndLineItemCreate(OrderViewTestCase):
 
     def mptest_http_response_code(self):
         """
-        Author: Haydn Dufrene
         A valid get should return a valid (200, 302) response (regardless
         of params).
+        
+        Author: Haydn Dufrene
         """
         response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
@@ -75,9 +76,10 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
     def mptest_http_response_code(self):
         """
-        Author: Haydn Dufrene
         A valid get should return a valid (200, 302) response (regardless
         of params).
+        
+        Author: Haydn Dufrene        
         """
         new_response = self.client.get(self.new_url)
         edit_response = self.client.get(self.edit_url)
@@ -151,47 +153,70 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
                                kwargs={'order_key': unicode(self.order.key())})
         self.edit_url = reverse('advertiser_line_item_form_edit',
                                kwargs={'line_item_key': unicode(self.line_item.key())})
- 
-    # def mptest_http_response_code(self):
-    #     """
-    #     Author: Haydn Dufrene
-    #     A valid post should return a valid (200, 302) response (regardless
-    #     of params).
-    #     """
-    #     new_response = self.client.post(self.new_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #     edit_response = self.client.post(self.edit_url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #     ok_(new_response.status_code in [200, 302])
-    #     ok_(edit_response.status_code in [200, 302])
 
-    # def mptest_graceful_fail_without_data(self):
-    #     ok_(False)
+    def mptest_graceful_fail_without_data(self):
+        """
+        Posting to the form handler should fail if there's no post body.
+        """
+        response = self.client.post(self.new_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
 
-    # def mptest_graceful_fail_without_ajax(self):
-    #     ok_(False)
+        response = self.client.post(self.edit_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
 
-    # def mptest_graceful_fail_for_non_order(self):
-    #     ok_(False)
+    def mptest_graceful_fail_without_ajax(self):
+        """
+        Posting to the form handler without using an XHR (non-ajax requests) should fail.
+        """
+        response = self.client.post(self.new_url)
+        eq_(response.status_code, 404)
 
-    # def mptest_puts_valid_order(self):
-    #     ok_(False)
+        response = self.client.post(self.edit_url)
+        eq_(response.status_code, 404)
+        
+    def mptest_graceful_fail_for_non_order(self):
+        """
+        Posting to the edit form handler with a non-order campaign (marketplace
+        or network) should fail gracefully.
+        """
+        ok_(False)
+        non_order_mpx = generate_marketplace_campaign(self.account, None)
+        url = reverse('advertiser_line_item_form_new', kwargs = {
+            'order_key': unicode(non_order_mpx.key())
+        })
+        response = self.client.post(url)
+        eq_(response.status_code, 404)
 
-    # def mptest_fails_gracefully_invalid_order(self):
-    #     ok_(False)
+        non_order_network = generate_marketplace_campaign(self.account, None)
+        url = reverse('advertiser_line_item_form_new', kwargs = {
+            'order_key': unicode(non_order_network.key())
+        })
+        response = self.client.post(url)
+        eq_(response.status_code, 404)
+        
 
-    # def mptest_puts_valid_line_item(self):
-    #     ok_(False)
+    def mptest_puts_valid_order(self):
+        ok_(False)
 
-    # def mptest_fails_gracefully_invalid_line_item(self):
-    #     ok_(False)
+    def mptest_fails_gracefully_invalid_order(self):
+        ok_(False)
 
-    # def mptest_complete_onboarding_after_first_campaign(self):
-    #     ok_(False)
+    def mptest_puts_valid_line_item(self):
+        ok_(False)
 
-    # def mptest_redirects_properly_after_success(self):
-    #     ok_(False)
+    def mptest_fails_gracefully_invalid_line_item(self):
+        ok_(False)
 
-    # def mptest_datetime_alias_for_jquery_on_fail(self):
-    #     ok_(False)
+    def mptest_complete_onboarding_after_first_campaign(self):
+        ok_(False)
+
+    def mptest_redirects_properly_after_success(self):
+        ok_(False)
+
+    def mptest_datetime_alias_for_jquery_on_fail(self):
+        ok_(False)
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):
@@ -201,9 +226,10 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_http_response_code(self):
         """
-        Author: Haydn Dufrene
         A valid post should return a valid (200, 302) response (regardless
         of params).
+        
+        Author: Haydn Dufrene
         """
         response = self.client.post(self.url)
         ok_(response.status_code in [200, 302])
@@ -418,7 +444,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(response_json['success'])
 
-        self.order = CampaignQueryManager.get(self.order.keycan ())
+        self.order = CampaignQueryManager.get(self.order.key())
         eq_(self.order.active, False)
 
         eq_(self.line_item.active, True)
@@ -634,3 +660,4 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         eq_(actual_order.active, False)
         eq_(actual_order.archived, False)
         eq_(actual_order.deleted, True)
+

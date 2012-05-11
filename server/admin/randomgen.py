@@ -218,11 +218,11 @@ def generate_adgroup(campaign, site_keys, account, adgroup_type):
     return adgroup
 
 
-def generate_campaign(account, *args):
+def generate_campaign(account, is_order=True, *args):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
                         advertiser = "John's Hat Co, Inc.",
-                        is_order=True)
+                        is_order=is_order)
     campaign.put()
     return campaign
 

@@ -22,6 +22,7 @@ counts.csv
 server/public/css/.sass-cache/
 .sass-cache
 server/common/wurfl/*.xml
+coverage.xml
 *~
 *#
 *#*

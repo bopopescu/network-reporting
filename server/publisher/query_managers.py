@@ -151,7 +151,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
             queue = taskqueue.Queue()
             task = taskqueue.Task(url='/fetch_api/adunit_update_fanout',
                                   method='POST',
-                                  params={'adunit_keys': adunit_keys})
+                                  params={'adunit_keys': adunit_keys},
+                                  target='38-fetch')
             queue.add(task)
 
         logging.info("Deleting from memcache: %s" % keys)
@@ -297,7 +298,8 @@ class AppQueryManager(CachedQueryManager):
     def update_config_and_put(cls, app, network_config):
         """ Updates the network config and the associated app"""
         from account.query_managers import NetworkConfigQueryManager
-        
+
+        network_config.account = App.network_config.get_value_for_datastore(app)
         NetworkConfigQueryManager.put(network_config)
         app.network_config = network_config
         cls.put(app)
@@ -318,13 +320,16 @@ class AppQueryManager(CachedQueryManager):
         if len(apps) != len(configs):
             raise Exception('Length of apps list must be equal to length of configs list')
 
+        for app, config in zip(apps, configs):
+            config.account = App.account.get_value_for_datastore(app)
+
         # Save the config objects first; otherwise, they won't have complete keys and we won't be
         # able to assign them to other objects.
         NetworkConfigQueryManager.put(configs)
-        
+
         for app, config in zip(apps, configs):
             app.network_config = config
-            
+
         cls.put(apps)
 
     @classmethod
@@ -518,6 +523,7 @@ class AdUnitQueryManager(QueryManager):
         """ Updates the network config and the associated adunit"""
         from account.query_managers import NetworkConfigQueryManager
 
+        network_config.account = AdUnit.account.get_value_for_datastore(adunit)
         NetworkConfigQueryManager.put(network_config)
         adunit.network_config = network_config
         cls.put(adunit)
@@ -538,10 +544,13 @@ class AdUnitQueryManager(QueryManager):
         if len(adunits) != len(configs):
             raise Exception('Length of ad units list must be equal to length of configs list')
 
+        for adunit, config in zip(adunits, configs):
+            config.account = AdUnit.account.get_value_for_datastore(adunit)
+
         # Save the config objects first; otherwise, they won't have complete keys and we won't be
         # able to assign them to other objects.
         NetworkConfigQueryManager.put(configs)
-        
+
         for adunit, config in zip(adunits, configs):
             adunit.network_config = config
 

@@ -1,5 +1,5 @@
 application: mopub-inc
-version: 38-mr
+version: 38-fetch
 
 runtime: python
 api_version: 1
@@ -83,7 +83,7 @@ handlers:
   login: admin
 
 - url: /_ah/warmup
-  script: ad_server/main.py
+  script: fetch_api/api_server.py
   login: admin
 
 - url: /fetch_api/.*

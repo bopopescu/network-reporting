@@ -184,5 +184,5 @@ NETWORKS = dict(NETWORKS_WITHOUT_REPORTING.items() +
 
 NETWORK_ADGROUP_TRANSLATION = {'iad': 'iAd',
                                'admob': 'admob_native',
-                               'millenial': 'millenial_native'}
+                               'millennial': 'millennial_native'}
 

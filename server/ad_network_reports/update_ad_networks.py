@@ -213,7 +213,7 @@ def update_account_stats(account,
             send_stats_mail(account, day, zip(mappers, all_stats))
         # Return management stats
         return management_stats
-    except Exception as exception:
+    except Exception, exception:
         exc_traceback = sys.exc_info()[2]
 
         error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
@@ -360,7 +360,7 @@ def retry_login(login_key,
                 logger=logger)
         result = ([stats for mapper, stats in valid_stats_list], temp_stats)
         return result
-    except Exception as exception:
+    except Exception, exception:
         exc_traceback = sys.exc_info()[2]
 
         error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
@@ -417,7 +417,7 @@ def update_login_stats(login,
         login.state = LoginStates.ERROR
         login.put()
         return []
-    except Exception as e:
+    except Exception, e:
         # This should catch ANY exception because we don't want to stop
         # updating stats if something minor breaks somewhere.
         if management_stats:

@@ -70,8 +70,7 @@ class IAdScraper(Scraper):
                 exception = False
                 try:
                     self.browser.find_element_by_name('appleConnectForm').submit()
-                except selenium.common.exceptions.NoSuchElementException as \
-                        exception:
+                except selenium.common.exceptions.NoSuchElementException:
                     pass
                 submit_count += 1
             # There are some redirects and shit that happens, chill out for a bit
@@ -134,8 +133,7 @@ class IAdScraper(Scraper):
             exception = False
             try:
                 curr_date = self.get_cal_date()
-            except selenium.common.exceptions.NoSuchElementException as \
-                    exception:
+            except selenium.common.exceptions.NoSuchElementException:
                 self.browser.find_element_by_css_selector(selector).click()
             count += 1
         # Which way do we go
@@ -226,8 +224,7 @@ class IAdScraper(Scraper):
             try:
                 nextPage = self.browser.find_element_by_css_selector(
                         '.pagingOptionsNextPage')
-            except selenium.common.exceptions.NoSuchElementException as \
-                    exception:
+            except selenium.common.exceptions.NoSuchElementException:
                 nextPage = False
             else:
                 # Click the icon if we aren't already on the last page

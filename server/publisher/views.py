@@ -1187,20 +1187,29 @@ def table_export(request, *args, **kwargs):
 def enable_networks(adunit, account):
     """
     Create network adgroups for this adunit for all ad networks.
+
+    NOTE: The campaigns' creatives are created when the adgroups are set to
+    active in the EditNetwork handler in networks/view
     """
     ntwk_adgroups = []
     for campaign in CampaignQueryManager.get_network_campaigns(account,
             is_new=True):
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                 adunit.key(), account.key())
-        preexisting_adgroup = AdGroupQueryManager.get_adgroups(campaign=
-                campaign)[0]
-        adgroup.active = preexisting_adgroup.active
-        adgroup.device_targeting = preexisting_adgroup.device_targeting
-        for device, pretty_name in adgroup.DEVICE_CHOICES:
-            setattr(adgroup, 'target_' + device, getattr(preexisting_adgroup,
-                'target_' + device, False))
-        adgroup.target_other = preexisting_adgroup.target_other
+        # New adunits are initialized as paused for the account's network
+        # campaigns
+        adgroup.active = False
+        adgroups = AdGroupQueryManager.get_adgroups(campaign=campaign)
+        # Accounts should have adunits prior to creating campaigns but just in
+        # case don't break
+        if adgroups:
+            preexisting_adgroup = adgroups[0]
+            # Copy over targeting for the NetworkDetails page
+            adgroup.device_targeting = preexisting_adgroup.device_targeting
+            for device, pretty_name in adgroup.DEVICE_CHOICES:
+                setattr(adgroup, 'target_' + device, getattr(
+                    preexisting_adgroup, 'target_' + device, False))
+            adgroup.target_other = preexisting_adgroup.target_other
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
 

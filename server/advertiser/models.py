@@ -72,7 +72,7 @@ class Campaign(db.Model):
     #
     # Compared to an AdGroup (network_type):
     #       admob = admob_native
-    #       millenial = millenial_native
+    #       millennial = millennial_native
     #       iad = iAd
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
     network_state = db.IntegerProperty(default=NetworkStates. \

@@ -84,7 +84,7 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
                                'adsense':'adsense_pub_id',
                                'iAd':'',
                                'admob':'admob_pub_id',
-                               'millenial':'millenial_pub_id',
+                               'millennial':'millennial_pub_id',
                                'ejam':'ejam_pub_id',
                                'chartboost':'chartboost_pub_id',
                                'appnexus':'appnexus_pub_id',
@@ -196,7 +196,7 @@ def generate_adgroup(campaign,
                      bid_strategy=None,
                      id=None,
                      key=None):
-    
+
 
     rand_network_type = select_rand(NETWORK_TYPES)
 
@@ -233,7 +233,7 @@ def generate_campaign(account,
                       campaign_type = None,
                       id=None,
                       key=None):
-    
+
     campaign = Campaign(key=_get_key(Campaign, id),
                         name=get_campaign_name(),
                         account = account,
@@ -295,7 +295,7 @@ def _get_correct_key(key):
             key = db.Key(key)
         key = db.Key.from_path(key.kind(), key.id_or_name()) # overwrite the _app property
     return key
-    
+
 
 def generate_networkconfig():
     networkconfig = NetworkConfig()
@@ -366,7 +366,7 @@ def main():
 
     account_id = 1
     account = generate_account(username='test@mopub.com', password='test', id=account_id)
-        
+
     apps = [generate_app(account, id=id) for id in xrange(NUM_APPS)]
 
     adunits_per_app = dict([(app,[]) for app in apps])
@@ -399,7 +399,7 @@ def main():
 
     for i, adgroup in enumerate(adgroups):
         [generate_creative(account, adgroup, (i*100 + id)) for id in xrange(NUM_CREATIVES_PER_ADGROUP/(i+1))]
-    
+
     start = datetime .datetime.now() - datetime.timedelta(100)
     days = date_magic.gen_days(start, datetime.datetime.now())
     datapoints = []
@@ -419,14 +419,14 @@ def main():
                     adunit       = str(adunit.key()),
                     source       = _get_source(adgroup),
                     source_type  = _get_source_type(adgroup),
-                    
+
                     rev          = get_stats(day)*10.0*random.random(),
                     req          = int(get_stats(day)*1000*random.random()),
                     imp          = int(get_stats(day)*900*random.random()),
                     clk          = int(get_stats(day)*40*random.random()),
                     conv         = int(get_stats(day)*random.random()),
                     attempts     = int(get_stats(day)*1000*random.random()),
-                    
+
                     mpx_rev      = 0,
                     mpx_req      = 0,
                     mpx_imp      = 0,
@@ -442,20 +442,20 @@ def main():
                     net_attempts = 0,
                 )]
 
-                
+
     open('datapoints.json','w').write(simplejson.dumps(datapoints))
 
     # for campaign_key in advertiser_keys.keys():
     #     budget = generate_budget()
-        
+
     #     campaign = generate_campaign(account,
     #                                  budget,
     #                                  adgroup_type = adgroup_types[campaign_key],
     #                                  key=campaign_key)
-                                     
+
 
     #     campaigns_per_app[app].append(campaign)
-        
+
     #     for i, adgroup_key in enumerate(advertiser_keys[campaign_key]):
     #         adgroup = generate_adgroup(campaign,
     #                                    select_rand_subset(all_site_keys),
@@ -473,7 +473,7 @@ def _get_source(adgroup):
         return 'network'
     if 'marketplace' in campaign_type:
         return 'mpx'
-    
+
 def _get_source_type(adgroup):
     source = _get_source(adgroup)
     if source == 'network':
@@ -490,8 +490,8 @@ def _get_source_type(adgroup):
             return 'promo'
 
 import math
-def get_stats(day):    
-    return int(day.day + math.sin(day.day)/3*day.day) 
-    
+def get_stats(day):
+    return int(day.day + math.sin(day.day)/3*day.day)
+
 if __name__=="__main__":
     main()

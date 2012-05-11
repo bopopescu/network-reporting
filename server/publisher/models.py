@@ -370,6 +370,7 @@ AdUnit = Site
 
 SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
 
+# TODO: Move this to common.utils.helper
 def to_dict(model, ignore = None):
     if ignore == None:
         ignore = []

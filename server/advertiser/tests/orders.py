@@ -20,6 +20,7 @@ from admin.randomgen import (generate_campaign, generate_adgroup, \
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
+from advertiser.forms import OrderForm, LineItemForm
 from publisher.query_managers import AppQueryManager
 
 setup_test_environment()
@@ -50,6 +51,17 @@ class OrderAndLineItemCreate(OrderViewTestCase):
         response = self.client.get(self.url)
         ok_(response.status_code in [200, 302])
 
+    def mptest_get_correct_forms_with_no_keys(self):
+        order = None
+        line_item = None
+        order_form = OrderForm(instance=order, prefix='order')
+        line_item_form = LineItemForm(instance=line_item)
+
+        no_key_url = reverse('advertiser_order_and_line_item_form_new')
+        response = self.client.get(no_key_url)
+        eq_(response.context['order_form'].instance, order_form.instance)
+        eq_(response.context['line_item_form'].instance, line_item_form.instance)
+
 
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def setUp(self):
@@ -72,12 +84,10 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         ok_(new_response.status_code in [200, 302])
         ok_(edit_response.status_code in [200, 302])
 
-    def mptest_get_correct_order_form(self):
-        ## line_item_key, order_key, none
+    def mptest_get_correct_forms_with_order(self):
         ok_(False)
 
-    def mptest_get_correct_line_item_form(self):
-        ## line_item_key, order_key, none
+    def mptest_get_correct_forms_with_line_item(self):
         ok_(False)
 
     # def mptest_order_owns_line_item(self):
@@ -101,6 +111,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
             self.client.get(diff_url)
         except Http404:
             pass
+        else:
+            ok_(False)
 
     def mptest_fail_on_unowned_line_item(self):
         diff_acct = generate_account(username='diff')
@@ -116,6 +128,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
             self.client.get(diff_url)
         except Http404:
             pass
+        else:
+            ok_(False)
 
     def mptest_gets_correct_apps(self):
         app1 = generate_app(self.account)
@@ -149,7 +163,36 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     #     ok_(new_response.status_code in [200, 302])
     #     ok_(edit_response.status_code in [200, 302])
 
- 
+    # def mptest_graceful_fail_without_data(self):
+    #     ok_(False)
+
+    # def mptest_graceful_fail_without_ajax(self):
+    #     ok_(False)
+
+    # def mptest_graceful_fail_for_non_order(self):
+    #     ok_(False)
+
+    # def mptest_puts_valid_order(self):
+    #     ok_(False)
+
+    # def mptest_fails_gracefully_invalid_order(self):
+    #     ok_(False)
+
+    # def mptest_puts_valid_line_item(self):
+    #     ok_(False)
+
+    # def mptest_fails_gracefully_invalid_line_item(self):
+    #     ok_(False)
+
+    # def mptest_complete_onboarding_after_first_campaign(self):
+    #     ok_(False)
+
+    # def mptest_redirects_properly_after_success(self):
+    #     ok_(False)
+
+    # def mptest_datetime_alias_for_jquery_on_fail(self):
+    #     ok_(False)
+
 
 class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):
@@ -375,7 +418,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(response_json['success'])
 
-        self.order = CampaignQueryManager.get(self.order.key())
+        self.order = CampaignQueryManager.get(self.order.keycan ())
         eq_(self.order.active, False)
 
         eq_(self.line_item.active, True)

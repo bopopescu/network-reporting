@@ -113,7 +113,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         # Excluded fields with funky equalsing.
         # app.t
-        app_dict = model_to_dict(app, exclude=['t', 'account'])
+        app_dict = model_to_dict(app, exclude=['t'])
 
         # Other fields.
         expected_app_dict = {
@@ -157,39 +157,41 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         adunit = adunits_dict.values()[0]
 
+        adunit_dict = model_to_dict(adunit, exclude=['t'])
+
         # Validate that the DB has been updated accurately.
-        eq_(adunit.name, u'Banner Ad')
-        eq_(adunit.description, u'AdUnit Description')
-        ok_(adunit.custom_width is None)
-        ok_(adunit.custom_height is None)
-        eq_(adunit.format, u'320x50')
-        eq_(adunit.app_key.key(), app.key())
-        eq_(adunit.device_format, u'phone')
-        eq_(adunit.refresh_interval, 0)
+        expected_adunit_dict = {
+            'name': u'Banner Ad',
+            'description': u'AdUnit Description',
+            'custom_width': None,
+            'custom_height': None,
+            'format': u'320x50',
+            'app_key': app,
+            'device_format': u'phone',
+            'refresh_interval': 0,
+            'account': self.account,
+            'adsense_channel_id': None,
+            'url': None,
+            'resizable': False,
+            'landscape': False,
+            'deleted': False,
+            'jumptap_site_id': None,
+            'millennial_site_id': None,
+            'keywords': None,
+            'animation_type': u'0',
+            'color_border': u'336699',
+            'color_bg': u'FFFFFF'
+            'color_link': u'000000FF',
+            'color_text': u'000000',
+            'color_url': u'008000',
+            # Will this work since network config is a refproperty?
+            'network_config': None,
+        }
 
-        eq_(adunit.account.key(), self.account.key())
-
-        # Make sure we don't modify any existing parameters
-        ok_(adunit.adsense_channel_id is None)
-        ok_(adunit.url is None)
-        ok_(not adunit.resizable)
-        ok_(not adunit.landscape)
-        ok_(not adunit.deleted)
-        ok_(adunit.jumptap_site_id is None)
-        ok_(adunit.millennial_site_id is None)
-        ok_(adunit.keywords is None)
-
-        eq_(adunit.animation_type, u'0')
-        eq_(adunit.color_border, u'336699')
-        eq_(adunit.color_bg, u'FFFFFF')
-        eq_(adunit.color_link, u'0000FF')
-        eq_(adunit.color_text, u'000000')
-        eq_(adunit.color_url, u'008000')
+        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
         ok_(adunit.t > utcnow - datetime.timedelta(minutes=1) and
             adunit.t < utcnow)
-
-        ok_(adunit.network_config is None)
 
     # This test is broken because of an existing bug in both AppForm (name isn't
     # required) and CreateAppHandler.post (attempts to put None app when form

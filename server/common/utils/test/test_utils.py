@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 
@@ -74,3 +75,6 @@ def model_to_dict(model, exclude=[]):
         model_dict[key] = getattr(model, key)
 
     return model_dict
+
+def time_almost_eq(time1, time2):
+    pass

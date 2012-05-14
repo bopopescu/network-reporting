@@ -163,6 +163,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         expected_adunit_dict = {
             'name': u'Banner Ad',
             'description': u'AdUnit Description',
+            'ad_type': None,
             'custom_width': None,
             'custom_height': None,
             'format': u'320x50',
@@ -180,11 +181,10 @@ class CreateAppViewTestCase(BaseViewTestCase):
             'keywords': None,
             'animation_type': u'0',
             'color_border': u'336699',
-            'color_bg': u'FFFFFF'
-            'color_link': u'000000FF',
+            'color_bg': u'FFFFFF',
+            'color_link': u'0000FF',
             'color_text': u'000000',
             'color_url': u'008000',
-            # Will this work since network config is a refproperty?
             'network_config': None,
         }
 

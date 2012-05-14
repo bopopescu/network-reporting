@@ -76,5 +76,5 @@ def model_to_dict(model, exclude=[]):
 
     return model_dict
 
-def time_almost_eq(time1, time2):
+def time_almost_eq(time1, time2, delta):
     pass

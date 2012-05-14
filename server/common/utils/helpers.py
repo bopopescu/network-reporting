@@ -185,3 +185,10 @@ def get_udid_appid(request):
 
     # Otherwise, there's no need to do special processing. Simply return the request parameters
     return udid, mobile_appid
+
+def dict_eq_(dict1, dict2):
+    dict1_keys = dict1.keys()
+    eq_(dict1_keys, dict2.keys())
+    for key in dict1_keys:
+        assert_almost_equals(dict1[key], dict2[key])
+

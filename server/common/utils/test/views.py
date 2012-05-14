@@ -11,6 +11,8 @@ setup_test_environment()
 
 
 class BaseViewTestCase(unittest.TestCase):
+    model_types = [Account, App, AdUnit, Campaign, AdGroup, Creative]
+
     def setUp(self):
         # setup the test environment
         self.testbed = testbed.Testbed()
@@ -30,3 +32,13 @@ class BaseViewTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.testbed.deactivate()
+
+    def dict_eq(self, dict1, dict2):
+        eq_(dict1.keys(), dict2.keys())
+
+        for key in dict1.keys():
+            # Possibly refactor to include more type comparisons.
+            eq_(dict1[key], dict2[key])
+
+    def model_eq(self, model1, model2):
+        eq_(model1.key(), model2.key())

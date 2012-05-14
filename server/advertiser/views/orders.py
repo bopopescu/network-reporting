@@ -325,7 +325,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
         # TODO: do this in the form? maybe pass the account in?
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-        print self.request.POST
         line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
 
         if line_item_form.is_valid():

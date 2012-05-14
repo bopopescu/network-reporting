@@ -5,7 +5,7 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from common.utils.test.views import BaseViewTestCase
-from common.utils.helpers import dict_eq_
+from common.utils.test.test_utils import dict_eq
 
 import logging
 import simplejson as json
@@ -159,7 +159,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
 
     def mptest_puts_new_valid_order_and_line_item(self):
         """
-        
+
         """
         response = self.client.post(self.url, self.post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -182,11 +182,11 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         ok_(line_item_dict['created'] > minute_ago)
         ok_(line_item_dict['t'] > minute_ago)
 
-        dict_eq_(to_dict(line_item, ignore=['id', 'campaign', 'created', 't']),
+        dict_eq(to_dict(line_item, ignore=['id', 'campaign', 'created', 't']),
                  to_dict(self.mock_line_item, ignore=['id', 'campaign', 'created', 't']))
 
         order = line_item.campaign
-        dict_eq_(to_dict(order, ignore=['id']),
+        dict_eq(to_dict(order, ignore=['id']),
                  to_dict(self.mock_order, ignore=['id']))
 
     def mptest_order_owns_line_item(self):
@@ -276,8 +276,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         response = self.client.get(self.edit_url)
         actual_order = response.context['order']
         actual_line_item = response.context['line_item']
-        dict_eq_(to_dict(self.order), to_dict(actual_order))
-        dict_eq_(to_dict(self.line_item), to_dict(actual_line_item))
+        dict_eq(to_dict(self.order), to_dict(actual_order))
+        dict_eq(to_dict(self.line_item), to_dict(actual_line_item))
 
     def mptest_fail_on_unowned_order(self):
         """

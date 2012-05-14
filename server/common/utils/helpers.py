@@ -7,6 +7,7 @@ import datetime
 from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import db
+from nose.tools import eq_, assert_almost_equals
 
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')

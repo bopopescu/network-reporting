@@ -10,8 +10,7 @@ import logging
 import simplejson as json
 from django.core.urlresolvers import reverse
 from django.test.utils import setup_test_environment
-from django.http import Http404
-from nose.tools import eq_, ok_, assert_raises
+from nose.tools import eq_, ok_
 
 from admin.randomgen import (generate_campaign, generate_adgroup, \
                              generate_creative, generate_app, \
@@ -38,9 +37,9 @@ class OrderViewTestCase(BaseViewTestCase):
         self.creative = generate_creative(self.account, self.line_item)
 
 
-class OrderAndLineItemCreate(OrderViewTestCase):
+class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
     def setUp(self):
-        super(OrderAndLineItemCreate, self).setUp()
+        super(OrderAndLineItemCreateGetTestCase, self).setUp()
         self.url = reverse('advertiser_order_and_line_item_form_new')
 
     def mptest_http_response_code(self):
@@ -65,6 +64,89 @@ class OrderAndLineItemCreate(OrderViewTestCase):
         ok_(response.context['line_item_form'].instance is None)
 
 
+class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(OrderAndLineItemCreatePostTestCase, self).setUp()
+        self.url = reverse('advertiser_order_and_line_item_form_new')
+        self.post_body = {
+                          # common form parameters
+                          u'ajax': [u'true'],
+                          # order form parameters
+                          u'order-advertiser': [u'Testingco'],
+                          u'order-description': [u''],
+                          u'order-name': [u'Test Order'],
+                          # line item form parameters
+                          u'adgroup_type': [u'gtee'],
+                          u'allocation_percentage': [u'100.0'],
+                          u'android_version_max': [u'999'],
+                          u'android_version_min': [u'1.5'],
+                          u'bid': [u'0.05'],
+                          u'bid_strategy': [u'cpm'],
+                          u'budget': [u''],
+                          u'budget_strategy': [u'allatonce'],
+                          u'budget_type': [u'daily'],
+                          u'daily_frequency_cap': [u'0'],
+                          u'device_targeting': [u'0'],
+                          u'end_datetime_0': [u'05/31/2012'],
+                          u'end_datetime_1': [u'11:59 PM'],
+                          u'gtee_priority': [u'normal'],
+                          u'hourly_frequency_cap': [u'0'],
+                          u'ios_version_max': [u'999'],
+                          u'ios_version_min': [u'2.0'],
+                          u'keywords': [u''],
+                          u'name': [u'Test Line Item'],
+                          u'promo_priority': [u'normal'],
+                          u'region_targeting': [u'all'],
+                          u'start_datetime_0': [u'05/30/2012'],
+                          u'start_datetime_1': [u'12:00 AM'],
+                          u'target_android': [u'on'],
+                          u'target_ipad': [u'on'],
+                          u'target_iphone': [u'on'],
+                          u'target_ipod': [u'on'],
+                          u'target_other': [u'on']
+                          }
+
+    def mptest_http_response_code(self):
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(response.status_code in [200, 302])
+
+    def mptest_graceful_fail_without_data(self):
+        """
+        Posting to the form handler should fail if there's no post body.
+        """
+        response = self.client.post(self.url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+    def mptest_graceful_fail_without_ajax(self):
+        """
+        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
+        """
+        response = self.client.post(self.url)
+        eq_(response.status_code, 404)
+
+    def mptest_puts_new_valid_order(self):
+        response = self.client.post(self.url, post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+
+    def mptest_puts_new_valid_line_item(self):
+        pass
+
+    def mptest_order_owns_line_item(self):
+        pass
+
+    def mptest_account_owns_order_and_line_item(self):
+        pass
+
+
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     """
     Tests for the new/edit line item POST method.
@@ -87,8 +169,6 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         """
         A valid get should return a valid (200, 302) response (regardless
         of params).
-        
-        Author: Haydn Dufrene
         """
         new_response = self.client.get(self.new_url)
         edit_response = self.client.get(self.edit_url)
@@ -102,7 +182,6 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         """
         line_item = None
         order_form = OrderForm(instance=self.order, prefix='order')
-        line_item_form = OrderForm(instance=line_item)
 
         response = self.client.get(self.new_url)
         eq_(response.context['order_form'].instance.key(),
@@ -131,9 +210,6 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         eq_(response.context['order'],
             response.context['line_item'].campaign)
 
-
-    # don't know if these will be necessary
-    # we should just test that all models dont change state
     def mptest_models_do_not_change(self):
         """
         GETs should never change the state of models
@@ -211,10 +287,12 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         Posting to the form handler should fail if there's no post body.
         """
-        response = self.client.post(self.new_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.client.post(self.new_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-        response = self.client.post(self.edit_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.client.post(self.edit_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
 

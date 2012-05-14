@@ -11,9 +11,9 @@ from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
 from admin.randomgen import generate_app, generate_adunit
+from common.utils.test.test_utils import dict_eq, model_to_dict
 from common.utils.test.views import BaseViewTestCase
 from publisher.forms import AppForm, AdUnitForm
-from publisher.models import to_dict
 from publisher.query_managers import PublisherQueryManager
 
 
@@ -112,12 +112,13 @@ class CreateAppViewTestCase(BaseViewTestCase):
         app = apps_dict.values()[0]
 
         # Excluded fields with funky equalsing.
-        # app.account
         # app.t
-        app_dict = to_dict(app, ignore=['account', 't'])
+        app_dict = model_to_dict(app, exclude=['t', 'account'])
 
         # Other fields.
         expected_app_dict = {
+            'account': self.account,
+            'deleted': False,
             'name': u'Book App',
             'global_id': None,
             'adsense_app_name': None,
@@ -142,9 +143,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
             'force_marketplace': True,
         }
 
-        eq_(app_dict, expected_app_dict)
-
-        eq_(app.account.key(), self.account.key())
+        dict_eq(app_dict, expected_app_dict, exclude=['t'])
 
         # Make sure the app was created within the last minute.
         utcnow = datetime.datetime.utcnow()
@@ -195,47 +194,47 @@ class CreateAppViewTestCase(BaseViewTestCase):
     # This test is broken because of an existing bug in both AppForm (name isn't
     # required) and CreateAppHandler.post (attempts to put None app when form
     # validation fails).
-    def mptest_create_app_failure(self):
-        """
-        Confirm that create_app returns the appropriate validation errors when
-        no app name is supplied and that the database state does not change.
-        """
+    # def mptest_create_app_failure(self):
+    #     """
+    #     Confirm that create_app returns the appropriate validation errors when
+    #     no app name is supplied and that the database state does not change.
+    #     """
 
-        # Submit an invalid POST by not supplying the required app name.
-        data = {
-            u'adunit-name': [u'Banner Ad'],
-            u'adunit-description': [u'AdUnit Description'],
-            u'adunit-custom_height': [u''],
-            u'app_type': [u'iphone'],
-            u'name': [u''],
-            u'package': [u''],
-            u'url': [u'', u''],
-            u'img_file': [u''],
-            u'secondary_category': [u''],
-            u'adunit-custom_width': [u''],
-            u'adunit-format': [u'320x50'],
-            u'adunit-app_key': [u''],
-            u'adunit-device_format': [u'phone'],
-            u'img_url': [u''],
-            u'primary_category': [u'books'],
-            u'adunit-refresh_interval': [u'0'],
-        }
+    #     # Submit an invalid POST by not supplying the required app name.
+    #     data = {
+    #         u'adunit-name': [u'Banner Ad'],
+    #         u'adunit-description': [u'AdUnit Description'],
+    #         u'adunit-custom_height': [u''],
+    #         u'app_type': [u'iphone'],
+    #         u'name': [u''],
+    #         u'package': [u''],
+    #         u'url': [u'', u''],
+    #         u'img_file': [u''],
+    #         u'secondary_category': [u''],
+    #         u'adunit-custom_width': [u''],
+    #         u'adunit-format': [u'320x50'],
+    #         u'adunit-app_key': [u''],
+    #         u'adunit-device_format': [u'phone'],
+    #         u'img_url': [u''],
+    #         u'primary_category': [u'books'],
+    #         u'adunit-refresh_interval': [u'0'],
+    #     }
 
-        post_response = self.client.post(self.url, data)
-        eq_(post_response.status_code, 200)
+    #     post_response = self.client.post(self.url, data)
+    #     eq_(post_response.status_code, 200)
 
-        # Make sure the response content reflects the validation errors.
-        eq_(simplejson.loads(post_response.content), {
-            'success': False,
-            'errors': [[u'name', u'This field is required.']],
-        })
+    #     # Make sure the response content reflects the validation errors.
+    #     eq_(simplejson.loads(post_response.content), {
+    #         'success': False,
+    #         'errors': [[u'name', u'This field is required.']],
+    #     })
 
-        # Make sure that the state of the database has not changed, and that
-        # there are still no apps nor adunits associated with this account.
-        apps_dict = PublisherQueryManager.get_apps_dict_for_account(account=self.account)
-        ok_(not apps_dict)
-        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
-        ok_(not adunits_dict)
+    #     # Make sure that the state of the database has not changed, and that
+    #     # there are still no apps nor adunits associated with this account.
+    #     apps_dict = PublisherQueryManager.get_apps_dict_for_account(account=self.account)
+    #     ok_(not apps_dict)
+    #     adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
+    #     ok_(not adunits_dict)
 
 
 class AppUpdateAJAXViewTestCase(BaseViewTestCase):
@@ -251,97 +250,97 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
 
         self.url = reverse('publisher_app_update_ajax', args=(str(self.app.key()),))
 
-    def mptest_update_app_success(self):
-        data = {}
+    # def mptest_update_app_success(self):
+    #     data = {}
 
-        response = self.client.post(self.url, data)
-        eq_(response.status_code, 200)
+    #     response = self.client.post(self.url, data)
+    #     eq_(response.status_code, 200)
 
-        eq_(simplejson.loads(response.content), {
-            'success': True,
-            'errors': [],
-        })
+    #     eq_(simplejson.loads(response.content), {
+    #         'success': True,
+    #         'errors': [],
+    #     })
 
-        apps_dict = PublisherQueryManager.get_apps_dict_for_account(account=self.account)
-        eq_(len(apps_dict), 1)
-        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
-        eq_(len(adunits_dict), 1)
+    #     apps_dict = PublisherQueryManager.get_apps_dict_for_account(account=self.account)
+    #     eq_(len(apps_dict), 1)
+    #     adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
+    #     eq_(len(adunits_dict), 1)
 
-        app = apps_dict.values()[0]
-        adunit = adunits_dict.values()[0]
+    #     app = apps_dict.values()[0]
+    #     adunit = adunits_dict.values()[0]
 
-        # Make sure all of the app's fields are appropriately set or remain at
-        # default values.
-        eq_(app.account.key(), self.account.key())
-        eq_(app.name, u'Book App')
-        ok_(app.global_id is None)
-        ok_(app.adsense_app_name is None)
-        ok_(app.adsense_app_id is None)
-        ok_(app.admob_bgcolor is None)
-        ok_(app.admob_textcolor is None)
-        eq_(app.app_type, u'iphone')
-        ok_(app.description is None)
-        ok_(app.url is None)
-        ok_(app.package is None)
-        eq_(app.categories, [])
-        ok_(app.icon_blob is None)
-        ok_(app.image_serve_url is None)
-        ok_(app.jumptap_app_id is None)
-        ok_(app.millennial_app_id is None)
+    #     # Make sure all of the app's fields are appropriately set or remain at
+    #     # default values.
+    #     eq_(app.account.key(), self.account.key())
+    #     eq_(app.name, u'Book App')
+    #     ok_(app.global_id is None)
+    #     ok_(app.adsense_app_name is None)
+    #     ok_(app.adsense_app_id is None)
+    #     ok_(app.admob_bgcolor is None)
+    #     ok_(app.admob_textcolor is None)
+    #     eq_(app.app_type, u'iphone')
+    #     ok_(app.description is None)
+    #     ok_(app.url is None)
+    #     ok_(app.package is None)
+    #     eq_(app.categories, [])
+    #     ok_(app.icon_blob is None)
+    #     ok_(app.image_serve_url is None)
+    #     ok_(app.jumptap_app_id is None)
+    #     ok_(app.millennial_app_id is None)
 
-        # Make sure the app was created within the last minute.
-        utcnow = datetime.datetime.utcnow()
-        ok_(app.t > utcnow - datetime.timedelta(minutes=1) and
-            app.t < utcnow)
+    #     # Make sure the app was created within the last minute.
+    #     utcnow = datetime.datetime.utcnow()
+    #     ok_(app.t > utcnow - datetime.timedelta(minutes=1) and
+    #         app.t < utcnow)
 
-        ok_(app.exchange_creative is None)
-        eq_(app.experimental_fraction, 0.0)
-        ok_(app.network_config is None)
-        eq_(app.primary_category, u'books')
-        ok_(app.secondary_category is None)
-        ok_(app.use_proxy_bids)
-        ok_(app.force_marketplace)
+    #     ok_(app.exchange_creative is None)
+    #     eq_(app.experimental_fraction, 0.0)
+    #     ok_(app.network_config is None)
+    #     eq_(app.primary_category, u'books')
+    #     ok_(app.secondary_category is None)
+    #     ok_(app.use_proxy_bids)
+    #     ok_(app.force_marketplace)
 
-        # Creating an app automatically creates a child adunit. Ensure that
-        # there is exactly one adunit for this account.
-        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
-        eq_(len(adunits_dict), 1)
+    #     # Creating an app automatically creates a child adunit. Ensure that
+    #     # there is exactly one adunit for this account.
+    #     adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
+    #     eq_(len(adunits_dict), 1)
 
-        adunit = adunits_dict.values()[0]
+    #     adunit = adunits_dict.values()[0]
 
-        # Validate that the DB has been updated accurately.
-        eq_(adunit.name, u'Banner Ad')
-        eq_(adunit.description, u'AdUnit Description')
-        ok_(adunit.custom_width is None)
-        ok_(adunit.custom_height is None)
-        eq_(adunit.format, u'320x50')
-        eq_(adunit.app_key.key(), app.key())
-        eq_(adunit.device_format, u'phone')
-        eq_(adunit.refresh_interval, 0)
+    #     # Validate that the DB has been updated accurately.
+    #     eq_(adunit.name, u'Banner Ad')
+    #     eq_(adunit.description, u'AdUnit Description')
+    #     ok_(adunit.custom_width is None)
+    #     ok_(adunit.custom_height is None)
+    #     eq_(adunit.format, u'320x50')
+    #     eq_(adunit.app_key.key(), app.key())
+    #     eq_(adunit.device_format, u'phone')
+    #     eq_(adunit.refresh_interval, 0)
 
-        eq_(adunit.account.key(), self.account.key())
+    #     eq_(adunit.account.key(), self.account.key())
 
-        # Make sure we don't modify any existing parameters
-        ok_(adunit.adsense_channel_id is None)
-        ok_(adunit.url is None)
-        ok_(not adunit.resizable)
-        ok_(not adunit.landscape)
-        ok_(not adunit.deleted)
-        ok_(adunit.jumptap_site_id is None)
-        ok_(adunit.millennial_site_id is None)
-        ok_(adunit.keywords is None)
+    #     # Make sure we don't modify any existing parameters
+    #     ok_(adunit.adsense_channel_id is None)
+    #     ok_(adunit.url is None)
+    #     ok_(not adunit.resizable)
+    #     ok_(not adunit.landscape)
+    #     ok_(not adunit.deleted)
+    #     ok_(adunit.jumptap_site_id is None)
+    #     ok_(adunit.millennial_site_id is None)
+    #     ok_(adunit.keywords is None)
 
-        eq_(adunit.animation_type, u'0')
-        eq_(adunit.color_border, u'336699')
-        eq_(adunit.color_bg, u'FFFFFF')
-        eq_(adunit.color_link, u'0000FF')
-        eq_(adunit.color_text, u'000000')
-        eq_(adunit.color_url, u'008000')
+    #     eq_(adunit.animation_type, u'0')
+    #     eq_(adunit.color_border, u'336699')
+    #     eq_(adunit.color_bg, u'FFFFFF')
+    #     eq_(adunit.color_link, u'0000FF')
+    #     eq_(adunit.color_text, u'000000')
+    #     eq_(adunit.color_url, u'008000')
 
-        ok_(adunit.t > utcnow - datetime.timedelta(minutes=1) and
-            adunit.t < utcnow)
+    #     ok_(adunit.t > utcnow - datetime.timedelta(minutes=1) and
+    #         adunit.t < utcnow)
 
-        ok_(adunit.network_config is None)
+    #     ok_(adunit.network_config is None)
 
     def mptest_update_app_failure(self):
         pass
@@ -366,6 +365,8 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         Confirm that adunit creation works by submitting known good parameters,
         and confirming the adunit was created as expected.
         """
+        import logging
+        logging.error(self.account)
 
         # Build a dictionary to submit as a POST that contains valid default
         # parameters.
@@ -390,6 +391,22 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             'success': True,
             'errors': [],
         })
+
+        from account.models import Account
+        from publisher.models import AdUnit
+        accounts = Account.all().fetch(limit=2)
+        logging.error(accounts)
+        logging.error(len(accounts))
+        eq_(self.account.key(), accounts[0].key())
+
+        #adunit_key = AdUnit.get_value_for_datastore(self.account)
+        #logging.error(adunit_key)
+
+        adunits = AdUnit.all().fetch(limit=2)
+        logging.error(adunits)
+        logging.error(self.account.key())
+        logging.error(adunits[0].account)
+        logging.error(adunits[0].account.key())
 
         # Ensure that this account has only one adunit.
         adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)

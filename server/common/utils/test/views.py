@@ -11,7 +11,12 @@ setup_test_environment()
 
 
 class BaseViewTestCase(unittest.TestCase):
-    def setUpClass(self):
+
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    def setUp(self):
         # setup the test environment
         self.testbed = testbed.Testbed()
         self.testbed.activate()
@@ -21,16 +26,15 @@ class BaseViewTestCase(unittest.TestCase):
 
         self.client = Client()
 
-    def setUp(self):
         # generate data
         self.account = generate_account()
 
         # log in
-        self.client.post('/account/login/', {'username': USERNAME,
-                                             'password': PASSWORD})
+        self.client.login(username=USERNAME, password=PASSWORD)
 
     def tearDown(self):
-        pass
-
-    def tearDownClass(self):
         self.testbed.deactivate()
+
+    @classmethod
+    def tearDownClass(cls):
+        pass

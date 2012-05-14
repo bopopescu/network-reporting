@@ -302,7 +302,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
             if (not order.is_order) or order.account.key() != self.account.key():
                 raise Http404
         else:
-            print self.request.POST
             order_form = OrderForm(self.request.POST, instance=order, prefix='order')
 
             if order_form.is_valid():
@@ -327,7 +326,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
         # TODO: do this in the form? maybe pass the account in?
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-
         line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
 
         if line_item_form.is_valid():

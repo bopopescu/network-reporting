@@ -376,7 +376,8 @@ def to_dict(model, ignore = None):
         ignore = []
 
     output = {}
-    output.update(id=str(model.key()))
+    if not 'id' in ignore:
+        output.update(id=str(model.key()))
     properties = model.properties().iteritems()
 
     for key, prop in properties:

@@ -314,6 +314,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
                                           [],
                                           diff_acct,
                                           'gtee')
+
+        print str(diff_acct.key())
+        print str(self.account.key())
         diff_url = reverse('advertiser_line_item_form_edit',
                            kwargs={'line_item_key':
                                    unicode(diff_line_item.key())})

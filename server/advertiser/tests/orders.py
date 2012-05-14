@@ -70,7 +70,15 @@ class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
 
 
 class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
+    """
+    Tests the post for creating a new order and line item
+    Author: Haydn Dufrene
+    """
     def setUp(self):
+        """
+        Set up the URL, post_body and creates mock models
+        to compare to the models put in the DB by the view
+        """
         super(OrderAndLineItemCreatePostTestCase, self).setUp()
         self.url = reverse('advertiser_order_and_line_item_form_new')
         self.order_body = {
@@ -159,7 +167,11 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
 
     def mptest_puts_new_valid_order_and_line_item(self):
         """
-
+        Catches the redirect for create order and line item post.
+        Then we use the line item key to retrieve the line item and 
+        order created. We check to see if the line_item was created
+        and edited within the last minute. We then compare the models
+        to the mocks created in the class setup.
         """
         response = self.client.post(self.url, self.post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')

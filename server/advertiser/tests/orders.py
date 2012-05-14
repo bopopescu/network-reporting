@@ -9,6 +9,8 @@ from common.utils.helpers import dict_eq_
 
 import logging
 import simplejson as json
+import time
+from datetime import datetime
 from django.core.urlresolvers import reverse
 
 from django.test.utils import setup_test_environment
@@ -23,7 +25,7 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 from advertiser.forms import OrderForm, LineItemForm
-from publisher.query_managers import AppQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 
 setup_test_environment()
@@ -73,50 +75,62 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         self.url = reverse('advertiser_order_and_line_item_form_new')
         self.order_body = {
                           # common form parameters
-                          u'ajax': [u'true'],
+                          u'ajax': u'true',
                           # order form parameters
-                          u'order-advertiser': [u'Testingco'],
-                          u'order-description': [u''],
-                          u'order-name': [u'Test Order']
+                          u'order-advertiser': u'Testingco',
+                          u'order-description': u'',
+                          u'order-name': u'Test Order'
                           }
         self.line_item_body = {
                           # common form parameters
-                          u'ajax': [u'true'],
+                          u'ajax': u'true',
                           # line item form parameters
-                          u'adgroup_type': [u'gtee'],
-                          u'allocation_percentage': [u'100.0'],
-                          u'android_version_max': [u'999'],
-                          u'android_version_min': [u'1.5'],
-                          u'bid': [u'0.05'],
-                          u'bid_strategy': [u'cpm'],
-                          u'budget': [u''],
-                          u'budget_strategy': [u'allatonce'],
-                          u'budget_type': [u'daily'],
-                          u'daily_frequency_cap': [u'0'],
-                          u'device_targeting': [u'0'],
-                          u'end_datetime_0': [u'05/31/2012'],
-                          u'end_datetime_1': [u'11:59 PM'],
-                          u'gtee_priority': [u'normal'],
-                          u'hourly_frequency_cap': [u'0'],
-                          u'ios_version_max': [u'999'],
-                          u'ios_version_min': [u'2.0'],
-                          u'keywords': [u''],
-                          u'name': [u'Test Line Item'],
-                          u'promo_priority': [u'normal'],
-                          u'region_targeting': [u'all'],
-                          u'start_datetime_0': [u'05/30/2012'],
-                          u'start_datetime_1': [u'12:00 AM'],
-                          u'target_android': [u'on'],
-                          u'target_ipad': [u'on'],
-                          u'target_iphone': [u'on'],
-                          u'target_ipod': [u'on'],
-                          u'target_other': [u'on']
+                          u'adgroup_type': u'gtee',
+                          u'allocation_percentage': u'100.0',
+                          u'android_version_max': u'999',
+                          u'android_version_min': u'1.5',
+                          u'bid': u'0.05',
+                          u'bid_strategy': u'cpm',
+                          u'budget': u'',
+                          u'budget_strategy': u'allatonce',
+                          u'budget_type': u'daily',
+                          u'daily_frequency_cap': u'0',
+                          u'device_targeting': u'0',
+                          u'end_datetime_0': u'05/31/2012',
+                          u'end_datetime_1': u'11:59 PM',
+                          u'geo_predicates': [u'US'],
+                          u'gtee_priority': u'normal',
+                          u'hourly_frequency_cap': u'0',
+                          u'ios_version_max': u'999',
+                          u'ios_version_min': u'2.0',
+                          u'keywords': u'',
+                          u'name': u'Test Line Item',
+                          u'promo_priority': u'normal',
+                          u'region_targeting': u'all',
+                          u'start_datetime_0': u'05/30/2012',
+                          u'start_datetime_1': u'12:00 AM',
+                          u'target_android': u'on',
+                          u'target_ipad': u'on',
+                          u'target_iphone': u'on',
+                          u'target_ipod': u'on',
+                          u'target_other': u'on'
         }
         self.post_body = dict(self.order_body, **self.line_item_body)
         mock_order_form = OrderForm(self.post_body, instance=None, prefix='order')
         self.mock_order = mock_order_form.save()
         self.mock_order.account = self.account
- 
+        self.mock_order.save()
+
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
+
+
+        line_item_form = LineItemForm(self.post_body, 
+                                      instance=None, site_keys=site_keys)
+        self.mock_line_item = line_item_form.save()
+        self.mock_line_item.account = self.account
+        self.mock_line_item.campaign = self.mock_order
+
     def mptest_http_response_code(self):
         """
         A valid get should return a valid (200, 302) response (regardless
@@ -143,7 +157,10 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         response = self.client.post(self.url)
         eq_(response.status_code, 404)
 
-    def mptest_puts_new_valid_order(self):
+    def mptest_puts_new_valid_order_and_line_item(self):
+        """
+        
+        """
         response = self.client.post(self.url, self.post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
@@ -157,19 +174,35 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
 
         line_item_key = url_split[3]
         line_item = AdGroupQueryManager.get(line_item_key)
-        order = line_item.campaign
-        print 'asdfdsf'
-        print self.post_body
-        # Need to stringi
-        dict_eq_(to_dict(order), to_dict(self.mock_order))
 
-    def mptest_puts_new_valid_line_item(self):
-        pass
+        # Tests to see that this line_item was created and modified
+        # within the last minute
+        line_item_dict = to_dict(line_item)
+        minute_ago = time.mktime(datetime.now().timetuple())
+        ok_(line_item_dict['created'] > minute_ago)
+        ok_(line_item_dict['t'] > minute_ago)
+
+        dict_eq_(to_dict(line_item, ignore=['id', 'campaign', 'created', 't']),
+                 to_dict(self.mock_line_item, ignore=['id', 'campaign', 'created', 't']))
+
+        order = line_item.campaign
+        dict_eq_(to_dict(order, ignore=['id']),
+                 to_dict(self.mock_order, ignore=['id']))
 
     def mptest_order_owns_line_item(self):
+        """
+        Because we must retrieve the order by line item key in the 
+        redirect, this test is implicitly covered in 
+        mptest_puts_new_valid_order_and_line_item
+        """
         pass
 
     def mptest_account_owns_order_and_line_item(self):
+        """
+        The mock which the returned order and line items are 
+        compared against contain self.account, this test is 
+        implicitly covered in mptest_puts_new_valid_order_and_line_item
+        """
         pass
 
 

@@ -13,6 +13,7 @@ from nose.tools import ok_, eq_
 from admin.randomgen import generate_app, generate_adunit
 from common.utils.test.views import BaseViewTestCase
 from publisher.forms import AppForm, AdUnitForm
+from publisher.models import to_dict
 from publisher.query_managers import PublisherQueryManager
 
 
@@ -40,6 +41,24 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         self.url = reverse('publisher_create_app')
 
+    def _check_status_and_context(self, expected_status_codes, expected_context):
+
+        get_response = self.client.get(self.url)
+        ok_(get_response.status_code in expected_status_codes)
+
+        for key, value in expected_context.iteritems():
+            eq_(get_response.context[key], value)
+
+    # def _get_response_and_check_status(self, expected_status_codes):
+    #     get_response = self.client.get(self.url)
+    #     ok_(get_response.status_code in expected_status_codes)
+    #     return get_response
+
+    # def _post_response_and_check_status(self, expected_status_codes, data):
+    #     post_response = self.client.post(self.url, data)
+    #     ok_(post_response.status_code in expected_status_codes)
+    #     return post_response
+
     def mptest_get(self):
         """
         Confirm that the create_app view returns the correct response to a GET
@@ -52,9 +71,9 @@ class CreateAppViewTestCase(BaseViewTestCase):
         # Check to make sure that AppForm and AdUnitForm are of hte appropriate
         # type and do not have a previous instance.
         ok_(isinstance(get_response.context['app_form'], AppForm))
-        ok_(get_response.context['app_form'].instance is None)
+        ok_(not get_response.context['app_form'].is_bound)
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
-        ok_(get_response.context['adunit_form'].instance is None)
+        ok_(not get_response.context['adunit_form'].is_bound)
 
     def mptest_create_app_success(self):
         """
@@ -92,37 +111,45 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         app = apps_dict.values()[0]
 
-        # Make sure all of the app's fields are appropriately set or remain at
-        # default values.
+        # Excluded fields with funky equalsing.
+        # app.account
+        # app.t
+        app_dict = to_dict(app, ignore=['account', 't'])
+
+        # Other fields.
+        expected_app_dict = {
+            'name': u'Book App',
+            'global_id': None,
+            'adsense_app_name': None,
+            'adsense_app_id': None,
+            'admob_bgcolor': None,
+            'admob_textcolor': None,
+            'app_type': u'iphone',
+            'description': None,
+            'url': None,
+            'package': None,
+            'categories': [],
+            'icon_blob': None,
+            'image_serve_url': None,
+            'jumptap_app_id': None,
+            'millennial_app_id': None,
+            'exchange_creative': None,
+            'experimental_fraction': 0.0,
+            'network_config': None,
+            'primary_category': u'books',
+            'secondary_category': None,
+            'use_proxy_bids': True,
+            'force_marketplace': True,
+        }
+
+        eq_(app_dict, expected_app_dict)
+
         eq_(app.account.key(), self.account.key())
-        eq_(app.name, u'Book App')
-        ok_(app.global_id is None)
-        ok_(app.adsense_app_name is None)
-        ok_(app.adsense_app_id is None)
-        ok_(app.admob_bgcolor is None)
-        ok_(app.admob_textcolor is None)
-        eq_(app.app_type, u'iphone')
-        ok_(app.description is None)
-        ok_(app.url is None)
-        ok_(app.package is None)
-        eq_(app.categories, [])
-        ok_(app.icon_blob is None)
-        ok_(app.image_serve_url is None)
-        ok_(app.jumptap_app_id is None)
-        ok_(app.millennial_app_id is None)
 
         # Make sure the app was created within the last minute.
         utcnow = datetime.datetime.utcnow()
         ok_(app.t > utcnow - datetime.timedelta(minutes=1) and
             app.t < utcnow)
-
-        ok_(app.exchange_creative is None)
-        eq_(app.experimental_fraction, 0.0)
-        ok_(app.network_config is None)
-        eq_(app.primary_category, u'books')
-        ok_(app.secondary_category is None)
-        ok_(app.use_proxy_bids)
-        ok_(app.force_marketplace)
 
         # Creating an app automatically creates a child adunit. Ensure that
         # there is exactly one adunit for this account.

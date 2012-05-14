@@ -8,7 +8,6 @@ from google.appengine.datastore import entity_pb
 from common.utils.decorators import wraps_first_arg
 from common.utils import simplejson
 
-from account.models import Account
 
 NAMESPACE = None
 #MAX_CACHE_TIME = 60*5 # 5 minutes
@@ -112,8 +111,7 @@ class CachedQueryManager(QueryManager):
         "account" and "deleted" properties.
 
         IMPORTANT: as a side effect, this method will store the entire dictionary of entities in
-        memcache. Additionally, it will store the LIST of entity KEYS in memcache. This helps to
-        optimize cases in which part of the entity dictionary becomes evicted from the cache.
+        memcache.
         """
         account_key = str(account.key())
         entity_type = entity_class.entity_type()
@@ -124,21 +122,33 @@ class CachedQueryManager(QueryManager):
         if entities is not None:
             return cls._filtered_entities(entities, include_deleted, include_archived)
 
-        # The dictionary wasn't in memcache. Check if the list of entity keys is in memcache. If it
-        # is, we can avoid doing a query.
-        entity_key_list_memcache_key = "%s_keys_acct_%s" % (entity_type, account_key)
-        entity_key_list = memcache.get(entity_key_list_memcache_key)
-        if entity_key_list is None:
-            query = entity_class.all(keys_only=True).filter("account = ", account)
-            entity_key_list = query.fetch(cls.FETCH_LIMIT)
-            memcache.set(entity_key_list_memcache_key, entity_key_list,
-                         time=cls.MEMCACHE_EXPIRY_ONE_DAY)
-
-        # Now that we have the keys, perform a batched GET and store the results in memcache.
-        entities_list = entity_class.get(entity_key_list)
+        # It wasn't in memcache. Construct the right query to get the objects.
+        entities_query = entity_class.all().filter("account = ", account)
+        entities_list = cls._fetch_all_for_query(entities_query)
         entities = dict((str(e.key()), e) for e in entities_list)
         cls.memcache_set_chunked(entities_memcache_key, entities, time=cls.MEMCACHE_EXPIRY_ONE_DAY)
         return cls._filtered_entities(entities, include_deleted, include_archived)
+
+    @classmethod
+    def _fetch_all_for_query(cls, query):
+        """
+        Returns all of the entities for a given query.
+
+        There is no explicit limit on the number of entities that may be returned. This method uses
+        query cursors to repeatedly fetch results in batches of size cls.FETCH_LIMIT, stopping
+        whenever a fetch returns zero items (i.e. when the cursor can move no further).
+
+        Arguments:
+        query -- the query for which we want to fetch results
+        """
+        results = query.fetch(cls.FETCH_LIMIT)
+        while True:
+            cursor = query.cursor()
+            next_chunk = query.with_cursor(cursor).fetch(cls.FETCH_LIMIT)
+            if len(next_chunk) == 0:
+                break
+            results += next_chunk
+        return results
 
     @classmethod
     def _filtered_entities(cls, entities, include_deleted, include_archived):
@@ -157,32 +167,28 @@ class CachedQueryManager(QueryManager):
         return entities
 
     @classmethod
-    def memcache_flush_entities_for_accounts(cls, accounts, entity_class):
+    def memcache_flush_entities_for_account_keys(cls, account_keys, entity_class):
         """
-        Given a collection of accounts and an entity class, this method will flush from memcache any
-        information about the entities for those accounts. For example, if this method is called
-        with accounts=[A, B] and entity_class=AdGroup, the cached dictionaries of AdGroups for
-        accounts A and B will be flushed. "accounts" may be a set, list, or a single object.
+        Given a collection of account keys and an entity class, this method will flush from memcache
+        any information about the entities for those accounts. For example, if this method is called
+        with account_keys=[key_A, key_B] and entity_class=AdGroup, the cached dictionaries of
+        AdGroups for accounts A and B will be flushed. "account_keys" may be a set, list, or a
+        single object.
         """
-        if isinstance(accounts, set): accounts = list(accounts)
-        if isinstance(accounts, Account): accounts = [accounts]
+        if isinstance(account_keys, set):
+            account_keys = list(account_keys)
+        if isinstance(account_keys, (basestring, db.Key)):
+            account_keys = [account_keys]
+        account_keys = [str(account_key) for account_key in account_keys]
         entity_type = entity_class.entity_type()
 
-        # For each account, we need to flush not only the dictionary of entities, but also the list
-        # of entity keys. First, we'll construct lists of the memcache keys we want to delete, so
-        # that we can perform batch deletes.
+        # We'll construct a list of the memcache keys we want to delete, for batching purposes.
+        memcache_keys = []
+        for account_key in account_keys:
+            memcache_keys.append("%s_acct_%s" % (entity_type, account_key))
 
-        memcache_keys_for_entity_dicts = []
-        memcache_keys_for_entity_key_lists = []
-        for account in accounts:
-            account_key = account.key()
-            memcache_keys_for_entity_dicts.append("%s_acct_%s" % (entity_type, account_key))
-            memcache_keys_for_entity_key_lists.append("%s_keys_acct_%s" % (entity_type, account_key))
-        
         # The entity dictionaries are stored as memcache chunks, so we use delete_multi_chunked.
-        dict_delete_success = cls.memcache_delete_multi_chunked(memcache_keys_for_entity_dicts)
-        list_delete_success = memcache.delete_multi(memcache_keys_for_entity_key_lists)
-        return dict_delete_success and list_delete_success
+        return cls.memcache_delete_multi_chunked(memcache_keys)
 
     @classmethod
     def memcache_set_chunked(cls, key_prefix, value, chunksize=CHUNK_SIZE, 

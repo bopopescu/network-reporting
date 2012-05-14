@@ -29,49 +29,51 @@
             <% } %>
         </tr>
     </thead>
+
     <tbody>
         <% adgroups.each(function(adgroup) { %>
             <tr class="campaignData">
                 <td class="campaignData-icon">
                     <input type="checkbox" name="id" value="<%= adgroup.id %>"/>
-                    <% if(adgroup.get_stat('status') == "Completed") %>
+                    <% if(adgroup.get('status') == "Completed") { %>
                         <img src="/images/completed.png" height="9" width="9" />
-                    <% else if(adgroup.get('active')) %>
+                    <% } else if(adgroup.get('active')) { %>
                         <img src="/images/active.gif" height="9" width="9" />
-                    <% else %>
+                    <% } else { %>
                         <img src="/images/paused.gif" height="9" width="9" />
-                    <% %>
+                    <% } %>
                 </td>
                 <td class="dataTable-name">
                     <a href="<%= adgroup.get('details_url') %>"><%= adgroup.get('name') %></a><br />
                     <span class="muted"><%
-                        if(type == 'network')
+                        if(type == 'network') {
                             print(adgroup.get('network_type'));
-                        else if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') {
+                        } else if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') {
                             var start_date = adgroup.get('start_date');
                             var end_date = adgroup.get('end_date');
                             if(start_date != null) {
-                                if(end_date != null)
+                                if(end_date != null) {
                                     print(start_date + ' - ' + end_date + '.');
-                                else
+                                } else {
                                     print('Starts ' + start_date + '.');
-                            }
-                            else {
-                                if(end_date != null)
+                                }
+                            }else {
+                                if(end_date != null) {
                                     print('Ends ' + end_date + '.');
-                                else
+                                } else {
                                     print('All dates.');
+                                }
                             }
-                            if(type == 'gtee') {
+                            if (type == 'gtee') {
                                 var budget_type = adgroup.get('budget_type');
                                 var budget = adgroup.get('budget');
                                 if(budget_type == 'daily') {
-                                    if(budget)
+                                    if(budget) {
                                         print(' $' + mopub.Utils.formatNumberWithCommas(budget.toFixed(2)) + ' daily budget.');
-                                    else
+                                    } else {
                                         print(' Unlimited budget.');
-                                }
-                                else if(budget_type == 'full_campaign') {
+                                    }
+                                } else if(budget_type == 'full_campaign') {
                                     print(' ' + mopub.Utils.formatNumberWithCommas(budget) + ' campaign budget.');
                                 }
                             }
@@ -79,14 +81,14 @@
                     %></span>
                 </td>
                 <% if(type == 'gtee') { %>
-                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('revenue') %></td>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('rev') %></td>
                 <% } %>
                 <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
                     <td class="dataTable-data numeric">
-                        <%= adgroup.get_formatted_stat('status') %><%
-                            if(adgroup.get_stat('status') == "Running") {
-                                if (adgroup.get_stat('pace_type')) {}
-                                    if(adgroup.get_stat('pace_type') == "delivery") { %>
+                        <%= adgroup.get('status') === undefined ? '--' : adgroup.get('status') %>
+                        <% if(adgroup.get('status') == "Running") {
+                                if (adgroup.get('pace_type')) {}
+                                    if(adgroup.get('pace_type') == "delivery") { %>
                                         <div class="delivery">
                                             <a href="#" id="campaign-delivery-helpLink" class="whatsthis">
                                                 <div class="whatsthis-icon"></div>
@@ -94,8 +96,8 @@
                                             Delivery: <%= adgroup.get_formatted_stat('pace') %>
                                         </div>
                                     <% }
-                                    else if(adgroup.get_stat('pace_type')) { %>
-                                        <div class="<%= adgroup.get_stat('pace_type') %>">
+                                    else if(adgroup.get('pace_type')) { %>
+                                        <div class="<%= adgroup.get('pace_type') %>">
                                             <a href="#" id="campaign-pacing-helpLink" class="whatsthis">
                                                 <div class="whatsthis-icon"></div>
                                             </a>
@@ -110,14 +112,18 @@
                     <%= adgroup.get_formatted_stat('cpm') %>
                 </td>
                 <% if(type == 'network') { %>
-                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('request_count') %></td>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('req') %></td>
                 <% } %>
                 <% if(type == 'gtee') { %>
                     <td class="dataTable-data numeric dataTable-goals"><%
-                        if(adgroup.get_stat('goal')) {
+                        if(adgroup.get('goal')) {
                             if(adgroup.get('bid_strategy') == 'cpm') { %>
                                 <%= adgroup.get_formatted_stat('goal') %>
-                                <div class="muted">Impressions</div>
+                                <% if(adgroup.get('budget_type') == 'daily') { %>
+                                    <div class="muted">Imps / Day</div>
+                                <% } else { %>
+                                    <div class="muted">Total Imps</div>
+                                <% } %>
                             <% }
                             else if(adgroup.get('bid_strategy') == 'cpc') { %>
                                 $<%= adgroup.get_formatted_stat('goal') %>
@@ -126,12 +132,12 @@
                         }
                     %></td>
                 <% } %>
-                <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('impression_count') %></td>
+                <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('imp') %></td>
                 <% if(type == 'network') { %>
                     <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('fill_rate') %></td>
                 <% } %>
                 <td class="dataTable-data numeric">
-                    <%= adgroup.get_formatted_stat('click_count') %>
+                    <%= adgroup.get_formatted_stat('clk') %>
                     <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') %>
                         <div class="muted"><%= adgroup.get_formatted_stat('ctr') %></div>
                 </td>
@@ -140,11 +146,12 @@
                 <% }  %>
                 <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
                     <td class="dataTable-data numeric">
-                        <%= adgroup.get_formatted_stat('conversion_count') %>
+                        <%= adgroup.get_formatted_stat('conv') %>
                         <div class="muted"><%= adgroup.get_formatted_stat('conv_rate') %></div>
                     </td>
                 <% } %>
             </tr>
         <% }); %>
     </tbody>
+
 </table>

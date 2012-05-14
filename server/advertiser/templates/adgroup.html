@@ -36,12 +36,6 @@
 
 
 {% block titleBarRight %}
-  {% if not account.status %}
-    <!-- MixPanel Tracking -->
-    <script type="text/javascript">
-      mpq.push(["track", "Post sign up: Campaign viewed"]);
-    </script>
-  {% endif %}
 
   <span class="titlebar-right">
     {% if not campaign.network or not account.display_new_networks %}
@@ -401,59 +395,33 @@
               <th class="dataTable-name">
                 <span class="inner">
                   <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
-                  <span class="muted unbold">({{ a.app_type_text }})</span>
+                  <span class="muted unbold">({{ a.type }})</span>
                   <img id="{{ a.key }}" class="loading-img" src="/images/icons-custom/spinner-12.gif" />
                 </span>
               </th>
 
               {% if campaign.gtee %}
-                <td class="impressions dataTable-data numeric">--</td>
-                <td class="clicks dataTable-data numeric">--</td>
+                <td class="imp dataTable-data numeric">--</td>
+                <td class="clk dataTable-data numeric">--</td>
                 <td class="ctr dataTable-data numeric">--</td>
-                <td class="revenue dataTable-data numeric">--</td>
+                <td class="rev dataTable-data numeric">--</td>
               {% endif %}
               {% if campaign.promo %}
-                <td class="impressions dataTable-data numeric">--</td>
-                <td class="clicks dataTable-data numeric">--</td>
+                <td class="imp dataTable-data numeric">--</td>
+                <td class="clk dataTable-data numeric">--</td>
                 <td class="ctr dataTable-data numeric">--</td>
                 <td class="dataTable-data numeric">
-                  <span class="conversions">--</span>
+                  <span class="conv">--</span>
                   (<span class="conv_rate">--</span>)
                 </td>
               {% endif %}
               {% if campaign.network %}
-                <td class="attempts dataTable-data numeric">--</td>
-                <td class="impressions dataTable-data numeric">--</td>
+                <td class="att dataTable-data numeric">--</td>
+                <td class="imp dataTable-data numeric">--</td>
                 <td class="fill_rate dataTable-data numeric">--</td>
-                <td class="clicks dataTable-data numeric">--</td>
+                <td class="clk dataTable-data numeric">--</td>
                 <td class="ctr dataTable-data numeric">--</td>
               {% endif %}
-
-              {% comment %}
-              {% if campaign.gtee or campaign.marketplace %}
-                <td class="dataTable-data numeric">&nbsp;</td>
-                <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
-                <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
-                <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
-                <td class="dataTable-data numeric">{{a.stats.revenue|currency}}</td>
-              {% endif %}
-              {% if campaign.promo %}
-                <td class="dataTable-data numeric">&nbsp;</td>
-                <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
-                <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
-                <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
-                <td class="dataTable-data numeric">
-                  {{a.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})
-                </td>
-              {% endif %}
-                {% if campaign.network %}
-                <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
-                <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
-                <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
-                <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
-                <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
-              {% endif %}
-              {% endcomment %}
             </tr>
           </tbody>
         </table>
@@ -471,25 +439,25 @@
                     </th>
 
                     {% if campaign.gtee %}
-                      <td class="impressions dataTable-data numeric">--</td>
-                      <td class="clicks dataTable-data numeric">--</td>
+                      <td class="imp dataTable-data numeric">--</td>
+                      <td class="clk dataTable-data numeric">--</td>
                       <td class="ctr dataTable-data numeric">--</td>
-                      <td class="revenue dataTable-data numeric">--</td>
+                      <td class="rev dataTable-data numeric">--</td>
                     {% endif %}
                     {% if campaign.promo %}
-                      <td class="impressions dataTable-data numeric">--</td>
-                      <td class="clicks dataTable-data numeric">--</td>
+                      <td class="imp dataTable-data numeric">--</td>
+                      <td class="clk dataTable-data numeric">--</td>
                       <td class="ctr dataTable-data numeric">--</td>
                       <td class="dataTable-data numeric">
-                        <span class="conversions">--</span>
+                        <span class="conv">--</span>
                         (<span class="conv_rate">--</span>)
                       </td>
                     {% endif %}
                     {% if campaign.network %}
-                      <td class="attempts dataTable-data numeric">--</td>
-                      <td class="impressions dataTable-data numeric">--</td>
+                      <td class="att dataTable-data numeric">--</td>
+                      <td class="imp dataTable-data numeric">--</td>
                       <td class="fill_rate dataTable-data numeric">--</td>
-                      <td class="clicks dataTable-data numeric">--</td>
+                      <td class="clk dataTable-data numeric">--</td>
                       <td class="ctr dataTable-data numeric">--</td>
                     {% endif %}
 

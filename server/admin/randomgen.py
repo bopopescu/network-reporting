@@ -29,7 +29,8 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkStats, \
      AdNetworkScrapeStats, \
      AdNetworkNetworkStats, \
-     AdNetworkAppStats
+     AdNetworkAppStats, \
+     LoginStates
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager
@@ -72,7 +73,7 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
                                'adsense':'adsense_pub_id',
                                'iAd':'',
                                'admob':'admob_pub_id',
-                               'millenial':'millenial_pub_id',
+                               'millennial':'millennial_pub_id',
                                'ejam':'ejam_pub_id',
                                'chartboost':'chartboost_pub_id',
                                'appnexus':'appnexus_pub_id',
@@ -279,7 +280,7 @@ def generate_stats_model(publisher,advertiser,account,date):
     impression_count = int(random.random()*request_count)
     click_count = int(random.random()*impression_count)
     conversion_count = int(random.random()*click_count)
-    revenue = click_count*.5
+    revenue = click_count*.002
 
     user_count = int(request_count*.75)
     request_user_count = user_count
@@ -321,7 +322,8 @@ def generate_creative(account,adgroup):
 
 
 
-#Example Method to generate data. See top configuration contants for customizing result
+# Example Method to generate data. See top configuration contants for
+# customizing result
 def main():
     account = generate_account(USERNAME,PASSWORD,USERNAME)
 
@@ -410,7 +412,8 @@ def main_():
         login = AdNetworkLoginCredentials(account=account,
                            ad_network_name=network,
                            client_key=str(random.random()*10),
-                           send_email=False)
+                           send_email=False,
+                           state=LoginStates.WORKING)
         login_by_network[network] = login
         login.put()
 

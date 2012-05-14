@@ -44,8 +44,8 @@ from ad_network_reports.scrapers.unauthorized_login_exception import \
 from common.constants import REPORTING_NETWORKS
 from common.utils import date_magic
 from common.utils.connect_to_appengine import setup_remote_api
+from common.utils.timezones import Pacific_tzinfo
 from publisher.query_managers import AppQueryManager
-from pytz import timezone
 
 # Email imports
 import smtplib
@@ -72,7 +72,8 @@ def multiprocess_update_all(start_day=None,
                             email=False,
                             processes=1,
                             network=None,
-                            testing=False):
+                            testing=False,
+                            delayed=False):
     """
     Break up update script into multiple processes.
 
@@ -81,12 +82,15 @@ def multiprocess_update_all(start_day=None,
     time.
     """
     # Standardize the date
-    pacific = timezone('US/Pacific')
-    yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
+    yesterday = (datetime.now(Pacific_tzinfo()) - timedelta(days=1)).date()
 
     # Set start and end dates
     start_day = start_day or yesterday
     end_day = end_day or yesterday
+
+    if delayed:
+        start_day -= timedelata(days=3)
+        end_day -= timedelata(days=3)
 
     def get_all_accounts_with_logins():
         logins_query = AdNetworkLoginManager.get_all_logins(
@@ -209,7 +213,7 @@ def update_account_stats(account,
             send_stats_mail(account, day, zip(mappers, all_stats))
         # Return management stats
         return management_stats
-    except Exception as exception:
+    except Exception, exception:
         exc_traceback = sys.exc_info()[2]
 
         error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
@@ -235,9 +239,11 @@ def update_account_stats(account,
         raise
 
 
+# TODO: REFACTOR method name
 def update_login_stats_for_check(login,
                                  start_day=None,
                                  end_day=None,
+                                 email=True,
                                  testing=False):
     """
     Collect data for a given login from the start date to yesterday.
@@ -245,8 +251,7 @@ def update_login_stats_for_check(login,
     Send email to account when complete if stats have been collected.
     """
     # Standardize the date
-    pacific = timezone('US/Pacific')
-    yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
+    yesterday = (datetime.now(Pacific_tzinfo()) - timedelta(days=1)).date()
 
     # Set start and end dates
     start_day = start_day or yesterday
@@ -260,29 +265,29 @@ def update_login_stats_for_check(login,
     login.state = LoginStates.WORKING
     login.put()
 
-
     if stats_list and not testing:
         # Flush stats to db
         db.put([stats for mapper, stats in stats_list])
 
-        # Send email informing user that they can now see statistics for the ad
-        # network they just signed up for on the ad network index page.
-        msg = MIMEText("Your ad network revenue report for %s is now ready. " \
-                "Access it here: https://app.mopub.com/ad_network_reports.\n" \
-                "\nIf you have any questions, please reach out to us at " \
-                "support@mopub.com" % REPORTING_NETWORKS[login.ad_network_name])
-        from_ = SUPPORT_EMAIL
-        to = [] if TESTING else login.account.emails
+        if email:
+            # Send email informing user that they can now see statistics for the ad
+            # network they just signed up for on the ad network index page.
+            msg = MIMEText("Your ad network revenue report for %s is now ready. " \
+                    "Access it here: https://app.mopub.com/ad_network_reports.\n" \
+                    "\nIf you have any questions, please reach out to us at " \
+                    "support@mopub.com" % REPORTING_NETWORKS[login.ad_network_name])
+            from_ = SUPPORT_EMAIL
+            to = [] if TESTING else login.account.emails
 
-        msg['Subject'] = "Finished Collecting Stats"
-        msg['From'] = from_
-        msg['To'] = ', '.join(to)
+            msg['Subject'] = "Finished Collecting Stats"
+            msg['From'] = from_
+            msg['To'] = ', '.join(to)
 
-        # Send the message via our own SMTP server, but don't include the
-        # envelope header.
-        s = smtplib.SMTP(SMTP_SERVER)
-        s.sendmail(from_, to + [ADMIN_EMAIL], msg.as_string())
-        s.quit()
+            # Send the message via our own SMTP server, but don't include the
+            # envelope header.
+            s = smtplib.SMTP(SMTP_SERVER)
+            s.sendmail(from_, to + [ADMIN_EMAIL], msg.as_string())
+            s.quit()
 
 
 def retry_logins(day,
@@ -355,7 +360,7 @@ def retry_login(login_key,
                 logger=logger)
         result = ([stats for mapper, stats in valid_stats_list], temp_stats)
         return result
-    except Exception as exception:
+    except Exception, exception:
         exc_traceback = sys.exc_info()[2]
 
         error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
@@ -412,7 +417,7 @@ def update_login_stats(login,
         login.state = LoginStates.ERROR
         login.put()
         return []
-    except Exception as e:
+    except Exception, e:
         # This should catch ANY exception because we don't want to stop
         # updating stats if something minor breaks somewhere.
         if management_stats:
@@ -556,12 +561,12 @@ def send_stats_mail(account, day, stats_list):
             mapper, stats in stats_list])
         stats_list = sorted(stats_list, key = lambda stats:
                 '%s-%s-%s' % (stats[0].application.name.lower(),
-                stats[0].application.app_type_text().lower(),
+                stats[0].application.type.lower(),
                 stats[0].ad_network_name))
         email_body = ""
         for mapper, stats in stats_list:
             app_name = '%s (%s)' % (mapper.application.name,
-                    mapper.application.app_type_text())
+                    mapper.application.type)
 
             stats_dict = {'app': app_name,
                    'network_name': REPORTING_NETWORKS[mapper.ad_network_name],
@@ -739,6 +744,7 @@ def main(args):
 
     START_DAY = 'start_day'
     END_DAY = 'end_day'
+    DELAYED = 'delayed'
     EMAIL = 'email'
     PROCESSES = 'processes'
     NETWORK = 'network'
@@ -748,6 +754,7 @@ def main(args):
 
     start_day = None
     end_day = None
+    delayed = False
     email = False
     network = None
     processes = 1
@@ -777,14 +784,16 @@ def main(args):
                     start_day = parse_day(arg, START_DAY)
                 elif field_name_match(arg, END_DAY):
                     end_day = parse_day(arg, END_DAY)
+                elif field_name_match(arg, DELAYED):
+                    delayed = arg[len(DELAYED) + 1:] in ('y', 'Y')
                 elif field_name_match(arg, EMAIL):
-                    email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
+                    email = arg[len(EMAIL) + 1:] in ('y', 'Y')
                 elif field_name_match(arg, PROCESSES):
                     processes = int(arg[len(PROCESSES) + 1:])
                 elif field_name_match(arg, NETWORK):
-                    network = int(arg[len(NETWORK) + 1:])
+                    network = arg[len(NETWORK) + 1:]
             multiprocess_update_all(start_day, end_day, email, processes,
-                    network)
+                    network, delayed=delayed)
 
 
 if __name__ == "__main__":

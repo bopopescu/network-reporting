@@ -19,7 +19,10 @@ from common.ragendja.template import render_to_response, \
      JSONResponse
 
 ## Models
-from advertiser.models import Campaign, AdGroup, HtmlCreative, NETWORKS
+from advertiser.models import Campaign, \
+        AdGroup, \
+        HtmlCreative, \
+        NetworkStates
 from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
@@ -29,12 +32,13 @@ from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkLoginManager
-from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
-                                      CreativeQueryManager
-from publisher.query_managers import AppQueryManager, \
-     AdUnitQueryManager, \
-     AdUnitContextQueryManager, \
-     PublisherQueryManager
+from advertiser.query_managers import (AdvertiserQueryManager,
+                                       CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
+from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
+                                      AdUnitQueryManager,
+                                      AdUnitContextQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
@@ -44,11 +48,46 @@ from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 #REFACTOR: only import what we need here
 from common.constants import *
-from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
+from common.utils.stats_helpers import MarketplaceStatsFetcher, \
+        MPStatsAPIException, \
+        SummedStatsFetcher
 
 from budget import budget_service
 
 from google.appengine.api import memcache
+
+
+class DashboardHandler(RequestHandler):
+    def get(self):
+        names = {
+            'direct': 'Direct Sold',
+            'mpx': 'Marketplace',
+            'network': 'Ad Networks',
+        }
+
+        for key, campaign in AdvertiserQueryManager.get_campaigns_dict_for_account(account=self.account, include_deleted=True).items():
+            names[key] = campaign.name
+
+        for key, app in PublisherQueryManager.get_apps_dict_for_account(account=self.account, include_deleted=True).items():
+            names[key] = app.name
+
+        for key, adunit in PublisherQueryManager.get_adunits_dict_for_account(account=self.account, include_deleted=True).items():
+            names[key] = adunit.name
+
+        return {
+            'page_width': 'wide',
+            'names': names,
+        }
+
+
+@login_required
+def dashboard(request, *args, **kwargs):
+    handler = DashboardHandler(template="publisher/dashboard.html")
+    return handler(request, use_cache=False, use_handshake=True, *args, **kwargs)
+
+
+
+
 
 class AppIndexHandler(RequestHandler):
     """
@@ -97,7 +136,11 @@ class AppIndexHandler(RequestHandler):
             stats_dict = {}
             stats_dict[key] = {}
             stats_dict[key]['name'] = "||"
-            stats_dict[key]['daily_stats'] = [s.to_dict() for s in totals_list]
+            # REFACTOR: StatsModel field naming
+            stats_dict[key]['daily_stats'] = [{'req': s.request_count,
+                                               'imp': s.impression_count,
+                                               'clk': s.click_count,
+                                               'usr': s.user_count} for s in totals_list]
             summed_stats = sum(totals_list, StatsModel())
             stats_dict[key]['sum'] = summed_stats.to_dict()
 
@@ -106,12 +149,12 @@ class AppIndexHandler(RequestHandler):
             response_dict['all_stats'] = stats_dict
 
             stats = {
-                'requests': {
+                'req': {
                     'today': today.request_count,
                     'yesterday': yesterday.request_count,
                     'total': totals.request_count,
                 },
-                'impressions': {
+                'imp': {
                     'today': today.impression_count,
                     'yesterday': yesterday.impression_count,
                     'total': totals.impression_count,
@@ -126,7 +169,7 @@ class AppIndexHandler(RequestHandler):
                     'yesterday': yesterday.ctr,
                     'total': totals.ctr
                 },
-                'clicks': {
+                'clk': {
                     'today': today.click_count,
                     'yesterday': yesterday.click_count,
                     'total': totals.click_count
@@ -297,7 +340,7 @@ class CreateAppHandler(RequestHandler):
                 self.account.status = "step4"
                 # skip to step 4 (add campaigns), but show step 2 (integrate)
                 # TODO (Tiago): add the itunes info here for iOS apps for iAd syncing
-                network_config = NetworkConfig()
+                network_config = NetworkConfig(account=self.account)
                 AccountQueryManager.update_config_and_put(account, network_config)
 
                 # create the marketplace account for the first time
@@ -476,12 +519,9 @@ class AppDetailHandler(RequestHandler):
                 campaign.adgroup = campaign.adgroups[0]
 
             # 1 GET
-            campaign.all_stats = stats_q.get_stats_for_days(publisher=app,
-                                                            advertiser=
-                                                            campaign,
-                                                            days=self.days)
-            campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats,
-                    StatsModel())
+            summed_fetcher = SummedStatsFetcher(self.account.key())
+            campaign.stats =  summed_fetcher.get_campaign_specific_app_stats(
+                    app.key(), campaign, self.start_date, self.end_date)
             #budget_object = campaign.budget_obj
             #campaign.percent_delivered = budget_service.percent_delivered(
                     #budget_object)
@@ -494,12 +534,12 @@ class AppDetailHandler(RequestHandler):
                     mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
                                                             self.start_date,
                                                             self.end_date)
-                except MPStatsAPIException, e:
-                    logging.warn(str(e))
+                except MPStatsAPIException, error:
+                    logging.warning("MPStatsAPIException: %s" % error)
                     mpx_stats = {}
 
-                campaign.stats.revenue = float(mpx_stats.get('revenue', 0.0))
-                campaign.stats.impression_count = int(mpx_stats.get('impressions', 0))
+                campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
+                campaign.stats['imp'] = int(mpx_stats.get('imp', 0))
 
             if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
                     'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
@@ -523,10 +563,7 @@ class AppDetailHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, campaigns = level_camps))
 
-
         # we don't include network or promo campaigns in the revenue totals
-        logging.warn(guarantee_campaigns)
-        logging.warn(marketplace_campaigns)
 
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
@@ -695,26 +732,61 @@ class AdUnitShowHandler(RequestHandler):
         adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
         adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
         for ag in adunit.adgroups:
-            ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                                                            advertiser=ag,
-                                                            days=self.days)
+            campaign = ag.campaign
+            # If its a new network campaign that has been migrated and the
+            # transition date is after the start date
+            if campaign.campaign_type == 'network' and campaign.network_state == \
+                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
+                    campaign.old_campaign and self.start_date <= \
+                    campaign.transition_date:
+                new_stats = None
+                if self.end_date >= campaign.transition_date:
+                    # get new campaign stats (specific for the single adgroup)
+                    days = date_magic.gen_days(campaign.transition_date,
+                            self.end_date)
+                    new_stats = stats_manager.get_stats_for_days(
+                            publisher=adunit, advertiser=ag,
+                            days=days)
+                    days = date_magic.gen_days(self.start_date,
+                            campaign.transition_date)
+                else:
+                    # getting only legacy campaign stats (back when campaign
+                    # and adgroup were one to one)
+                    days = self.days
+                # get old campaign stats
+                old_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                        advertiser=campaign.old_campaign, days=days)
+                if new_stats:
+                    transition_stats = old_stats[-1] + new_stats[0]
+                    ag.all_stats = old_stats[:-1] + [transition_stats] + \
+                            new_stats[1:]
+                else:
+                    ag.all_stats = old_stats
+            else:
+                # getting only adgroup stats (back when campaign
+                # and adgroup were one to one)
+                days = self.days
+                ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                        advertiser=ag, days=days)
+
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            budget_object = ag.campaign.budget_obj
+            budget_object = campaign.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
-            if ag.campaign.campaign_type in ['marketplace']:
+            if campaign.campaign_type in ['marketplace']:
                 try:
                     mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
                                                                self.start_date,
                                                                self.end_date)
-                except MPStatsAPIException, e:
+                except MPStatsAPIException, error:
+                    logging.warning("MPStatsAPIException: %s" % error)
                     mpx_stats = {}
-                ag.stats.revenue = float(mpx_stats.get('revenue'))
-                ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+                ag.stats.revenue = float(mpx_stats.get('rev', 0.0))
+                ag.stats.impression_count = int(mpx_stats.get('imp', 0))
 
-            if ag.campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
+            if campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
                 ag.calculated_ecpm = calculate_ecpm(ag)
 
 
@@ -1073,7 +1145,7 @@ class DashboardExportHandler(RequestHandler):
                          resource_id] + \
                         app_stats(summed_stats) + \
                         ["N/A",
-                         app.app_type_text()])
+                         app.type])
             adunits = AdUnitQueryManager.get_adunits(app=app)
 
             for adunit in adunits:
@@ -1090,7 +1162,7 @@ class DashboardExportHandler(RequestHandler):
                              resource_id] + \
                             app_stats(summed_stats) +
                             [ad_size,
-                             app.app_type_text()])
+                             app.type])
 
         f_name_dict = {
             'start': start.strftime('%b %d'),
@@ -1102,7 +1174,7 @@ class DashboardExportHandler(RequestHandler):
         titles = ['App','Ad Unit','Pub ID','Resource ID', 'Requests',
                   'Impressions', 'Fill Rate', 'Clicks', 'CTR','Ad Size',
                   'Platform',]
-        
+
         return sswriter.export_writer(file_type, f_name, titles, data)
 
 
@@ -1172,20 +1244,29 @@ def table_export(request, *args, **kwargs):
 def enable_networks(adunit, account):
     """
     Create network adgroups for this adunit for all ad networks.
+
+    NOTE: The campaigns' creatives are created when the adgroups are set to
+    active in the EditNetwork handler in networks/view
     """
     ntwk_adgroups = []
     for campaign in CampaignQueryManager.get_network_campaigns(account,
             is_new=True):
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                 adunit.key(), account.key())
-        preexisting_adgroup = AdGroupQueryManager.get_adgroups(campaign=
-                campaign).get()
-        adgroup.active = preexisting_adgroup.active
-        adgroup.device_targeting = preexisting_adgroup.device_targeting
-        for device, pretty_name in adgroup.DEVICE_CHOICES:
-            setattr(adgroup, 'target_' + device, getattr(preexisting_adgroup,
-                'target_' + device, False))
-        adgroup.target_other = preexisting_adgroup.target_other
+        # New adunits are initialized as paused for the account's network
+        # campaigns
+        adgroup.active = False
+        adgroups = AdGroupQueryManager.get_adgroups(campaign=campaign)
+        # Accounts should have adunits prior to creating campaigns but just in
+        # case don't break
+        if adgroups:
+            preexisting_adgroup = adgroups[0]
+            # Copy over targeting for the NetworkDetails page
+            adgroup.device_targeting = preexisting_adgroup.device_targeting
+            for device, pretty_name in adgroup.DEVICE_CHOICES:
+                setattr(adgroup, 'target_' + device, getattr(
+                    preexisting_adgroup, 'target_' + device, False))
+            adgroup.target_other = preexisting_adgroup.target_other
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
 
@@ -1307,13 +1388,9 @@ def calculate_ecpm(adgroup):
     Calculate the ecpm for a cpc campaign.
     REFACTOR: move this to the app/adunit models
     """
-    if adgroup.cpc:
-        try:
-            return float(adgroup.stats.click_count) * \
-                   float(adgroup.bid) * \
-                   1000.0 / float(adgroup.stats.impression_count)
-        except Exception, error:
-            logging.error(error)
+    if adgroup.cpc and adgroup.stats.impression_count:
+        return (float(adgroup.stats.click_count) * float(adgroup.bid) * 1000.0 /
+                float(adgroup.stats.impression_count))
     return adgroup.bid
 
 
@@ -1351,4 +1428,3 @@ def set_column_widths(ws, headers, body):
         ws.col(i).width = column_widths[i] * char_width
 
     return ws
-

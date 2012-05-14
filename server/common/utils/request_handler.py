@@ -1,6 +1,7 @@
 import logging
 
 import datetime
+import random
 
 from account.query_managers import AccountQueryManager
 
@@ -37,7 +38,7 @@ class RequestHandler(object):
 
         super(RequestHandler, self).__init__()
 
-    def __call__(self, request, cache_time=5 * 60, use_cache=True, *args, **kwargs):
+    def __call__(self, request, cache_time=5 * 60, use_cache=True, use_handshake=False, *args, **kwargs):
         if settings.DEBUG:
             use_cache = False
 
@@ -121,10 +122,12 @@ class RequestHandler(object):
                     "offline": self.offline,
                     "account": self.account
                 })
-                return render_to_response(self.request,
+                response = render_to_response(self.request,
                                           self.template,
                                           response)
-
+                if use_handshake:
+                    self._add_handshake(response)
+                return response
 
 
             elif request.method == "POST":
@@ -165,6 +168,19 @@ class RequestHandler(object):
 
     def put(self):
         raise NotImplementedError
+
+    def _add_handshake(self, response):
+        from common.utils.crypto import EncodeAES, get_cipher
+
+        iv = ''.join([str(random.randint(0, 9)) for i in xrange(16)])
+        data = {'is_super': self.request.user.is_staff,
+                'account_list': [str(self.account.key())] if self.account else [],
+               }
+        data_string = simplejson.dumps(data)
+        encrypted_data = EncodeAES(get_cipher(iv), data_string)
+
+        response.set_cookie("handshake_data", encrypted_data)
+        response.set_cookie("handshake_iv", iv)
 
     def _set_account(self):
         self.account = None

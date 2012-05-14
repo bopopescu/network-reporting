@@ -44,7 +44,7 @@ then
    echo "Network Server Side tests"
    nosetests ./ad_server/networks/tests/ --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
    echo "SimpleModels Tests"
-   nosetests ./simple_models_mptests.py --match='(?:^|[\b_\./-])mptest' --without-sandbox
+   nosetests ./simple_tests/ --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
 
    # System Tests (Must live in server root dir for some reason TODO: Fix this)
    echo "System tests"

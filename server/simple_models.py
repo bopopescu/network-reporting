@@ -4,6 +4,7 @@ to the ones that live on GAE as far as the adserver is concerned, but they don't
 have any of the builtins for db putting and other things that the adserver doesn't
 give a shit about """
 from datetime import datetime
+import time
 import logging
 
 MAX_OBJECTS = 200
@@ -67,7 +68,8 @@ def to_basic_type(obj, already_translated = None):
     #if id(obj) in already_translated:
     #    return already_translated[id(obj)]
     #logging.info("Converting to basic-types: %s %s" % (type(obj), repr(obj)))
-    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel, bool))
+
+    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel, bool)), "Object type is %s" % type(obj)
     if isinstance(obj, (list, tuple)):
         # Apply this function recursively on the subobjects.
         to_return = [to_basic_type(x, already_translated) for x in obj]
@@ -137,11 +139,15 @@ class SimpleModel(object):
         return obj
 
 class SimpleAdUnitContext(SimpleModel):
-    def __init__(self, adunit, campaigns, adgroups, creatives):
+    def __init__(self, adunit, campaigns, adgroups, creatives, created_at=None, *args, **kwargs):
         self.adunit = adunit.simplify()
         self.campaigns = [camp.simplify() for camp in campaigns]
         self.adgroups = [ag.simplify() for ag in adgroups]
         self.creatives = [crtv.simplify() for crtv in creatives]
+        if created_at is None:
+            self.created_at = int(time.mktime(datetime.utcnow().timetuple()))
+        else:
+            self.created_at = int(float(created_at))
 
     def get_creative_by_key(self, creative_key):
         crtv = None
@@ -182,7 +188,7 @@ class SimpleAdUnit(SimpleModel):
     def __init__(self, key=None, app_key=None, format=None, landscape=None,
                  resizable=None, custom_height=None, custom_width=None, keywords=None,
                  adsense_channel_id=None, ad_type=None, account=None, name=None,
-                 refresh_interval=None, network_config=None):
+                 refresh_interval=None, network_config=None, *args, **kwargs):
         self.account = account.simplify()
         self.name = name
         self._key = key
@@ -259,7 +265,7 @@ class SimpleAdUnit(SimpleModel):
     app = property(_get_app, _set_app)
 
 class SimpleCampaign(SimpleModel):
-    def __init__(self, key=None, name=None, campaign_type=None, start_datetime=None, end_datetime=None, active=None, deleted=None, account=None, budget_type=None, full_budget=None, daily_budget=None):
+    def __init__(self, key=None, name=None, campaign_type=None, start_datetime=None, end_datetime=None, active=None, deleted=None, account=None, budget_type=None, full_budget=None, daily_budget=None, *args, **kwargs):
         self._key = key
         self.name = name
         self.campaign_type = campaign_type
@@ -331,6 +337,8 @@ class SimpleAdGroup(SimpleModel):
                  optimizable=None,
                  default_cpm=None,
                  network_type=None,
+                 *args,
+                 **kwargs
                  ):
         self._key = key
         self.campaign = campaign.simplify()
@@ -395,7 +403,7 @@ class SimpleAdGroup(SimpleModel):
 class SimpleCreative(SimpleModel):
     def __init__(self, key=None, name=None, custom_width=None, custom_height=None, landscape=None, ad_group=None,
                  active=None, deleted=None, ad_type=None, tracking_url=None, url=None, display_url=None, conv_appid=None,
-                 format=None, launchpage=None, account=None, multi_format=None, network_name = None):
+                 format=None, launchpage=None, account=None, multi_format=None, network_name = None, *args, **kwargs):
         self._key = key
         self.name = name
         self.custom_width = custom_width
@@ -467,7 +475,7 @@ class SimpleCreative(SimpleModel):
     adgroup = property(_get_adgroup,_set_adgroup)
 
 class SimpleTextCreative(SimpleCreative):
-    def __init__(self, headline=None, line1=None, line2=None, **kwargs):
+    def __init__(self, headline=None, line1=None, line2=None, *args, **kwargs):
         self.headline = headline
         self.line1 = line1
         self.line2 = line2
@@ -475,7 +483,7 @@ class SimpleTextCreative(SimpleCreative):
 
 class SimpleTextAndTileCreative(SimpleCreative):
     def __init__(self, line1=None, line2=None, image_url=None, action_icon=None,
-                 color=None, font_color=None, gradient=None, **kwargs):
+                 color=None, font_color=None, gradient=None, *args, **kwargs):
         self.line1 = line1
         self.line2 = line2
         self.image_url= image_url
@@ -486,15 +494,18 @@ class SimpleTextAndTileCreative(SimpleCreative):
         super(SimpleTextAndTileCreative, self).__init__(**kwargs)
 
 class SimpleHtmlCreative(SimpleCreative):
-    def __init__(self, html_data=None, ormma_html=False, **kwargs):
+    def __init__(self, html_data=None, ormma_html=False, *args, **kwargs):
         if html_data is not None:
-            html_data = str(html_data)
+            try:
+                html_data = str(html_data)
+            except UnicodeEncodeError, e:
+                html_data = unicode(html_data)
         self.html_data = html_data
         self.ormma_html = ormma_html
         super(SimpleHtmlCreative, self).__init__(**kwargs)
 
 class SimpleImageCreative(SimpleCreative):
-    def __init__(self, image_url=None, image_height=None, image_width=None, **kwargs):
+    def __init__(self, image_url=None, image_height=None, image_width=None, *args, **kwargs):
         self.image_url = image_url
         self.image_height = image_height
         self.image_width = image_width
@@ -521,7 +532,7 @@ class SimpleApp(SimpleModel):
     def __init__(self, key=None, account=None, global_id=None, adsense_app_name=None, adsense_app_id=None,
                  admob_bgcolor=None, admob_textcolor=None, app_type=None, package=None, url=None,
                  network_config=None, primary_category=None, secondary_category=None, name=None,
-                 experimental_fraction=.001):
+                 experimental_fraction=.001, force_marketplace=True, *args, **kwargs):
         self._key = key
         self.account = account.simplify()
         self.global_id = global_id
@@ -537,13 +548,14 @@ class SimpleApp(SimpleModel):
         self.primary_category = primary_category
         self.secondary_category = secondary_category
         self.experimental_fraction = experimental_fraction
+        self.force_marketplace = force_marketplace
 
     def key(self):
         return self._key
 
 class SimpleAccount(SimpleModel):
     def __init__(self, key=None, company=None, domain=None, network_config=None,
-                 adsense_company_name=None, adsense_test_mode=None):
+                 adsense_company_name=None, adsense_test_mode=None, *args, **kwargs):
         self._key = key
         self.company = company
         self.domain = domain
@@ -560,7 +572,7 @@ class SimpleNetworkConfig(SimpleModel):
                  greystripe_pub_id=None, inmobi_pub_id=None, jumptap_pub_id=None,
                  millennial_pub_id=None, mobfox_pub_id=None, rev_share=None,
                  price_floor=None, blocklist=None, blind=None, blocked_cat=None, blocked_attrs=None,
-                 category_blocklist=None, attribute_blocklist=None):
+                 category_blocklist=None, attribute_blocklist=None, *args, **kwargs):
         self._key = key
         self.admob_pub_id = admob_pub_id
         self.adsense_pub_id = adsense_pub_id

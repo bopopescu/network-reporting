@@ -1,7 +1,8 @@
 /*
  * # MoPub Publisher/Inventory Javascript
  * ## Client-side functionality for the following pages:
- * * Inventory/Dashboard
+ * * Inventory
+ * * Dashboard
  * * App detail
  * * Adunit detail
  * * App creation
@@ -13,10 +14,10 @@ var mopub = mopub || {};
 
 (function($, Backbone, _){
 
+
     /*
      * ## Helpers for DashboardController
      */
-
     var toast_error = function () {
         var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
@@ -25,6 +26,8 @@ var mopub = mopub || {};
             });
         Toast.error(message, "Error fetching app data.");
     };
+
+
 
     /*
      * Refactor/remove
@@ -46,10 +49,10 @@ var mopub = mopub || {};
         mopub.dashboardStatsChartData = {
             pointStart: start_date,
             pointInterval: 86400000,
-            requests: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "request_count")}],
-            impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
-            clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
-            users: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "user_count")}]
+            req: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "req")}],
+            imp: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}],
+            clk: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clk")}],
+            usr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "usr")}]
         };
 
         mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
@@ -113,7 +116,6 @@ var mopub = mopub || {};
             }
         });
     }
-
 
     /*
      * ## initializeNewAppForm
@@ -293,6 +295,7 @@ var mopub = mopub || {};
             });
     }
 
+
     /*
      * ## initializeNewAdunitForm
      * Loads all click handlers/visual stuff/ajax loading for
@@ -314,7 +317,6 @@ var mopub = mopub || {};
 
         // Click handler for the tablet format
         $('#adunit-device_format_tablet').click(function(e){
-            console.log('tablet clicked');
             $('#adForm-phone-container').hide();
             $('#adForm-tablet-container')
                 .show()
@@ -385,7 +387,7 @@ var mopub = mopub || {};
                 'appForm-adUnitFormat-custom': 'Custom Ad',
                 'appForm-adUnitFormat-tablet-custom': 'Custom Ad',
                 'appForm-adUnitFormat-tablet-leaderboard': 'Leaderboard Ad',
-                'appForm-adUnitFormat-wide-tablet-skyscraper': 'Skyscraper Ad',
+                'appForm-adUnitFormat-wide-tablet-skyscraper': 'Skyscraper Ad'
             };
 
             // If the current ad name is a default, we can replace it at will
@@ -490,7 +492,6 @@ var mopub = mopub || {};
             });
         }
 
-
     /*
      * ## initializeEditAdunitForm
      * Like the app editing form, the adunit editing form is done
@@ -571,9 +572,7 @@ var mopub = mopub || {};
                 button.button();
             }
         });
-
     }
-
 
     /*
      * ## initializeDateButtons
@@ -592,8 +591,8 @@ var mopub = mopub || {};
                             text: 'Set dates',
                             css: { fontWeight: '600' },
                             click: function() {
-                                var from_date = $('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                                var to_date = $('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                var from_date = $('#dashboard-dateOptions-custom-from').xdatepicker("getDate");
+                                var to_date = $('#dashboard-dateOptions-custom-to').xdatepicker("getDate");
                                 var num_days = Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
 
                                 var from_day = from_date.getDate();
@@ -631,31 +630,31 @@ var mopub = mopub || {};
         });
 
         // set up custom dateOptions modal dialog
-        $('#dashboard-dateOptions-custom-from').datepicker({
+        $('#dashboard-dateOptions-custom-from').xdatepicker({
             defaultDate: '-15d',
             maxDate: '0d',
             onSelect: function(selectedDate) {
                 var other = $('#dashboard-dateOptions-custom-to');
                 var instance = $(this).data("datepicker");
-                var date = $.datepicker.parseDate(instance.settings.dateFormat
-                                                  || $.datepicker._defaults.dateFormat,
+                var date = $.xdatepicker.parseDate(instance.settings.dateFormat
+                                                  || $.xdatepicker._defaults.dateFormat,
                                                   selectedDate,
                                                   instance.settings);
-                other.datepicker('option', 'minDate', date);
+                other.xdatepicker('option', 'minDate', date);
             }
         });
 
-        $('#dashboard-dateOptions-custom-to').datepicker({
+        $('#dashboard-dateOptions-custom-to').xdatepicker({
             defaultDate: '-1d',
             maxDate: '0d',
             onSelect: function(selectedDate) {
                 var other = $('#dashboard-dateOptions-custom-from');
                 var instance = $(this).data("datepicker");
-                var date = $.datepicker.parseDate(instance.settings.dateFormat ||
-                                                  $.datepicker._defaults.dateFormat,
+                var date = $.xdatepicker.parseDate(instance.settings.dateFormat ||
+                                                  $.xdatepicker._defaults.dateFormat,
                                                   selectedDate,
                                                   instance.settings);
-                other.datepicker('option', 'maxDate', date);
+                other.xdatepicker('option', 'maxDate', date);
             }
         });
     }
@@ -762,9 +761,6 @@ var mopub = mopub || {};
         });
     }
 
-    function fetchAppsForAdgroup(adgroup_key) {
-        // fill in
-    }
 
     /*
      * ## Dashboard Controller
@@ -778,6 +774,7 @@ var mopub = mopub || {};
             initializeCommon();
 
             // Populate the graph
+            // REFACTOR: use CollectionGraphView
             populateGraphWithAccountStats(bootstrapping_data.account_stats,
                                           bootstrapping_data.start_date);
 
@@ -810,12 +807,12 @@ var mopub = mopub || {};
 
             // Hide unneeded li entry
             $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
-
         },
+
+
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-
         },
 
         initializeAppDetail: function (bootstrapping_data) {
@@ -880,10 +877,8 @@ var mopub = mopub || {};
     };
 
     window.DashboardController = DashboardController;
-
-
+    
 })(this.jQuery, this.Backbone, this._);
-
 
 /* REFACTOR */
 var artwork_json;

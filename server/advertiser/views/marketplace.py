@@ -21,7 +21,6 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      MPStatsAPIException
 
 
-
 class MarketplaceIndexHandler(RequestHandler):
     """
     Rendering of the Marketplace page. At this point, this is the only
@@ -31,10 +30,13 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # Marketplace settings are kept as a single campaign.  Only
         # one should exist per account.
-        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+                self.account, from_db=True)
 
-        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
-        alphabetically_sorted_apps = sorted(apps_dict.values(), lambda x, y: cmp(x.name, y.name))
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(
+                self.account)
+        alphabetically_sorted_apps = sorted(apps_dict.values(), lambda x, y:
+                cmp(x.name, y.name))
         app_keys_json = simplejson.dumps(apps_dict.keys())
 
         adunit_keys = []
@@ -45,32 +47,19 @@ class MarketplaceIndexHandler(RequestHandler):
         # Set up a MarketplaceStatsFetcher with this account
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
 
-        # Form the date range
-        # REFACTOR this into a helper function
-        if self.start_date:
-            year, month, day = str(self.start_date).split('-')
-            start_date = datetime.date(int(year), int(month), int(day))
-            if self.date_range:
-                end_date = start_date + datetime.timedelta(int(self.date_range) - 1)
-            else:
-                end_date = start_date + datetime.timedelta(13)
-        else:
-            end_date = datetime.datetime.now(Pacific_tzinfo()).date()
-            if self.date_range:
-                start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
-            else:
-                start_date = end_date - datetime.timedelta(13)
-
         try:
-            mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
-        except MPStatsAPIException, e:
+            mpx_stats = stats_fetcher.get_account_stats(self.days[0],
+                    self.days[-1], daily=True)
+        except MPStatsAPIException, error:
+            logging.warning("MPStatsAPIException: %s" % error)
             mpx_stats = {}
 
         # Set up the blocklist
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
+            blocklist = [str(domain) for domain in network_config.blocklist
+                    if not str(domain) in ("", "#")]
 
         # Get today and yesterday's stats for the graph
         today_stats = []
@@ -80,21 +69,34 @@ class MarketplaceIndexHandler(RequestHandler):
             today_stats = mpx_stats["daily"][-1]
             yesterday_stats = mpx_stats["daily"][-2]
 
+            # REFACTOR: load this data via ajax and use CollectionGraphView?
+            def cpm(rev, imp):
+                if imp:
+                    return rev / imp * 1000
+                else:
+                    return 0
+
+            mpx_stats['cpm'] = cpm(mpx_stats['rev'], mpx_stats['imp'])
+
+            for stats in mpx_stats['daily']:
+                stats['cpm'] = cpm(stats['rev'], stats['imp'])
+
             stats = {
-                'revenue': {
-                    'today': today_stats['revenue'],
-                    'yesterday': yesterday_stats['revenue'],
-                    'total': mpx_stats['revenue']
+                'rev': {
+                    'today': today_stats['rev'],
+                    'yesterday': yesterday_stats['rev'],
+                    'total': mpx_stats['rev']
                 },
-                'impressions': {
-                    'today': today_stats['impressions'],
-                    'yesterday': yesterday_stats['impressions'],
-                    'total': mpx_stats['impressions'],
+                'imp': {
+                    'today': today_stats['imp'],
+                    'yesterday': yesterday_stats['imp'],
+                    'total': mpx_stats['imp'],
                 },
-                'ecpm': {
-                    'today': today_stats['ecpm'],
-                    'yesterday': yesterday_stats['ecpm'],
-                    'total': mpx_stats['ecpm']
+                'cpm': {
+                    'today': cpm(today_stats['rev'], today_stats['imp']),
+                    'yesterday': cpm(yesterday_stats['rev'],
+                        yesterday_stats['imp']),
+                    'total': cpm(mpx_stats['rev'], mpx_stats['imp']),
                 },
             }
 
@@ -115,14 +117,15 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'adunit_keys': adunit_keys,
                                       'pub_key': self.account.key(),
                                       'mpx_stats': simplejson.dumps(mpx_stats),
-                                      'stats_breakdown_includes': ['revenue', 'impressions', 'ecpm'],
+                                      'stats_breakdown_includes': ['revenue',
+                                              'impressions', 'ecpm'],
                                       'totals': mpx_stats,
                                       'today_stats': today_stats,
                                       'yesterday_stats': yesterday_stats,
                                       'stats': stats,
                                       'blocklist': blocklist,
-                                      'start_date': start_date,
-                                      'end_date': end_date,
+                                      'start_date': self.days[0],
+                                      'end_date': self.days[-1],
                                       'date_range': self.date_range,
                                       'blind': blind,
                                       'network_config': network_config
@@ -145,6 +148,7 @@ class BlocklistHandler(RequestHandler):
         try:
             # Get the blocklist urls and the action
             blocklist_urls = self.request.POST.get('blocklist')
+            # Split on whitespace and commas
             blocklist = blocklist_urls.replace(',', ' ').split()
             blocklist_action = self.request.POST.get('action')
 
@@ -153,27 +157,32 @@ class BlocklistHandler(RequestHandler):
 
             # Process add's (sometimes they're in bulk)
             if blocklist_action == "add" and blocklist:
-                new = [d for d in blocklist if not d in network_config.blocklist]
+                new = [d for d in blocklist if not d in
+                        network_config.blocklist]
                 network_config.blocklist.extend(blocklist)
-                network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
-                AccountQueryManager().update_config_and_put(account=self.account,
-                                                            network_config=network_config)
+                # Removes duplicates and sorts
+                network_config.blocklist = sorted(set(network_config.blocklist))
+                AccountQueryManager.update_config_and_put(account=
+                        self.account, network_config=network_config)
 
                 return JSONResponse({'success': 'blocklist item(s) added',
                                      'new': new})
 
             # Process removes (there should only be one at a time, but we could
-            # change functionality on the client side to remove multiple urls at once
+            # change functionality on the client side to remove multiple urls
+            # at once
             elif blocklist_action == "remove" and blocklist:
                 for url in blocklist:
                     if network_config.blocklist.count(url):
                         network_config.blocklist.remove(url)
-                AccountQueryManager().update_config_and_put(account=self.account, network_config=network_config)
+                AccountQueryManager.update_config_and_put(account=
+                        self.account, network_config=network_config)
                 return JSONResponse({'success': 'blocklist item(s) removed'})
 
             # If they didn't pass the action, it's an error.
             else:
-                return JSONResponse({'error': 'you must provide an action (add|remove) and a blockist'})
+                return JSONResponse({'error': 'you must provide an action ' \
+                        '(add|remove) and a blockist'})
 
         except Exception, e:
             logging.warn(e)
@@ -195,7 +204,7 @@ class ContentFilterHandler(RequestHandler):
 
         # If the account doesn't have a network config, make one
         if not network_config:
-            network_config = NetworkConfig()
+            network_config = NetworkConfig(account=self.account)
             network_config.put()
             self.account.network_config = network_config
             self.account.put()
@@ -213,7 +222,8 @@ class ContentFilterHandler(RequestHandler):
             else:
                 return JSONResponse({'error': 'Invalid filter level'})
         else:
-            return JSONResponse({'error': 'No filter level specified (choose one of [none, low, moderate, strict]'})
+            return JSONResponse({'error': 'No filter level specified (choose ' \
+                    'one of [none, low, moderate, strict]'})
 
         return JSONResponse({'success': 'success'})
 
@@ -227,7 +237,7 @@ class MarketplaceOnOffHandler(RequestHandler):
     """
     Ajax handler for activating/deactivating the marketplace.
     Required data parameters:
-    - activate: 'on' or 'off', to set the marketplace on or off.
+    - activate: 'true' or 'false', to set the marketplace on or off.
     """
     def post(self):
         try:
@@ -258,8 +268,10 @@ class MarketplaceBlindnessChangeHandler(RequestHandler):
             network_config = self.account.network_config
 
             # Some accounts won't have a network config yet
+            # REFACTOR: override getattr for Account to create a network
+            # config if one doesn't exist?
             if network_config == None:
-                n = NetworkConfig().put()
+                n = NetworkConfig(account=self.account).put()
                 self.account.network_config = n
                 self.account.put()
                 network_config = n
@@ -293,7 +305,8 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
     """
     def get(self):
         url = "http://mpx.mopub.com/stats/creatives"
-        query = "?" + "&".join([key + '=' + value for key, value in self.request.GET.items()])
+        query = "?" + "&".join([key + '=' + value for key, value in
+            self.request.GET.items()])
         url += query
         response = urlfetch.fetch(url, method=urlfetch.GET, deadline=30).content
 
@@ -305,8 +318,7 @@ def marketplace_creative_proxy(request, *args, **kwargs):
     return MarketplaceCreativeProxyHandler()(request, *args, **kwargs)
 
 
-
-# Do we still need this?
+# REFACTOR: Do we still need this?
 class MPXInfoHandler(RequestHandler):
     def get(self):
         return render_to_response(self.request,

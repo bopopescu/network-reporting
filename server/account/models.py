@@ -6,7 +6,6 @@ from common.ragendja.auth import hybrid_models
 from common.constants import ISO_COUNTRIES
 from simple_models import SimpleNetworkConfig, SimpleAccount
 
-
 class User(hybrid_models.User):
     title = db.StringProperty()
     company = db.StringProperty()
@@ -121,6 +120,7 @@ class NetworkConfig(db.Model):
                                           indexed=False,
                                           default=MODERATE_ATTRIBUTES)
     blind = db.BooleanProperty(default=False)
+    account = db.ReferenceProperty()
 
     def simplify(self):
         return SimpleNetworkConfig(admob_pub_id = self.admob_pub_id,
@@ -245,6 +245,7 @@ class Account(db.Model):
 
     # account sees new networks page
     display_new_networks = db.BooleanProperty(default=False)
+    display_networks_message = db.BooleanProperty(default=False)
 
     # use only mongo to display realtime stats in UI
     display_mongo = db.BooleanProperty(default=False if settings.DEBUG else True)

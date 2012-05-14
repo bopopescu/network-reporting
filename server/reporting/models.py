@@ -495,15 +495,31 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
         pseudo_props = ['attempt_count', 'cpa', 'cpc', 'cpm', 'fill_rate', \
                 'pace', 'pace_type', 'conv_rate', 'ctr', \
                 'on_schedule', 'status', 'min_cpm', 'max_cpm']
-        return model_props + pseudo_props
+        # Hopefully the only translation dict needed ideally we run a script on
+        # appengine or stop using those entities entirely
+        PROP_TRANSLATION = {'attempt_count': 'att',
+                             'click_count': 'clk',
+                             'conversion_count': 'conv',
+                             'impression_count': 'imp',
+                             'request_count': 'req',
+                             'revenue': 'rev',
+                             'conversion_rate': 'conv_rate',
+                             'user_count': 'usr',
+                             'request_user_count': 'req_usr',
+                             'impression_user_count': 'imp_usr',
+                             'click_user_count': 'clk_user',}
+
+        properties = model_props + pseudo_props
+        return [(prop, PROP_TRANSLATION[prop]) if prop in PROP_TRANSLATION else
+            (prop, prop) for prop in properties]
 
     def to_dict(self):
         properties = self._dict_properties()
         d = {}
-        for prop_name in properties:
-            value = getattr(self, '_%s'%prop_name, None)
+        for prop, abbr_prop in properties:
+            value = getattr(self, '_%s'%prop, None)
             if value is None:
-                value = getattr(self, '%s'%prop_name, None)
+                value = getattr(self, '%s'%prop, None)
             if value is not None:
                 if isinstance(value, db.Model):
                     value = str(value.key())
@@ -511,7 +527,7 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
                     value = str(value)
                 if isinstance(value, datetime.datetime):
                     value = str(value)
-                d[prop_name] = value
+                d[abbr_prop] = value
         return d
 #
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated

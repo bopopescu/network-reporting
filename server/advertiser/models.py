@@ -121,7 +121,7 @@ class Campaign(db.Model):
     #
     # Compared to an AdGroup (network_type):
     #       admob = admob_native
-    #       millenial = millenial_native
+    #       millennial = millennial_native
     #       iad = iAd
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
     network_state = db.IntegerProperty(default=NetworkStates. \
@@ -223,6 +223,8 @@ class Campaign(db.Model):
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
+    # net_creative is not set for new network campaigns due to circular
+    # reference redundancy, use the creatives collection instead
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty()
 
@@ -371,13 +373,9 @@ class AdGroup(db.Model):
         """
         Calculate the ecpm for a cpc campaign.
         """
-        if self.cpc:
-            try:
-                return float(self.stats.click_count) * \
-                       float(self.bid) * \
-                       1000.0 / float(self.stats.impression_count)
-            except Exception, error:
-                logging.error(error)
+        if self.cpc and self.stats.impression_count:
+            return (float(self.stats.click_count) * float(self.bid) * 1000.0 /
+                    float(self.stats.impression_count))
         return self.bid
 
     def simplify(self):
@@ -543,7 +541,7 @@ class AdGroup(db.Model):
             return "Paused"
 
         # At this point, all campaigns are within active date range and not paused
-        if campaign.budget:
+        if campaign.budget and hasattr(self, 'percent_delivered'):
             if self.percent_delivered and self.percent_delivered < 100.0:
                 return "Running"
             elif self.percent_delivered and self.percent_delivered >= 100.0:
@@ -946,6 +944,9 @@ class EjamCreative(Creative):
     #Renderer = ChartBoostRenderer
 
     #ServerSide = EjamServerSide
+    @property
+    def multi_format(self):
+        return ('320x50', 'full',)
 
 
 class InMobiCreative(Creative):

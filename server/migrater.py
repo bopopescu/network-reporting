@@ -8,6 +8,7 @@ from common.utils import helpers
 from google.appengine.api import images, files
 from mapreduce import operation as op
 # from reporting.models import StatsModel, MPStatsModel
+from account.models import Account
 from publisher.models import App
 def mapper(s):
     # change entity
@@ -89,3 +90,13 @@ def creative_activater(creative):
     if getattr(creative, 'image_blob', None):
         creative.active = creative.was_active
         yield op.db.Put(creative)
+
+
+def network_configer(obj):
+    network_config = getattr(obj, 'network_config', None)
+    if network_config:
+        if isinstance(obj, Account):
+            network_config.account = obj.key()  # key only
+        else:
+            network_config.account = obj._account  # key only
+        yield op.db.Put(network_config)

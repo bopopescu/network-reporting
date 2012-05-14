@@ -12,7 +12,7 @@ mopub.Utils = mopub.Utils || {};
 /*
  * Make sure there's a console.log function in case we forgot to remove debug statements
  */
-if (typeof window.console == "undefined") {
+if (window.console === undefined) {
     window.console = {
         log: function() {}
     };
@@ -24,46 +24,13 @@ if (typeof window.console == "undefined") {
  * it should go here.
  */
 (function($) {
-
+    
     var mopub = window.mopub || {};
     var Chart = window.Chart || {};
     var Stats = window.Stats || {};
 
     $(document).ready(function() {
-
-        /*
-         * ## Mixpanel Event Tracking
-         */
-
-        if (typeof mpq.push != 'undefined') {
-            // Date options in dashboard
-            try {
-                $("#dashboard-dateOptions-option-7").click(function(){
-                    mpq.push(['track', '7 Day Date-option clicked']);
-                });
-                $("#dashboard-dateOptions-option-14").click(function(){
-                    mpq.push(['track', '14 Day Date-option clicked']);
-                });
-                $("#dashboard-dateOptions-option-30").click(function(){
-                    mpq.push(['track', '30 Day Date-option clicked']);
-                });
-                $("#dashboard-dateOptions-option-custom").click(function(){
-                    mpq.push(['track', 'Custom Date-option clicked']);
-                });
-                // Today/Yesterday/All options in rollup
-                $("#stats-breakdown-dateOptions-option-0").click(function(){
-                    mpq.push(['track', '"Today" clicked in Stats Breakdown']);
-                });
-                $("#stats-breakdown-dateOptions-option-1").click(function(){
-                    mpq.push(['track', '"Yesterday" clicked in Stats Breakdown']);
-                });
-                $("#stats-breakdown-dateOptions-option-2").click(function(){
-                    mpq.push(['track', '"All" clicked in Stats Breakdown']);
-                });
-            } catch (x) {
-
-            }
-        }
+        
 
         // export tables as xls/csv
         // id is the html table's id attribute
@@ -177,7 +144,7 @@ if (typeof window.console == "undefined") {
         });
 
         // Override default jQuery UI datepicker options
-        $.datepicker.setDefaults({
+        $.xdatepicker.setDefaults({
             dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         });
 
@@ -195,24 +162,6 @@ if (typeof window.console == "undefined") {
             $(this).parent().fadeOut();
         });
 
-        // Set up tooltips.
-        // FYI: These are being phased out
-        $.fn.qtip.styles.mopub = {
-            background: '#303030',
-            color: '#ffffff',
-            border: {
-                radius: 5
-            },
-            tip: {
-                size: {
-                    x: 10,
-                    y: 10
-                }
-            },
-            name: 'dark' // Inherit the rest of the attributes from the preset dark style
-        };
-
-        $('a[title]').qtip({ style: { name: 'mopub', tip: true } });
         $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 
 
@@ -989,7 +938,7 @@ if (typeof window.console == "undefined") {
             yAxis: {
                 labels: {
                     formatter: function() {
-                        if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                        if(activeMetric == 'rev' || activeMetric == 'cpm') {
                             return '$' + Highcharts.numberFormat(this.value, 0);
                         } else if(activeMetric == 'ctr') {
                             return Highcharts.numberFormat(this.value, 0) + '%';
@@ -1013,23 +962,38 @@ if (typeof window.console == "undefined") {
             tooltip: {
                 formatter: function() {
                     var text = '', value = '', total = '';
+                    metric_translation = {att: 'attempts',
+                                          clk: 'clicks',
+                                          conv: 'conversions',
+                                          imp: 'impressions',
+                                          req: 'requests',
+                                          cpm: 'CPM',
+                                          rev: 'revenue',
+                                          conv_rate: 'conversion rate',
+                                          ctr: 'click through rate',
+                                          fill_rate: 'fill rate', 
+                                          usr: 'user count'};
 
-                    if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                    // If the metric isn't in the dict use the unformatted name
+                    var metric_name = metric_translation[activeMetric];
+                    metric_name = metric_name ? metric_name : activeMetric;
+
+                    if(activeMetric == 'rev' || activeMetric == 'cpm') {
                         value = '$' + Highcharts.numberFormat(this.y, 2);
                         if(data.total) {
                             total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
                         }
-                    } else if (activeMetric == 'clicks') {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                    } else if (activeMetric == 'clk') {
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_name;
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_name;
                         }
                     } else if (activeMetric == 'ctr') {
                         value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
                     } else {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_name;
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_name;
                         }
                     }
 

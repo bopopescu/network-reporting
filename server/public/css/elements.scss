@@ -598,7 +598,7 @@
     }
 }
 
-span.pub_id.muted {
+div.pub-id-edit, span.pub_id.muted {
     float: left;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -617,6 +617,9 @@ div.editable {
 .editable {
     color: #CCC;
     font-weight: 300;
+}
+.inventory_table tr:hover .editable{
+    color: #0090D9;
 }
 .editable:hover {
     color: #0090D9;

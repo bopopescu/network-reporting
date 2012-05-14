@@ -84,6 +84,8 @@ class App(db.Model):
 
     use_proxy_bids = db.BooleanProperty(default=True)
 
+    force_marketplace = db.BooleanProperty(default=True)
+
     def simplify(self):
         return SimpleApp(key = str(self.key()),
                          account = self.account,
@@ -99,9 +101,11 @@ class App(db.Model):
                          experimental_fraction = self.experimental_fraction,
                          network_config = self.network_config,
                          primary_category = self.primary_category,
-                         secondary_category = self.secondary_category)
+                         secondary_category = self.secondary_category,
+                         force_marketplace = self.force_marketplace)
 
-    def app_type_text(self):
+    @property
+    def type(self):
         types = {
             'iphone': 'iOS',
             'android': 'Android',
@@ -128,7 +132,7 @@ class App(db.Model):
 
     @property
     def full_name(self):
-        return self.name + " (" + self.app_type_text() + ")"
+        return self.name + " (" + self.type + ")"
 
     @property
     def key_(self):
@@ -165,6 +169,10 @@ class App(db.Model):
         d.update(icon_url=self.icon_url)
         return d
 
+    def external_key(self):
+        return db.Key.from_path(self.key().kind(), self.key().id_or_name(), _app='mopub-inc')
+
+        
 class Site(db.Model):
     DEVICE_FORMAT_CHOICES = (
            u'phone',
@@ -340,6 +348,8 @@ class Site(db.Model):
         if account_level_id:
             return account_level_id
 
+    def external_key(self):
+        return db.Key.from_path(self.key().kind(), self.key().id_or_name(), _app='mopub-inc')            
 
 ###############
 # rename Site #

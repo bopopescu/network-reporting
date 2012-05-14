@@ -3,14 +3,15 @@ from urllib2 import urlopen
 from common.utils import date_magic
 from datetime import datetime, date, time
 
+from api.networks_helpers import get_all_stats as get_network_stats
+
 from account.query_managers import AccountQueryManager
 from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
-        AdNetworkAggregateManager, \
-        NetworkStatsQueryManager
+        AdNetworkAggregateManager
 from common.constants import REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager,\
@@ -31,13 +32,6 @@ except ImportError:
     except ImportError:
         from django.utils import simplejson as json
 
-ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
-        else 0)
-ecpm = lambda revenue, impressions: (revenue/float(impressions)*1000 if
-        impressions else 0)
-fill_rate = lambda requests, impressions: (impressions/float(requests) if
-        requests else 0)
-
 
 class AbstractStatsFetcher(object):
 
@@ -55,27 +49,36 @@ class AbstractStatsFetcher(object):
 
     def format_stats(self, stats):
         stat_totals = {
-            'revenue': sum([stat.revenue for stat in stats]),
-            'ctr': 0.0,
-            'ecpm': 0.0,
-            'impressions': sum([stat.impression_count for stat in stats]),
-            'clicks': sum([stat.click_count for stat in stats]),
-            'requests': sum([stat.request_count for stat in stats]),
-            'fill_rate': 0.0,
-            'conversions': sum([stat.conversion_count for stat in stats]),
-            'conversion_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+            'rev': sum([stat.revenue for stat in stats]),
+            'imp': sum([stat.impression_count for stat in stats]),
+            'clk': sum([stat.click_count for stat in stats]),
+            'req': sum([stat.request_count for stat in stats]),
+            'conv': sum([stat.conversion_count for stat in stats]),
+            'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
         }
 
-        stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
-        stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
-        stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
-
         return stat_totals
+
+    def format_daily_stats(self, all_stats):
+        stats_dict = {'sum': {'rev': sum([stats.revenue for stats in
+                                  all_stats]),
+                              'imp': sum([stats.impression_count for
+                                  stats in all_stats]),
+                              'clk': sum([stats.click_count for stats in
+                                  all_stats]),
+                              'req': sum([stats.request_count for stats
+                                  in all_stats]), },
+                      'daily_stats': [{'rev': stats.revenue,
+                                       'imp': stats.impression_count,
+                                       'clk': stats.click_count,
+                                       'req': stats.request_count,} for
+                                       stats in all_stats], }
+        return stats_dict
 
 
 class SummedStatsFetcher(AbstractStatsFetcher):
     def _get_publisher_stats(self, start, end, publisher=None,
-                             advertiser=None, format_stats=True,
+                             advertiser=None, daily=False,
                              *args, **kwargs):
         # mongo
         days = date_magic.gen_days(start, end)
@@ -84,17 +87,71 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=advertiser,
                                                  days=days)
-        if format_stats:
-            return self.format_stats(stats)
+        if daily:
+            return self.format_daily_stats(stats)
         else:
-            return stats
+            return self.format_stats(stats)
+
+    def _get_campaign_stats(self, start, end, campaign, publisher=None,
+            daily=False, *args, **kwargs):
+        # mongo
+        query_manager = StatsModelQueryManager(AccountQueryManager.get(
+            self.account_key))
+        # If its a new network campaign that has been migrated and the
+        # transition date is after the start date
+        if campaign.campaign_type == 'network' and campaign.network_state == \
+                NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
+                campaign.old_campaign and start <= campaign.transition_date:
+            new_stats = None
+            if end >= campaign.transition_date:
+                # get new campaign stats
+                days = date_magic.gen_days(campaign.transition_date, end)
+                new_stats = query_manager.get_stats_for_days(
+                        publisher=publisher, advertiser=campaign,
+                        days=days)
+                days = date_magic.gen_days(start, campaign.transition_date)
+            else:
+                # getting only legacy campaign stats
+                days = date_magic.gen_days(start, end)
+            # get old campaign stats
+            old_stats = query_manager.get_stats_for_days(publisher=publisher,
+                    advertiser=campaign.old_campaign, days=days)
+            if new_stats:
+                transition_stats = old_stats[-1] + new_stats[0]
+                all_stats = old_stats[:-1] + [transition_stats] + new_stats[1:]
+            else:
+                all_stats = old_stats
+        else:
+            days = date_magic.gen_days(start, end)
+            all_stats = query_manager.get_stats_for_days(publisher=publisher,
+                    advertiser=campaign, days=days)
+        if daily:
+            return self.format_daily_stats(all_stats)
+        else:
+            return self.format_stats(all_stats)
 
     def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
         # mongo
         campaign = CampaignQueryManager.get(campaign_key)
-        campaign_stats = self._get_publisher_stats(start, end,
-                advertiser=campaign, format_stats=False)
+        campaign_stats = self._get_campaign_stats(start, end, campaign,
+                daily=True)
         return campaign_stats
+
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign, start,
+            end, *args, **kwargs):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key);
+        adunit_stats = self._get_campaign_stats(start, end, campaign,
+                publisher=adunit)
+        return adunit_stats
+
+    def get_campaign_specific_app_stats(self, app_key, campaign,
+                                        start, end, *args, **kwargs):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        app_stats = self._get_campaign_stats(start, end, campaign,
+                publisher=app)
+        return app_stats
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         # mongo
@@ -172,11 +229,9 @@ class MarketplaceStatsFetcher(object):
 
         stats_dict = {}
         for id, stats in response_dict.iteritems():
-            counts = {"revenue": currency(stats['pub_rev']),
-                      "impressions": int(stats['imp']),
-                      "clicks": stats['clk'],
-                      "ecpm": currency(ecpm(stats['pub_rev'], stats['imp'])),
-                      "ctr": percentage(ctr(stats['clk'], stats['imp']))}
+            counts = {"rev": currency(stats['pub_rev']),
+                      "imp": int(stats['imp']),
+                      "clk": stats['clk'], }
             stats_dict[id] = counts
         return stats_dict
 
@@ -191,29 +246,21 @@ class MarketplaceStatsFetcher(object):
 
         example output with daily flag set:
 
-        {'ctr': '0.00%',
-        'revenue': '$0.08',
-        'daily': [{'ctr': '0.00%',
-                   'revenue': '$0.00',
-                   'ecpm': '$0.00',
+        {'rev': '$0.08',
+        'daily': [{'rev': '$0.00',
                    'date': u'2011-10-25',
-                   'impressions': 0,
-                   'clicks': 0},
-                  {'ctr': '0.00%',
-                   'revenue': '$0.01',
-                   'ecpm': '$0.89',
+                   'imp': 0,
+                   'clk': 0},
+                  {'rev': '$0.01',
                    'date': u'2011-10-26',
-                   'impressions': 9,
-                   'clicks': 0},
-                  {'ctr': '0.00%',
-                   'revenue': '$0.07',
-                   'ecpm': '$0.98',
+                   'imp': 9,
+                   'clk': 0},
+                  {'rev': '$0.07',
                    'date': u'2011-10-27',
-                   'impressions': 71,
-                   'clicks': 0}],
-         'ecpm': '$0.98',
-         'impressions': 80,
-         'clicks': 0}
+                   'imp': 71,
+                   'clk': 0}],
+         'imp': 80,
+         'clk': 0}
 
         """
         if isinstance(start, date):
@@ -283,8 +330,6 @@ class MarketplaceStatsFetcher(object):
             # these values has been kind of a pain in the ass to generate
             # in the template/on the client side, so generate them here.
             # ideally they'd be generated client side.
-            dsp['stats']['ctr'] = ctr(dsp['stats']['clk'], dsp['stats']['imp'])
-            dsp['stats']['ecpm'] = ecpm(dsp['stats']['pub_rev'], dsp['stats']['imp'])
 
             dsp_list.append(dsp)
 
@@ -319,9 +364,6 @@ class MarketplaceStatsFetcher(object):
         if not dsp_key in creative_stats:
             return {}
         creatives = [creative for creative in creative_stats[dsp_key].values()]
-        for creative in creatives:
-            creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))
-            creative['stats'].update(ecpm = ecpm(creative['stats']['pub_rev'], creative['stats']['imp']))
 
         return creatives
 
@@ -337,9 +379,6 @@ class MarketplaceStatsFetcher(object):
             creative_stats = _fetch_and_decode(url)
             if dsp_key in creative_stats:
                 creatives = [creative for creative in creative_stats[dsp_key].values()]
-                for creative in creatives:
-                    creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))
-                    creative['stats'].update(ecpm = ecpm(creative['stats']['pub_rev'], creative['stats']['imp']))
 
                 all_creatives.extend(creatives)
         return all_creatives
@@ -353,20 +392,29 @@ class MarketplaceStatsFetcher(object):
         return {}
 
 class NetworkStatsFetcher(AbstractStatsFetcher):
+    def _get_publisher_stats(self, start, end, account_key, app_key='*',
+            network='*'):
+        # network stats api
+        stats = get_network_stats(str(app_key), network, str(account_key),
+                start, end).values()[0]
+        return stats
+
     def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        # ad network stats
         campaign = CampaignQueryManager.get(campaign_key)
         days = date_magic.gen_days(start, end)
         if campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-            query_manager = NetworkStatsQueryManager(
-                    AccountQueryManager.get(self.account_key))
-            stats = query_manager.get_stats_for_days(campaign.network_type,
-                    days=days)
+            stats = self._get_publisher_stats(start, end, campaign._account,
+                    network=campaign.network_type)
         else:
-            stats = [StatsModel(date=datetime.combined(day, time())) for day in
-                    days]
+            return None
         return stats
+
+    def get_campaign_specific_app_stats(self, app_key, campaign, start, end,
+            *args, **kwargs):
+        app_stats = self._get_publisher_stats(start, end, campaign._account,
+                app_key=app_key, network=campaign.network_type)['sum']
+        return app_stats
 
 # TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):
@@ -423,16 +471,13 @@ class AdNetworkStatsFetcher(object):
 # Helper/Utility functions
 
 def _transform_stats(stats_dict):
-    return {"revenue": stats_dict['rev'],
-            "impressions": int(stats_dict['imp']),
-            "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
-            "ecpm": ecpm(stats_dict['rev'], stats_dict['imp']),
-            "ctr": ctr(stats_dict.get('clk', 0), stats_dict['imp'])}
+    return {"rev": stats_dict['rev'],
+            "imp": int(stats_dict['imp']),
+            "clk": stats_dict.get('clk', 0),} # no clk currently from /stats/pub
 
 
 def _fetch_and_decode(url):
     try:
-        logging.warn(url)
         response = urlopen(url).read()
         response_dict = json.loads(response)
     except Exception, ex:

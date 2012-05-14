@@ -1,4 +1,8 @@
 # magic import
+import sys
+import os
+
+sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from account.models import Account, NetworkConfig
@@ -19,7 +23,7 @@ def load_test_data(include_iad=False):
     account.put()
 
 
-    network_config = NetworkConfig(jumptap_pub_id=TEST_JUMPTAP_PUB_ID,
+    network_config = NetworkConfig(account=account, jumptap_pub_id=TEST_JUMPTAP_PUB_ID,
             admob_pub_id=TEST_ADMOB_PUB_ID, inmobi_pub_id=TEST_INMOBI_PUB_ID,
             mobfox_pub_id=TEST_MOBFOX_PUB_ID)
     network_config.put()
@@ -31,7 +35,7 @@ def load_test_data(include_iad=False):
 
     # Test adding adunit pub id for jumptap
     jumptap_adunit = Site(app_key=app)
-    jumptap_adunit_config = NetworkConfig(jumptap_pub_id=
+    jumptap_adunit_config = NetworkConfig(account=account, jumptap_pub_id=
             'bet_wap_site_106andpark_top')
     jumptap_adunit_config.put()
     jumptap_adunit.network_config = jumptap_adunit_config

@@ -30,6 +30,9 @@ setup_test_environment()
 
 
 class OrderViewTestCase(BaseViewTestCase):
+    """
+    Base test class for all of our order views.
+    """
     def setUp(self):
         super(OrderViewTestCase, self).setUp()
         self.order = generate_campaign(self.account)
@@ -41,6 +44,9 @@ class OrderViewTestCase(BaseViewTestCase):
 
 
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
+    """
+    Tests for the order and line item create view's GET method.
+    """
     def setUp(self):
         super(OrderAndLineItemCreateGetTestCase, self).setUp()
         self.url = reverse('advertiser_order_and_line_item_form_new')

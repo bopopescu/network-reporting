@@ -1,7 +1,10 @@
 import os
 import urllib
 import urllib2
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 import logging
 import sys
 import time

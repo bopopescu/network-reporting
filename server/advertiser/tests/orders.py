@@ -66,7 +66,15 @@ class OrderAndLineItemCreate(OrderViewTestCase):
 
 
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
+    """
+    Tests for the new/edit line item POST method.
+    Author: Haydn Dufrene
+    """
+
     def setUp(self):
+        """
+        Sets up the new and edit urls.
+        """
         super(NewOrEditLineItemGetTestCase, self).setUp()
         self.new_url = reverse('advertiser_line_item_form_new', kwargs={
             'order_key': unicode(self.order.key())
@@ -79,7 +87,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         """
         A valid get should return a valid (200, 302) response (regardless
         of params).
-
+        
         Author: Haydn Dufrene
         """
         new_response = self.client.get(self.new_url)
@@ -88,6 +96,10 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         ok_(edit_response.status_code in [200, 302])
 
     def mptest_get_correct_forms_with_order(self):
+        """
+        The proper order form is returned with an empty line_item
+        form for creating new line_items with an order
+        """
         line_item = None
         order_form = OrderForm(instance=self.order, prefix='order')
         line_item_form = OrderForm(instance=line_item)
@@ -98,6 +110,10 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         ok_(response.context['line_item_form'].instance is None)
 
     def mptest_get_correct_forms_with_line_item(self):
+        """
+        The proper order and line_item forms are returned
+        when editing
+        """
         order_form = OrderForm(instance=self.order, prefix='order')
         line_item_form = LineItemForm(instance=self.line_item)
 
@@ -108,13 +124,20 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
             line_item_form.instance.key())
 
     def mptest_order_owns_line_item(self):
+        """
+        The order returned must own the line_item returned
+        """
         response = self.client.get(self.edit_url)
         eq_(response.context['order'],
             response.context['line_item'].campaign)
 
+
     # don't know if these will be necessary
     # we should just test that all models dont change state
     def mptest_models_do_not_change(self):
+        """
+        GETs should never change the state of models
+        """
         response = self.client.get(self.edit_url)
         actual_order = response.context['order']
         actual_line_item = response.context['line_item']
@@ -122,6 +145,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         eq_(to_dict(self.line_item), to_dict(actual_line_item))
 
     def mptest_fail_on_unowned_order(self):
+        """
+        Trying to access an unowned order returns a 404
+        """
         diff_acct = generate_account(username='diff')
         diff_order = generate_campaign(account=diff_acct)
         diff_url = reverse('advertiser_line_item_form_new',
@@ -132,6 +158,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         eq_(response.status_code, 404)
 
     def mptest_fail_on_unowned_line_item(self):
+        """
+        Trying to access an unowned line_item returns a 404
+        """
         diff_acct = generate_account(username='diff')
         diff_order = generate_campaign(account=diff_acct)
         diff_line_item = generate_adgroup(diff_order,
@@ -146,6 +175,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         eq_(response.status_code, 404)
 
     def mptest_gets_correct_apps(self):
+        """
+        All apps for the given account should be returned
+        """
         app1 = generate_app(self.account)
         app2 = generate_app(self.account)
         response = self.client.get(self.edit_url)
@@ -216,7 +248,6 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
-
     def mptest_fail_when_line_item_not_owned(self):
         """
         A line item should not be editable by accounts that don't
@@ -275,42 +306,35 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         eq_(response.status_code, 404)
 
-
     def mptest_puts_new_valid_line_item(self):
         """
         """
         ok_(False)
-
 
     def mptest_puts_changed_valid_line_item(self):
         """
         """
         ok_(False)
 
-
     def mptest_fails_gracefully_invalid_line_item(self):
         """
         """
         ok_(False)
-
 
     def mptest_complete_onboarding_after_first_campaign(self):
         """
         """
         ok_(False)
 
-
     def mptest_redirects_properly_after_success(self):
         """
         """
         ok_(False)
 
-
     def mptest_datetime_alias_for_jquery_on_fail(self):
         """
         """
         ok_(False)
-
 
 class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):

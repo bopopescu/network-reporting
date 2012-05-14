@@ -5,7 +5,7 @@ import sys
 sys.path.append(os.environ['PWD'])
 
 from google.appengine.ext import db
-from nose.tools import eq_
+from nose.tools import eq_, ok_
 
 from account.models import Account
 from advertiser.models import Campaign, AdGroup, Creative
@@ -77,4 +77,4 @@ def model_to_dict(model, exclude=[]):
     return model_dict
 
 def time_almost_eq(time1, time2, delta):
-    pass
+    ok_(time1 < time2 + delta and time1 > time2 - delta)

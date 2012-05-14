@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
 from admin.randomgen import generate_app, generate_adunit
-from common.utils.test.test_utils import dict_eq, model_to_dict
+from common.utils.test.test_utils import dict_eq, model_to_dict, time_almost_eq
 from common.utils.test.views import BaseViewTestCase
 from publisher.forms import AppForm, AdUnitForm
 from publisher.query_managers import PublisherQueryManager
@@ -146,9 +146,9 @@ class CreateAppViewTestCase(BaseViewTestCase):
         dict_eq(app_dict, expected_app_dict, exclude=['t'])
 
         # Make sure the app was created within the last minute.
-        utcnow = datetime.datetime.utcnow()
-        ok_(app.t > utcnow - datetime.timedelta(minutes=1) and
-            app.t < utcnow)
+        time_almost_eq(app.t,
+                       datetime.datetime.utcnow(),
+                       datetime.timedelta(minutes=1))
 
         # Creating an app automatically creates a child adunit. Ensure that
         # there is exactly one adunit for this account.
@@ -190,8 +190,9 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
-        ok_(adunit.t > utcnow - datetime.timedelta(minutes=1) and
-            adunit.t < utcnow)
+        time_almost_eq(adunit.t,
+                       datetime.datetime.utcnow(),
+                       datetime.timedelta(minutes=1))
 
     # This test is broken because of an existing bug in both AppForm (name isn't
     # required) and CreateAppHandler.post (attempts to put None app when form

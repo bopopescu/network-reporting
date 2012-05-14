@@ -568,6 +568,7 @@ class EditNetworkHandler(RequestHandler):
                 # Onboarding: user is done after they set up their first
                 # campaign
                 if self.account.status == "step4":
+                    logging.info('HERE')
                     self.account.status = ""
                     AccountQueryManager.put_accounts(self.account)
 

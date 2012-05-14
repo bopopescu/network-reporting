@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse
 from django.test.utils import setup_test_environment
 from django.http import Http404
 from nose.tools import eq_, ok_, assert_raises
-
+import uuid
 from admin.randomgen import (generate_campaign, generate_adgroup, \
                              generate_creative, generate_app, \
                              generate_account, generate_marketplace_campaign)
@@ -248,6 +248,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
+
     def mptest_fail_when_line_item_not_owned(self):
         """
         A line item should not be editable by accounts that don't
@@ -306,10 +307,80 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         eq_(response.status_code, 404)
 
+
     def mptest_puts_new_valid_line_item(self):
         """
         """
-        ok_(False)
+        order = generate_campaign(self.account)
+        #line_item = generate_adgroup(order, [], diff_account, 'gtee')
+        url = reverse('advertiser_line_item_form_new', kwargs = {
+            'order_key': unicode(order.key())
+        })
+
+        new_line_item_name = u'New really awesome lineitem' + unicode(uuid.uuid4())
+        post_body = {
+
+            # common form parameters
+            u'ajax': [u'true'],
+
+            # order form parameters
+            u'order-advertiser': [order.advertiser],
+            u'order-description': [order.description],
+            u'order-name': [order.name],
+
+            # line item form parameters
+            u'adgroup_type': [u'gtee'],
+            u'allocation_percentage': [u'100.0'],
+            u'android_version_max': [u'999'],
+            u'android_version_min': [u'1.5'],
+            u'bid': [u'0.05'],
+            u'bid_strategy': [u'cpm'],
+            u'budget': [u''],
+            u'budget_strategy': [u'allatonce'],
+            u'budget_type': [u'daily'],
+            u'daily_frequency_cap': [u'0'],
+            u'device_targeting': [u'0'],
+            u'end_datetime_0': [u'05/31/2012'],
+            u'end_datetime_1': [u'11:59 PM'],
+            u'gtee_priority': [u'normal'],
+            u'hourly_frequency_cap': [u'0'],
+            u'ios_version_max': [u'999'],
+            u'ios_version_min': [u'2.0'],
+            u'keywords': [u''],
+            u'name': [new_line_item_name],
+            u'promo_priority': [u'normal'],
+            u'region_targeting': [u'all'],
+            u'start_datetime_0': [u'05/30/2012'],
+            u'start_datetime_1': [u'12:00 AM'],
+            u'target_android': [u'on'],
+            u'target_ipad': [u'on'],
+            u'target_iphone': [u'on'],
+            u'target_ipod': [u'on'],
+            u'target_other': [u'on']
+        }
+
+        # Get the response from the post
+        response = self.client.post(url, post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        # Assert that the form post was a success
+        ok_(response_json['success'])
+
+        # Assert that we got a redirect link
+        ok_(response_json['redirect'])
+
+        # Get the new line item
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        # Check all of the values from the new line item that we care about
+        for li_param in post_body.keys():
+            expected_value = post_body[li_param]
+            actual_value =
+            eq_(
+
+
 
     def mptest_puts_changed_valid_line_item(self):
         """
@@ -335,6 +406,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         """
         ok_(False)
+
 
 class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):
@@ -777,3 +849,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_order.active)
         ok_(not actual_order.archived)
         ok_(actual_order.deleted)
+
+
+def get_line_item_key_from_redirect_url(redirect_url):
+    return redirect_url.replace('/advertise/line_items/', '').rstrip('/')

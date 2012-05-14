@@ -275,14 +275,22 @@ class OrderAndLineItemFormHandler(RequestHandler):
             'line_item_form': line_item_form,
         }
 
-        
+
     def post(self, order_key=None, line_item_key=None):
+<<<<<<< HEAD
+=======
+
+>>>>>>> dada85de2b87a06c18800c194b1bb4ed74f1b0a5
         if not self.request.is_ajax():
             raise Http404
 
         if len(self.request.POST.keys()) == 0:
             raise Http404
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> dada85de2b87a06c18800c194b1bb4ed74f1b0a5
         if line_item_key:
             line_item = AdGroupQueryManager.get(line_item_key)
             order = line_item.campaign
@@ -293,8 +301,17 @@ class OrderAndLineItemFormHandler(RequestHandler):
             order = None
             line_item = None
 
+<<<<<<< HEAD
         if order:
             if not order.is_order:
+=======
+        if line_item:
+            if not line_item.account.key() == self.account.key():
+                raise Http404
+
+        if order:
+            if (not order.is_order) or order.account.key() != self.account.key():
+>>>>>>> dada85de2b87a06c18800c194b1bb4ed74f1b0a5
                 raise Http404
         else:
             print self.request.POST

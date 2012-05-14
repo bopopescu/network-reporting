@@ -277,15 +277,12 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
         
     def post(self, order_key=None, line_item_key=None):
-        
         if not self.request.is_ajax():
             raise Http404
 
         if len(self.request.POST.keys()) == 0:
             raise Http404
-
-        logging.warn(self.request.POST)
-            
+        
         if line_item_key:
             line_item = AdGroupQueryManager.get(line_item_key)
             order = line_item.campaign
@@ -296,14 +293,11 @@ class OrderAndLineItemFormHandler(RequestHandler):
             order = None
             line_item = None
 
-        if line_item:
-            if not line_item.account.key() == self.account.key():
-                raise Http404
-            
         if order:
-            if (not order.is_order) or order.account.key() == self.account.key():
+            if not order.is_order:
                 raise Http404
         else:
+            print self.request.POST
             order_form = OrderForm(self.request.POST, instance=order, prefix='order')
 
             if order_form.is_valid():
@@ -329,9 +323,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
 
-        line_item_form = LineItemForm(self.request.POST,
-                                      instance=line_item,
-                                      site_keys=site_keys)
+        line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
 
         if line_item_form.is_valid():
             line_item = line_item_form.save()

@@ -191,5 +191,4 @@ def dict_eq_(dict1, dict2):
     dict1_keys = dict1.keys()
     eq_(dict1_keys, dict2.keys())
     for key in dict1_keys:
-        assert_almost_equals(dict1[key], dict2[key])
-
+        eq_(dict1[key], dict2[key])

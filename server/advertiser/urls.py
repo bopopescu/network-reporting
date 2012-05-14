@@ -59,7 +59,8 @@ urlpatterns = patterns(
 
     # Status changing (active/pause/archive)
     url('^ad_source/status/$',
-        'ad_source_status_change'),
+        'ad_source_status_change',
+        name='advertiser_ad_source_status_change'),
 
     # Forms
     # Note: these need to come before the detail

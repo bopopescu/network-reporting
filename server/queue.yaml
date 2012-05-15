@@ -156,11 +156,11 @@ queue:
   rate: 100/s
   bucket_size: 100
   retry_parameters:
-    task_retry_limit: 5
+    task_retry_limit: 1
 
 - name: budget-api
   rate: 100/s
-  bucket_size: 100 
+  bucket_size: 100
 
 - name: budget-advance
   rate: 100/s

@@ -1,3 +1,7 @@
+"""
+NOTE: Since these are so expensive they are not run by usual nose tests
+"""
+
 import os, sys
 sys.path.append(os.environ['PWD'])
 import unittest

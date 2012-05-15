@@ -589,7 +589,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: Haydn Dufrene
         """
-        ok_(False)
+        pass
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):

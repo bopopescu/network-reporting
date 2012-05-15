@@ -238,9 +238,10 @@ def generate_marketplace_campaign(account, budget):
 
 def generate_account(username=USERNAME,
                      password=PASSWORD,
-                     email=USERNAME,
                      marketplace_config=None,
-                     network_config=None):
+                     network_config=None,
+                     *args, **kwargs):
+    email = username
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
         marketplace_config.put()
@@ -255,6 +256,7 @@ def generate_account(username=USERNAME,
                                       email=email)
     manager.create_profile(user)
 
+    
     account = AccountQueryManager().get_current_account(user=user)
     account.active = True
     account.marketplace_config = marketplace_config

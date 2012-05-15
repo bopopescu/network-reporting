@@ -377,7 +377,10 @@ class CreateAppHandler(RequestHandler):
             publisher_integration_url = publisher_integration_url + '?status=' + status
             return HttpResponseRedirect(publisher_integration_url)
 
-        return self.get(app_form, adunit_form)
+        return render_to_response(self.request, self.template, {
+            'app_form': app_form,
+            'adunit_form': adunit_form
+        })
 
 
 @login_required
@@ -855,6 +858,9 @@ class AppUpdateAJAXHandler(RequestHandler):
         return JSONResponse(json_dict)
 
     def post(self,app_key=None):
+        logging.error(self.request.POST)
+        logging.error(self.request.FILES)
+
         app_key = app_key or self.request.POST.get('app_key')
         if app_key:
             app = AppQueryManager.get(app_key)

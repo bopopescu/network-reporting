@@ -7,7 +7,7 @@ import datetime
 from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import db
-from nose.tools import eq_, assert_almost_equals
+
 
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
@@ -186,13 +186,3 @@ def get_udid_appid(request):
 
     # Otherwise, there's no need to do special processing. Simply return the request parameters
     return udid, mobile_appid
-
-def dict_eq_(dict1, dict2, exclude=None):
-    dict1_keys = dict1.keys()
-    eq_(dict1_keys, dict2.keys())
-    for key in dict1_keys:
-        try:
-            eq_(dict1[key], dict2[key])
-        except AssertionError:
-            print key
-            assert False

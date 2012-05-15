@@ -44,25 +44,26 @@ class OrderViewTestCase(BaseViewTestCase):
     """
     def setUp(self):
         super(OrderViewTestCase, self).setUp()
+
+        # Set up some basic items. These can be used for
+        # initial objects and for resolving urls.
         self.order = generate_campaign(self.account)
-        self.line_item = generate_adgroup(self.order,
-                                          [],
-                                          self.account,
-                                          'gtee')
+        self.line_item = generate_adgroup(self.order,[],self.account,'gtee')
         self.creative = generate_creative(self.account, self.line_item)
-        
+
+        # A post body for an order form, used for testing
+        # form submits that need an order.
         self.order_body = {
-            # common form parameters
-            u'ajax': u'true',
-            # order form parameters
+            u'ajax': u'true', # common form parameter
             u'order-advertiser': u'Testingco',
             u'order-description': u'',
             u'order-name': u'Test Order'
         }
+
+        # A post body for a line item form, used for testing
+        # form submits that need a line item
         self.line_item_body = {
-            # common form parameters
-            u'ajax': u'true',
-            # line item form parameters
+            u'ajax': u'true', # common form parameters
             u'adgroup_type': u'gtee',
             u'allocation_percentage': u'100.0',
             u'android_version_max': u'999',
@@ -94,6 +95,8 @@ class OrderViewTestCase(BaseViewTestCase):
             u'target_other': u'on'
         }
 
+
+        # Combined form post body
         self.post_body = dict(self.order_body, **self.line_item_body)
 
         # Mock order used for testing forms
@@ -113,7 +116,6 @@ class OrderViewTestCase(BaseViewTestCase):
         self.mock_line_item = line_item_form.save()
         self.mock_line_item.account = self.account
         self.mock_line_item.campaign = self.mock_order
-
 
 
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
@@ -200,7 +202,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         should have a valid budget and valid targeting.
 
         Catches the redirect for create order and line item post.
-        Then we use the line item key to retrieve the line item and 
+        Then we use the line item key to retrieve the line item and
         order created. We check to see if the line_item was created
         and edited within the last minute. We then compare the models
         to the mocks created in the class setup.
@@ -213,9 +215,10 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(response_json['success'])
 
-        redirect = response_json['redirect']
-        # /advertise/line_items/<LINE_ITEM_KEY>/
-        line_item_key = get_line_item_key_from_redirect_url(redirect)
+        # Get the line item key out of the redirect url and fetch the new
+        # line item with the key.
+        redirect_url = response_json['redirect']
+        line_item_key = get_line_item_key_from_redirect_url(redirect_url)
         line_item = AdGroupQueryManager.get(line_item_key)
 
         # Tests to see that this line_item was created and modified
@@ -593,7 +596,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):
-    
+
     def setUp(self):
         super(AdSourceChangeTestCase, self).setUp()
         self.url = reverse('advertiser_ad_source_status_change')

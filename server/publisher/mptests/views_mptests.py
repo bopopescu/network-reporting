@@ -413,11 +413,6 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 2)
 
-        # TODO: .
-        # adunits = adunits_dict.values()
-        # new_adunits = adunits.filter(lambda a: a.key != self.adunit.key())
-        # new_adunit = new_adunits[0]
-
         # Obtain the created adunit (the one that is not self.adunit) and
         # convert it to a dict. Exclude 't' because the exact creation time is
         # unknown.
@@ -525,7 +520,8 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         })
 
         # The account should still own exactly one adunit.
-        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
         eq_(len(adunits_dict), 1)
 
         # Obtain the adunit and convert it to a dict. Exclude 't' because the
@@ -544,7 +540,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         the correct error is returned and that the db state has not changed.
         """
 
-        self.login_secondary_account
+        self.login_secondary_account()
 
         post_data = self._generate_post_data(**{
             'adunit-name': [u'Updated Banner Ad'],
@@ -556,7 +552,8 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         eq_(post_response.status_code, 404)
 
         # The account should still own exactly one one adunit.
-        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account=self.account)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
         eq_(len(adunits_dict), 1)
 
         # Obtain the adunit and convert it to a dict. Exclude 't' because the

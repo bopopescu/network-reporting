@@ -1,3 +1,9 @@
+__doc__="""
+Tests for the order and line item views.
+
+Author: Haydn Dufrene and John Pena
+"""
+
 # don't remove, necessary to set up the test env
 import sys
 import os
@@ -87,7 +93,7 @@ class OrderViewTestCase(BaseViewTestCase):
             u'target_ipod': u'on',
             u'target_other': u'on'
         }
-        
+
         self.post_body = dict(self.order_body, **self.line_item_body)
 
         # Mock order used for testing forms
@@ -129,6 +135,12 @@ class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
         ok_(response.status_code in [200, 302])
 
     def mptest_get_correct_forms_with_no_keys(self):
+        """
+        A valid get should return valid form objects when no
+        order or line item key is passed to the url.
+
+        Author: Haydn Dufrene
+        """
         order = None
         line_item = None
         order_form = OrderForm(instance=order, prefix='order')
@@ -165,6 +177,8 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
     def mptest_graceful_fail_without_data(self):
         """
         Posting to the form handler should fail if there's no post body.
+
+        Author: John Pena
         """
         response = self.client.post(self.url,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -173,17 +187,25 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
     def mptest_graceful_fail_without_ajax(self):
         """
         Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
+
+        Author: John Pena
         """
         response = self.client.post(self.url)
         eq_(response.status_code, 404)
 
     def mptest_puts_new_valid_order_and_line_item(self):
         """
+        A valid POST with valid order and line item data should
+        create new order and line item objects. The line item
+        should have a valid budget and valid targeting.
+
         Catches the redirect for create order and line item post.
         Then we use the line item key to retrieve the line item and 
         order created. We check to see if the line_item was created
         and edited within the last minute. We then compare the models
         to the mocks created in the class setup.
+
+        Author: Haydn Dufrene
         """
         response = self.client.post(self.url, self.post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -215,7 +237,9 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         """
         Because we must retrieve the order by line item key in the 
         redirect, this test is implicitly covered in 
-        mptest_puts_new_valid_order_and_line_item
+        mptest_puts_new_valid_order_and_line_item.
+
+        Author: Haydn Dufrene
         """
         pass
 
@@ -224,6 +248,8 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         The mock which the returned order and line items are 
         compared against contain self.account, this test is 
         implicitly covered in mptest_puts_new_valid_order_and_line_item
+
+        Author: Haydn Dufrene
         """
         pass
 
@@ -231,7 +257,6 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     """
     Tests for the new/edit line item POST method.
-    Author: Haydn Dufrene
     """
 
     def setUp(self):
@@ -250,6 +275,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         """
         A valid get should return a valid (200, 302) response (regardless
         of params).
+
+        Author: John Pena
         """
         new_response = self.client.get(self.new_url)
         edit_response = self.client.get(self.edit_url)
@@ -260,6 +287,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         """
         The proper order form is returned with an empty line_item
         form for creating new line_items with an order
+
+        Author: Haydn Dufrene
         """
         line_item = None
         order_form = OrderForm(instance=self.order, prefix='order')
@@ -273,6 +302,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         """
         The proper order and line_item forms are returned
         when editing
+
+        Author: Haydn Dufrene
         """
         order_form = OrderForm(instance=self.order, prefix='order')
         line_item_form = LineItemForm(instance=self.line_item)
@@ -286,6 +317,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def mptest_order_owns_line_item(self):
         """
         The order returned must own the line_item returned
+
+        Author: Haydn Dufrene
         """
         response = self.client.get(self.edit_url)
         eq_(response.context['order'],
@@ -294,6 +327,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def mptest_models_do_not_change(self):
         """
         GETs should never change the state of models
+
+        Author: Haydn Dufrene
         """
         response = self.client.get(self.edit_url)
         actual_order = response.context['order']
@@ -304,6 +339,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def mptest_fail_on_unowned_order(self):
         """
         Trying to access an unowned order returns a 404
+
+        Author: John Pena
         """
         diff_acct = generate_account(username='slamboomington@c.com')
         diff_order = generate_campaign(account=diff_acct)
@@ -317,6 +354,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def mptest_fail_on_unowned_line_item(self):
         """
         Trying to access an unowned line_item returns a 404
+
+        Author: John Pena
         """
         diff_acct = generate_account(username='diff')
         diff_order = generate_campaign(account=diff_acct)
@@ -335,6 +374,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     def mptest_gets_correct_apps(self):
         """
         All apps for the given account should be returned
+
+        Author: Haydn Dufrene
         """
         app1 = generate_app(self.account)
         app2 = generate_app(self.account)
@@ -368,17 +409,23 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     def mptest_graceful_fail_without_data(self):
         """
         Posting to the form handler should fail if there's no post body.
+
+        Author: John Pena
         """
-        response = self.client.post(self.new_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.client.post(self.new_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-        response = self.client.post(self.edit_url,HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = self.client.post(self.edit_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
 
     def mptest_graceful_fail_without_ajax(self):
         """
         Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
+
+        Author: John Pena
         """
         response = self.client.post(self.new_url)
         eq_(response.status_code, 404)
@@ -391,6 +438,8 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         Posting to the edit form handler with a non-order campaign (marketplace
         or network) should fail gracefully.
+
+        Author: John Pena
         """
         non_order_mpx = generate_marketplace_campaign(self.account, None)
         url = reverse('advertiser_line_item_form_new', kwargs = {
@@ -411,6 +460,8 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         A line item should not be editable by accounts that don't
         own it.
+
+        Author: John Pena
         """
         diff_account = generate_account(username='diff')
         order = generate_campaign(diff_account)
@@ -427,6 +478,10 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
     def mptest_puts_new_valid_line_item(self):
         """
+        Posting valid line item data should result in a new line item being
+        created on the order that was referenced in the URL.
+
+        Author: John Pena
         """
         order = generate_campaign(self.account)
         #line_item = generate_adgroup(order, [], diff_account, 'gtee')
@@ -464,15 +519,25 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
     def mptest_puts_changed_valid_line_item(self):
         """
+        Posting valid line item information should update the line item
+        in the database.
         Author: John Pena
         """
-        pass
+        url = reverse('advertiser_line_item_form_edit', kwargs = {
+            'line_item_key': unicode(self.mock_line_item.key())
+        })
 
     def mptest_fails_gracefully_invalid_line_item(self):
         """
+        Posting invalid line item information should not result
+        in the line item being changed in the database.
+
         Author: John Pena
         """
-        pass
+        url = reverse('advertiser_line_item_form_edit', kwargs = {
+            'line_item_key': unicode(self.mock_line_item.key())
+        })
+
 
     def mptest_complete_onboarding_after_first_campaign(self):
         """
@@ -502,6 +567,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
 
 class AdSourceChangeTestCase(OrderViewTestCase):
+    
     def setUp(self):
         super(AdSourceChangeTestCase, self).setUp()
         self.url = reverse('advertiser_ad_source_status_change')
@@ -518,9 +584,10 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_fails_on_missing_params(self):
         """
-        Author: John Pena
         The ad source status change handler should return success: false
         if required parameters (ad_sources, status) are missing.
+        
+        Author: John Pena        
         """
         # test without params
         response = self.client.post(self.url)
@@ -543,17 +610,19 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_fail_on_unowned_objects(self):
         """
-        Author: John Pena
         Users should not be able to change the status of objects
         they don't own. The view should return a 404.
+
+        Author: John Pena
         """
         pass
 
     def mptest_creative_run(self):
         """
-        Author: Haydn Dufrene
         The ad source status change handler should set a creative as running
         when 'run' is passed as the status.
+
+        Author: Haydn Dufrene
         """
         self.creative.active = False
         CreativeQueryManager.put(self.creative)
@@ -568,11 +637,13 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(self.creative.active)
 
+
     def mptest_creative_pause(self):
         """
-        Author: Haydn Dufrene
         The ad source status change handler should set a creative as paused
         when 'pause' is passed as the status.
+
+        Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.creative.key()),
@@ -585,11 +656,13 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(not self.creative.active)
 
+
     def mptest_creative_delete(self):
         """
-        Author: Haydn Dufrene
         The ad source status change handler should set a creative as deleted
         when 'delete' is passed as the status.
+        
+        Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
             "ad_sources[]": unicode(self.creative.key()),
@@ -605,9 +678,10 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_line_item_run(self):
         """
-        Author: John Pena
         The ad source status change handler should set a line item as running
         when 'run' is passed as the status.
+
+        Author: John Pena
         """
         # Set the line item as paused
         self.line_item.active = False
@@ -630,9 +704,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_line_item_pause(self):
         """
-        Author: John Pena
         The ad source status change handler should set a line item as paused
         when 'pause' is passed as the status.
+        Author: John Pena
         """
         AdGroupQueryManager.put(self.line_item)
         response = self.client.post(self.url, {
@@ -670,9 +744,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_line_item_delete(self):
         """
-        Author: John Pena
         The ad source status change handler should set a line item as deleted
         when 'delete' is passed as the status.
+        Author: John Pena
         """
         AdGroupQueryManager.put(self.line_item)
         response = self.client.post(self.url, {
@@ -690,10 +764,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mp_test_order_run(self):
         """
-        Author: Haydn Dufrene
         The ad source status change handler should set an order as running
         when 'run' is passed as the status. The order's line items should
         not be affected.
+        
+        Author: Haydn Dufrene
         """
         self.order.active = False
         CampaignQueryManager.put(self.order)
@@ -713,10 +788,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_order_pause(self):
         """
-        Author: Haydn Dufrene
         The ad source status change handler should set an order as paused
         when 'pause' is passed as the status. The order's line items should
         not be affected.
+        
+        Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.order.key()),
@@ -733,10 +809,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_order_archive(self):
         """
-        Author: Haydn Dufrene
         The ad source status change handler should set an order as archived
         when 'archive' is passed as the status. The order's line items should
         not be affected.
+        
+        Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.order.key()),
@@ -753,10 +830,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_order_delete(self):
         """
-        Author: Haydn Dufrene
         The ad source status change handler should set an order as deleted
         when 'delete' is passed as the status. The order's line items should
         not be affected.
+        
+        Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
             'ad_sources[]': unicode(self.order.key()),
@@ -775,9 +853,10 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_mixed_run(self):
         """
-        Author: John Pena
         The ad source status change handler changes multiple objects
         statuses to running when 'run' is passed as the status.
+        
+        Author: John Pena
         """
         # Set the line item as paused and put it in the db
         self.line_item.active = False
@@ -827,9 +906,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_mixed_pause(self):
         """
-        Author: John Pena
         The ad source status change handler changes multiple objects
         statuses to paused when 'pause' is passed as the status.
+        Author: John Pena
         """
 
         AdGroupQueryManager.put(self.line_item)
@@ -867,9 +946,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_mixed_archive(self):
         """
-        Author: John Pena
         The ad source status change handler changes multiple objects
         statuses to archived when 'archive' is passed as the status.
+        Author: John Pena
         """
         AdGroupQueryManager.put(self.line_item)
         CampaignQueryManager.put(self.order)
@@ -906,9 +985,9 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
     def mptest_mixed_delete(self):
         """
-        Author: John Pena
         The ad source status change handler changes multiple objects
         statuses to deleted when 'delete' is passed as the status.
+        Author: John Pena
         """
         AdGroupQueryManager.put(self.line_item)
         CampaignQueryManager.put(self.order)
@@ -945,4 +1024,8 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
 def get_line_item_key_from_redirect_url(redirect_url):
+    """
+    Helper method for getting a line item key from the redirect
+    url that's passed back in many post views.
+    """
     return redirect_url.replace('/advertise/line_items/', '').rstrip('/')

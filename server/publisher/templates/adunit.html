@@ -11,18 +11,15 @@
   </h1>
 {% endblock pageTitle %}
 
-{% block titleBarRight %}
-  <span class="titlebar-right">
-    <a class="button" id="dashboard-apps-editAdUnitButton" href="#">
-      Edit ad unit settings
-    </a>
-    <a class="linkIcon" href="{% url publisher_integration_help adunit_key=adunit.key %}">
-      Get code snippet
-      <span class="ui-icon ui-icon-triangle-1-e"></span>
-    </a>
-  </span>
-{% endblock titleBarRight %}
 
+{% block dateButtons %}{% endblock dateButtons %}
+
+{% block titleBarRight %}
+
+  {% include "partials/datecontrols.html" %}
+  
+{% endblock titleBarRight %}
+  
 {% block content %}
 
   {% if not adunit.adgroups %}
@@ -30,7 +27,7 @@
       There are no ad sources targeting this ad unit.
       To show ads here, set up a new ad campaign or
       add this ad unit to an existing campaign on the
-      <a href="{% url advertiser_campaign %}">Campaigns</a> page.
+      <a href="{% url advertiser_order_index %}">Campaigns</a> page.
     </div>
   {% endif %}
 
@@ -127,9 +124,15 @@
 
   <div class="clear"></div>
 
+  
   <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
-      <a class="button" id="advertisers-testAdServer" href="#">Test Ad</a>
+    <div class="right">
+      <a class="btn" id="advertisers-testAdServer" href="#">
+        Test Ad
+      </a>
+      <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
+        Edit ad unit settings
+      </a>      
     </div>
 
     <div id="adserverTest" style="display:none;">
@@ -159,77 +162,73 @@
                 </tr>
               </thead>
               <tbody>
-                  {% for level in gtee %}
-                    {% for adgroup in level.adgroups %}
-                      <tr>
-                        <th>
-                          {% status_icon adgroup %}
-                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                            {{ adgroup.name }}
-                          </a>
-                          <br />
-                          <span class="muted">
-                            {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                              {{adgroup.campaign.start_datetime|format_date}} -
-                              {{adgroup.campaign.end_datetime|format_date}}.
-                            {% endif %}
 
-                            {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                {% for adgroup in gtee %}
+                  <tr>
+                    <th>
+                      {% status_icon adgroup %}
+                      <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
+                        {{ adgroup.name }}
+                      </a>
+                      <br />
+                      <span class="muted">
+                        {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                          {{adgroup.campaign.start_datetime|format_date}} -
+                          {{adgroup.campaign.end_datetime|format_date}}.
+                        {% endif %}
 
-                              Starts {{adgroup.campaign.start_datetime|format_date}}.
-                            {% endif %}
+                        {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
 
-                            {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                              Ends {{adgroup.campaign.end_datetime|format_date}}.
-                            {% endif %}
+                          Starts {{adgroup.campaign.start_datetime|format_date}}.
+                        {% endif %}
 
-                            {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                              All dates.
-                            {% endif %}
+                        {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                          Ends {{adgroup.campaign.end_datetime|format_date}}.
+                        {% endif %}
 
-                            {% ifequal adgroup.campaign.budget_type 'daily' %}
-                              {% if adgroup.campaign.budget %}
-                                {{ adgroup.campaign.budget|currency }} daily budget.
-                              {% else %}
-                                  Unlimited budget.
-                              {% endif %}
-                            {% endifequal %}
-                            {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                              {{adgroup.campaign.full_budget|currency}} campaign budget.
-                            {% endifequal %}
-                          </span>
-                        </th>
-                        <td class="dataTable-data numeric">
-                            Guaranteed<br/><span class="muted">{{level.name}}</span></td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                        <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
-                          {% if adgroup.bid_strategy == 'cpc' %}
-                            {{ adgroup.calculated_ecpm|currency }}
+                        {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                          All dates.
+                        {% endif %}
+
+                        {% ifequal adgroup.campaign.budget_type 'daily' %}
+                          {% if adgroup.campaign.budget %}
+                            {{ adgroup.campaign.budget|currency }} daily budget.
                           {% else %}
-                            {{ adgroup.bid|currency }}
+                            Unlimited budget.
                           {% endif %}
-                        </td>
-                        <td class="dataTable-data numeric">-</td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">
-                            {{adgroup.stats.click_count|withsep}}<br/>
-                            <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
-                        </td>
-                        <td class="dataTable-data numeric">
-                          {{adgroup.stats.conversion_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
-                        </td>
-                      </tr>
-                    {% endfor %}
-                  {% endfor %}
-                  {% for adgroup in promo %}
-                    <tr>
-                      <th>
-                        {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
-                        </a><br/>
-                        <span class="muted">
+                        {% endifequal %}
+                        {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+                          {{adgroup.campaign.full_budget|currency}} campaign budget.
+                        {% endifequal %}
+                        {% if adgroup.percent_delivered %}
+                          ({{adgroup.percent_delivered|floatformat:1}}%)
+                        {%endif %}
+                      </span>
+                    </th>
+                    <td class="dataTable-data numeric">
+                    Guaranteed<br/><span class="muted">{{level.name}}</span></td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">
+                      {{adgroup.stats.click_count|withsep}}<br/>
+                      <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                    </td>
+                    <td class="dataTable-data numeric">
+                      {{adgroup.stats.conversion_count|withsep}}<br/>
+                      <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% for adgroup in promo %}
+                  <tr>
+                    <th>
+                      {% status_icon adgroup %}
+                      <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
+                        {{ adgroup.name }}
+                      </a>
+                      <br/>
+                      <span class="muted">
                           {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
                             {{adgroup.campaign.start_date|format_date_compact}}
                             -
@@ -257,14 +256,7 @@
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Normal</span></td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
-                        {% if adgroup.bid_strategy == 'cpc' %}
-                          {{ adgroup.calculated_ecpm|currency }}
-                        {% else %}
-                          {{ adgroup.bid|currency }}
-                        {% endif %}
-                      </td>
-                      <td class="dataTable-data numeric">-</td>
+                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -306,9 +298,10 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% if adgroup.campaign.network_type %}{% url network_details campaign_key=adgroup.campaign.key %}{% else %}{% url advertiser_adgroup_show adgroup_key=adgroup.key %}{% endif %}">
-                          {{adgroup.name}}
-                        </a><br/>
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
+                          {{ adgroup.name }}
+                        </a>
+                        <br/>
                         <span class="muted">{{adgroup.network_type}}</span>
                       </th>
 
@@ -330,10 +323,10 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
-                        </a><br/>
-
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
+                          {{ adgroup.name }}
+                        </a>
+                        <br/>
                         <span class="muted">
 
                           {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
@@ -362,14 +355,7 @@
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Backfill</span></td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
-                        {% if adgroup.bid_strategy == 'cpc' %}
-                          {{ adgroup.calculated_ecpm|currency }}
-                        {% else %}
-                          {{ adgroup.bid|currency }}
-                        {% endif %}
-                      </td>
-                      <td class="dataTable-data numeric">-</td>
+                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -384,12 +370,7 @@
 
                   {% comment %}
                   <tr>
-                    <td>
-                      <span class="big">Totals</span> <br />
-                      <span class="muted">
-                        Totals include any ad sources previously targeted to this app/ad unit
-                      </span>
-                    </td>
+                    <td class="big">Totals</td>
                     <td></td>
                     <td class="dataTable-name numeric"><b>{{adunit.stats.revenue|currency}}</b></td>
                     <td></td>

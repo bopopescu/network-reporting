@@ -1,7 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'common/base.html' %}
 {% load filters %}
 
- {% block extraScripts %}<script src="/js/controllers/account.js?v=8"></script>{% endblock extraScripts %}
+ {% block extraScripts %}
+   {% include_script "controllers/account" %}
+{% endblock extraScripts %}
 
 {% block dateButtons %}{% endblock dateButtons %}
 

@@ -1,0 +1,132 @@
+@import "common.scss";
+
+// GRID SYSTEM
+// -----------
+
+// Default 940px grid
+$gridColumns:             12 !default;
+$gridColumnWidth:         60px !default;
+$gridGutterWidth:         20px !default;
+$gridRowWidth:            ($gridColumns * $gridColumnWidth) + ($gridGutterWidth * ($gridColumns - 1)) !default;
+
+// Fluid grid
+$fluidGridColumnWidth:    6.382978723% !default;
+$fluidGridGutterWidth:    2.127659574% !default;
+
+
+// Site container
+// -------------------------
+@mixin container-fixed() {
+    width: $gridRowWidth;
+    margin-left: auto;
+    margin-right: auto;
+    @include clearfix();
+}
+
+
+// Setup the mixins to be used
+@mixin gridSystemColumns($gridGutterWidth, $gridColumnWidth, $gridRowWidth, $columns) {
+    width: ($gridColumnWidth * $columns) + ($gridGutterWidth * ($columns - 1));
+}
+
+@mixin gridSystemOffset($gridColumnWidth, $gridGutterWidth, $columns) {
+    margin-left: ($gridColumnWidth * $columns) + ($gridGutterWidth * ($columns - 1)) + ($gridGutterWidth * 2);
+}
+
+@mixin gridSystemGridColumn($gridGutterWidth) {
+    float: left;
+    margin-left: $gridGutterWidth;
+}
+
+// Take these values and mixins, and make em do their thang
+@mixin gridSystemGenerate($gridColumns, $gridColumnWidth, $gridGutterWidth) {
+    // Row surrounds the columns
+    .row {
+        margin-left: $gridGutterWidth * -1;
+        @include clearfix();
+    }
+    // Find all .span# classes within .row and give them the necessary properties for grid columns (supported by all browsers back to IE7, thanks @dhg)
+    [class*="span"] {
+        @include gridSystemGridColumn($gridGutterWidth);
+    }
+    // Default columns
+    @for $i from 1 through $gridColumns {
+        .span#{$i} {
+          @include gridSystemColumns($gridGutterWidth,
+                                     $gridColumnWidth,
+                                     $gridRowWidth,
+                                     $i);
+        }
+    }
+  
+    .container { @include gridSystemColumns($gridGutterWidth, $gridColumnWidth, $gridRowWidth, $gridColumns) }
+    
+    // Offset column options
+    @for $i from 1 through $gridColumns - 1 {
+        .offset#{$i} { @include gridSystemOffset($gridColumnWidth, $gridGutterWidth, $i) }
+    }
+}
+
+// Fluid grid system
+// -------------------------
+@mixin fluidGridSystemColumns($fluidGridGutterWidth, $fluidGridColumnWidth, $columns) {
+    width: ($fluidGridColumnWidth * $columns) + ($fluidGridGutterWidth * ($columns - 1));
+} 
+@mixin fluidGridSystemGridColumn($fluidGridGutterWidth) {
+    float: left;
+    margin-left: $fluidGridGutterWidth;
+}
+// Take these values and mixins, and make em do their thang
+@mixin fluidGridSystemGenerate($gridColumns, $fluidGridColumnWidth, $fluidGridGutterWidth) {      
+    // Row surrounds the columns
+    .row-fluid {
+        width: 100%;
+        @include clearfix();
+        
+        // Find all .span# classes within .row and give them the necessary properties for grid columns (supported by all browsers back to IE7, thanks @dhg)
+        > [class*="span"] {
+            @include fluidGridSystemGridColumn($fluidGridGutterWidth);
+        }
+        > [class*="span"]:first-child {
+      margin-left: 0;
+        }
+        // Default columns
+        @for $i from 1 through $gridColumns {
+            > .span#{$i} { @include fluidGridSystemColumns($fluidGridGutterWidth, $fluidGridColumnWidth, $i); }
+        }
+    }
+}
+
+// Input grid system
+// -------------------------
+@mixin inputGridSystemInputColumns($gridGutterWidth, $gridColumnWidth, $gridRowWidth, $columns) {
+    width: (($gridColumnWidth) * $columns) + ($gridGutterWidth * ($columns - 1)) - 10;
+}
+
+@mixin inputGridSystemGenerate($gridColumns, $gridColumnWidth, $gridGutterWidth) {
+    input, textarea, .uneditable-input {
+        @for $i from 1 through $gridColumns {
+            &.span#{$i} { @include inputGridSystemInputColumns($gridGutterWidth, $gridColumnWidth, $gridRowWidth, $i); }
+        }
+    }
+}
+
+// Make a grid
+// -------------------------
+// Use makeRow() and makeColumn() to assign semantic layouts grid system behaviour
+@mixin makeRow() {
+    margin-left: $gridGutterWidth * -1;
+    @include clearfix();
+}
+
+@mixin makeColumn($columns: 1) {
+    float: left;
+    margin-left: $gridGutterWidth;
+    width: ($gridColumnWidth * $columns) + ($gridGutterWidth * ($columns - 1));
+}
+
+// Fixed (940px)
+@include gridSystemGenerate($gridColumns, $gridColumnWidth, $gridGutterWidth);
+
+// Fluid (940px)
+@include fluidGridSystemGenerate($gridColumns, $fluidGridColumnWidth, $fluidGridGutterWidth);

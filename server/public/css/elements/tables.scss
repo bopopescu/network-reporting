@@ -1,0 +1,295 @@
+
+/* iconTable
+ *
+ * This is the table class for tables that have "main" rows
+ * with an icon in the left-most column and "sub" rows below that.
+ * Each group of rows should be wrapped in <tbody> tags to alternate colors
+ * and facilitate sorting.
+ */
+
+
+.inventory_table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    vertical-align: top;
+    font-size: 13px;
+    font-weight: normal;
+
+    thead {
+        th, td {
+            padding: 10px 10px 8px 0;
+            font-size: 10px;
+            font-weight: 300;
+            text-transform: uppercase;
+            color: #555;
+            vertical-align: bottom;
+            &.title {
+                font-size: 15px;
+                font-weight: 600;
+                text-transform: none;
+            }
+        }
+    }
+    tbody {
+        &.alt, tr.alt {
+            background: #F7F7F7;
+            &:last-child {
+                border-bottom: 1px solid darken(#f7f7f7, 3%);
+                @include bottom-border-radius();
+            }
+        }
+        tr.main {
+            &.app-targeting {
+                height: 40px;
+            }
+            td {
+                font-weight: 600;
+                padding: 10px 10px 4px 0;
+                &.name {
+                    font-size: 14px;
+                }
+            }
+        }
+        tr.sub td {
+            padding: 4px 10px 4px 0;
+            &.name, &.stat, &.text {
+                border-top: 1px solid #EEE;
+            }
+        }
+        tr.thick td {
+           padding: 8px 10px 7px 0;
+        }
+    }
+    td.stat, th.stat {
+        text-align: right;
+        width: 65px;
+        &.advertiser {
+            width: 130px;
+            height: 40px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    }
+    td.text {
+        width: 65px;
+        &.pub-id-data { 
+            width: 170px
+        }
+        &.advanced-options { 
+            width: 100px
+        }
+    }
+    td.icon, th.icon {
+        padding: 0 11px 0 10px;
+        width: 45px;
+        > div {
+            position: relative;
+            img {
+                position:absolute;
+                top:0px;
+                left:10px;
+                @include border-radius(6px)
+            }
+        }
+    }
+    td.controls, th.controls {
+       padding-left: 5px !important;
+       padding-right: 11px !important;
+       width: 39px !important;
+    }
+    td.spacer, th.spacer {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        width: 10px !important;
+    }
+
+    // Padding between sections if there are sub rows
+    tbody tr.sub:last-child td {
+        padding-bottom: 11px;
+    }
+
+    // Padding between sections if there arent any sub rows
+    tbody tr:only-child td {
+        padding-bottom: 37px;
+    }
+}
+
+/* Data table */
+
+.dataTable {
+    thead {
+        th {
+            font-size: 10px;
+            font-weight: 300;
+            text-transform: uppercase;
+            color: #555;
+            vertical-align: bottom;
+            padding: 0 0 8px 0;
+        }
+    }
+    th, td {
+        font-size: 14px;
+        text-align: left;
+        vertical-align: top;
+        padding: 8px 0 7px 0;
+    }
+}
+
+table.dataTable {
+    width: 100%;
+}
+
+
+.dataTable-name {
+   /* width: 400px; */
+    .inner {
+        display: block;
+        width: 500px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}
+
+.dataTable-data {
+  width: 75px;
+}
+
+.dataTable-date {
+  width: 175px;
+}
+
+.dataTable-date-short {
+  width: 100px;
+}
+
+.dataTable-campaign-ecpm {
+  color: #53a600;
+}
+
+table.simpletable {
+    @include border-radius(3px);
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 0;
+    border-collapse: separate;
+    *border-collapse: collapse;
+    border: 1px solid #ddd;
+    th, td {
+        padding: 10px 10px 9px;
+        text-align: left;
+    }
+    th {
+        padding-top: 9px;
+        vertical-align: middle;
+        border-bottom: 1px solid #ddd;
+        font-size: 16px;
+        font-size: 10px;
+        font-weight: 300;
+        text-transform: uppercase;
+        color: #555;
+        vertical-align: bottom;
+        padding: 0 0 8px 0;
+    }
+    td {
+        vertical-align: top;
+        &.align_right {
+            text-align: right;
+        }
+    }
+    th + th, td + td {
+        border-left: 1px solid #ddd;
+    }
+    tr + tr td {
+        border-top: 1px solid #ddd;
+    }
+    tbody tr:first-child td:first-child {
+        @include border-radius(4px 0 0 0);
+    }
+    tbody tr:first-child td:last-child {
+        @include border-radius(0 4px 0 0);
+    }
+    tbody tr:last-child td:first-child {
+        @include border-radius(0 0 0 4px);
+    }
+    tbody tr:last-child td:last-child {
+        @include border-radius(0 0 4px 0);
+    }
+
+    tfoot td {
+        background: white;
+        border-top: 2px solid #ccc;
+        font-size: 16px;
+    }
+
+    tr.even td {
+        background-color: #fff;
+    }
+
+    tr.odd td {
+        background-color: #f7f7f7;
+    }
+}
+
+.adunit-row.name {
+    padding-left: 50px;
+}
+// ZEBRA-STRIPING
+// --------------
+
+// Default zebra-stripe styles (alternating gray and transparent backgrounds)
+.zebra-striped {
+    tbody {
+        tr:nth-child(odd) td {
+             background-color: #f7f7f7;
+             //@include box-shadow(inset 0px 1px 5px #eee);
+        }
+        tr:nth-child(even) td {
+            background-color: #fff;
+            //@include box-shadow(0px 1px 5px #eee);
+        }
+        tr:hover td {
+            background-color: #EBF2F7;
+            //@include box-shadow(0px 1px 10px #eee);
+            //@include box-shadow(none);
+        }
+    }
+}
+
+
+.dataTables_length {
+    float: left;
+
+}
+
+.dataTables_filter {
+    float: right;
+
+}
+
+.paginate_button {
+     display: inline-block;
+}
+
+tr.adunit-row td:not(.icon){
+    border-top: 1px dotted #ddd;
+}
+
+img.app-icon {
+    @include border-radius(6px);
+}
+
+// css for network edit form
+tbody.global-settings {
+    background: #F5F9FC;
+    border-top: 3px solid #EBF2F7;
+    border-bottom: 3px solid #EBF2F7;
+    td {
+        &.title {
+            font-size: 16px;
+        }
+        vertical-align: middle;
+    }
+}
+

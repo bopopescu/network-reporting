@@ -6,7 +6,6 @@
   <h1>Dashboard</h1>
 {% endblock pageTitle %}
 
-
 {% block titleBarRight %}
   <a href="{% url dashboard %}"> MoPub Explorer (Beta) </a>
 {% endblock titleBarRight %}
@@ -33,28 +32,28 @@
 
   {% if stats %}
   <section class="offset nomargin" id="dashboard-stats">
-
+    
     <h3 class="stats-chart-title">
       Realtime Stats for {{start_date|format_date_compact}} to
       {{end_date|format_date_compact}}
     </h3>
-
-    <div class="stats">
-
-      {% stats_breakdown stats %}
-
-      <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-
+    
+    <div class="stats">      
+      {% stats_breakdown stats %}     
+      <div class="chart stats-chart" id="dashboard-stats-chart"></div>      
     </div>
+    
     <div class="clear"></div>
+    
   </section>
-
-  <div class="clear"></div>
   {% endif %}
 
   <section id="dashboard-apps">
     <div class="buttonBank buttonBank-right">
-      <a class="button" id="dashboard-apps-addAppButton" href='{% url publisher_create_app %}'>Add an app</a>
+      <a class="btn" href='{% url publisher_create_app %}'>
+        <i class="icon-plus"></i>
+        Add an app
+      </a>
     </div>
     <h2>Apps and sites</h2>
 
@@ -62,29 +61,30 @@
 
 
     <br />
-    <form id='dashboardExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url dashboard_export %}'>
-      <input name='file_type' id='appExportType' type='text' value='' />
-      <input name='start' value={{start_date|date:"mdy"}} />
-      <input name='end' value={{end_date|date:"mdy"}} />
-    </form>
-    <div class="buttonBank buttonBank-right">
-      <select name='exportSelect' id='publisher-dashboard-exportSelect' class='selectmenu'>
-        <option value='exp'>Export</option>
-        <option value='xls'>XLS</option>
-        <option value='csv'>CSV</option>
-      </select>
+    
+    <div class="right">
+      <div class="btn-group">
+        <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="#" data-toggle="running"> XLS </a> </li>
+          <li> <a href="#" data-toggle="running"> CSV </a> </li>
+        </ul>
+      </div>
     </div>
-
+    
   </section>
 
 {% endblock content %}
 
 {% block extraScripts %}
   <script type="text/html" id="app-template">
-    {% include "partials/app.html" %}
+    {% include "common/partials/app.html" %}
   </script>
   <script type="text/html" id="adunit-template">
-    {% include "partials/adunit.html" %}
+    {% include "common/partials/adunit.html" %}
   </script>
   {% include_script 'models/inventory' %}
   {% include_script 'views/inventory' %}

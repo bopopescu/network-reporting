@@ -2,8 +2,6 @@ from django.conf import settings
 
 import datetime
 import logging
-import time
-import copy
 import traceback
 from urllib import urlopen
 try:
@@ -16,19 +14,11 @@ except ImportError:
 
 
 from google.appengine.ext import db
-from google.appengine.ext import blobstore
-from google.appengine.ext.db import InternalError, Timeout
-from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
-
 import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
-from common.utils import date_magic
-from common.utils.helpers import chunks
 from reporting.models import SiteStats, StatsModel, BlobLog
 from reporting import mongostats
-from advertiser.models import Creative
-from publisher.models import Site as AdUnit
 
 
 # maximum number of objects per batch put

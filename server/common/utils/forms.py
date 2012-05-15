@@ -13,7 +13,7 @@ from django.forms.widgets import Textarea
 
 class MPBoundField(BoundField):
     """"A Field plus data by MoPub."""
-    TEMPLATE = "bound_field.html"
+    TEMPLATE = "common/bound_field.html"
 
     def __unicode__(self):
         """Renders this field as an HTML widget with label and errors."""

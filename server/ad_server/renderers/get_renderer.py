@@ -21,8 +21,7 @@ from ad_server.renderers.text_and_tile import TextAndTileRenderer
 
 from advertiser.models import (ImageCreative,
                                HtmlCreative,
-                               TextAndTileCreative,
-                               TextCreative)
+                               TextAndTileCreative)
 
 RENDERERS = {
      "mobfox":MobFoxRenderer,
@@ -53,11 +52,6 @@ def get_renderer_for_creative(creative):
             return HtmlDataRenderer
         elif isinstance(creative, TextAndTileCreative):
             return TextAndTileRenderer
-        elif isinstance(creative, TextCreative):
-            # TODO(simon)
-            assert False, "TODO: We do not have a TextRenderer class. We should probably make one. Using TextAndTileRenderer instead for now."
-            return TextAndTileRenderer
         else:
             assert False, "We do not have an appropriate renderer for Creative type %s. Defaulting to BaseCreativeRenderer, which will probably raise an exception if used." % type(creative)
             return BaseCreativeRenderer
-

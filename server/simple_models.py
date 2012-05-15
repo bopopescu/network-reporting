@@ -606,7 +606,6 @@ TestAdUnit                         = SimpleAdUnit
 TestCampaign                       = SimpleCampaign
 TestAdGroup                        = SimpleAdGroup
 TestCreative                       = SimpleCreative
-TestTextCreative                   = SimpleTextCreative
 TestTextAndTileCreative            = SimpleTextAndTileCreative
 TestHtmlCreative                   = SimpleHtmlCreative
 TestImageCreative                  = SimpleImageCreative

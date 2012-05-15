@@ -1,0 +1,250 @@
+{% load filters %}
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <title> MoPub - {% block pageTitleTag %}Ad Serving for Mobile Applications{% endblock %} </title>
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  {% block extraMeta %}{% endblock %}
+
+  {# CSS #}
+  {% include_style "jquery-ui-1.8.7.custom" %}
+  {% include_style "style" %}
+  {% block extraCSS %}{% endblock %}
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+   
+  </head>
+
+
+{% block body_content %}
+  <body id="mopub-dashboard">
+    <input type='hidden' value='{{user.is_staff}}' id='is_admin_input' />
+      
+    <div id="container">
+      <header>
+        <div class="pageWidth">
+
+          <div id="logo"><a class="ir" href="/">MoPub</a></div>
+          
+          <nav id="nav1">
+            <ul>
+              {% block navLinks %}
+                <li><a href="{% url app_index %}">Dashboard</a></li>
+                <li><a href="{% url advertiser_order_index %}">Orders</a></li>
+                <li><a href="{% url marketplace_index %}">Marketplace</a></li>
+                <li><a href="{% url network_index %}">Networks</a></li>
+              {% endblock navLinks %}
+            </ul>
+          </nav>
+          
+          <nav id="nav2">
+            <ul>
+              <li class="dropdown" id="account-menu">                
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#account-menu">
+                  Your Account <span class="dropdown-caret"> </span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li>                    
+                    <a href="/account/">General Settings</a>
+                  </li>
+                  <li>
+                    <a href="/account/networks/">Ad Network Settings </a>
+                  </li>
+                  <li>
+                    <a href="/reports/">Reports</a>
+                  </li>
+                  <li>
+                    <a href="/account/payments/history">Payment History </a>
+                  </li>
+                  {% if user.is_authenticated %}
+                    <hr />
+                    <li>
+                      <a id="logout-link" href="{% url django.contrib.auth.views.logout %}">
+                        Log out
+                      </a>
+                    </li>
+                {% endif %}
+                </ul>
+              </li>
+              
+              <li>
+                <a href="http://help.mopub.com/" target="_blank">Help</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+      
+      <div id="main">
+        <div id="titlebar">
+          <div class="pageWidth">
+            {% block pageTitle %}{% endblock pageTitle %}            
+          
+          
+            <div id="titlebar-right">
+              {% block titleBarRight %}
+                {% include "partials/datecontrols.html" %}
+              {% endblock titleBarRight %}
+            </div>
+
+          </div>
+        </div>
+        
+        <div id="content">
+          <div class="pageWidth">            
+            {% block flash %}
+              {% if flash %}
+                {# There's one or more flash-scoped objects #}
+                {% for key, value in flash.items %}
+                  <div class="{{ key }} alert-message block-message">
+                    {% autoescape off %}
+                    {{ value }}
+                    {% endautoescape %}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endblock flash %}
+            
+            {% block content %}{% endblock content %}
+          </div>
+        </div>
+      </div>
+      <div class="clear"></div>
+      
+      <footer>
+        <div id="footer-inner">
+          <div class="pageWidth">
+            <div id="footer-links">
+              <ul id="menu-footer">
+                <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2012 MoPub Inc.</li>
+                <li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li>
+                <li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li>
+                <li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li>
+                <li id="menu-item-279" class="menu-item menu-item-type-custom menu-item-279"><a href="http://www.mopub.com/resources">Resources</a></li>
+                </ul>
+                <ul id="menu-social">
+                  <li class="menu-item menu-item-type-post_type menu-item-58">&nbsp;</li>
+                  <li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-60"><a href="http://www.twitter.com/mopub">@mopub</a></li>
+                  <li id="menu-item-268" class="menu-item menu-item-type-post_type menu-item-268"><a href="http://www.mopub.com/about/">About</a></li>
+                  <li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-61"><a href="http://www.mopub.com/contact/">Contact Us</a></li>
+                  <li id="menu-item-270" class="menu-item menu-item-type-post_type menu-item-270"><a href="http://www.mopub.com/jobs/">Jobs</a></li>
+                </ul>
+            </div>
+            <div id="footer-account">
+              {% if user.is_authenticated %}
+                Logged in as <a href="/account/">{{user.email}}</a>
+              {% endif %}
+                
+              {% block adminSelect %}
+                {% if user.is_staff %}
+                  <div style="float:right;padding-left:10px">
+                    <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
+                      Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>
+                    </form>
+                    </div>
+                    
+                    <script type="text/javascript">
+                      function getCookie(c_name) {
+                          if (document.cookie.length>0) {
+                              c_start=document.cookie.indexOf(c_name + "=");
+                              if (c_start!=-1) {
+                                  c_start=c_start + c_name.length+1;
+                                  c_end=document.cookie.indexOf(";",c_start);
+                                  if (c_end==-1) c_end=document.cookie.length;
+                                  return unescape(document.cookie.substring(c_start,c_end));
+                              }
+                          }
+                          return "";
+                      }
+                      var user_email = getCookie('account_email').slice(1,-1);
+                      var $text_input = $('#user_switcher');
+                      $text_input.val(user_email)
+                    </script>
+                  {% endif %}
+                {% endblock adminSelect %}
+                {% if user.is_authenticated %}
+                  <span class="sep">&middot;</span>
+                  <a href="{% url django.contrib.auth.views.logout %}">Log out</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </footer>
+        </div> {# end of #container #}
+
+        {% comment %}
+        {# TypeKit #}
+        <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
+        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+        {% endcomment %}
+        {# Google load for jquery and jqueryui #}
+        <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
+        <script type="text/javascript">
+          //<![CDATA[
+          google.load("jquery", "1.7.1");
+          google.load("jqueryui", "1.8.7");
+        </script>
+        
+        {# Plugins  aggregated from all the *.js files in /public/js/libs/*#}
+        {% include_script "plugins" %}
+
+        {# MoPub #}
+        {% include_script "app" 1 %}
+        {% include_script "controllers/mopub" %}
+        
+        {% block extraScripts %}{% endblock extraScripts %}
+
+        {# Mixpanel #}
+
+        <script type="text/javascript">
+          (function(d,c){var a,b,g,e;a=d.createElement("script");a.type="text/javascript";
+                         a.async=!0;a.src=("https:"===d.location.protocol?"https:":"http:")+
+                         '//api.mixpanel.com/site_media/js/api/mixpanel.2.js';b=d.getElementsByTagName("script")[0];
+                         b.parentNode.insertBefore(a,b);c._i=[];c.init=function(a,d,f){var b=c;
+    "undefined"!==typeof f?b=c[f]=[]:f="mixpanel";g=['disable','track','track_pageview',
+    'track_links','track_forms','register','register_once','unregister','identify',
+    'name_tag','set_config'];
+    for(e=0;e<g.length;e++)(function(a){b[a]=function(){b.push([a].concat(
+    Array.prototype.slice.call(arguments,0)))}})(g[e]);c._i.push([a,d,f])};window.mixpanel=c}
+    )(document,[]);
+    mixpanel.init("2941bda924fcaaff6ec23f27b41f0129");
+    mixpanel.name_tag('{{ user.email }}');
+  </script>
+
+  {#  End Mixpanel #}
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-20014961-2']);
+  _gaq.push(['_trackPageview']);
+  _gaq.push(['_trackPageLoadTime']);
+
+  (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+  </script>
+
+  <script type="text/javascript">
+    var _kmq = _kmq || [];
+    function _kms(u){
+        setTimeout(function(){
+            var s = document.createElement('script'); var f = document.getElementsByTagName('script')[0]; s.type = 'text/javascript'; s.async = true;
+            s.src = u; f.parentNode.insertBefore(s, f);
+        }, 1);
+    }
+    _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/df1cac838b87437e951e9a26136cc8ae203e052e.1.js');
+
+    _kmq.push(['identify', '{{ user.email }}']);
+
+  </script>
+        
+       
+    </body>
+  {% endblock body_content %}
+</html>

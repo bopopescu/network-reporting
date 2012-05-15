@@ -8,6 +8,7 @@ from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import db
 
+
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
@@ -185,10 +186,3 @@ def get_udid_appid(request):
 
     # Otherwise, there's no need to do special processing. Simply return the request parameters
     return udid, mobile_appid
-
-def dict_eq_(dict1, dict2):
-    dict1_keys = dict1.keys()
-    eq_(dict1_keys, dict2.keys())
-    for key in dict1_keys:
-        assert_almost_equals(dict1[key], dict2[key])
-

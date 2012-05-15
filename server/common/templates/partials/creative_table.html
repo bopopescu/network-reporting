@@ -1,0 +1,21 @@
+{% load elements %}
+
+<table class="inventory_table" id="creative_table">
+    <thead>
+        <tr>
+            <th></th>
+            <th class="name">Creative Name</th>
+            <th class="stat">Impressions</th>
+            <th class="stat">Clicks</th>
+            <th class="stat">CTR</th>
+            <th class="stat">{% if campaign.gtee %}Revenue{% else %}Conv{% endif %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for creative in creatives %}
+            <tbody class="{% cycle 'alt' 'primary' %}">
+                {% creative_row creative %}
+            </tbody>
+        {% endfor %}
+    </tbody>
+</table>

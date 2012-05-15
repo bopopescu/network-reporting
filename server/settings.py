@@ -113,11 +113,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 ROOT_URLCONF = 'urls'
 
-ROOT_PATH = os.path.dirname(__file__)
-TEMPLATE_DIRS = (
-    os.path.join(ROOT_PATH, 'templates'),
-)
-
 INSTALLED_APPS = (
      'appengine_django',
      'django.contrib.auth',
@@ -135,7 +130,7 @@ INSTALLED_APPS = (
      'advertiser',
      'website',
      'admin',
-     'common_templates',
+     'common',
      'budget',
      'registration',
      'reports',

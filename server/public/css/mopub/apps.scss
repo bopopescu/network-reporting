@@ -1,0 +1,317 @@
+/* Dashboard */
+
+#dashboard-stats {
+    padding: 20px 20px 10px 20px;
+    img.preload {
+        position: relative;
+        top: 60px;
+        left: 225px;
+    }
+}
+
+#dashboard-stats-chart {
+    height: 185px;
+}
+
+#revenue-chart {
+    height: 185px;
+}
+
+.stats-chart {
+    height: 185px;
+}
+
+#marketplace-apps, #dashboard-apps, #dashboard-campaign {
+    margin: 30px 0 0 0;
+}
+
+#marketplace-apps h2, #dashboard-apps h2 {
+    font-size: 20px;
+    margin: 0;
+}
+
+/* App and ad setup forms */
+
+.mweb .android,
+.mweb .iphone,
+.iphone .mweb,
+.iphone .android,
+.android .mweb,
+.android .iphone {
+    display: none;
+}
+
+#appForm-name-ios {
+    width: 220px;
+}
+
+#appForm-search {
+    margin: 0;
+    position: relative;
+}
+
+#appForm-market-search-button, #appForm-search-button {
+    margin: 0;
+    position: absolute;
+    top: -14px;
+    left: 4px;
+    white-space: nowrap;
+}
+
+#searchAppStore-loading {
+    margin: 20px 0 0 0;
+    font-size: 16px;
+    color: #666;
+    text-align: center;
+}
+
+#searchAppStore-loading img {
+    margin: 0 4px 0 0;
+    vertical-align: -3px;
+}
+
+#appForm-icon {
+    float: left;
+}
+
+#appForm-changeIcon .sep {
+    padding: 0 5px 0 10px;
+}
+
+.adForm-formats {
+    float: left;
+    width: 565px;
+}
+
+.adForm-phone-format {
+    float: left;
+    width: 110px;
+}
+.adForm-tablet-format {
+    float: left;
+    width: 110px;
+}
+
+#adForm-tablet-formats {
+    width: 120px;
+    display: inline-block;
+    float: left;
+}
+
+#adForm-images-container {
+    padding-top:20px;
+}
+
+.adForm-format-name {
+    position: relative;
+    height: 42px;
+    padding-left: 19px;
+}
+
+.adForm-format-name .input-radio {
+    position: absolute;
+    top: 5px;
+    left: 0;
+}
+
+.ie8 .adForm-format-name .input-radio,
+.ie7 .adForm-format-name .input-radio,
+.ie6 .adForm-format-name .input-radio {
+    top: 0;
+    left: -2px;
+}
+
+.adForm-format-name label {
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.adForm-format-details {
+    font-size: 11px;
+    line-height: 13px;
+    color: #999;
+    font-weight: 300;
+}
+
+.adForm-format-image {
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.adForm-format-custom {
+    width: 135px;
+}
+
+.adForm-format-custom .adForm-format-details .input-text-small {
+    width: 41px;
+}
+
+.adForm-format-custom .adForm-format-details {
+    margin: 5px 0 0 0;
+}
+
+.adForm-appSearch {
+    margin: 15px 0 0 0;
+}
+
+.adForm-appSearch-img {
+    float:left;
+    position:relative;
+}
+
+.adForm-appSearch-img span {
+    background:url(../images/mask40.png);
+    display:block;
+    position:absolute;
+    left:-1px;
+    top:0px;
+    z-index:1;
+    height:42px;
+    width:41px;
+}
+
+.adForm-appSearch-text {
+    margin-left:50px;
+    margin-top:10px;
+}
+
+.adForm-appSearch-text span {
+    color: #999;
+    font-size: 13px;
+}
+
+.adForm-appSearch-text span a {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.creative div {
+    text-align: center;
+}
+
+.creative iframe {
+    border: 1px solid #e1edf5
+}
+
+.accountInfoForm-container {
+    position: relative;
+}
+
+#account-section .formFields{
+  margin: 0;
+}
+
+.accountInfoForm-left {
+  position:absolute;
+  top:0;
+  left:0;
+  padding:20px;
+}
+
+.accountInfoForm-right {
+  margin-left: 205px;
+}
+
+
+/* App data */
+
+.appData {
+    padding: 10px 10px 12px 10px;
+    background: #f7f7f7;
+}
+
+.appData-alt {
+    background: #fff;
+}
+
+.appData-columnHeaders {
+    padding: 10px 10px 0 10px;
+}
+
+
+.dataTable, .inventory_table {
+    .appData-icon {
+        padding-right: 11px;
+        width: 45px;
+    }
+    .networkData-icon {
+        padding-right:11px;
+        width: 75px;
+    }
+    .appData-icon a img {
+        @include border-radius(6px);
+    }
+    .reportData-icon a img {
+        @include border-radius(6px);
+    }
+    .appData-icon-none {
+        margin-right: 11px;
+        width: 15px;
+    }
+    td {
+        position: relative;
+        .appData-id {
+            position: absolute;
+            top: 3px;
+            right: 0;
+            overflow: ellipsis;
+        }
+    }
+}
+
+.appData-main {
+    th, td {
+        padding-top: 0;
+        font-size: 13px;
+        font-weight: 600;
+        &.smaller {
+            font-size: 13px;
+            font-weight: normal;
+        }
+    }
+    .dataTable-name {
+        padding-top: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+}
+
+th.numeric, td.numeric {
+    text-align: right;
+}
+
+.appData-details {
+    margin: -29px 0 0 56px;
+    .dataTable {
+        margin: 0 0 7px 0;
+        background: url(../images/layout/hr-dots.png) repeat-x bottom left;
+        th, td {
+            padding-top: 4px;
+            padding-bottom: 4px;
+            font-size: 13px;
+            font-weight: normal;
+            background: url(../images/layout/hr-dots.png) repeat-x top left;
+            &.special {
+                font-size: 10px;
+                font-weight: 300;
+                background: none;
+            }
+            &.big {
+                font-size: 15px;
+                font-weight: 600;
+                text-transform: none;
+                background: none;
+            }
+        }
+    }
+    &.noneg {
+        margin: 0;
+    }
+}
+
+span.big {
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: none;
+    background: none;
+}

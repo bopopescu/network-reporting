@@ -38,3 +38,10 @@ class BaseViewTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         pass
+
+    def login_secondary_account(self):
+        username = 'user@domain.com'
+        password = 'password'
+        generate_account(username, password, username)
+
+        self.client.login(username=username, password=password)

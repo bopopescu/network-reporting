@@ -898,7 +898,8 @@ class AppUpdateAJAXHandler(RequestHandler):
 
 @login_required
 def app_update_ajax(request, *args, **kwargs):
-    return AppUpdateAJAXHandler()(request, *args, **kwargs)
+    handler = AppUpdateAJAXHandler(id='app_key')
+    return handler(request, *args, **kwargs)
 
 
 class AdUnitUpdateAJAXHandler(RequestHandler):
@@ -940,6 +941,9 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         return JSONResponse(json_dict)
 
     def post(self, adunit_key=None):
+        logging.error(self.request.POST)
+        logging.error(self.request.FILES)
+
         adunit_key = adunit_key or self.request.POST.get('adunit_key')
         if adunit_key:
             # Note this gets things from the cache ?

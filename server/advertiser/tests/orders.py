@@ -11,7 +11,7 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from common.utils.test.views import BaseViewTestCase
-from common.utils.test.test_utils import dict_eq
+from common.utils.test.test_utils import dict_eq, time_almost_eq
 
 import logging
 import simplejson as json
@@ -226,6 +226,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         line_item_dict = to_dict(line_item)
         minute_ago = datetime.now() - timedelta(minutes=1)
         minute_ago_seconds = time.mktime(minute_ago.timetuple())
+        
         ok_(line_item_dict['created'] > minute_ago_seconds)
         ok_(line_item_dict['t'] > minute_ago_seconds)
 

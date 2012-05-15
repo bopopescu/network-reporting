@@ -5,6 +5,8 @@ sys.path.append(os.environ['PWD'])
 
 import common.utils.test.setup
 
+from nose.tools import nottest
+
 from django.core.urlresolvers import reverse
 from google.appengine.ext import db
 
@@ -39,7 +41,7 @@ from account.query_managers import AccountQueryManager
 
 DEFAULT_BID = 0.05
 DEFAULT_HTML = 'html_data1'
-DEFAULT_PUB_ID = 'pub_id1'
+DEFAULT_PUB_ID = 'pub_id'
 
 class CreateSimpleNetworkTestCase(BaseViewTestCase):
     _multiprocess_can_split = True
@@ -58,12 +60,42 @@ class CreateSimpleNetworkTestCase(BaseViewTestCase):
         network_type = 'admob'
         apps = PublisherQueryManager.get_objects_dict_for_account(
                 account=self.account).values()
+
+        # Andrew: Tiago, does this assertion need to be here? It's basically
+        # testing randomgen...
         self.assertEqual(len(apps), 1)
 
         response = setup_and_make_request(self, network_type, apps)
 
-        check_response(self, response, network_type)
+        # Begin test verification.
+        # Andrew: I didn't set instance variables (e.g. self.apps) because
+        # it's easier to figure out where the variables are being set.
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                account=self.account).values()
+        network_campaigns = CampaignQueryManager.get_network_campaigns(
+                self.account, is_new=True)
+        new_campaign = network_campaigns[0]
 
+        self.check_status_code(response)
+        self.check_new_campaign_exists(new_campaign)
+
+        # Andrew: Is this test even necessary?
+        # self.check_campaign_should_be_added_to_memcache()
+
+        # Andrew: Tiago, what's your opinion on named arguments? We might want
+        # to decide whether the check_ methods should take them for clarity.
+        self.check_campaign_init(new_campaign, network_type=network_type,
+                network_state=NetworkStates.DEFAULT_NETWORK_CAMPAIGN)
+        self.check_campaign_has_network_key_name(new_campaign,
+                network_type=network_type)
+        self.check_app_network_configs(apps, network_type)
+        self.check_app_mappers(apps, network_type)
+        self.check_adunit_network_configs(apps, network_type)
+        self.check_adunits_adgroups(apps, new_campaign, network_type,
+                DEFAULT_BID)
+        self.check_onboarding_status_finished()
+
+    @nottest
     def mptest_create_simple_custom_network(self):
         """
         Create custom network campaign.
@@ -80,6 +112,7 @@ class CreateSimpleNetworkTestCase(BaseViewTestCase):
         check_response(self, response, network_type,
                 network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN)
 
+    @nottest
     def mptest_create_simple_admob_custom_network(self):
         """
         Create custom network campaigns of all types excluding custom and
@@ -103,6 +136,108 @@ class CreateSimpleNetworkTestCase(BaseViewTestCase):
                 network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
                 other_campaigns=[default_campaign])
 
+    def check_status_code(self, response):
+        """Checks that the response's status code is 200.
+
+        Author: Andrew He
+        """
+        self.assertEqual(response.status_code, 200)
+    
+    def check_new_campaign_exists(self, campaign):
+        self.assertTrue(campaign)
+
+    def check_campaign_should_be_added_to_memcache(self, network_campaigns,
+            existing_campaigns):
+        """Checks that the new campaign is present in memcache.
+
+        Author: Andrew He
+        """
+        num_campaigns_before = len(existing_campaigns)
+        num_campaigns_after = len(network_campaigns)
+        self.assertEqual(num_campaigns_after - num_campaigns_before, 1)
+
+    def check_campaign_init(self, campaign, network_type=None,
+            network_state=None):
+        """Checks that the new campaign has the right initial properties.
+
+        Author: Andrew He
+        """
+        self.assertEqual(campaign._account, self.account.key())
+        self.assertEqual(campaign.campaign_type, 'network')
+        self.assertEqual(campaign.network_type, network_type)
+        self.assertEqual(campaign.network_state, network_state)
+
+    def check_campaign_has_network_key_name(self, campaign, network_type=None):
+        """Checks that the new campaign has the right key name.
+
+        Author: Andrew He
+        """
+        # Is the key_name set for the default network campaign?
+        self.assertTrue(campaign.key().name())
+        # Is the key name in the form ntwk:<account_key>:<network_type>?
+        self.assertEqual(campaign.key().name(), 'ntwk:%s:%s' %
+                (self.account.key(), network_type))
+
+    def check_app_network_configs(self, apps, network_type):
+        """Checks that the app-level network configs were updated.
+
+        Author: Andrew He
+        """
+        for index, app in enumerate(apps):
+            self.assertTrue(app.network_config)
+            self.assertEqual(getattr(app.network_config, '%s_pub_id' %
+                    network_type), DEFAULT_PUB_ID + str(index))
+
+    def check_app_mappers(self, apps, network_type):
+        """Checks that the apps have AdNetworkAppMappers.
+
+        Author: Andrew He
+        """
+        for index, app in enumerate(apps):
+            mapper = AdNetworkAppMapper.all().filter('application =', app). \
+                    filter('ad_network_name =', network_type).get()
+            self.assertTrue(mapper)
+            self.assertEqual(mapper.publisher_id, DEFAULT_PUB_ID + str(index))
+
+    def check_adunit_network_configs(self, apps, network_type):
+        """Checks that the adunit-level network configs were updated.
+
+        Author: Andrew He
+        """
+        for app in apps:
+            for adunit in app.adunits:
+                self.assertTrue(hasattr(adunit, 'network_config'))
+                self.assertEqual(getattr(adunit.network_config, '%s_pub_id' %
+                            network_type), DEFAULT_PUB_ID)
+
+    def check_adunits_adgroups(self, apps, campaign, network_type, default_bid):
+        """Checks that each adgroup corresponds to one adunit.
+
+        Author: Andrew He
+        """
+        for app in apps:
+            for adunit in app.adunits:
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                            adunit.key(), self.account.key(), get_from_db=True)
+                self.assertTrue(adgroup)
+                self.assertEqual(adgroup.network_type,
+                        NETWORK_ADGROUP_TRANSLATION.get(network_type, network_type))
+                self.assertEqual(adgroup.bid, default_bid)
+
+                creatives = list(adgroup.creatives)
+                self.assertEqual(len(creatives), 1)
+                creative = creatives[0]
+                self.assertEqual(creative._account, self.account.key())
+                self.assertEqual(creative.__class__,
+                        adgroup.default_creative().__class__)
+
+    def check_onboarding_status_finished(self):
+        """Checks that the onboarding status is set to ''.
+
+        Author: Andrew He
+        """
+        self.assertEqual(AccountQueryManager.get(self.account.key()).status, '')
+
 NUM_APPS = 5
 NUM_ADUNITS_PER_APP = 5
 class CreateComplexNetworkTestCase(BaseViewTestCase):
@@ -114,7 +249,8 @@ class CreateComplexNetworkTestCase(BaseViewTestCase):
             for adunit_index in range(NUM_ADUNITS_PER_APP):
                 generate_adunit(app, self.account)
 
-    def mptest_create_complex_default_admob_network(self):
+    @nottest
+    def mptest2_create_complex_default_admob_network(self):
         """
         Create default admob network campaign with multiple apps and adunits.
 
@@ -130,6 +266,7 @@ class CreateComplexNetworkTestCase(BaseViewTestCase):
 
         check_response(self, response, network_type)
 
+    @nottest
     def mptest_create_complex_custom_network(self):
         """
         Create custom network campaign with multiple apps and adunits.
@@ -147,6 +284,7 @@ class CreateComplexNetworkTestCase(BaseViewTestCase):
         check_response(self, response, network_type,
                 network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN)
 
+    @nottest
     def mptest_create_complex_custom_admob_network(self):
         """
         Create custom network campaign with multiple apps and adunits.
@@ -196,8 +334,8 @@ def setup_and_make_request(test_case, network_type, apps, default_bid=
     pub_id_data = {}
     # Create the adgroup forms, one per adunit
     adgroup_forms = []
-    for app in apps:
-        pub_id_data['app_%s-%s_pub_id' % (app.key(), network_type)] = DEFAULT_PUB_ID
+    for index, app in enumerate(apps):
+        pub_id_data['app_%s-%s_pub_id' % (app.key(), network_type)] = DEFAULT_PUB_ID + str(index)
         for adunit in app.adunits:
             pub_id_data['adunit_%s-%s_pub_id' % (adunit.key(), network_type)] = \
                     DEFAULT_PUB_ID
@@ -264,19 +402,20 @@ def check_response(test_case, response, network_type,
 
     # Was one adgroup per app created and are the created adgroups set up
     # properly?
-    for app in apps:
+    for index, app in enumerate(apps):
         if network_type in NETWORKS_WITH_PUB_IDS:
             test_case.assertTrue(app.network_config)
             test_case.assertEqual(getattr(app.network_config, '%s_pub_id' %
-                network_type), DEFAULT_PUB_ID)
+                network_type), DEFAULT_PUB_ID + str(index))
 
             if campaign.network_type in REPORTING_NETWORKS and \
                     campaign.network_state == NetworkStates. \
                     DEFAULT_NETWORK_CAMPAIGN:
-                mapper = AdNetworkAppMapper.all().filter('application =', app).filter(
-                        'ad_network_name =', network_type).get()
+                mapper = AdNetworkAppMapper.all().filter('application =', app).filter('ad_network_name =', network_type).get()
+                #print 'MAPPER MAPPER'
+                #print mapper
                 test_case.assertTrue(mapper)
-                test_case.assertEqual(mapper.publisher_id, DEFAULT_PUB_ID)
+                test_case.assertEqual(mapper.publisher_id, DEFAULT_PUB_ID + str(index))
 
         for adunit in app.adunits:
             if network_type in NETWORKS_WITH_PUB_IDS:

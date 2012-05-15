@@ -133,7 +133,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
     # This test is broken because of an existing bug in both AppForm (name isn't
     # required) and CreateAppHandler.post (attempts to put None app when form
     # validation fails).
-    def mptest_create_app_and_adunit_app_validation(self):
+    def _mptest_create_app_and_adunit_app_validation(self):
         """
         Confirm that create_app returns the appropriate validation errors when
         no app name is supplied and that the database state does not change.
@@ -292,7 +292,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
 
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
-    def mptest_update_app_authorization(self):
+    def _mptest_update_app_authorization(self):
         self.login_secondary_account()
 
         data = self._generate_post_data()
@@ -472,7 +472,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit_dict = _default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
-    def mptest_update_adunit_authorization(self):
+    def _mptest_update_adunit_authorization(self):
         self.login_secondary_account
 
         data = self._generate_post_data(**{

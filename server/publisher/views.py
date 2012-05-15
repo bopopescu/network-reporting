@@ -697,10 +697,9 @@ class AdUnitShowHandler(RequestHandler):
             campaign = ag.campaign
             # If its a new network campaign that has been migrated and the
             # transition date is after the start date
-            if campaign.campaign_type == 'network' and campaign.network_state == \
-                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
-                    campaign.old_campaign and self.start_date <= \
-                    campaign.transition_date:
+            if (campaign.is_network) and campaign.old_campaign and
+               (campaign.network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN) and \
+                and (self.start_date <= campaign.transition_date):
                 new_stats = None
                 if self.end_date >= campaign.transition_date:
                     # get new campaign stats (specific for the single adgroup)

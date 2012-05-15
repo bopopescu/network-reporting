@@ -354,9 +354,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         response = self.client.get(diff_url)
         eq_(response.status_code, 404)
 
-    def mptest_fail_on_unowned_line_item(self):
+    def mptest_fail_on_editing_unowned_line_item(self):
         """
-        Trying to access an unowned line_item returns a 404
+        Trying to access and access an unowned line_item returns a 404
 
         Author: John Pena
         """
@@ -376,7 +376,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
     def mptest_gets_correct_apps(self):
         """
-        All apps for the given account should be returned
+        All apps for the given account should be returned.
+        This test will fail if actual apps are not alphabetized in the view.
 
         Author: Haydn Dufrene
         """
@@ -387,6 +388,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         expected_apps = AppQueryManager.get_apps(account=self.account,
                                         alphabetize=True)
         actual_apps = response.context['apps']
+
+        eq_(len(actual_apps), len(expected_apps))
         for actual_app, expected_app in zip(actual_apps, expected_apps):
             eq_(actual_app.key(), expected_app.key())
 
@@ -487,7 +490,6 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         Author: John Pena
         """
         order = generate_campaign(self.account)
-        #line_item = generate_adgroup(order, [], diff_account, 'gtee')
         url = reverse('advertiser_line_item_form_new', kwargs = {
             'order_key': unicode(order.key())
         })
@@ -584,6 +586,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         acct = AccountQueryManager.get(self.account.key())
         eq_(acct.status, '')
 
+    # TODO
     def mptest_datetime_alias_for_jquery_on_fail(self):
         """
         There is a block at the end of the post (L:351-359)
@@ -637,6 +640,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(not response_json['success'])
 
+    # TODO
     def mptest_fail_on_unowned_objects(self):
         """
         Users should not be able to change the status of objects
@@ -813,6 +817,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.order = CampaignQueryManager.get(self.order.key())
         ok_(self.order.active)
 
+        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
         ok_(self.line_item.active)
 
     def mptest_order_pause(self):
@@ -834,6 +839,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.order = CampaignQueryManager.get(self.order.key())
         ok_(not self.order.active)
 
+        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
         ok_(self.line_item.active)
 
     def mptest_order_archive(self):
@@ -855,6 +861,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.order = CampaignQueryManager.get(self.order.key())
         ok_(self.order.archived)
 
+        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
         ok_(not self.line_item.archived)
 
     def mptest_order_delete(self):
@@ -877,6 +884,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(self.order.deleted)
         ok_(not self.order.active)
 
+        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
         ok_(not self.line_item.deleted)
         ok_(self.line_item.active)
 

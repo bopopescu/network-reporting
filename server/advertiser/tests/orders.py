@@ -817,7 +817,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.order = CampaignQueryManager.get(self.order.key())
         ok_(self.order.active)
 
-        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(self.line_item.active)
 
     def mptest_order_pause(self):
@@ -839,7 +839,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.order = CampaignQueryManager.get(self.order.key())
         ok_(not self.order.active)
 
-        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(self.line_item.active)
 
     def mptest_order_archive(self):
@@ -861,7 +861,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.order = CampaignQueryManager.get(self.order.key())
         ok_(self.order.archived)
 
-        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(not self.line_item.archived)
 
     def mptest_order_delete(self):
@@ -884,7 +884,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(self.order.deleted)
         ok_(not self.order.active)
 
-        self.line_item = AdGroupQueryManager.get(self.line_item_key.key())
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(not self.line_item.deleted)
         ok_(self.line_item.active)
 

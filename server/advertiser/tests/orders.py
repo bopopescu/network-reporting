@@ -569,10 +569,22 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         in the database.
         Author: John Pena
         """
+        AdGroupQueryManager.put(self.mock_line_item)
         url = reverse('advertiser_line_item_form_edit', kwargs = {
             'line_item_key': unicode(self.mock_line_item.key())
         })
 
+        # update the name for the post body
+        new_name = 'new new name yeah'
+        post_body = self.post_body
+        post_body['name'] = new_name
+
+        response = self.client.post(url, post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        line_item = AdGroupQueryManager.get(self.mock_line_item.key())
+
+        eq_(line_item.name, new_name)
 
     def mptest_fails_gracefully_invalid_line_item(self):
         """
@@ -581,9 +593,22 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
+        line_item = generate_adgroup(self.order,
+                                     [],
+                                     self.account,
+                                     'gtee')
         url = reverse('advertiser_line_item_form_edit', kwargs = {
-            'line_item_key': unicode(self.mock_line_item.key())
+            'line_item_key': unicode(line_item.key())
         })
+
+        post_body = self.post_body
+        post_body['name'] = ''
+
+        response = self.client.post(url, post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        ok_(not response_json['success'])
 
 
     def mptest_complete_onboarding_after_first_campaign(self):

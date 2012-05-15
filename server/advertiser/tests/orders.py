@@ -152,8 +152,15 @@ class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
 
 
 class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
-
+    """
+    Tests the post for creating a new order and line item
+    Author: Haydn Dufrene
+    """
     def setUp(self):
+        """
+        Set up the URL, post_body and creates mock models
+        to compare to the models put in the DB by the view
+        """
         super(OrderAndLineItemCreatePostTestCase, self).setUp()
         self.url = reverse('advertiser_order_and_line_item_form_new')
 
@@ -192,6 +199,12 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         A valid POST with valid order and line item data should
         create new order and line item objects. The line item
         should have a valid budget and valid targeting.
+
+        Catches the redirect for create order and line item post.
+        Then we use the line item key to retrieve the line item and 
+        order created. We check to see if the line_item was created
+        and edited within the last minute. We then compare the models
+        to the mocks created in the class setup.
 
         Author: Haydn Dufrene
         """
@@ -353,6 +366,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
                                           [],
                                           diff_acct,
                                           'gtee')
+
+        print str(diff_acct.key())
+        print str(self.account.key())
         diff_url = reverse('advertiser_line_item_form_edit',
                            kwargs={'line_item_key':
                                    unicode(diff_line_item.key())})

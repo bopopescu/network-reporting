@@ -15,7 +15,6 @@ from common.utils.test.test_utils import dict_eq, time_almost_eq
 
 import logging
 import simplejson as json
-import time
 from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
 
@@ -223,19 +222,24 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
 
         # Tests to see that this line_item was created and modified
         # within the last minute
-        line_item_dict = to_dict(line_item)
-        minute_ago = datetime.now() - timedelta(minutes=1)
-        minute_ago_seconds = time.mktime(minute_ago.timetuple())
-        
-        ok_(line_item_dict['created'] > minute_ago_seconds)
-        ok_(line_item_dict['t'] > minute_ago_seconds)
+
+        time_almost_eq(line_item.t,
+                       datetime.utcnow(),
+                       timedelta(minutes=1))
+        time_almost_eq(line_item.created,
+                       datetime.utcnow(),
+                       timedelta(minutes=1))
 
         dict_eq(to_dict(line_item, ignore=['id', 'campaign', 'created', 't']),
                  to_dict(self.mock_line_item, ignore=['id', 'campaign', 'created', 't']))
 
         order = line_item.campaign
-        dict_eq(to_dict(order, ignore=['id']),
-                 to_dict(self.mock_order, ignore=['id']))
+        time_almost_eq(order.created,
+                       datetime.utcnow(),
+                       timedelta(minutes=1))
+
+        dict_eq(to_dict(order, ignore=['id', 'created']),
+                 to_dict(self.mock_order, ignore=['id', 'created']))
 
     def mptest_order_owns_line_item(self):
         """

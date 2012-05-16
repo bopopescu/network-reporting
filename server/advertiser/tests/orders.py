@@ -1067,7 +1067,8 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
     def setUp(self):
-        self.url = ''
+        self.new_url = ''
+        self.edit_url = ''
 
     def mptest_http_response_code(self):
         pass
@@ -1084,6 +1085,8 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         response = self.client.post(self.edit_url)
         eq_(response.status_code, 404)
 
+    def mptest_ensure_proper_redirect(self):
+        pass
 
     def mptest_puts_valid_new_creative(self):
         pass
@@ -1097,13 +1100,14 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
     def mptest_fails_with_unsupported_ad_type(self):
         pass
 
+#^ haydn
+##############################
+#v pena
+
     def mptest_line_item_owns_creative(self):
         pass
 
     def mptest_account_owns_creative(self):
-        pass
-
-    def mptest_ensure_proper_redirect(self):
         pass
 
     def mptest_fails_gracefully_with_form_errors(self):

@@ -1290,7 +1290,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
             response = self.client.post(self.new_url,
                                         self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        except Exception as e:
+        except Exception, e:
             eq_(e.message, 'Unsupported creative type fake_ad_type.')
 
     def mptest_line_item_owns_creative(self):

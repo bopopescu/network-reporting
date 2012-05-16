@@ -299,6 +299,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
                 raise Http404
 
         if order:
+            logging.warn(order)
             if (not order.is_order) or order.account.key() != self.account.key():
                 raise Http404
         else:
@@ -389,6 +390,9 @@ class CreativeFormHandler(RequestHandler):
     New/Edit form page for Creatives.
     """
     def post(self, line_item_key=None, creative_key=None):
+        if not self.request.is_ajax():
+            raise Http404
+
         if creative_key:
             creative = CreativeQueryManager.get(creative_key)
             line_item = creative.ad_group

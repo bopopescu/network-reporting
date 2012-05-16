@@ -567,6 +567,117 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
 
+class DeleteAppViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    def setUp(self):
+        super(DeleteAppViewTestCase, self).setUp()
+
+        self.app = _generate_app(self.account)
+        self.adunit = _generate_adunit(self.account, self.app)
+
+        self.url = reverse('publisher_delete_app', args=[str(self.app.key())])
+
+    def mptest_delete_app(self):
+        """
+        Delete an app and confirm that it and its child adunit are no longer
+        returned by the query manager.
+        """
+
+        # This response should redirect to the inventory page with a status
+        # code of 302.
+        post_response = self.client.post(self.url)
+        eq_(post_response.status_code, 302)
+
+        # There should no longer be any apps or adunits associated with this
+        # account.
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account)
+        eq_(apps_dict, {})
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
+        eq_(adunits_dict, {})
+
+    def mptest_delete_app_authorization(self):
+        """
+        Confirm that an attempt to delete an app belonging to a different
+        account responds with a 404 and the db state does not change.
+        """
+
+        self.login_secondary_account()
+
+        # This should return a status code 404.
+        post_response = self.client.post(self.url)
+        eq_(post_response.status_code, 404)
+
+        # There should still be exactly one app and one adunit associated with
+        # this account.
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account)
+        eq_(len(apps_dict), 1)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
+        eq_(len(adunits_dict), 1)
+
+
+class DeleteAdUnitViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    def setUp(self):
+        super(DeleteAdUnitViewTestCase, self).setUp()
+
+        self.app = _generate_app(self.account)
+        self.adunit = _generate_adunit(self.account, self.app)
+
+        self.url = reverse('publisher_delete_adunit',
+                           args=[str(self.adunit.key())])
+
+    def mptest_delete_app(self):
+        """
+        Delete an adunit and confirm that it is no longer returned by the query
+        manager.
+        """
+
+        # This response should redirect to the inventory page with a status
+        # code of 302.
+        post_response = self.client.post(self.url)
+        eq_(post_response.status_code, 302)
+
+        # There should exactly one app and zero adunits associated with this
+        # account.
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account)
+        eq_(len(apps_dict), 1)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
+        eq_(adunits_dict, {})
+
+    def mptest_delete_app_authorization(self):
+        """
+        Confirm that an attempt to delete an adunit belonging to a different
+        account responds with a 404 and the db state does not change.
+        """
+
+        self.login_secondary_account()
+
+        # This should return a status code 404.
+        post_response = self.client.post(self.url)
+        eq_(post_response.status_code, 404)
+
+        # There should still be exactly one app and one adunit associated with
+        # this account.
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account)
+        eq_(len(apps_dict), 1)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
+        eq_(len(adunits_dict), 1)
+
+
 def _generate_app(account, **kwargs):
     app_dict = {
         'account': account,

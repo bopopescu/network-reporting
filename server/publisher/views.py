@@ -993,6 +993,7 @@ class DeleteAdUnitHandler(RequestHandler):
     Deletes an adunit and redirects to the adunit's app.
     """
     def post(self, adunit_key):
+        logging.error(self.request.POST)
         a = AdUnitQueryManager.get(adunit_key)
         if a != None and a.app_key.account == self.account:
             a.deleted = True
@@ -1014,6 +1015,7 @@ class DeleteAppHandler(RequestHandler):
     Deletes an app and redirects to the app index.
     """
     def post(self, app_key):
+        logging.error(self.request.POST)
         app = AppQueryManager.get(app_key)
         adunits = AdUnitQueryManager.get_adunits(app=app)
         if app and app.account == self.account:

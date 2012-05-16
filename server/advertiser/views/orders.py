@@ -389,6 +389,10 @@ class CreativeFormHandler(RequestHandler):
     New/Edit form page for Creatives.
     """
     def post(self, line_item_key=None, creative_key=None):
+
+        logging.error(self.request.POST)
+        logging.error(self.request.FILES)
+
         if creative_key:
             creative = CreativeQueryManager.get(creative_key)
             line_item = creative.ad_group

@@ -22,13 +22,17 @@ from django.test.utils import setup_test_environment
 from nose.tools import eq_, ok_
 import uuid
 
-from admin.randomgen import (generate_campaign, generate_adgroup, \
-                             generate_creative, generate_app, \
-                             generate_account, generate_marketplace_campaign)
+from admin.randomgen import (generate_campaign,
+                             generate_adgroup,
+                             generate_creative,
+                             generate_app,
+                             generate_account,
+                             generate_marketplace_campaign)
 
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
+
 from advertiser.forms import OrderForm, LineItemForm
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
@@ -1066,9 +1070,62 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
+
     def setUp(self):
-        self.new_url = ''
-        self.edit_url = ''
+        super(NewOrEditCreativeViewTestCase, self).setUp()
+        self.new_url = reverse('advertiser_creative_form_new', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+        self.edit_url = reverse('advertiser_creative_form_edit', kwargs={
+            'creative_key': unicode(self.creative.key())
+        })
+
+        self.default_creative_post_body = {
+            u'action_icon': u'download_arrow4',
+            u'ad_type': u'image',
+            u'color': u'000000',
+            u'conv_appid': u'',
+            u'custom_height': u'',
+            u'custom_width': u'',
+            u'font_color': u'FFFFFF',
+            u'format': u'320x50',
+            u'gradient': u'on',
+            u'html_data': u'',
+            u'launchpage': u'',
+            u'line1': u'',
+            u'line2': u'',
+            u'name': u'Creative',
+            u'tracking_url': u'',
+            u'url': u'',
+        }
+
+        # We need this to get the absolute path to image files
+        # we'll use for testing uploads
+        pwd = os.path.dirname(os.path.abspath(__file__))
+
+        # Post bodies for the different types of creatives
+        self.html_creative_post_body = self.default_creative_post_body
+        self.image_creative_post_body = self.default_creative_post_body
+        self.text_tile_creative_post_body = self.default_creative_post_body
+
+        self.html_creative_post_body.update({
+            u'ad_type': u'html',
+            u'html_data': u'<div> An Ad </div>',
+            u'name': u'HTML Creative',
+        })
+
+        test_banner_path = os.path.join(pwd, 'test_banner.gif')
+        self.image_creative_post_body.update({
+            u'ad_type': u'image',
+            u'name': u'Image Creative',
+            'image_file': open(test_banner_path, 'rb')
+        })
+
+        test_tile_path = os.path.join(pwd, 'test_tile.png')
+        self.text_tile_creative_post_body.update({
+            'image_file': open(test_tile_path, 'rb')
+        })
+
 
     def mptest_http_response_code(self):
         pass
@@ -1105,7 +1162,10 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 #v pena
 
     def mptest_line_item_owns_creative(self):
-        pass
+        past_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
+        self.client.post(self.new_url, self.html_creative_post_body)
+        current_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
+        eq_(len(current_creatives), (len(past_creatives) + 1))
 
     def mptest_account_owns_creative(self):
         pass
@@ -1126,3 +1186,7 @@ def get_line_item_key_from_redirect_url(redirect_url):
     url that's passed back in many post views.
     """
     return redirect_url.replace('/advertise/line_items/', '').rstrip('/')
+
+def get_image_upload_body(file_path):
+    f = open(file_path, 'rb')
+    return {'image_file': f}

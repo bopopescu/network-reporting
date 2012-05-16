@@ -125,6 +125,83 @@ class OrderViewTestCase(BaseViewTestCase):
         self.mock_line_item.campaign = self.mock_order
 
 
+class OrderIndexTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(OrderIndexTestCase, self).setUp()
+        self.url = ''
+
+    def mptest_http_response_code(self):
+        pass
+
+    def mptest_gets_all_orders(self):
+        pass
+
+    def mptest_gets_all_line_items(self):
+        pass
+
+    def mptest_account_owns_all_items(self):
+        pass
+
+    def mptest_all_campaigns_are_orders(self):
+        pass
+
+    def mptest_all_line_items_are_for_orders(self):
+        pass
+
+    def mptest_all_orders_returned_are_orders(self):
+        pass
+
+
+class OrderDetailHandlerTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(OrderDetailHandlerTestCase, self).setUp()
+        self.url = ''
+
+    def mptest_http_response_code(self):
+        pass
+
+    def mptest_fails_on_unowned_order(self):
+        pass
+
+    def mptest_returns_all_targeted_adunits(self):
+        pass
+
+    def mptest_returns_all_targeted_apps_and_keys(self):
+        pass
+
+    def mptest_proper_order_form_is_returned(self):
+        pass
+
+    def mptest_returns_proper_order(self):
+        pass
+
+
+class LineItemDetailHandler(OrderViewTestCase):
+    def setUp(self):
+        super(LineItemDetailHandler, self).setUp()
+        self.url = ''
+
+    def mptest_http_response_code(self):
+        pass
+
+    def mptest_fails_on_unowned_line_item(self):
+        pass
+
+    def mptest_returns_all_targetd_adunits(self):
+        pass
+
+    def mptest_returns_all_targeted_apps_and_keys(self):
+        pass
+
+    def mptest_returns_new_creative_form(self):
+        pass
+
+    def mptest_returns_proper_line_item(self):
+        pass
+
+    def mptest_returns_order_which_owns_line_item(self):
+        pass
+
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
     """
     Tests for the order and line item create view's GET method.
@@ -1073,6 +1150,54 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(actual_order.deleted)
 
 
+class DisplayCreativeHandlerTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(DisplayCreativeHandlerTestCase, self).setUp()
+        self.url = ''
+
+    def mptest_http_response_code(self):
+        pass
+
+    def mptest_fails_on_unowned_creative(self):
+        pass
+
+    def mptest_returns_empty_for_mraid(self):
+        pass
+
+    def mptest_fails_with_non_creative_key(self):
+        pass
+
+    def mptest_returns_html_for_image_creative(self):
+        pass
+
+    def mptest_returns_html_for_text_tile(self):
+        pass
+
+    def mptest_returns_html_for_html(self):
+        pass
+
+
+class CreativeImageHandlerTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(CreativeImageHandlerTestCase, self).setUp()
+        self.url = ''
+
+    def mptest_http_response_code(self):
+        pass
+
+    def mptest_fails_on_unowned_creative(self):
+        pass
+
+    def mptest_fails_with_non_creative_key(self):
+        pass
+
+    def mptest_returns_proper_response(self):
+        pass
+
+    def mptest_raise_404_for_non_image_creatives(self):
+        pass
+
+
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
     def setUp(self):
         super(NewOrEditCreativeViewTestCase, self).setUp()
@@ -1241,7 +1366,6 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                         'text_icon': self.text_tile_creative_post_body
                         }
         for ad_type, post_body in ad_type_dict.iteritems():
-            print post_body
             response = self.client.post(self.new_url, post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
             response_json = json.loads(response.content)
@@ -1249,7 +1373,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
             line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
             line_item = AdGroupQueryManager.get(line_item_key)
 
-            creatives = line_item.creatives.filter('name =', post_body['name']).fetch(1000)
+            creatives = line_item.creatives.filter('name =', post_body['name']).fetch(1)
             creative = creatives[0]
             eq_(creative.ad_type, ad_type)
 

@@ -416,6 +416,7 @@ class CreativeFormHandler(RequestHandler):
 
         if creative_form.is_valid():
             creative = creative_form.save()
+            print 'here'
             creative.account = self.account
             creative.ad_group = line_item
             creative.save()

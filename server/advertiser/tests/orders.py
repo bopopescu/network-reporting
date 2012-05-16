@@ -1242,8 +1242,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                         }
         for ad_type, post_body in ad_type_dict.iteritems():
             print post_body
-            response = self.client.post(self.new_url, 
-                                        post_body,
+            response = self.client.post(self.new_url, post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
             response_json = json.loads(response.content)
 

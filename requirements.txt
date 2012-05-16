@@ -21,5 +21,6 @@ pymongo==2.1.1
 pytz==2012c
 selenium==2.21.3
 simplejson==2.3.2
+unittest2==0.5.1
 wsgiref==0.1.2
 yolk==0.4.1

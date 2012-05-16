@@ -34,6 +34,7 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        CreativeQueryManager)
 
 from advertiser.forms import OrderForm, LineItemForm
+from advertiser.models import Creative
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
@@ -1162,13 +1163,40 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 #v pena
 
     def mptest_line_item_owns_creative(self):
+        """
+        Check that when a new creative is made, it's owned by the line
+        item we referenced in the post url.
+        """
+        # look at the past creatives for this line item. after we post,
+        # the length of this list should be +1
         past_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
-        self.client.post(self.new_url, self.html_creative_post_body)
+        self.client.post(self.new_url, self.html_creative_post_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         current_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
         eq_(len(current_creatives), (len(past_creatives) + 1))
 
     def mptest_account_owns_creative(self):
-        pass
+        """
+        Check that when a new creative is made, it's owned by the
+        account that's logged in.
+        """
+        # make a super unique name and update the post body with the name
+        new_name = 'my super awesome creative ' + unicode(uuid.uuid4())
+        new_creative_body = self.html_creative_post_body
+        new_creative_body['name'] = new_name
+
+        # post the new creative
+        self.client.post(self.new_url, new_creative_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # find the new creative based on its super unique name.
+        # make sure there's only one.
+        new_creatives = Creative.all().filter("name = ", new_name).fetch(1000)
+        eq_(len(new_creatives), 1)
+        new_creative = new_creatives[0]
+
+        # make sure its owned by the current account
+        eq_(unicode(new_creative.account.key()), unicode(self.account.key()))
 
     def mptest_fails_gracefully_with_form_errors(self):
         pass

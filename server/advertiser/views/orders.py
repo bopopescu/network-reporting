@@ -13,9 +13,10 @@ Whenever you see "Campaign", think "Order", and wherever you see
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import Http404
+from django.http import HttpResponse, Http404
 
-from common.ragendja.template import JSONResponse
+from common.utils import helpers
+from common.ragendja.template import render_to_response, JSONResponse
 from common.utils.request_handler import RequestHandler
 
 from account.query_managers import AccountQueryManager
@@ -452,21 +453,35 @@ def creative_form_edit(request, *args, **kwargs):
 
 
 class DisplayCreativeHandler(RequestHandler):
+    #asdf
     def get(self, creative_key):
+
+        # Corner casing requests that are made for mraid.js.
+        # This happens for MRAID creatives and can't be changed
+        # because of the MRAID spec
         if creative_key == 'mraid.js':
             return HttpResponse("")
-        c = CreativeQueryManager.get(creative_key)
-        if c and c.ad_type == "image":
 
-            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>' % helpers.get_url_for_blob(c.image_blob))
-            # return HttpResponse(c.image,content_type='image/png')
-        if c and c.ad_type == "text_icon":
-            c.icon_url = helpers.get_url_for_blob(c.image_blob)
+        creative = CreativeQueryManager.get(creative_key)
+        if creative:
+            if creative.ad_type == "image":
+                template = """<html><head>
+                <style type="text/css">body{margin:0;padding:0;}</style>
+                </head><body><img src="%s"/></body></html>"""
+                url_for_blob = helpers.get_url_for_blob(creative.image_blob)
+                return HttpResponse(template % url_for_blob)
 
-            return render_to_response(self.request, 'advertiser/text_tile.html', {'c': c})
-            #return HttpResponse(c.image,content_type='image/png')
-        if c and c.ad_type == "html":
-            return HttpResponse("<html><body style='margin:0px;'>" + c.html_data + "</body></html")
+            if creative.ad_type == "text_icon":
+                creative.icon_url = helpers.get_url_for_blob(creative.image_blob)
+                return render_to_response(self.request,
+                                          'advertiser/text_tile.html',
+                                          {'c': creative})
+
+            if creative.ad_type == "html":
+                return HttpResponse("<html><body style='margin:0px;'>" + \
+                                    creative.html_data + "</body></html")
+        else:
+            raise Http404
 
 
 class CreativeImageHandler(RequestHandler):

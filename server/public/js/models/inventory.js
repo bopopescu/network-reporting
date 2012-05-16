@@ -843,5 +843,9 @@ var mopub = mopub || {};
     window.Campaigns = Campaigns;
     window.ModelHelpers = ModelHelpers;
 
+    window.Order = Order;
+    window.LineItem = LineItem;
+    window.OrderCollection = OrderCollection;
+    window.LineItemCollection = LineItemCollection;
 
 }(this.jQuery, this.Backbone, this._));

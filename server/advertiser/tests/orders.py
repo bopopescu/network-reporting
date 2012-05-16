@@ -24,14 +24,20 @@ from django.test.utils import setup_test_environment
 from nose.tools import eq_, ok_
 import uuid
 
-from admin.randomgen import (generate_campaign, generate_adgroup, \
-                             generate_creative, generate_app, \
-                             generate_account, generate_marketplace_campaign)
+from admin.randomgen import (generate_campaign,
+                             generate_adgroup,
+                             generate_creative,
+                             generate_app,
+                             generate_account,
+                             generate_marketplace_campaign)
 
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
+
 from advertiser.forms import OrderForm, LineItemForm, HtmlCreativeForm
+from advertiser.models import (TextAndTileCreative, HtmlCreative,
+                               ImageCreative)
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
@@ -1067,6 +1073,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
+
     def setUp(self):
         super(NewOrEditCreativeViewTestCase, self).setUp()
         self.new_url = reverse('advertiser_creative_form_new', kwargs={
@@ -1076,14 +1083,53 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
             'creative_key': unicode(self.creative.key())
         })
 
-        self.creative_body = {
-            u'ajax': u'true',
-            u'format': u'320x50',
+        self.default_creative_post_body = {
+            u'action_icon': u'download_arrow4',
             u'ad_type': u'html',
-            u'name': u'Test Creative',
+            u'color': u'000000',
+            u'conv_appid': u'',
+            u'custom_height': u'',
+            u'custom_width': u'',
+            u'font_color': u'FFFFFF',
+            u'format': u'320x50',
+            u'gradient': u'on',
+            u'html_data': u'',
+            u'launchpage': u'',
+            u'line1': u'',
+            u'line2': u'',
+            u'name': u'Creative',
+            u'tracking_url': u'',
+            u'url': u'',
         }
 
-        mock_creative_form = HtmlCreativeForm(self.creative_body,
+        # We need this to get the absolute path to image files
+        # we'll use for testing uploads
+        pwd = os.path.dirname(os.path.abspath(__file__))
+
+        # Post bodies for the different types of creatives
+        self.html_creative_post_body = self.default_creative_post_body
+        self.image_creative_post_body = self.default_creative_post_body
+        self.text_tile_creative_post_body = self.default_creative_post_body
+
+        self.html_creative_post_body.update({
+            u'ad_type': u'html',
+            u'html_data': u'<div> An Ad </div>',
+            u'name': u'HTML Creative',
+        })
+
+        test_banner_path = os.path.join(pwd, 'test_banner.gif')
+        self.image_creative_post_body.update({
+            u'ad_type': u'image',
+            u'name': u'Image Creative',
+            'image_file': open(test_banner_path, 'rb')
+        })
+
+        test_tile_path = os.path.join(pwd, 'test_tile.png')
+        self.text_tile_creative_post_body.update({
+            'image_file': open(test_tile_path, 'rb')
+        })
+
+        mock_creative_form = HtmlCreativeForm(self.html_creative_post_body,
                                               instance=None)
         self.mock_creative = mock_creative_form.save()
         self.mock_creative.account = self.account
@@ -1120,9 +1166,9 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         eq_(edit_response.status_code, 404)
 
     def mptest_ensure_proper_redirect(self):
-        new_response = self.client.post(self.new_url, self.creative_body,
+        new_response = self.client.post(self.new_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        edit_response = self.client.post(self.edit_url, self.creative_body,
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
         new_response_json = json.loads(new_response.content)
@@ -1187,8 +1233,46 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(to_dict(creative), 
                 to_dict(updated_creative), exclude=['id'])
 
-    def mptest_uses_correct_forms_for_ad_types(self):
-        pass
+    def mptest_uses_correct_form_for_image(self):
+        response = self.client.post(self.edit_url, 
+                                    self.image_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+        creative = creatives[0]
+        ok_(isinstance(creative, ImageCreative))
+
+    def mptest_uses_correct_form_for_text_icon(self):
+        response = self.client.post(self.edit_url, 
+                                    self.text_tile_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+        creative = creatives[0]
+        ok_(isinstance(creative, TextAndTileCreative))
+
+
+    def mptest_uses_correct_form_for_html(self):
+        response = self.client.post(self.edit_url, 
+                                    self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+        creative = creatives[0]
+        ok_(isinstance(creative, HtmlCreative))
+
 
     def mptest_fails_with_unsupported_ad_type(self):
         pass
@@ -1198,7 +1282,10 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 #v pena
 
     def mptest_line_item_owns_creative(self):
-        pass
+        past_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
+        self.client.post(self.new_url, self.html_creative_post_body)
+        current_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
+        eq_(len(current_creatives), (len(past_creatives) + 1))
 
     def mptest_account_owns_creative(self):
         pass
@@ -1219,3 +1306,7 @@ def get_line_item_key_from_redirect_url(redirect_url):
     url that's passed back in many post views.
     """
     return redirect_url.replace('/advertise/line_items/', '').rstrip('/')
+
+def get_image_upload_body(file_path):
+    f = open(file_path, 'rb')
+    return {'image_file': f}

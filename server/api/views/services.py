@@ -575,27 +575,26 @@ def sum_campaign_stats(campaign):
                 (impressions/float(requests) if requests else 0)
 
     stats = {
-        'revenue': sum([ag['revenue'] for ag in campaign['adgroups']]),
+        'rev': sum([ag['rev'] for ag in campaign['adgroups']]),
         'ctr': 0.0,
         'ecpm': 0.0,
-        'impressions': sum([ag['impressions'] for ag in campaign['adgroups']]),
-        'clicks': sum([ag['clicks'] for ag in campaign['adgroups']]),
-        'requests': sum([ag['requests'] for ag in campaign['adgroups']]),
+        'imp': sum([ag['imp'] for ag in campaign['adgroups']]),
+        'clk': sum([ag['clk'] for ag in campaign['adgroups']]),
+        'req': sum([ag['req'] for ag in campaign['adgroups']]),
         'fill_rate': 0.0,
-        'conversions': sum([ag['conversions'] for ag in campaign['adgroups']]),
-        
+        'conv': sum([ag['conv'] for ag in campaign['adgroups']]),
     }
 
     num_adgroups = len(campaign['adgroups'])
     if num_adgroups > 0:
-        stats['conversion_rate'] =  sum([ag['conversion_rate'] \
-                                         for ag in campaign['adgroups']]) \
-                                    / len(campaign['adgroups'])
+        stats['conv_rate'] =  sum([ag['conv_rate'] \
+                                   for ag in campaign['adgroups']]) \
+                              / len(campaign['adgroups'])
     else:
-        stats['conversion_rate'] = 0
-    stats['ctr'] = ctr(stats['clicks'], stats['impressions'])
-    stats['ecpm'] = ecpm(stats['revenue'], stats['impressions'])
-    stats['fill_rate'] = fill_rate(stats['requests'], stats['impressions'])
+        stats['conv_rate'] = 0
+    stats['ctr'] = ctr(stats['clk'], stats['imp'])
+    stats['ecpm'] = ecpm(stats['rev'], stats['imp'])
+    stats['fill_rate'] = fill_rate(stats['req'], stats['imp'])
     
     return stats
 
@@ -629,8 +628,8 @@ def get_pace(adgroup):
             pace_status = 'pace-warning'
         else:
             pace_status = 'pace-succes'
-            
+
         return (pace[1], pace_status)
-        
+
     else:
         return (0, None)

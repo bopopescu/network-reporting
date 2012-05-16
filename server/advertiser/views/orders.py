@@ -429,7 +429,6 @@ class CreativeFormHandler(RequestHandler):
             for key, value in creative_form.errors.items():
                 # TODO: just join value?
                 errors[key] = ' '.join([error for error in value])
-
             return JSONResponse({
                 'errors': errors,
                 'success': False,

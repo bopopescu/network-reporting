@@ -29,7 +29,7 @@ from admin.randomgen import (generate_campaign, generate_adgroup, \
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
-from advertiser.forms import OrderForm, LineItemForm
+from advertiser.forms import OrderForm, LineItemForm, HtmlCreativeForm
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
@@ -94,7 +94,6 @@ class OrderViewTestCase(BaseViewTestCase):
             u'target_other': u'on'
         }
 
-
         # Combined form post body
         self.post_body = dict(self.order_body, **self.line_item_body)
 
@@ -102,7 +101,6 @@ class OrderViewTestCase(BaseViewTestCase):
         mock_order_form = OrderForm(self.post_body, instance=None, prefix='order')
         self.mock_order = mock_order_form.save()
         self.mock_order.account = self.account
-        self.mock_order.save()
 
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
@@ -1067,11 +1065,42 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
     def setUp(self):
-        self.new_url = ''
-        self.edit_url = ''
+        super(NewOrEditCreativeViewTestCase, self).setUp()
+        self.new_url = reverse('advertiser_creative_form_new', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+        self.edit_url = reverse('advertiser_creative_form_edit', kwargs={
+            'creative_key': unicode(self.creative.key())
+        })
+
+        self.creative_body = {
+            u'ajax': u'true',
+            u'format': u'320x50',
+            u'ad_type': u'html',
+            u'name': u'Test Creative',
+        }
+
+        mock_creative_form = HtmlCreativeForm(self.creative_body,
+                                              instance=None)
+        self.mock_creative = mock_creative_form.save()
+        self.mock_creative.account = self.account
+        self.mock_creative.ad_group = self.line_item
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid post should return a valid (200, 302) response (regardless
+        of params).
+
+        Author: Haydn Dufrene
+        """
+        new_response = self.client.post(self.new_url, self.creative_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(new_response.status_code in [200, 302])
+
+        edit_response = self.client.post(self.edit_url, self.creative_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(edit_response.status_code in [200, 302])
+
 
     def mptest_graceful_fail_without_ajax(self):
         """
@@ -1079,14 +1108,37 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        response = self.client.post(self.new_url)
-        eq_(response.status_code, 404)
+        self.creative_body.pop('ajax')
 
-        response = self.client.post(self.edit_url)
-        eq_(response.status_code, 404)
+        new_response = self.client.post(self.new_url, self.creative_body)
+        eq_(new_response.status_code, 404)
+
+        edit_response = self.client.post(self.edit_url, self.creative_body)
+        eq_(edit_response.status_code, 404)
 
     def mptest_ensure_proper_redirect(self):
-        pass
+        new_response = self.client.post(self.new_url, self.creative_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        edit_response = self.client.post(self.edit_url, self.creative_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        new_response_json = json.loads(new_response.content)
+        edit_response_json = json.loads(edit_response.content)
+
+        ok_(new_response_json['success'])
+        ok_(edit_response_json['success'])
+        print new_response_json
+        new_redirect_url = new_response_json['redirect']
+        edit_redirect_url = edit_response_json['redirect']
+
+        new_redirect_split = new_redirect_url.split('/')
+        edit_redirect_split = edit_redirect_url.split('/')
+
+        eq_(new_redirect_split[0], 'advertise')
+        eq_(edit_redirect_split[0], 'advertise')
+
+        eq_(new_redirect_split[1], 'advertise')
+        assert False
 
     def mptest_puts_valid_new_creative(self):
         pass

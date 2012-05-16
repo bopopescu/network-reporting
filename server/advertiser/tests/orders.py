@@ -35,9 +35,10 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 
-from advertiser.forms import OrderForm, LineItemForm, HtmlCreativeForm
-from advertiser.models import (TextAndTileCreative, HtmlCreative,
-                               ImageCreative)
+from advertiser.forms import (OrderForm, LineItemForm, 
+                              HtmlCreativeForm, ImageCreativeForm)
+from advertiser.models import (Creative, TextAndTileCreative, 
+                               HtmlCreative, ImageCreative)
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
@@ -1073,7 +1074,6 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
-
     def setUp(self):
         super(NewOrEditCreativeViewTestCase, self).setUp()
         self.new_url = reverse('advertiser_creative_form_new', kwargs={
@@ -1084,6 +1084,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         })
 
         self.default_creative_post_body = {
+            u'ajax': u'true',
             u'action_icon': u'download_arrow4',
             u'ad_type': u'html',
             u'color': u'000000',
@@ -1108,24 +1109,24 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         # Post bodies for the different types of creatives
         self.html_creative_post_body = self.default_creative_post_body
-        self.image_creative_post_body = self.default_creative_post_body
-        self.text_tile_creative_post_body = self.default_creative_post_body
+        self.image_creative_post_body = self.default_creative_post_body.copy()
+        self.text_tile_creative_post_body = self.default_creative_post_body.copy()
 
         self.html_creative_post_body.update({
-            u'ad_type': u'html',
             u'html_data': u'<div> An Ad </div>',
             u'name': u'HTML Creative',
         })
 
-        test_banner_path = os.path.join(pwd, 'test_banner.gif')
+        self.test_banner_path = os.path.join(pwd, 'test_banner.gif')
         self.image_creative_post_body.update({
             u'ad_type': u'image',
             u'name': u'Image Creative',
-            'image_file': open(test_banner_path, 'rb')
+            'image_file': open(self.test_banner_path, 'rb')
         })
 
         test_tile_path = os.path.join(pwd, 'test_tile.png')
         self.text_tile_creative_post_body.update({
+            u'ad_type': u'text_icon',
             'image_file': open(test_tile_path, 'rb')
         })
 
@@ -1142,11 +1143,11 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         Author: Haydn Dufrene
         """
-        new_response = self.client.post(self.new_url, self.creative_body,
+        new_response = self.client.post(self.new_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(new_response.status_code in [200, 302])
 
-        edit_response = self.client.post(self.edit_url, self.creative_body,
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(edit_response.status_code in [200, 302])
 
@@ -1157,12 +1158,12 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        self.creative_body.pop('ajax')
+        self.html_creative_post_body.pop('ajax')
 
-        new_response = self.client.post(self.new_url, self.creative_body)
+        new_response = self.client.post(self.new_url, self.html_creative_post_body)
         eq_(new_response.status_code, 404)
 
-        edit_response = self.client.post(self.edit_url, self.creative_body)
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
         eq_(edit_response.status_code, 404)
 
     def mptest_ensure_proper_redirect(self):
@@ -1194,7 +1195,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         db.Key(edit_redirect_split[3])
 
     def mptest_puts_valid_new_creative(self):
-        response = self.client.post(self.new_url, self.creative_body,
+        response = self.client.post(self.new_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         response_json = json.loads(response.content)
 
@@ -1207,12 +1208,12 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         # to self.line_item in module setUp
         eq_(creatives.count(), 2)
 
-        creative = creatives.filter('name =', 'Test Creative').fetch(1)[0]
+        creative = creatives.filter('name =', self.html_creative_post_body['name']).fetch(1)[0]
         dict_eq(to_dict(creative), 
                 to_dict(self.mock_creative), exclude=['id'])
 
     def mptest_puts_valid_edited_creative(self):
-        response = self.client.post(self.edit_url, self.creative_body,
+        response = self.client.post(self.edit_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         response_json = json.loads(response.content)
 
@@ -1226,7 +1227,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         creative = creatives[0]
 
-        updated_creative_form = HtmlCreativeForm(self.creative_body,
+        updated_creative_form = HtmlCreativeForm(self.html_creative_post_body,
                                                  instance=self.creative)
         updated_creative = updated_creative_form.save()
 
@@ -1244,7 +1245,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         creatives = line_item.creatives
         creative = creatives[0]
-        ok_(isinstance(creative, ImageCreative))
+        eq_(creative.ad_type, 'image')
 
     def mptest_uses_correct_form_for_text_icon(self):
         response = self.client.post(self.edit_url, 
@@ -1257,10 +1258,18 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         creatives = line_item.creatives
         creative = creatives[0]
-        ok_(isinstance(creative, TextAndTileCreative))
+        eq_(creative.ad_type, 'text_icon')
 
-
+    # This is failing because we are not choosing forms correctly
+    # or they are not working properly    
     def mptest_uses_correct_form_for_html(self):
+        # Modify self.creative to be another ad_type
+        # so that this test will ensure that the ad_type 
+        # is changed to html
+        response = self.client.post(self.edit_url,
+                                    self.image_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
         response = self.client.post(self.edit_url, 
                                     self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1271,14 +1280,18 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         creatives = line_item.creatives
         creative = creatives[0]
-        ok_(isinstance(creative, HtmlCreative))
+        eq_(creative.ad_type, 'html')
 
+    # TODO: Make a mopub exception to catch, so we dont have to hardcode
+    #       error messages into tests?
     def mptest_fails_with_unsupported_ad_type(self):
-        pass
-
-#^ haydn
-##############################
-#v pena
+        self.html_creative_post_body.update({u'ad_type': u'fake_ad_type'})
+        try:
+            response = self.client.post(self.new_url,
+                                        self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        except Exception as e:
+            eq_(e.message, 'Unsupported creative type fake_ad_type.')
 
     def mptest_line_item_owns_creative(self):
         """

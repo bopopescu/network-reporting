@@ -13,6 +13,8 @@ import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
 from common.utils.test.test_utils import dict_eq, time_almost_eq
 
+from google.appengine.ext import db
+
 import logging
 import simplejson as json
 from datetime import datetime, timedelta
@@ -33,8 +35,10 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 
-from advertiser.forms import OrderForm, LineItemForm
-from advertiser.models import Creative
+from advertiser.forms import (OrderForm, LineItemForm, 
+                              HtmlCreativeForm, ImageCreativeForm)
+from advertiser.models import (Creative, TextAndTileCreative, 
+                               HtmlCreative, ImageCreative)
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
@@ -53,6 +57,7 @@ class OrderViewTestCase(BaseViewTestCase):
         # initial objects and for resolving urls.
         self.order = generate_campaign(self.account)
         self.line_item = generate_adgroup(self.order,[],self.account,'gtee')
+        # HTML Creative
         self.creative = generate_creative(self.account, self.line_item)
 
         # A post body for an order form, used for testing
@@ -99,7 +104,6 @@ class OrderViewTestCase(BaseViewTestCase):
             u'target_other': u'on'
         }
 
-
         # Combined form post body
         self.post_body = dict(self.order_body, **self.line_item_body)
 
@@ -107,7 +111,6 @@ class OrderViewTestCase(BaseViewTestCase):
         mock_order_form = OrderForm(self.post_body, instance=None, prefix='order')
         self.mock_order = mock_order_form.save()
         self.mock_order.account = self.account
-        self.mock_order.save()
 
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
@@ -1071,7 +1074,6 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
-
     def setUp(self):
         super(NewOrEditCreativeViewTestCase, self).setUp()
         self.new_url = reverse('advertiser_creative_form_new', kwargs={
@@ -1082,8 +1084,9 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         })
 
         self.default_creative_post_body = {
+            u'ajax': u'true',
             u'action_icon': u'download_arrow4',
-            u'ad_type': u'image',
+            u'ad_type': u'html',
             u'color': u'000000',
             u'conv_appid': u'',
             u'custom_height': u'',
@@ -1106,30 +1109,48 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         # Post bodies for the different types of creatives
         self.html_creative_post_body = self.default_creative_post_body
-        self.image_creative_post_body = self.default_creative_post_body
-        self.text_tile_creative_post_body = self.default_creative_post_body
+        self.image_creative_post_body = self.default_creative_post_body.copy()
+        self.text_tile_creative_post_body = self.default_creative_post_body.copy()
 
         self.html_creative_post_body.update({
-            u'ad_type': u'html',
             u'html_data': u'<div> An Ad </div>',
             u'name': u'HTML Creative',
         })
 
-        test_banner_path = os.path.join(pwd, 'test_banner.gif')
+        self.test_banner_path = os.path.join(pwd, 'test_banner.gif')
         self.image_creative_post_body.update({
             u'ad_type': u'image',
             u'name': u'Image Creative',
-            'image_file': open(test_banner_path, 'rb')
+            'image_file': open(self.test_banner_path, 'rb')
         })
 
         test_tile_path = os.path.join(pwd, 'test_tile.png')
         self.text_tile_creative_post_body.update({
+            u'ad_type': u'text_icon',
             'image_file': open(test_tile_path, 'rb')
         })
 
+        mock_creative_form = HtmlCreativeForm(self.html_creative_post_body,
+                                              instance=None)
+        self.mock_creative = mock_creative_form.save()
+        self.mock_creative.account = self.account
+        self.mock_creative.ad_group = self.line_item
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid post should return a valid (200, 302) response (regardless
+        of params).
+
+        Author: Haydn Dufrene
+        """
+        new_response = self.client.post(self.new_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(new_response.status_code in [200, 302])
+
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(edit_response.status_code in [200, 302])
+
 
     def mptest_graceful_fail_without_ajax(self):
         """
@@ -1137,30 +1158,140 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        response = self.client.post(self.new_url)
-        eq_(response.status_code, 404)
+        self.html_creative_post_body.pop('ajax')
 
-        response = self.client.post(self.edit_url)
-        eq_(response.status_code, 404)
+        new_response = self.client.post(self.new_url, self.html_creative_post_body)
+        eq_(new_response.status_code, 404)
+
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
+        eq_(edit_response.status_code, 404)
 
     def mptest_ensure_proper_redirect(self):
-        pass
+        new_response = self.client.post(self.new_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        new_response_json = json.loads(new_response.content)
+        edit_response_json = json.loads(edit_response.content)
+
+        ok_(new_response_json['success'])
+        ok_(edit_response_json['success'])
+
+        new_redirect_url = new_response_json['redirect']
+        edit_redirect_url = edit_response_json['redirect']
+
+        new_redirect_split = new_redirect_url.split('/')
+        edit_redirect_split = edit_redirect_url.split('/')
+
+        eq_(new_redirect_split[1], 'advertise')
+        eq_(edit_redirect_split[1], 'advertise')
+
+        eq_(new_redirect_split[2], 'line_items')
+        eq_(edit_redirect_split[2], 'line_items')
+
+        # These will fail loudly if a valid key is not returned
+        db.Key(new_redirect_split[3])
+        db.Key(edit_redirect_split[3])
 
     def mptest_puts_valid_new_creative(self):
-        pass
+        response = self.client.post(self.new_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+
+        # There is also a randomly generated creative attached
+        # to self.line_item in module setUp
+        eq_(creatives.count(), 2)
+
+        creative = creatives.filter('name =', self.html_creative_post_body['name']).fetch(1)[0]
+        dict_eq(to_dict(creative), 
+                to_dict(self.mock_creative), exclude=['id'])
 
     def mptest_puts_valid_edited_creative(self):
-        pass
+        response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
 
-    def mptest_uses_correct_forms_for_ad_types(self):
-        pass
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
 
+        creatives = line_item.creatives
+
+        # self.creative
+        eq_(creatives.count(), 1)
+
+        creative = creatives[0]
+
+        updated_creative_form = HtmlCreativeForm(self.html_creative_post_body,
+                                                 instance=self.creative)
+        updated_creative = updated_creative_form.save()
+
+        dict_eq(to_dict(creative), 
+                to_dict(updated_creative), exclude=['id'])
+
+    def mptest_uses_correct_form_for_image(self):
+        response = self.client.post(self.edit_url, 
+                                    self.image_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+        creative = creatives[0]
+        eq_(creative.ad_type, 'image')
+
+    def mptest_uses_correct_form_for_text_icon(self):
+        response = self.client.post(self.edit_url, 
+                                    self.text_tile_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+        creative = creatives[0]
+        eq_(creative.ad_type, 'text_icon')
+
+    # This is failing because we are not choosing forms correctly
+    # or they are not working properly    
+    def mptest_uses_correct_form_for_html(self):
+        # Modify self.creative to be another ad_type
+        # so that this test will ensure that the ad_type 
+        # is changed to html
+        response = self.client.post(self.edit_url,
+                                    self.image_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        response = self.client.post(self.edit_url, 
+                                    self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+        creative = creatives[0]
+        eq_(creative.ad_type, 'html')
+
+    # TODO: Make a mopub exception to catch, so we dont have to hardcode
+    #       error messages into tests?
     def mptest_fails_with_unsupported_ad_type(self):
-        pass
-
-#^ haydn
-##############################
-#v pena
+        self.html_creative_post_body.update({u'ad_type': u'fake_ad_type'})
+        try:
+            response = self.client.post(self.new_url,
+                                        self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        except Exception as e:
+            eq_(e.message, 'Unsupported creative type fake_ad_type.')
 
     def mptest_line_item_owns_creative(self):
         """

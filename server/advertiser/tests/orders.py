@@ -13,6 +13,8 @@ import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
 from common.utils.test.test_utils import dict_eq, time_almost_eq
 
+from google.appengine.ext import db
+
 import logging
 import simplejson as json
 from datetime import datetime, timedelta
@@ -48,6 +50,7 @@ class OrderViewTestCase(BaseViewTestCase):
         # initial objects and for resolving urls.
         self.order = generate_campaign(self.account)
         self.line_item = generate_adgroup(self.order,[],self.account,'gtee')
+        # HTML Creative
         self.creative = generate_creative(self.account, self.line_item)
 
         # A post body for an order form, used for testing
@@ -1127,24 +1130,62 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         ok_(new_response_json['success'])
         ok_(edit_response_json['success'])
-        print new_response_json
+
         new_redirect_url = new_response_json['redirect']
         edit_redirect_url = edit_response_json['redirect']
 
         new_redirect_split = new_redirect_url.split('/')
         edit_redirect_split = edit_redirect_url.split('/')
 
-        eq_(new_redirect_split[0], 'advertise')
-        eq_(edit_redirect_split[0], 'advertise')
-
         eq_(new_redirect_split[1], 'advertise')
-        assert False
+        eq_(edit_redirect_split[1], 'advertise')
+
+        eq_(new_redirect_split[2], 'line_items')
+        eq_(edit_redirect_split[2], 'line_items')
+
+        # These will fail loudly if a valid key is not returned
+        db.Key(new_redirect_split[3])
+        db.Key(edit_redirect_split[3])
 
     def mptest_puts_valid_new_creative(self):
-        pass
+        response = self.client.post(self.new_url, self.creative_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+
+        # There is also a randomly generated creative attached
+        # to self.line_item in module setUp
+        eq_(creatives.count(), 2)
+
+        creative = creatives.filter('name =', 'Test Creative').fetch(1)[0]
+        dict_eq(to_dict(creative), 
+                to_dict(self.mock_creative), exclude=['id'])
 
     def mptest_puts_valid_edited_creative(self):
-        pass
+        response = self.client.post(self.edit_url, self.creative_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+
+        # self.creative
+        eq_(creatives.count(), 1)
+
+        creative = creatives[0]
+
+        updated_creative_form = HtmlCreativeForm(self.creative_body,
+                                                 instance=self.creative)
+        updated_creative = updated_creative_form.save()
+
+        dict_eq(to_dict(creative), 
+                to_dict(updated_creative), exclude=['id'])
 
     def mptest_uses_correct_forms_for_ad_types(self):
         pass

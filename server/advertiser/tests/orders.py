@@ -502,9 +502,9 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        order = generate_campaign(self.account)
+#        order = generate_campaign(self.account)
         url = reverse('advertiser_line_item_form_new', kwargs = {
-            'order_key': unicode(order.key())
+            'order_key': unicode(self.order.key())
         })
 
         new_line_item_name = u'New really awesome lineitem' + unicode(uuid.uuid4())
@@ -539,11 +539,11 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         Posting valid line item information should update the line item
         in the database.
+        
         Author: John Pena
         """
-        AdGroupQueryManager.put(self.mock_line_item)
         url = reverse('advertiser_line_item_form_edit', kwargs = {
-            'line_item_key': unicode(self.mock_line_item.key())
+            'line_item_key': unicode(self.line_item.key())
         })
 
         # update the name for the post body
@@ -554,7 +554,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url, post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        line_item = AdGroupQueryManager.get(self.mock_line_item.key())
+        line_item = AdGroupQueryManager.get(self.line_item.key())
 
         eq_(line_item.name, new_name)
 
@@ -1108,7 +1108,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         pwd = os.path.dirname(os.path.abspath(__file__))
 
         # Post bodies for the different types of creatives
-        self.html_creative_post_body = self.default_creative_post_body
+        self.html_creative_post_body = self.default_creative_post_body.copy()
         self.image_creative_post_body = self.default_creative_post_body.copy()
         self.text_tile_creative_post_body = self.default_creative_post_body.copy()
 
@@ -1261,16 +1261,16 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         eq_(creative.ad_type, 'text_icon')
 
     # This is failing because we are not choosing forms correctly
-    # or they are not working properly    
+    # or they are not working properly
     def mptest_uses_correct_form_for_html(self):
         # Modify self.creative to be another ad_type
-        # so that this test will ensure that the ad_type 
+        # so that this test will ensure that the ad_type
         # is changed to html
         response = self.client.post(self.edit_url,
                                     self.image_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        response = self.client.post(self.edit_url, 
+        response = self.client.post(self.edit_url,
                                     self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         response_json = json.loads(response.content)
@@ -1281,6 +1281,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         creatives = line_item.creatives
         creative = creatives[0]
         eq_(creative.ad_type, 'html')
+
 
     # TODO: Make a mopub exception to catch, so we dont have to hardcode
     #       error messages into tests?

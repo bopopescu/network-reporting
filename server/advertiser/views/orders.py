@@ -299,7 +299,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
                 raise Http404
 
         if order:
-            logging.warn(order)
             if (not order.is_order) or order.account.key() != self.account.key():
                 raise Http404
         else:

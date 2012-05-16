@@ -13,7 +13,7 @@
         });
         campaign_view.renderInline();
 
-        var adgroups = new AdGroupCollection(campaign.get('adgroups'));
+        var adgroups = new LineItemCollection(campaign.get('adgroups'));
         adgroups.each(function(adgroup){
             renderAdGroup(adgroup);
         });
@@ -240,7 +240,7 @@
              * Create a campaign collection, fetch all of the
              * campaigns, and render all of them inline
              */
-            var campaigns = new CampaignCollection();
+            var campaigns = new OrderCollection();
             campaigns.stats_endpoint = 'direct';
 
             campaigns.bind('reset', function(campaigns_collection) {

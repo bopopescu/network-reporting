@@ -1241,7 +1241,6 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                         'text_icon': self.text_tile_creative_post_body
                         }
         for ad_type, post_body in ad_type_dict.iteritems():
-            print post_body
             response = self.client.post(self.new_url, post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
             response_json = json.loads(response.content)
@@ -1249,7 +1248,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
             line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
             line_item = AdGroupQueryManager.get(line_item_key)
 
-            creatives = line_item.creatives.fetch('name =', post_body['name'])
+            creatives = line_item.creatives.filter('name =', post_body['name']).fetch(1)
             creative = creatives[0]
             eq_(creative.ad_type, ad_type)
 

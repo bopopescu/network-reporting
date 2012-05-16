@@ -1121,13 +1121,13 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         self.image_creative_post_body.update({
             u'ad_type': u'image',
             u'name': u'Image Creative',
-            'image_file': open(self.test_banner_path, 'rb')
+            u'image_file': open(self.test_banner_path, 'rb')
         })
 
         test_tile_path = os.path.join(pwd, 'test_tile.png')
         self.text_tile_creative_post_body.update({
             u'ad_type': u'text_icon',
-            'image_file': open(test_tile_path, 'rb')
+            u'image_file': open(test_tile_path, 'rb')
         })
 
         mock_creative_form = HtmlCreativeForm(self.html_creative_post_body,
@@ -1234,53 +1234,25 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(to_dict(creative), 
                 to_dict(updated_creative), exclude=['id'])
 
-    def mptest_uses_correct_form_for_image(self):
-        response = self.client.post(self.edit_url, 
-                                    self.image_creative_post_body,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        response_json = json.loads(response.content)
-
-        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
-        line_item = AdGroupQueryManager.get(line_item_key)
-
-        creatives = line_item.creatives
-        creative = creatives[0]
-        eq_(creative.ad_type, 'image')
-
-    def mptest_uses_correct_form_for_text_icon(self):
-        response = self.client.post(self.edit_url, 
-                                    self.text_tile_creative_post_body,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        response_json = json.loads(response.content)
-
-        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
-        line_item = AdGroupQueryManager.get(line_item_key)
-
-        creatives = line_item.creatives
-        creative = creatives[0]
-        eq_(creative.ad_type, 'text_icon')
-
-    # This is failing because we are not choosing forms correctly
-    # or they are not working properly    
     def mptest_uses_correct_form_for_html(self):
-        # Modify self.creative to be another ad_type
-        # so that this test will ensure that the ad_type 
-        # is changed to html
-        response = self.client.post(self.edit_url,
-                                    self.image_creative_post_body,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ad_type_dict = {
+                        'html': self.html_creative_post_body,
+                        'image': self.image_creative_post_body,
+                        'text_icon': self.text_tile_creative_post_body
+                        }
+        for ad_type, post_body in ad_type_dict.iteritems():
+            print post_body
+            response = self.client.post(self.new_url, 
+                                        post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            response_json = json.loads(response.content)
 
-        response = self.client.post(self.edit_url, 
-                                    self.html_creative_post_body,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        response_json = json.loads(response.content)
+            line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+            line_item = AdGroupQueryManager.get(line_item_key)
 
-        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
-        line_item = AdGroupQueryManager.get(line_item_key)
-
-        creatives = line_item.creatives
-        creative = creatives[0]
-        eq_(creative.ad_type, 'html')
+            creatives = line_item.creatives.fetch('name =', post_body['name'])
+            creative = creatives[0]
+            eq_(creative.ad_type, ad_type)
 
     # TODO: Make a mopub exception to catch, so we dont have to hardcode
     #       error messages into tests?
@@ -1355,7 +1327,8 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(not response_json['success'])
         dict_eq(response_json['errors'],
-                {u'image_file': u'You must upload an image file for a creative of this type.'})
+                {u'image_file': 
+                 u'You must upload an image file for a creative of this type.'})
 
     def mptest_fails_when_creative_is_unowned(self):
         self.login_secondary_account()
@@ -1376,7 +1349,3 @@ def get_line_item_key_from_redirect_url(redirect_url):
     url that's passed back in many post views.
     """
     return redirect_url.replace('/advertise/line_items/', '').rstrip('/')
-
-def get_image_upload_body(file_path):
-    f = open(file_path, 'rb')
-    return {'image_file': f}

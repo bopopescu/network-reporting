@@ -1065,6 +1065,57 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(actual_order.deleted)
 
 
+class NewOrEditCreativeViewTestCase(OrderViewTestCase):
+    def setUp(self):
+        self.url = ''
+
+    def mptest_http_response_code(self):
+        pass
+
+    def mptest_graceful_fail_without_ajax(self):
+        """
+        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
+
+        Author: John Pena
+        """
+        response = self.client.post(self.new_url)
+        eq_(response.status_code, 404)
+
+        response = self.client.post(self.edit_url)
+        eq_(response.status_code, 404)
+
+
+    def mptest_puts_valid_new_creative(self):
+        pass
+
+    def mptest_puts_valid_edited_creative(self):
+        pass
+
+    def mptest_uses_correct_forms_for_ad_types(self):
+        pass
+
+    def mptest_fails_with_unsupported_ad_type(self):
+        pass
+
+    def mptest_line_item_owns_creative(self):
+        pass
+
+    def mptest_account_owns_creative(self):
+        pass
+
+    def mptest_ensure_proper_redirect(self):
+        pass
+
+    def mptest_fails_gracefully_with_form_errors(self):
+        pass
+
+    def mptest_fails_when_creative_is_unowned(self):
+        pass
+
+    def mptest_fails_when_line_item_is_unowned(self):
+        pass
+
+
 def get_line_item_key_from_redirect_url(redirect_url):
     """
     Helper method for getting a line item key from the redirect

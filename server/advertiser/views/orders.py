@@ -397,7 +397,6 @@ class CreativeFormHandler(RequestHandler):
             line_item = AdGroupQueryManager.get(line_item_key)
 
         ad_type = creative.ad_type if creative else self.request.POST['ad_type']
-        logging.error(ad_type)
         if ad_type == 'image':
             creative_form = ImageCreativeForm(self.request.POST,
                                               files=self.request.FILES,

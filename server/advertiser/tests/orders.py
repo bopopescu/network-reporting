@@ -1249,7 +1249,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
             line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
             line_item = AdGroupQueryManager.get(line_item_key)
 
-            creatives = line_item.creatives.fetch('name =', post_body['name'])
+            creatives = line_item.creatives.filter('name =', post_body['name']).fetch(1000)
             creative = creatives[0]
             eq_(creative.ad_type, ad_type)
 

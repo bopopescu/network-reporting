@@ -1166,6 +1166,8 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         """
         Check that when a new creative is made, it's owned by the line
         item we referenced in the post url.
+
+        Author: John Pena
         """
         # look at the past creatives for this line item. after we post,
         # the length of this list should be +1
@@ -1179,6 +1181,8 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         """
         Check that when a new creative is made, it's owned by the
         account that's logged in.
+
+        Author: John Pena
         """
         # make a super unique name and update the post body with the name
         new_name = 'my super awesome creative ' + unicode(uuid.uuid4())
@@ -1199,13 +1203,40 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         eq_(unicode(new_creative.account.key()), unicode(self.account.key()))
 
     def mptest_fails_gracefully_with_form_errors(self):
-        pass
+        """
+        Check that when invalid form data is posted, a valid (status
+        200) JSON response is returned, which includes success=False and
+        a list of errors.
+
+        Author: John Pena
+        """
+        # make some invalid data
+        invalid_creative_body = self.image_creative_post_body
+        invalid_creative_body['image_file'] = None
+
+        # post the new creative and make sure the response is valid
+        response = self.client.post(self.new_url, invalid_creative_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 200)
+
+        # look at the response data and make sure its listed as having failed
+        # and includes errors
+        response_json = json.loads(response.content)
+        ok_(not response_json['success'])
+        dict_eq(response_json['errors'],
+                {u'image_file': u'You must upload an image file for a creative of this type.'})
 
     def mptest_fails_when_creative_is_unowned(self):
-        pass
+        self.login_secondary_account()
+        response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
 
     def mptest_fails_when_line_item_is_unowned(self):
-        pass
+        self.login_secondary_account()
+        response = self.client.post(self.new_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
 
 
 def get_line_item_key_from_redirect_url(redirect_url):

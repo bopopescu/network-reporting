@@ -236,8 +236,16 @@ def generate_marketplace_campaign(account, budget):
     return campaign
 
 
+# HACK: we had noticed some issues with how the email function parameter
+# was being used (it didnt always match up with username, which it should).
+# We fixed this problem in our branch, but since randomgen is different in
+# other branches, we still allow you to pass in the email parameter (we
+# just override it in our function), so that other libraries don't have
+# to change. This will be resolved when randomgen is merged back in
+# to master (this comment was made in the adgroups branch).
 def generate_account(username=USERNAME,
                      password=PASSWORD,
+                     email=None,
                      marketplace_config=None,
                      network_config=None,
                      *args, **kwargs):

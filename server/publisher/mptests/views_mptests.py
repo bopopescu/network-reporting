@@ -636,7 +636,7 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
         self.url = reverse('publisher_delete_adunit',
                            args=[str(self.adunit.key())])
 
-    def mptest_delete_app(self):
+    def mptest_delete_adunit(self):
         """
         Delete an adunit and confirm that it is no longer returned by the query
         manager.
@@ -656,7 +656,7 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(adunits_dict, {})
 
-    def mptest_delete_app_authorization(self):
+    def mptest_delete_adunit_authorization(self):
         """
         Confirm that an attempt to delete an adunit belonging to a different
         account responds with a 404 and the db state does not change.

@@ -315,72 +315,74 @@ class CreateAppHandler(RequestHandler):
         app = None
         if self.request.POST.get("app_key"):
             app = AppQueryManager.get(self.request.POST.get("app_key"))
-            app_form = AppForm(data = self.request.POST,
-                               files = self.request.FILES,
+            app_form = AppForm(data=self.request.POST,
+                               files=self.request.FILES,
                                instance=app)
         else:
-            app_form = AppForm(data = self.request.POST, files = self.request.FILES)
+            app_form = AppForm(data=self.request.POST, files=self.request.FILES)
 
-        adunit_form = AdUnitForm(data = self.request.POST, prefix = "adunit")
-        if app_form.is_valid():
-            if not app_form.instance: #ensure form posts do not change ownership
-                account = self.account  # attach account info
-            else:
-                account = app_form.instance.account
-            app = app_form.save(commit=False)
-            app.account = account
+        adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
 
-        if adunit_form.is_valid():
-            if not adunit_form.instance: #ensure form posts do not change ownership
-                account = self.account
-            else:
-                account = adunit_form.instance.account
-            adunit = adunit_form.save(commit=False)
-            adunit.account = account
+        # If there are validation errors in either the app_form or adunit_form,
+        # fail by returning the page rendered with the invalid forms.
+        if not app_form.is_valid() or not adunit_form.is_valid():
+            return render_to_response(self.request, self.template, {
+                'app_form': app_form,
+                'adunit_form': adunit_form
+            })
 
-            # update the database
-            AppQueryManager.put(app)
+        if not app_form.instance:  # ensure form posts do not change ownership
+            account = self.account  # attach account info
+        else:
+            account = app_form.instance.account
+        app = app_form.save(commit=False)
+        app.account = account
 
-            create_iad_mapper(self.account, app)
+        if not adunit_form.instance:  # ensure form posts do not change ownership
+            account = self.account
+        else:
+            account = adunit_form.instance.account
+        adunit = adunit_form.save(commit=False)
+        adunit.account = account
 
-            adunit.app_key = app
-            AdUnitQueryManager.put(adunit)
+        # update the database
+        AppQueryManager.put(app)
 
-            # see if we need to enable the marketplace or network campaigns
-            enable_marketplace(adunit, self.account)
-            enable_networks(adunit, self.account)
+        create_iad_mapper(self.account, app)
 
-            # Check if this is the first ad unit for this account
-            if len(AdUnitQueryManager.get_adunits(account=self.account, limit=2)) == 1:
-                add_demo_campaign(adunit)
-            # Check if this is the first app for this account
-            status = "success"
-            if self.account.status == "new":
-                self.account.status = "step4"
-                # skip to step 4 (add campaigns), but show step 2 (integrate)
-                # TODO (Tiago): add the itunes info here for iOS apps for iAd syncing
-                network_config = NetworkConfig(account=self.account)
-                AccountQueryManager.update_config_and_put(account, network_config)
+        adunit.app_key = app
+        AdUnitQueryManager.put(adunit)
 
-                # create the marketplace account for the first time
-                mpx = CampaignQueryManager.get_marketplace(self.account)
-                mpx.active = False
-                CampaignQueryManager.put(mpx)
+        # see if we need to enable the marketplace or network campaigns
+        enable_marketplace(adunit, self.account)
+        enable_networks(adunit, self.account)
 
-                status = "welcome"
+        # Check if this is the first ad unit for this account
+        if len(AdUnitQueryManager.get_adunits(account=self.account, limit=2)) == 1:
+            add_demo_campaign(adunit)
+        # Check if this is the first app for this account
+        status = "success"
+        if self.account.status == "new":
+            self.account.status = "step4"
+            # skip to step 4 (add campaigns), but show step 2 (integrate)
+            # TODO (Tiago): add the itunes info here for iOS apps for iAd syncing
+            network_config = NetworkConfig(account=self.account)
+            AccountQueryManager.update_config_and_put(account, network_config)
 
-            # Redirect to the code snippet page
-            publisher_integration_url = reverse('publisher_integration_help',
-                                                kwargs = {
-                                                    'adunit_key': adunit.key()
-                                                })
-            publisher_integration_url = publisher_integration_url + '?status=' + status
-            return HttpResponseRedirect(publisher_integration_url)
+            # create the marketplace account for the first time
+            mpx = CampaignQueryManager.get_marketplace(self.account)
+            mpx.active = False
+            CampaignQueryManager.put(mpx)
 
-        return render_to_response(self.request, self.template, {
-            'app_form': app_form,
-            'adunit_form': adunit_form
-        })
+            status = "welcome"
+
+        # Redirect to the code snippet page
+        publisher_integration_url = reverse('publisher_integration_help',
+                                            kwargs = {
+                                                'adunit_key': adunit.key()
+                                            })
+        publisher_integration_url = publisher_integration_url + '?status=' + status
+        return HttpResponseRedirect(publisher_integration_url)
 
 
 @login_required
@@ -858,9 +860,6 @@ class AppUpdateAJAXHandler(RequestHandler):
         return JSONResponse(json_dict)
 
     def post(self,app_key=None):
-        logging.error(self.request.POST)
-        logging.error(self.request.FILES)
-
         app_key = app_key or self.request.POST.get('app_key')
         if app_key:
             app = AppQueryManager.get(app_key)
@@ -941,13 +940,12 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         return JSONResponse(json_dict)
 
     def post(self, adunit_key=None):
-        logging.error(self.request.POST)
-        logging.error(self.request.FILES)
-
         adunit_key = adunit_key or self.request.POST.get('adunit_key')
         if adunit_key:
             # Note this gets things from the cache ?
             adunit = AdUnitQueryManager.get(adunit_key)
+            if adunit.account.key() != self.account.key():
+                raise Http404
         else:
             adunit = None
 
@@ -993,15 +991,17 @@ class DeleteAdUnitHandler(RequestHandler):
     Deletes an adunit and redirects to the adunit's app.
     """
     def post(self, adunit_key):
-        logging.error(self.request.POST)
-        a = AdUnitQueryManager.get(adunit_key)
-        if a != None and a.app_key.account == self.account:
-            a.deleted = True
-            AdUnitQueryManager.put(a)
+        adunit = AdUnitQueryManager.get(adunit_key)
+
+        if adunit is None or adunit.account.key() != self.account.key():
+            raise Http404
+
+        adunit.deleted = True
+        AdUnitQueryManager.put(adunit)
 
         return HttpResponseRedirect(reverse('publisher_app_show',
                                             kwargs = {
-                                                'app_key': a.app.key()
+                                                'app_key': adunit.app.key()
                                             }))
 
 
@@ -1015,16 +1015,20 @@ class DeleteAppHandler(RequestHandler):
     Deletes an app and redirects to the app index.
     """
     def post(self, app_key):
-        logging.error(self.request.POST)
         app = AppQueryManager.get(app_key)
+
+        if app is None or app.account.key() != self.account.key():
+            raise Http404
+
         adunits = AdUnitQueryManager.get_adunits(app=app)
-        if app and app.account == self.account:
-            app.deleted = True
-            # also "delete" all the adunits associated with the app
-            for adunit in adunits:
-                adunit.deleted = True
-            AppQueryManager.put(app)
-            AdUnitQueryManager.put(adunits)
+
+        app.deleted = True
+        # also "delete" all the adunits associated with the app
+        for adunit in adunits:
+            adunit.deleted = True
+
+        AppQueryManager.put(app)
+        AdUnitQueryManager.put(adunits)
 
         return HttpResponseRedirect(reverse('app_index'))
 
@@ -1040,7 +1044,7 @@ class IntegrationHelpHandler(RequestHandler):
     their apps integrated. Pubs land on this page after they've
     created a new adunit.
     """
-    def get(self,adunit_key):
+    def get(self, adunit_key):
         adunit = AdUnitQueryManager.get(adunit_key)
         status = self.params.get('status')
         return render_to_response(self.request,

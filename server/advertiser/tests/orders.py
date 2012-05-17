@@ -28,6 +28,7 @@ from admin.randomgen import (generate_campaign,
                              generate_adgroup,
                              generate_creative,
                              generate_app,
+                             generate_adunit,
                              generate_account,
                              generate_marketplace_campaign)
 
@@ -35,10 +36,11 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 
-from advertiser.forms import (OrderForm, LineItemForm, 
+from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
 from advertiser.models import (Creative, TextAndTileCreative, 
                                HtmlCreative, ImageCreative)
+from advertiser.views.orders import get_targeted_apps
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
@@ -55,6 +57,8 @@ class OrderViewTestCase(BaseViewTestCase):
 
         # Set up some basic items. These can be used for
         # initial objects and for resolving urls.
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.app, self.account)
         self.order = generate_campaign(self.account)
         self.line_item = generate_adgroup(self.order,[],self.account,'gtee')
         # HTML Creative
@@ -126,81 +130,223 @@ class OrderViewTestCase(BaseViewTestCase):
 
 
 class OrderIndexTestCase(OrderViewTestCase):
+    """
+    Tests the order index handler
+
+    Author: Haydn Dufrene
+    """
     def setUp(self):
+        """
+        Sets up the index url
+        """
         super(OrderIndexTestCase, self).setUp()
-        self.url = ''
+        self.url = reverse('advertiser_order_index')
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
 
     def mptest_gets_all_orders(self):
-        pass
+        """
+        Checks to see that all orders of a given account are returned
+        """
+        expected_orders = CampaignQueryManager.get_order_campaigns(account=self.account)
+        expected_orders = expected_orders.fetch(1000)
+
+        response = self.client.get(self.url)
+        actual_orders = response.context['orders'].fetch(1000)
+
+        eq_(len(actual_orders), len(expected_orders))
+        for actual_order, expected_order in zip(actual_orders, expected_orders):
+            eq_(actual_order.key(), expected_order.key())
+
 
     def mptest_gets_all_line_items(self):
-        pass
+        """
+        Checks to see that all line_items of an account are returned
+        """
+        expected_line_items = AdGroupQueryManager.get_adgroups(account=self.account)
+
+        response = self.client.get(self.url)
+        actual_line_items = response.context['line_items']
+
+        eq_(len(actual_line_items), len(expected_line_items))
+        for actual_line_item, expected_line_items in zip(actual_line_items, expected_line_items):
+            eq_(actual_line_item.key(), expected_line_items.key())
+
 
     def mptest_account_owns_all_items(self):
-        pass
+        """
+        We query for items by account in the previous two tests
+        and therefore this test implicitly passes if they do.
 
-    def mptest_all_campaigns_are_orders(self):
-        pass
-
-    def mptest_all_line_items_are_for_orders(self):
+        Author: Haydn Dufrene
+        """
         pass
 
     def mptest_all_orders_returned_are_orders(self):
-        pass
+        response = self.client.get(self.url)
+        orders = response.context['orders'].fetch(1000)
+        for order in orders:
+            ok_(order.is_order)
+
+    def mptest_all_line_items_are_for_orders(self):
+        mpx_campaign = generate_marketplace_campaign(self.account, None)
+        mpx_adgroup = generate_adgroup(mpx_campaign, [], self.account, 'marketplace')
+        response = self.client.get(self.url)
+        line_items = response.context['line_items']
+        for line_item in line_items:
+            ok_(line_item.campaign.is_order)
 
 
 class OrderDetailHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(OrderDetailHandlerTestCase, self).setUp()
-        self.url = ''
+        self.url = reverse('advertiser_order_detail', 
+                           kwargs={
+                                'order_key': unicode(self.order.key())
+                           })
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
 
     def mptest_fails_on_unowned_order(self):
-        pass
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)
 
-    def mptest_returns_all_targeted_adunits(self):
-        pass
+    def mptest_returns_all_targeted_adunits_apps_and_keys(self):
+        # Formatted lists properly so they match the view
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        expected_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                               for line_item in self.order.adgroups]))
+
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            eq_(actual_adunit.key(), expected_adunit.key())
 
     def mptest_returns_all_targeted_apps_and_keys(self):
-        pass
+        # Formatted lists properly so they match the view
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        expected_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                               for line_item in self.order.adgroups]))
+        expected_apps = get_targeted_apps(expected_adunits)
+        expected_app_keys = expected_apps.keys()
 
-    def mptest_proper_order_form_is_returned(self):
-        pass
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+        actual_apps = response.context['targeted_apps']
+        actual_app_keys = response.context['targeted_app_keys']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            eq_(actual_adunit.key(), expected_adunit.key())
+
+        eq_(len(actual_apps), len(expected_apps))
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            eq_(actual_app.key(), expected_app.key())
+
+        eq_(actual_app_keys, expected_app_keys)
+
+    def mptest_returns_proper_order_form(self):
+        expected_order_form = OrderForm(instance=self.order)
+
+        response = self.client.get(self.url)
+        actual_order_form = response.context['order_form']
+
+        eq_(expected_order_form.instance.key(), 
+            actual_order_form.instance.key())
 
     def mptest_returns_proper_order(self):
-        pass
+        expected_order = self.order
 
+        response = self.client.get(self.url)
+        actual_order = response.context['order']
+
+        eq_(expected_order.key(), actual_order.key())
 
 class LineItemDetailHandler(OrderViewTestCase):
     def setUp(self):
         super(LineItemDetailHandler, self).setUp()
-        self.url = ''
+        self.url = reverse('advertiser_line_item_detail',
+                           kwargs={'line_item_key': self.line_item.key()})
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
 
     def mptest_fails_on_unowned_line_item(self):
-        pass
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)
 
-    def mptest_returns_all_targetd_adunits(self):
-        pass
+    def mptest_returns_all_targeted_adunits(self):
+        expected_adunits = AdUnitQueryManager.get(self.line_item.site_keys)
+
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            eq_(actual_adunit.key(), expected_adunit.key())
+
 
     def mptest_returns_all_targeted_apps_and_keys(self):
-        pass
+        expected_adunits = AdUnitQueryManager.get(self.line_item.site_keys)
+        expected_apps = get_targeted_apps(expected_adunits)
+        expected_app_keys = expected_apps.keys()
+
+        response = self.client.get(self.url)
+        actual_apps = response.context['targeted_apps']
+        actual_app_keys = response.context['targeted_app_keys']
+
+        eq_(len(actual_apps), len(expected_apps))
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            eq_(actual_app.key(), expected_app.key())
+
+        eq_(actual_app_keys, expected_app_keys)
 
     def mptest_returns_new_creative_form(self):
-        pass
+        response = self.client.get(self.url)
+        creative_form = response.context['creative_form']
+        ok_(isinstance(creative_form, NewCreativeForm))
+        ok_(creative_form.instance is None)
 
     def mptest_returns_proper_line_item(self):
-        pass
+        expected_line_item = self.line_item
+
+        response = self.client.get(self.url)
+        actual_line_item = response.context['line_item']
+
+        eq_(expected_line_item.key(),
+            actual_line_item.key())
 
     def mptest_returns_order_which_owns_line_item(self):
-        pass
+        expected_order = self.order
+
+        response = self.client.get(self.url)
+        actual_line_item = response.context['line_item']
+        actual_order = response.context['order']
+
+        eq_(actual_line_item.campaign.key(), actual_order.key())
+        eq_(actual_order.key(), expected_order.key())
+
 
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
     """

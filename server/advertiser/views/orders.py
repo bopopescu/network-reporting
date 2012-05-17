@@ -11,9 +11,11 @@ Whenever you see "Campaign", think "Order", and wherever you see
 "AdGroup", think "LineItem".
 """
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
+from google.appengine.ext import db
 
 from common.utils import helpers
 from common.ragendja.template import render_to_response, JSONResponse
@@ -390,9 +392,6 @@ class CreativeFormHandler(RequestHandler):
     New/Edit form page for Creatives.
     """
     def post(self, line_item_key=None, creative_key=None):
-        if not self.request.is_ajax():
-            raise Http404
-
         if creative_key:
             creative = CreativeQueryManager.get(creative_key)
             line_item = creative.ad_group
@@ -461,24 +460,31 @@ class DisplayCreativeHandler(RequestHandler):
         if creative_key == 'mraid.js':
             return HttpResponse("")
 
-        creative = CreativeQueryManager.get(creative_key)
-        if creative:
+        try:
+            creative = CreativeQueryManager.get(creative_key)
+        except db.BadKeyError:
+            raise Http404
+
+        if creative and creative.account.key() == self.account.key():
             if creative.ad_type == "image":
                 template = """<html><head>
                 <style type="text/css">body{margin:0;padding:0;}</style>
                 </head><body><img src="%s"/></body></html>"""
-                url_for_blob = helpers.get_url_for_blob(creative.image_blob)
+                url_for_blob = helpers.get_url_for_blob(creative.image_blob,
+                                                        ssl=(not settings.DEBUG))
                 return HttpResponse(template % url_for_blob)
 
             if creative.ad_type == "text_icon":
-                creative.icon_url = helpers.get_url_for_blob(creative.image_blob)
+                creative.icon_url = helpers.get_url_for_blob(creative.image_blob,
+                                                             ssl=(not settings.DEBUG))
                 return render_to_response(self.request,
                                           'advertiser/text_tile.html',
                                           {'c': creative})
 
             if creative.ad_type == "html":
+                html_data = creative.html_data or ''
                 return HttpResponse("<html><body style='margin:0px;'>" + \
-                                    creative.html_data + "</body></html")
+                                    html_data + "</body></html")
         else:
             raise Http404
 

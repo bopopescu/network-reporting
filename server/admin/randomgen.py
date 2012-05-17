@@ -15,6 +15,7 @@ from account.models import *
 from budget.models import *
 from reporting.models import *
 
+from google.appengine.api import files
 
 ceiling = lambda x, y: x if x < y else y
 
@@ -316,18 +317,31 @@ def generate_stats_model(publisher,advertiser,account,date):
     return stats_model
 
 
-def generate_creative(account,adgroup):
+def generate_creative(account, adgroup, *args, **kwargs):
     creative_name = get_creative_name()
 
+    ad_types = {
+        'html': HtmlCreative,
+        'text_icon': TextAndTileCreative,
+        'image': ImageCreative
+    }
+
+    constructor_class = ad_types[kwargs.get('ad_type', 'html')]
+
     #For now, test data generation will only create basic text creatives
-    creative = HtmlCreative(active=True,
-                            account = account,
-                            ad_group = adgroup,
-                            ad_type = "html",
-                            headline = "%s %s" % (creative_name,"headline"),
-                            line1 = "%s %s" % (creative_name,"line1"),
-                            line2 = "%s %s" % (creative_name,"line2"),
-                            name=creative_name)
+    creative = constructor_class(active=True,
+                                 account = account,
+                                 ad_group = adgroup,
+                                 ad_type = kwargs.get('ad_type', None) or "html",
+                                 headline = "%s %s" % (creative_name,"headline"),
+                                 line1 = "%s %s" % (creative_name,"line1"),
+                                 line2 = "%s %s" % (creative_name,"line2"),
+                                 name=creative_name)
+
+    # see forms.py line 564 to see how to do this
+    # if constructor_class in (TextAndTileCreative, ImageCreative):
+    #     creative.image_blob = 
+    
     creative.put()
     return creative
 

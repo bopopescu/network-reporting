@@ -1,0 +1,22 @@
+# Frontend Tests
+
+### What is this directory?
+* Interaction tests - front end tests, run by Selenium, which test interaction with the site.
+* Javascript tests - Jasmine tests for front end javascript (models, views, controllers, helpers, routers)
+* Django app-specific tests should **not** go in here, they should go in _appname_/tests/
+
+### Writing these tests
+
+###### Interaction tests
+* link to docs
+
+###### Javascript tests
+* link to docs
+
+### Running these tests
+
+###### Interaction tests
+* Selenium server
+
+###### Javascript tests
+* Open up testrunner.html in a browser, you'll get a readout of all of the tests that passed/failed/errored

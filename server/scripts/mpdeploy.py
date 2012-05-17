@@ -1,12 +1,29 @@
 """
+mpdeploy.py [<server_name>]
 Call this script when you want to deploy frontend code.
+
+What this script does when you run it:
+
+1. Tags the deploy in git, and creates a new commit for it (frontend-0 deploys only)
+2. Updates the changelog with a list of commits between this deploy and the last one
+3. Updating all lighthouse tickets that were fixed (they need to have been tagged,
+   e.g. git commit -m '[#123 state:fixed]')
+4. Minifies javascript
+5. Updating all version numbers
+6. Notifying hipchat
+7. Actually deploying
+
+server_name is an optional argument to this script, specifying which server
+(frontend-0, frontend-staging, frontend-boom, etc) you want to deploy to. If
+you don't specify it, it'll default to frontend-staging.
+
+Author: John Pena
 """
 # TODO: Figure out why envoy fucks up commands that have messages
 # like git tag and git commit
 import sys
 import os
 
-#sys.path.append(os.environ['PWD'])
 PWD = os.path.dirname(__file__)
 sys.path.append(os.path.join(PWD, '..'))
 import common.utils.test.setup
@@ -20,7 +37,6 @@ import requests
 import clint
 from clint.textui import puts, indent, colored
 import envoy
-
 
 
 def prompt_before_executing(original, override=None):

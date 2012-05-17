@@ -1151,30 +1151,117 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):
+    #qwer
     def setUp(self):
         super(DisplayCreativeHandlerTestCase, self).setUp()
-        self.url = ''
+        self.image_url = reverse('advertiser_creative_image', kwargs={
+            'creative_key' : unicode(self.creative.key())
+        })
+        self.html_url = reverse('advertiser_creative_html', kwargs={
+            'creative_key' : unicode(self.creative.key())
+        })
+
+    def _make_new_creative(self, ad_type):
+
+        CreativeQueryManager.put(new_creative)
+        return new_creative
 
     def mptest_http_response_code(self):
-        pass
+        """
+        When a valid GET is made to the creative display handler, a valid
+        response is returned.
 
-    def mptest_fails_on_unowned_creative(self):
-        pass
-
-    def mptest_returns_empty_for_mraid(self):
-        pass
+        Author: John Pena
+        """
+        image_response = self.client.get(self.image_url)
+        html_response = self.client.get(self.html_url)
+        eq_(image_response.status_code, 200)
+        eq_(html_response.status_code, 200)
 
     def mptest_fails_with_non_creative_key(self):
-        pass
+        """
+        When an invalid creative key is passed in the url, the creative
+        display handler raises a 404.
+        """
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key' : 'sentinal134'
+        })
+        response = self.client.get(url)
+        eq_(response.status_code, 404)
+
+    def mptest_fails_on_unowned_creative(self):
+        """
+        When the key for an unowned creative is passed in the url, the
+        creative display handler raises a 404.
+
+        Author: John Pena
+        """
+        self.login_secondary_account()
+        response = self.client.get(self.html_url)
+        eq_(response.status_code, 404)
+
+    def mptest_returns_empty_for_mraid(self):
+        """
+        When 'mraid.js' is passed as the creative key, an empty
+        response is returned.
+
+        Author: John Pena
+        """
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': 'mraid.js'
+        })
+        response = self.client.get(url)
+        eq_(response.content, '')
 
     def mptest_returns_html_for_image_creative(self):
-        pass
+        """
+        When the key for an image creative is passed, the url for
+        the image is generated from the blob and placed in an image
+        tag, which is returned in the response.
+
+        Author: John Pena
+        """
+        new_creative = generate_creative(self.account,
+                                         self.line_item,
+                                         ad_type='image')
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': unicode(new_creative.key())
+        })
+        response = self.client.get(url)
+        eq_(response.content, '')
 
     def mptest_returns_html_for_text_tile(self):
-        pass
+        """
+        When the key for an html creative is passed, the url for the
+        tile image is generated from the blob and rendered in the text
+        and tile template, which is returned in the response.
+
+        Author: John Pena
+        """
+        new_creative = generate_creative(self.account,
+                                         self.line_item,
+                                         ad_type='text_icon')
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': unicode(new_creative.key())
+        })
+        response = self.client.get(url)
+        eq_(response.content, '')
 
     def mptest_returns_html_for_html(self):
-        pass
+        """
+        When the key for an html creative is passed, the html for the
+        creative is generated, which is returned in the response.
+
+        Author: John Pena
+        """
+        new_creative = generate_creative(self.account,
+                                         self.line_item,
+                                         ad_type='html')
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': unicode(new_creative.key())
+        })
+        response = self.client.get(url)
+        ok_(response.content.find("<html><body style='margin:0px;'>") >= 0)
 
 
 class CreativeImageHandlerTestCase(OrderViewTestCase):
@@ -1276,20 +1363,6 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(edit_response.status_code in [200, 302])
 
-
-    def mptest_graceful_fail_without_ajax(self):
-        """
-        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
-
-        Author: John Pena
-        """
-        self.html_creative_post_body.pop('ajax')
-
-        new_response = self.client.post(self.new_url, self.html_creative_post_body)
-        eq_(new_response.status_code, 404)
-
-        edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
-        eq_(edit_response.status_code, 404)
 
     def mptest_ensure_proper_redirect(self):
         new_response = self.client.post(self.new_url, self.html_creative_post_body,

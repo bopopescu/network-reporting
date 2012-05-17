@@ -62,6 +62,16 @@ def dict_eq(dict1, dict2, exclude=[]):
             eq_(dict1[key], dict2[key])
 
 
+def list_eq(list1, list2):
+    eq_(len(list1), len(list2))
+
+    for item1, item2 in zip(list1, list2):
+        if isinstance(item1, db.Model):
+            model_key_eq(item1, item2)
+        else:
+            eq_(item1, item2)
+
+
 def model_key_eq(model1, model2):
     eq_(model1.key(), model2.key())
 

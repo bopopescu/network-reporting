@@ -1,5 +1,6 @@
 import unittest
 
+from django.core.urlresolvers import reverse
 from django.test import Client
 from django.test.utils import setup_test_environment
 from google.appengine.ext import testbed
@@ -45,3 +46,11 @@ class BaseViewTestCase(unittest.TestCase):
         generate_account(username, password, username)
 
         self.client.login(username=username, password=password)
+
+    @staticmethod
+    def test_reverse(viewname, urlconf=None, args=None, kwargs=None,
+                     current_app=None):
+        # django.test.Client uses 'testserver' as the host name.
+        url = 'http://testserver'
+        url += reverse(viewname, urlconf, args, kwargs, current_app)
+        return url

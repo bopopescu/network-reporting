@@ -11,16 +11,16 @@ import common.utils.test.setup
 from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
-from advertiser.models import Campaign, AdGroup, Creative
-from advertiser.query_managers import (AdvertiserQueryManager,
-                                       CampaignQueryManager,
-                                       AdGroupQueryManager)
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from common.utils.date_magic import gen_days
-from common.utils.test.test_utils import dict_eq, list_eq, model_key_eq, model_to_dict, time_almost_eq
+from common.utils.test.fixtures import (generate_app, generate_adunit,
+                                        generate_campaign, generate_adgroup,
+                                        default_app_dict, default_adunit_dict)
+from common.utils.test.test_utils import (dict_eq, list_eq, model_key_eq,
+                                          model_to_dict, time_almost_eq)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
-from publisher.models import App, AdUnit
 from publisher.query_managers import PublisherQueryManager
 from reporting.models import StatsModel
 
@@ -33,8 +33,8 @@ class DashboardViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(DashboardViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
     def mptest_get(self):
         """
@@ -86,7 +86,7 @@ class AppIndexViewTestCase(BaseViewTestCase):
         Confirm that app_index returns an appropriate response when the account
         has an app by checking the status_code and context.
         """
-        app = _generate_app(self.account)
+        app = generate_app(self.account)
 
         get_response = self.client.get(self.url)
         eq_(get_response.status_code, 200)
@@ -105,41 +105,41 @@ class AppDetailViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(AppDetailViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
         # Create a campaign that doesn't target our adunit to confirm that it
         # doesn't show up on this page.
-        self.untargetted_campaign = _generate_campaign(self.account)
-        _generate_adgroup(self.account, self.untargetted_campaign)
+        self.untargetted_campaign = generate_campaign(self.account)
+        generate_adgroup(self.account, self.untargetted_campaign)
 
         # Create campaigns of each type and an adgroup for each campaign. Each
         # adgroup targets our adunit by setting its site_keys property.
         site_keys = [self.adunit.key()]
 
-        self.gtee_high_campaign = _generate_campaign(
+        self.gtee_high_campaign = generate_campaign(
                 self.account, campaign_type='gtee_high')
-        _generate_adgroup(
+        generate_adgroup(
                 self.account, self.gtee_high_campaign, site_keys=site_keys)
 
-        self.gtee_campaign = _generate_campaign(
+        self.gtee_campaign = generate_campaign(
                 self.account)
-        _generate_adgroup(
+        generate_adgroup(
                 self.account, self.gtee_campaign, site_keys=site_keys)
 
-        self.gtee_low_campaign = _generate_campaign(
+        self.gtee_low_campaign = generate_campaign(
                 self.account, campaign_type='gtee_low')
-        _generate_adgroup(
+        generate_adgroup(
                 self.account, self.gtee_low_campaign, site_keys=site_keys)
 
-        self.promo_campaign = _generate_campaign(
+        self.promo_campaign = generate_campaign(
                 self.account, campaign_type='promo')
-        _generate_adgroup(
+        generate_adgroup(
                 self.account, self.promo_campaign, site_keys=site_keys)
 
-        self.backfill_promo_campaign = _generate_campaign(
+        self.backfill_promo_campaign = generate_campaign(
                 self.account, campaign_type='backfill_promo')
-        _generate_adgroup(
+        generate_adgroup(
                 self.account, self.backfill_promo_campaign, site_keys=site_keys)
 
         # Use the query manager methods to create marketplace campaigns and
@@ -253,8 +253,8 @@ class AppDetailViewTestCase(BaseViewTestCase):
 #     def setUp(self):
 #         super(ExportFileViewTestCase, self).setUp()
 
-#         self.app = _generate_app(self.account)
-#         self.adunit = _generate_adunit(self.account, self.app)
+#         self.app = generate_app(self.account)
+#         self.adunit = generate_adunit(self.account, self.app)
 
 #         self.url = reverse('exporter', args=('csv', 'app', str(self.app.key())))
 
@@ -286,41 +286,41 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(AdUnitShowViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
         # Create a campaign that doesn't target our adunit to confirm that it
         # doesn't show up on this page.
-        self.untargetted_campaign = _generate_campaign(self.account)
-        _generate_adgroup(self.account, self.untargetted_campaign)
+        self.untargetted_campaign = generate_campaign(self.account)
+        generate_adgroup(self.account, self.untargetted_campaign)
 
         # Create campaigns of each type and an adgroup for each campaign. Each
         # adgroup targets our adunit by setting its site_keys property.
         site_keys = [self.adunit.key()]
 
-        self.gtee_high_campaign = _generate_campaign(
+        self.gtee_high_campaign = generate_campaign(
                 self.account, campaign_type='gtee_high')
-        self.gtee_high_adgroup = _generate_adgroup(
+        self.gtee_high_adgroup = generate_adgroup(
                 self.account, self.gtee_high_campaign, site_keys=site_keys)
 
-        self.gtee_campaign = _generate_campaign(
+        self.gtee_campaign = generate_campaign(
                 self.account)
-        self.gtee_adgroup = _generate_adgroup(
+        self.gtee_adgroup = generate_adgroup(
                 self.account, self.gtee_campaign, site_keys=site_keys)
 
-        self.gtee_low_campaign = _generate_campaign(
+        self.gtee_low_campaign = generate_campaign(
                 self.account, campaign_type='gtee_low')
-        self.gtee_low_adgroup = _generate_adgroup(
+        self.gtee_low_adgroup = generate_adgroup(
                 self.account, self.gtee_low_campaign, site_keys=site_keys)
 
-        self.promo_campaign = _generate_campaign(
+        self.promo_campaign = generate_campaign(
                 self.account, campaign_type='promo')
-        self.promo_adgroup = _generate_adgroup(
+        self.promo_adgroup = generate_adgroup(
                 self.account, self.promo_campaign, site_keys=site_keys)
 
-        self.backfill_promo_campaign = _generate_campaign(
+        self.backfill_promo_campaign = generate_campaign(
                 self.account, campaign_type='backfill_promo')
-        self.backfill_promo_adgroup = _generate_adgroup(
+        self.backfill_promo_adgroup = generate_adgroup(
                 self.account, self.backfill_promo_campaign, site_keys=site_keys)
 
         # Use the query manager methods to create marketplace campaigns and
@@ -334,7 +334,8 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
 
         # TODO: network campaigns
 
-        self.url = reverse('publisher_adunit_show', args=[str(self.adunit.key())])
+        self.url = reverse('publisher_adunit_show',
+                           args=[str(self.adunit.key())])
 
     def mptest_get(self):
         """
@@ -379,7 +380,8 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
 
         # We really shouldn't be passing up HTML fragments here, so here is a
         # simple test until we refactor.
-        ok_(isinstance(get_response.context['adunit_form_fragment'], basestring))
+        ok_(isinstance(get_response.context['adunit_form_fragment'],
+                       basestring))
 
         model_key_eq(get_response.context['account'], self.account)
 
@@ -434,8 +436,8 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(IntegrationHelpViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
         self.url = reverse('publisher_integration_help',
                            args=[str(self.adunit.key())])
@@ -530,14 +532,14 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
 #         eq_(post_response.status_code, 200)
 
 
-# ###############################################################################
-# ###############################################################################
-# ###############################################################################
-# ###############################################################################
-# ###############################################################################
-# ###############################################################################
-# ###############################################################################
-# ###############################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
 
 class CreateAppViewTestCase(BaseViewTestCase):
     """
@@ -550,13 +552,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         self.url = reverse('publisher_create_app')
 
     @staticmethod
-    def _generate_post_data(**kwargs):
+    def generate_post_data(**kwargs):
         """
         Generate a dict of POST parameters that would be generated by the
-        create app view page. This should correspond to _generate_app,
-        _generate_adunit, _default_app_dict, and _default_adunit_dict functions
-        below. Optionally pass in keywords to modify the default key/value
-        pairs.
+        create app view page. This should correspond to generate_app,
+        generate_adunit, default_app_dict, and default_adunit_dict functions.
+        Optionally pass in keywords to modify the default key/value pairs.
         """
         post_data = {
             u'adunit-name': [u'Banner Ad'],
@@ -601,7 +602,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         parameters, and confirming the app/adunit were created as expected.
         """
 
-        post_data = self._generate_post_data()
+        post_data = self.generate_post_data()
 
         # We're expecting a statuc code 302 because this view, on successful
         # creation, redirects to the app detail page.
@@ -624,9 +625,9 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         # Build dicts of expected app/adunit properties and compare them to
         # the actual state of the db.
-        expected_app_dict = _default_app_dict(self.account)
+        expected_app_dict = default_app_dict(self.account)
         dict_eq(app_dict, expected_app_dict, exclude=['t'])
-        expected_adunit_dict = _default_adunit_dict(self.account, app)
+        expected_adunit_dict = default_adunit_dict(self.account, app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
         # Make sure the app/adunit were created within the last minute.
@@ -647,7 +648,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         """
 
         # Submit an invalid POST by not supplying the required adunit name.
-        post_data = self._generate_post_data(name=[u''])
+        post_data = self.generate_post_data(name=[u''])
 
         post_response = self.client.post(self.url, post_data)
         eq_(post_response.status_code, 200)
@@ -680,7 +681,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         # Submit an invalid POST by not supplying the required adunit name.
         # We need to supply kwargs as an expanded dict because 'adunit-name'
         # has a hyphen-minus in its name.
-        data = self._generate_post_data(**{'adunit-name': [u'']})
+        data = self.generate_post_data(**{'adunit-name': [u'']})
 
         post_response = self.client.post(self.url, data)
         eq_(post_response.status_code, 200)
@@ -713,18 +714,18 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(AppUpdateAJAXViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
         self.url = reverse(
             'publisher_app_update_ajax',
             args=[str(self.app.key())])
 
     @staticmethod
-    def _generate_post_data(**kwargs):
+    def generate_post_data(**kwargs):
         """
         Generate a dict of POST parameters that would change the name and
-        primary category of the app generated by _generate_app. Optionally
+        primary category of the app generated by generate_app. Optionally
         pass in keywords to modify the default key/value pairs.
         """
         post_data = {
@@ -748,7 +749,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         not be changed.
         """
 
-        post_data = self._generate_post_data()
+        post_data = self.generate_post_data()
 
         post_response = self.client.post(self.url, post_data)
         eq_(post_response.status_code, 200)
@@ -778,12 +779,12 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         # Build dicts of expected app/adunit properties and compare them to the
         # actual state of the db. Based on our POST data, we expect app name and
         # primary_category to have changed. AdUnit properties should not change.
-        expected_app_dict = _default_app_dict(
+        expected_app_dict = default_app_dict(
             self.account,
             name=u'Business App',
             primary_category=u'business')
         dict_eq(app_dict, expected_app_dict, exclude=['t'])
-        expected_adunit_dict = _default_adunit_dict(self.account, self.app)
+        expected_adunit_dict = default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
     def mptest_update_app_validation(self):
@@ -793,7 +794,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         """
 
         # Remove name from the post parameters to generate a validation error.
-        post_data = self._generate_post_data(name=[u''])
+        post_data = self.generate_post_data(name=[u''])
 
         post_response = self.client.post(self.url, post_data)
         eq_(post_response.status_code, 200)
@@ -822,9 +823,9 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
 
         # Build dicts of the expected app/adunit properties and compare them to
         # actual state of the db, which should not have changed.
-        expected_app_dict = _default_app_dict(self.account)
+        expected_app_dict = default_app_dict(self.account)
         dict_eq(app_dict, expected_app_dict, exclude=['t'])
-        expected_adunit_dict = _default_adunit_dict(self.account, self.app)
+        expected_adunit_dict = default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
     def mptest_update_app_authorization(self):
@@ -835,7 +836,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
 
         self.login_secondary_account()
 
-        post_data = self._generate_post_data()
+        post_data = self.generate_post_data()
 
         # We expect a 404 HTTP response code because the secondary account is
         # not authorized to update this app.
@@ -859,9 +860,9 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
 
         # Build dicts of the expected app/adunit properties and compare them to
         # actual state of the db, which should not have changed.
-        expected_app_dict = _default_app_dict(self.account)
+        expected_app_dict = default_app_dict(self.account)
         dict_eq(app_dict, expected_app_dict, exclude=['t'])
-        expected_adunit_dict = _default_adunit_dict(self.account, self.app)
+        expected_adunit_dict = default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
 
@@ -873,16 +874,16 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(AdUnitUpdateAJAXViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
         self.url = reverse('publisher_adunit_update_ajax')
 
-    def _generate_post_data(self, **kwargs):
+    def generate_post_data(self, **kwargs):
         """
         Generate a dict of POST parameters that would be generated by the
         app detail or adunit detail pages. This should correspond to the
-        _generate_adunit and _default_adunit_dict functions below. Optionally
+        generate_adunit and default_adunit_dict functions. Optionally
         pass in keywords to modify the default key/value pairs.
         """
         post_data = {
@@ -905,7 +906,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         and confirming the adunit was created as expected by checking db state.
         """
 
-        post_data = self._generate_post_data()
+        post_data = self.generate_post_data()
 
         post_response = self.client.post(self.url, post_data)
         eq_(post_response.status_code, 200)
@@ -932,7 +933,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
 
         # Build a dict of the expected adunit properties and compare it to
         # actual state of the db.
-        expected_adunit_dict = _default_adunit_dict(self.account, self.app)
+        expected_adunit_dict = default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
         # Make sure the adunit was created within the last minute.
@@ -948,7 +949,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         """
 
         # We POST invalid data by not supplying the required name.
-        post_data = self._generate_post_data(**{'adunit-name': [u'']})
+        post_data = self.generate_post_data(**{'adunit-name': [u'']})
 
         post_response = self.client.post(self.url, post_data)
         eq_(post_response.status_code, 200)
@@ -974,7 +975,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         # Change the name of an existing adunit by submitting a valid POST. We
         # need to supply kwargs as an expanded dict because 'adunit-name' has a
         # hyphen-minus in its name.
-        post_data = self._generate_post_data(**{
+        post_data = self.generate_post_data(**{
             'adunit-name': [u'Updated Banner Ad'],
             'adunit_key': [unicode(self.adunit.key())]})
 
@@ -999,7 +1000,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
 
         # Build a dict of the expected adunit properties and compare it to
         # actual state of the db.
-        expected_adunit_dict = _default_adunit_dict(
+        expected_adunit_dict = default_adunit_dict(
             self.account,
             self.app,
             name=u'Updated Banner Ad')
@@ -1013,7 +1014,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         """
 
         # We POST invalid data by not supplying the required name.
-        post_data = self._generate_post_data(**{
+        post_data = self.generate_post_data(**{
             'adunit-name': [u''],
             'adunit_key': [unicode(self.adunit.key())]})
 
@@ -1039,7 +1040,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
 
         # Build a dict of the expected adunit properties and compare it to
         # actual state of the db, which should not have changed.
-        expected_adunit_dict = _default_adunit_dict(self.account, self.app)
+        expected_adunit_dict = default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
     def mptest_update_adunit_authorization(self):
@@ -1050,7 +1051,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
 
         self.login_secondary_account()
 
-        post_data = self._generate_post_data(**{
+        post_data = self.generate_post_data(**{
             'adunit-name': [u'Updated Banner Ad'],
             'adunit_key': [unicode(self.adunit.key())]})
 
@@ -1071,7 +1072,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
 
         # Build a dict of the expected adunit properties and compare it to
         # actual state of the db, which should not have changed.
-        expected_adunit_dict = _default_adunit_dict(self.account, self.app)
+        expected_adunit_dict = default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
 
@@ -1083,8 +1084,8 @@ class DeleteAppViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(DeleteAppViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
         self.url = reverse('publisher_delete_app', args=[str(self.app.key())])
 
@@ -1138,8 +1139,8 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
     def setUp(self):
         super(DeleteAdUnitViewTestCase, self).setUp()
 
-        self.app = _generate_app(self.account)
-        self.adunit = _generate_adunit(self.account, self.app)
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.account, self.app)
 
         self.url = reverse('publisher_delete_adunit',
                            args=[str(self.adunit.key())])
@@ -1184,124 +1185,3 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
         adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
             account=self.account)
         eq_(len(adunits_dict), 1)
-
-
-def _generate_app(account, **kwargs):
-    app_dict = {
-        'account': account,
-        'name': 'Book App',
-        'app_type': 'iphone',
-        'primary_category': 'books',
-    }
-    app_dict.update(kwargs)
-    app = App(**app_dict)
-    app.put()
-    return app
-
-
-def _generate_adunit(account, app, **kwargs):
-    adunit_dict = {
-        'app_key': app,
-        'account': account,
-        'name': 'Banner Ad',
-        'device_format': 'phone',
-        'format': '320x50',
-        'ad_type': None,
-        'color_border': '336699',
-        'color_bg': 'FFFFFF',
-        'color_link': '0000FF',
-        'color_text': '000000',
-        'color_url': '008000',
-    }
-    adunit_dict.update(kwargs)
-    adunit = AdUnit(**adunit_dict)
-    adunit.put()
-    return adunit
-
-
-def _generate_campaign(account, **kwargs):
-    campaign_dict = {
-        'account': account,
-        'name': 'Test Campaign',
-        'campaign_type': 'gtee',
-    }
-    campaign_dict.update(kwargs)
-    campaign = Campaign(**campaign_dict)
-    campaign.put()
-    return campaign
-
-
-def _generate_adgroup(account, campaign, **kwargs):
-    adgroup_dict = {
-        'account': account,
-        'campaign': campaign,
-    }
-    adgroup_dict.update(kwargs)
-    adgroup = AdGroup(**adgroup_dict)
-    adgroup.put()
-    return adgroup
-
-
-def _default_app_dict(account, **kwargs):
-    app_dict = {
-        'account': account,
-        'deleted': False,
-        'name': u'Book App',
-        'global_id': None,
-        'adsense_app_name': None,
-        'adsense_app_id': None,
-        'admob_bgcolor': None,
-        'admob_textcolor': None,
-        'app_type': u'iphone',
-        'description': None,
-        'url': None,
-        'package': None,
-        'categories': [],
-        'icon_blob': None,
-        'image_serve_url': None,
-        'jumptap_app_id': None,
-        'millennial_app_id': None,
-        'exchange_creative': None,
-        'experimental_fraction': 0.0,
-        'network_config': None,
-        'primary_category': u'books',
-        'secondary_category': None,
-        'use_proxy_bids': True,
-        'force_marketplace': True,
-    }
-
-    app_dict.update(kwargs)
-    return app_dict
-
-
-def _default_adunit_dict(account, app, **kwargs):
-    adunit_dict = {
-        'name': u'Banner Ad',
-        'description': None,
-        'ad_type': None,
-        'custom_width': None,
-        'custom_height': None,
-        'format': u'320x50',
-        'app_key': app,
-        'device_format': u'phone',
-        'refresh_interval': 0,
-        'account': account,
-        'adsense_channel_id': None,
-        'url': None,
-        'resizable': False,
-        'landscape': False,
-        'deleted': False,
-        'jumptap_site_id': None,
-        'millennial_site_id': None,
-        'keywords': None,
-        'animation_type': u'0',
-        'color_border': u'336699',
-        'color_bg': u'FFFFFF',
-        'color_link': u'0000FF',
-        'color_text': u'000000',
-        'color_url': u'008000',
-        'network_config': None,
-    }
-
-    adunit_dict.update(kwargs)
-    return adunit_dict

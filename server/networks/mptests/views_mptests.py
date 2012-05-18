@@ -60,17 +60,14 @@ def skip_if_no_mappers(test_method):
 class CreateNetworkTestCase(BaseViewTestCase):
     def setUp(self):
         super(CreateNetworkTestCase, self).setUp()
-        
+
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
         self.existing_apps = self.get_apps_with_adunits()
 
-        self.url = reverse('edit_network', 
+        self.url = reverse('edit_network',
                 kwargs={'network': self.network_type})
         self.post_data = self.setup_post_request_data()
-
-    def tearDown(self):
-        self.testbed.deactivate()
 
     def network_type_to_test(self):
         return 'admob'
@@ -160,7 +157,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
                             adunit.key(), self.account.key(), get_from_db=True)
                 ok_(adgroup is not None)
                 eq_(adgroup.network_type,
-                        NETWORK_ADGROUP_TRANSLATION.get(self.network_type, 
+                        NETWORK_ADGROUP_TRANSLATION.get(self.network_type,
                                                         self.network_type))
                 eq_(adgroup.bid, DEFAULT_BID)
 
@@ -204,7 +201,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
         adunit = app.adunits[0]
 
         # Mark one of the adunits as 'enabled' without giving it a pub ID.
-        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit.key(), 
+        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit.key(),
                 self.network_type)
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_pub_id_key] = ''
@@ -259,7 +256,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
     @skip_if_no_mappers
     def mptest_creates_new_mapper_if_no_existing_mappers(self):
         """If a mapper does not exist, a new one should be created.
-        
+
         Author: Andrew He
         """
         ad_network_login = self.generate_ad_network_login(self.network_type)
@@ -297,7 +294,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
 
         self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        
+
         actual_mappers = AdNetworkAppMapper.all(). \
                 filter('application =', self.existing_apps[0]). \
                 filter('ad_network_name =', self.network_type).fetch(1000)
@@ -317,14 +314,14 @@ class CreateNetworkTestCase(BaseViewTestCase):
 
         self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        
+
         actual_mappers = AdNetworkAppMapper.all(). \
                 filter('application =', self.existing_apps[0]). \
                 filter('ad_network_name =', self.network_type).fetch(1000)
         eq_(len(actual_mappers), 2)
 
         # Check that old mapper wasn't modified.
-        old_mapper = AdNetworkAppMapper.get_by_publisher_id(DEFAULT_PUB_ID, 
+        old_mapper = AdNetworkAppMapper.get_by_publisher_id(DEFAULT_PUB_ID,
                 self.network_type)
         eq_(old_mapper.key(), existing_mapper.key())
 
@@ -388,7 +385,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
                 self.account, ad_network_name)
         if not login:
             login = self.generate_ad_network_login(ad_network_name)
-        
+
         # Create the mapper and save it.
         mapper = AdNetworkAppMapper(ad_network_login=login,
                                     ad_network_name=ad_network_name,
@@ -421,7 +418,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
             data['custom_html'] = DEFAULT_HTML
         if self.network_type == 'custom_native':
             data['custom_method'] = DEFAULT_HTML
-        
+
         pub_id_data = {}
 
         if self.network_type in NETWORKS_WITH_PUB_IDS:
@@ -486,7 +483,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
         return newly_added_campaigns
 
 
-class CreateJumptapNetworkTestCase(CreateNetworkTestCase):
+class CreateJumpTapNetworkTestCase(CreateNetworkTestCase):
     def network_type_to_test(self):
         return 'jumptap'
 
@@ -496,7 +493,7 @@ class CreateIAdNetworkTestCase(CreateNetworkTestCase):
         return 'iad'
 
 
-class CreateInmobiNetworkTestCase(CreateNetworkTestCase):
+class CreateInMobiNetworkTestCase(CreateNetworkTestCase):
     def network_type_to_test(self):
         return 'inmobi'
 
@@ -516,7 +513,7 @@ class CreateAdsenseNetworkTestCase(CreateNetworkTestCase):
         return 'adsense'
 
 
-class CreateEjamNetworkTestCase(CreateNetworkTestCase):
+class CreateTapItNetworkTestCase(CreateNetworkTestCase):
     def network_type_to_test(self):
         return 'ejam'
 
@@ -545,3 +542,242 @@ class ComplexEditNetworkTestCase(CreateNetworkTestCase):
             app = generate_app(self.account)
             for adunit_index in range(NUM_ADUNITS):
                 generate_adunit(app, self.account)
+
+
+class PauseNetworkTestCase(BaseViewTestCase):
+    def setUp(self):
+        super(CreateNetworkTestCase, self).setUp()
+
+        self.url = reverse('pause_network')
+
+        network_type = 'admob'
+        self.campaign = Campaign(name=NETWORKS[network_type],
+                                 campaign_type='network',
+                                 network_type=network_type)
+        self.campaign.put()
+        self.post_data = {'campaign_key': self.campaign.key(),
+                          'active': True}
+
+    def mptest_response_code(self):
+        """When adding a network campaign, response code should be 200.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 200)
+
+
+    def mptest_activate_campaign(self):
+        """Activate campaign.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.campaign = CampaignQueryManager.get(self.campaign.key())
+        eq_(self.campaign.active, True)
+
+    def mptest_pause_campaign(self):
+        """Pause campaign.
+
+        Author: Tiago Bandeira
+        """
+        self.post_data['active'] = False
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.campaign = CampaignQueryManager.get(self.campaign.key())
+        eq_(self.campaign.active, False)
+
+    def mptest_activate_campaign_for_other_account(self):
+        """Attempting to activate a campaign for another account should result
+        in an error.
+
+        Author: Tiago Bandeira
+        """
+        self.login_secondary_account()
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+
+class DeleteNetworkTestCase(BaseViewTestCase):
+    def setUp(self):
+        super(CreateNetworkTestCase, self).setUp()
+
+        self.url = reverse('pause_network')
+
+        network_type = 'admob'
+        # TODO: generate_campaign
+        self.campaign = Campaign(name=NETWORKS[network_type],
+                                 campaign_type='network',
+                                 network_type=network_type)
+        # TODO: create login credentials for the campaign
+        self.campaign.put()
+        self.post_data = {'campaign_key': self.campaign.key()}
+
+    def mptest_response_code(self):
+        """When adding a network campaign, response code should be 200.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 200)
+
+    def mptest_delete_campaign(self):
+        """Delete a campaign and all associated adgroups, creatives and login
+        credentials.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
+                self.account).values()
+        ok_(not campaigns)
+
+        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
+        ok_(not adgroups)
+
+        creatives = AdvertiserQueryManager.get_creatives_dict_for_account(
+                self.account).values()
+        ok_(not creatives)
+
+        logins = AdNetworkLoginCredentials.all().get()
+        ok_(not logins)
+
+    def mptest_new_default_campaign_chosen(self):
+        """When a default campaign is deleted and other campaigns of this
+        network_type exist a new default campaign is chosen.
+
+        Author: Tiago Bandeira
+        """
+        num_of_custom_campaigns = 2
+        for x in range(num_of_custom_campaigns):
+            # TODO: generate_network_campaign
+            Campaign(name=NETWORKS[network_type],
+                     campaign_type='network',
+                     network_type=network_type).put()
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
+                self.account).values()
+        eq_(len(campaigns), num_of_custom_campaigns)
+        ok_([campaign for campaign in campaigns if campaign.network_state == \
+                NetworkStates.DEFAULT_NETWORK_STATE])
+
+        logins = AdNetworkLoginCredentials.all().get()
+        ok_(logins)
+
+    def mptest_delete_campaign_for_other_account(self):
+        """Attempting to delete a campaign for another account should result
+        in an error.
+
+        Author: Tiago Bandeira
+        """
+        self.login_secondary_account()
+        response = self.client.post(self.url, self.post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+
+class NetworksTestCase(BaseViewTestCase):
+    def setUp(self):
+        super(CreateNetworkTestCase, self).setUp()
+
+        # TODO
+        self.set_up_existing_apps_and_adunits()
+        self.existing_apps = self.get_apps_with_adunits()
+
+        # TODO: for network in NETWORKS generate_network_campaign
+
+        self.url = reverse('networks')
+
+    def mptest_response_code(self):
+        """Networks shall return a valid status code.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
+
+
+class NetworkDetailsTestCase(BaseViewTestCase):
+    def setUp(self):
+        super(CreateNetworkTestCase, self).setUp()
+
+        # TODO
+        set_up_existing_apps_and_adunits()
+        self.existing_apps = get_apps_with_adunits()
+
+        self.network_type = self.network_type_to_test()
+        # TODO: generate_network_campaign
+
+        self.url = reverse('network_details')
+
+    def network_type_to_test(self):
+        return 'admob'
+
+    def mptest_response_code(self):
+        """Networks shall return a valid status code.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
+
+
+class JumpTapDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'jumptap'
+
+
+class IAdDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'iad'
+
+
+class InMobiDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'inmobi'
+
+
+class MobfoxDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'mobfox'
+
+
+class MillennialDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'millennial'
+
+
+class AdsenseDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'adsense'
+
+
+class TapItDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'ejam'
+
+
+class BrightrollDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'brightroll'
+
+
+class CustomDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'custom'
+
+
+class CustomNativeDetailsTestCase(NetworkDetailsTestCase):
+    def network_type_to_test(self):
+        return 'custom_native'

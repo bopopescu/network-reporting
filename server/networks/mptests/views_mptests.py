@@ -57,20 +57,106 @@ def skip_if_no_mappers(test_method):
             return test_method(self)
     return wrapper
 
+
+class EditNetworkTestCase(BaseViewTestCase):
+    def setUp(self):
+        super(EditNetworkTestCase, self).setUp()
+
+        self.network_type = self.network_type_to_test()
+        self.set_up_existing_apps_and_adunits()
+        self.existing_apps = get_apps_with_adunits(self.account)
+
+        self.existing_campaign = generate_network_campaign(self.network_type,
+            self.account, self.existing_apps)
+        
+        app_pub_ids = {}
+        adunit_pub_ids = {}
+
+        for app_idx, app in enumerate(self.existing_apps):
+            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+            app_pub_ids[app.key()] = pub_id
+
+            for adunit_idx, adunit in enumerate(app.adunits):
+                adunit_pub_ids[adunit.key()] = '%s_%s' % (pub_id, adunit_idx)
+
+                adgroup = AdGroupQueryManager.get_network_adgroup(self.existing_campaign,
+                            adunit.key(), self.account.key())
+                adgroup.put()
+
+                if self.network_type in ('custom', 'custom_native'):
+                    creative = adgroup.default_creative(html_data=DEFAULT_HTML)
+                else:
+                    creative = adgroup.default_creative()
+                creative.account = self.account
+                creative.put()
+
+        self.url = reverse('edit_network',
+                kwargs={'campaign_key': str(self.existing_campaign.key())})
+
+        self.post_data = setup_post_request_data(apps=self.existing_apps,
+                network_type=self.network_type, account_pub_id=None,
+                app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
+
+    def network_type_to_test(self):
+        return 'admob'
+
+    def set_up_existing_apps_and_adunits(self):
+        """Creates one app with one adunit for use as a test fixture.
+
+        This method may be overridden in a test case subclass to modify the
+        test fixture.
+
+        Author: Andrew He
+        """
+        app = generate_app(self.account)
+        generate_adunit(app, self.account)
+
+    def mptest_response_code(self):
+        """When editing a network campaign, response code should be 200.
+
+        Author: Andrew He
+        """
+        response = self.client.post(self.url, self.post_data,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 200)
+
+    def mptest_puts_campaign(self):
+        """When no form data is changed the db shouldn't be modified.
+
+        Author: Andrew He
+        """
+        self.client.post(self.url, self.post_data,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # model_eq(self.existing_campaign, CampaignQueryManager.get( \
+        #     self.existing_campaign.key()))
+
+
 class CreateNetworkTestCase(BaseViewTestCase):
     def setUp(self):
         super(CreateNetworkTestCase, self).setUp()
         
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
-        self.existing_apps = self.get_apps_with_adunits()
+        self.existing_apps = get_apps_with_adunits(self.account)
+
+        self.app_pub_ids = {}
+        self.adunit_pub_ids = {}
+
+        for app_idx, app in enumerate(self.existing_apps):
+            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+            self.app_pub_ids[app.key()] = pub_id
+
+            for adunit_idx, adunit in enumerate(app.adunits):
+                self.adunit_pub_ids[adunit.key()] = '%s_%s' % (pub_id, 
+                        adunit_idx)
 
         self.url = reverse('edit_network', 
                 kwargs={'network': self.network_type})
-        self.post_data = self.setup_post_request_data()
-
-    def tearDown(self):
-        self.testbed.deactivate()
+        self.post_data = setup_post_request_data(apps=self.existing_apps,
+                network_type=self.network_type, account_pub_id=None,
+                app_pub_ids=self.app_pub_ids,
+                adunit_pub_ids=self.adunit_pub_ids)
 
     def network_type_to_test(self):
         return 'admob'
@@ -104,7 +190,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
         self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        newly_added_campaigns = self.get_newly_added_campaigns(
+        newly_added_campaigns = self.get_campaigns(
                 existing_campaigns=existing_campaigns)
         eq_(len(newly_added_campaigns), 1)
 
@@ -124,14 +210,16 @@ class CreateNetworkTestCase(BaseViewTestCase):
 
         Author: Andrew He
         """
-        default_campaign = self.generate_default_network_campaign(
-                self.network_type)
+        if self.network_type in ('custom', 'custom_native'):
+            return
+
+        default_campaign = self.generate_network_campaign(self.network_type)
 
         existing_campaigns = self.get_network_campaigns()
         self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        newly_added_campaigns = self.get_newly_added_campaigns(
+        newly_added_campaigns = self.get_campaigns(
                 existing_campaigns=existing_campaigns)
         eq_(len(newly_added_campaigns), 1)
 
@@ -149,7 +237,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
         self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        newly_added_campaigns = self.get_newly_added_campaigns(
+        newly_added_campaigns = self.get_campaigns(
                 existing_campaigns=existing_campaigns)
         eq_(len(newly_added_campaigns), 1)
         new_campaign = newly_added_campaigns[0]
@@ -189,7 +277,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         response_json = json.loads(response.content)
 
-        campaign = self.get_newly_added_campaigns()[0]
+        campaign = self.get_campaigns()[0]
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                 adunit.key(), self.account.key(), get_from_db=True)
 
@@ -210,6 +298,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
         self.post_data[adunit_pub_id_key] = ''
         self.post_data[adunit_active_key] = True
 
+        print self.post_data
         response = self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         response_json = json.loads(response.content)
@@ -233,16 +322,17 @@ class CreateNetworkTestCase(BaseViewTestCase):
             ok_(self.account.network_config)
             eq_(self.account.network_config.jumptap_pub_id, DEFAULT_PUB_ID)
 
-        actual_apps = self.get_apps_with_adunits()
-        for index, app in enumerate(actual_apps):
-            ok_(app.network_config is not None)
+        actual_apps = get_apps_with_adunits(self.account)
+        for app in actual_apps:
+            expected_app_pub_id = self.app_pub_ids[app.key()]
             eq_(getattr(app.network_config, '%s_pub_id' %
-                    self.network_type), DEFAULT_PUB_ID + str(index))
+                    self.network_type), expected_app_pub_id)
 
             for adunit in app.adunits:
+                expected_adunit_pub_id = self.adunit_pub_ids[adunit.key()]
                 ok_(hasattr(adunit, 'network_config'))
                 eq_(getattr(adunit.network_config, '%s_pub_id' %
-                            self.network_type), DEFAULT_PUB_ID)
+                            self.network_type), expected_adunit_pub_id)
 
     @skip_if_no_mappers
     def mptest_creates_new_mapper_only_if_login_saved(self):
@@ -275,14 +365,15 @@ class CreateNetworkTestCase(BaseViewTestCase):
         for mapper in actual_mappers:
             mappers_for_app_key[mapper.application.key()].append(mapper)
 
-        for index, app in enumerate(self.existing_apps):
+        for app in self.existing_apps:
             # Each app should have mappers.
             ok_(app.key() in mappers_for_app_key)
 
             mappers = mappers_for_app_key[app.key()]
             for mapper in mappers:
                 # Each mapper should be initialized properly.
-                eq_(mapper.publisher_id, DEFAULT_PUB_ID + str(index))
+                expected_pub_id = self.app_pub_ids[app.key()]
+                eq_(mapper.publisher_id, expected_pub_id)
                 eq_(mapper.ad_network_name, self.network_type)
                 eq_(mapper.ad_network_login.key(), ad_network_login.key())
 
@@ -344,11 +435,6 @@ class CreateNetworkTestCase(BaseViewTestCase):
 
     # Helper methods.
 
-    def get_apps_with_adunits(self):
-        apps = PublisherQueryManager.get_objects_dict_for_account(
-                account=self.account).values()
-        return sorted(apps, key=lambda a: a.name)
-
     def get_network_campaigns(self):
         """Retrieves all network campaigns corresponding to self.account.
 
@@ -357,15 +443,21 @@ class CreateNetworkTestCase(BaseViewTestCase):
         return CampaignQueryManager.get_network_campaigns(
                 self.account, is_new=True)
 
-    def generate_default_network_campaign(self, network_type):
-        """Creates and saves a default network campaign of the given type.
+    def generate_network_campaign(self, network_type):
+        """Creates and saves a network campaign of the given type.
 
         Author: Andrew He
         """
-        default = CampaignQueryManager.get_default_network_campaign(
+        if network_type in ('custom', 'custom_native'):
+            campaign = Campaign(name=NETWORKS[network_type])
+            campaign.campaign_type = 'network'
+            campaign.network_type = network_type
+        else:  
+            campaign = CampaignQueryManager.get_default_network_campaign(
                 self.account, network_type)
-        default.put()
-        return default
+
+        campaign.put()
+        return campaign
 
     def generate_ad_network_login(self, network_type):
         """Creates and saves an AdNetworkLoginCredentials object.
@@ -404,53 +496,6 @@ class CreateNetworkTestCase(BaseViewTestCase):
 
         return mapper
 
-    def setup_post_request_data(self):
-        """
-        Setup the POST request data used to create a network campaign
-
-        Author: Tiago Bandeira
-        """
-        # Set constants
-        campaign_name = NETWORKS[self.network_type]
-
-        campaign_form = NetworkCampaignForm({'name': campaign_name})
-        default_adgroup_form = NetworkAdGroupForm()
-
-        data = {'bid': DEFAULT_BID}
-        if self.network_type == 'custom':
-            data['custom_html'] = DEFAULT_HTML
-        if self.network_type == 'custom_native':
-            data['custom_method'] = DEFAULT_HTML
-        
-        pub_id_data = {}
-
-        if self.network_type in NETWORKS_WITH_PUB_IDS:
-            # Create the adgroup forms, one per adunit
-            adgroup_forms = []
-            for index, app in enumerate(self.existing_apps):
-                pub_id_data['app_%s-%s_pub_id' % (app.key(), self.network_type)] = DEFAULT_PUB_ID + str(index)
-                for adunit in app.adunits:
-                    pub_id_data['adunit_%s-%s_pub_id' % (adunit.key(), self.network_type)] = \
-                            DEFAULT_PUB_ID
-                    adgroup_form = AdUnitAdGroupForm(data,
-                            prefix=str(adunit.key()))
-                    adgroup_forms.append(adgroup_form)
-
-        if self.network_type == 'jumptap':
-            pub_id_data['jumptap_pub_id'] = DEFAULT_PUB_ID
-
-        # Create the data dict, each adgroup form per adunit must have a prefix,
-        # so we can post multiple adgroup forms, which is the adunit key
-        adunit_data = [('%s-%s' % (adgroup_form.prefix, key), item) for \
-                adgroup_form in adgroup_forms for key, item in \
-                adgroup_form.data.items()]
-        data = campaign_form.data.items() + default_adgroup_form. \
-                data.items() + adunit_data + pub_id_data.items()
-        data = dict(data)
-
-        print data
-        return data
-
     def check_campaign_init(self, campaign, network_type=None,
             network_state=None):
         """Checks that the new campaign has the right initial properties.
@@ -471,77 +516,156 @@ class CreateNetworkTestCase(BaseViewTestCase):
             # Custom network campaigns don't have a key name.
             ok_(campaign.key().name() is None)
 
-    def get_newly_added_campaigns(self, existing_campaigns=[]):
+    def get_campaigns(self, existing_campaigns=[]):
         """Retrieves all network campaigns besides those in existing_campaigns.
 
         Author: Andrew He
         """
         existing_campaigns_keys = [c.key() for c in existing_campaigns]
 
-        actual_campaigns = self.get_network_campaigns()
-        newly_added_campaigns = filter(
+        all_campaigns = self.get_network_campaigns()
+        filtered_campaigns = filter(
                 lambda c: c.key() not in existing_campaigns_keys,
-                actual_campaigns)
+                all_campaigns)
 
-        return newly_added_campaigns
+        return filtered_campaigns
+    
+
+# Helper functions.
+
+def get_apps_with_adunits(account):
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                account=account).values()
+        return sorted(apps, key=lambda a: a.name)
+
+def generate_network_campaign(network_type, account, apps):
+    """Creates a network campaign along with any necessary adgroups/creatives.
+
+    Author: Andrew He
+    """
+    # Generate the campaign object.
+    if network_type in ('custom', 'custom_native'):
+        campaign = Campaign(name=NETWORKS[network_type])
+        campaign.campaign_type = 'network'
+        campaign.network_type = network_type
+    else:  
+        campaign = CampaignQueryManager.get_default_network_campaign(
+            account, network_type)
+
+    campaign.put()
+
+    # Generate one adgroup per adunit.
+    for app in apps:
+        for adunit in app.adunits:
+            adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                    adunit.key(), account.key())
+            adgroup.put()
+
+            # Generate the creative for this adgroup.
+            if network_type in ('custom', 'custom_native'):
+                creative = adgroup.default_creative(html_data=DEFAULT_HTML)
+            else:
+                creative = adgroup.default_creative()
+            creative.account = account
+            creative.put()
+
+    return campaign
+
+def setup_post_request_data(apps=[], network_type=None, account_pub_id=None,
+        app_pub_ids={}, adunit_pub_ids={}):
+
+    post_data = {}
+
+    campaign_name = NETWORKS[network_type]
+    campaign_form = NetworkCampaignForm({'name': campaign_name})
+    post_data.update(campaign_form.data)
+
+    default_adgroup_form = NetworkAdGroupForm()
+    post_data.update(default_adgroup_form.data)
+
+    if network_type == 'jumptap':
+        post_data['jumptap_pub_id'] = account_pub_id
+
+    for app in apps:
+        app_post_key = 'app_%s-%s_pub_id' % (app.key(), network_type)
+        post_data[app_post_key] = app_pub_ids[app.key()]
+
+        for adunit in app.adunits:
+            adunit_post_key = 'adunit_%s-%s_pub_id' % \
+                    (adunit.key(), network_type)
+            post_data[adunit_post_key] = adunit_pub_ids[adunit.key()]
+
+            adgroup_form_data = {'bid': DEFAULT_BID}
+            if network_type == 'custom':
+                adgroup_form_data['custom_html'] = DEFAULT_HTML
+            elif network_type == 'custom_native':
+                adgroup_form_data['custom_method'] = DEFAULT_HTML
+            adgroup_form = AdUnitAdGroupForm(adgroup_form_data)
+
+            for key, item in adgroup_form.data.items():
+                prefixed_key = '%s-%s' % (adunit.key(), key)
+                post_data[prefixed_key] = item
+
+    print post_data
+    return post_data
 
 
-class CreateJumptapNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'jumptap'
+# class CreateJumptapNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'jumptap'
 
 
-class CreateIAdNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'iad'
+# class CreateIAdNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'iad'
 
 
-class CreateInmobiNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'inmobi'
+# class CreateInmobiNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'inmobi'
 
 
-class CreateMobfoxNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'mobfox'
+# class CreateMobfoxNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'mobfox'
 
 
-class CreateMillennialNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'millennial'
+# class CreateMillennialNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'millennial'
 
 
-class CreateAdsenseNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'adsense'
+# class CreateAdsenseNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'adsense'
 
 
-class CreateEjamNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'ejam'
+# class CreateEjamNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'ejam'
 
 
-class CreateBrightrollNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'brightroll'
+# class CreateBrightrollNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'brightroll'
 
 
-class CreateCustomNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'custom'
+# class CreateCustomNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'custom'
 
 
-class CreateCustomNativeNetworkTestCase(CreateNetworkTestCase):
-    def network_type_to_test(self):
-        return 'custom_native'
+# class CreateCustomNativeNetworkTestCase(CreateNetworkTestCase):
+#     def network_type_to_test(self):
+#         return 'custom_native'
 
 
-NUM_APPS = 3
-NUM_ADUNITS = 3
-class ComplexEditNetworkTestCase(CreateNetworkTestCase):
-    def set_up_existing_apps_and_adunits(self):
-        """Overrides method in superclass."""
-        for app_index in range(NUM_APPS):
-            app = generate_app(self.account)
-            for adunit_index in range(NUM_ADUNITS):
-                generate_adunit(app, self.account)
+# NUM_APPS = 3
+# NUM_ADUNITS = 3
+# class ComplexEditNetworkTestCase(CreateNetworkTestCase):
+#     def set_up_existing_apps_and_adunits(self):
+#         """Overrides method in superclass."""
+#         for app_index in range(NUM_APPS):
+#             app = generate_app(self.account)
+#             for adunit_index in range(NUM_ADUNITS):
+#                 generate_adunit(app, self.account)

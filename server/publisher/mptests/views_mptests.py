@@ -10,7 +10,7 @@ import common.utils.test.setup
 from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
-from common.utils.test.test_utils import dict_eq, list_eq, model_to_dict, time_almost_eq
+from common.utils.test.test_utils import dict_eq, list_eq, model_key_eq, model_to_dict, time_almost_eq
 from common.utils.test.views import BaseViewTestCase
 from publisher.forms import AppForm, AdUnitForm
 from publisher.models import App, AdUnit
@@ -98,68 +98,204 @@ class AppDetailViewTestCase(BaseViewTestCase):
         super(AppDetailViewTestCase, self).setUp()
 
         self.app = _generate_app(self.account)
+        self.adunit = _generate_adunit(self.account, self.app)
 
         self.url = reverse('publisher_app_show', args=[str(self.app.key())])
 
     def mptest_get(self):
         """
-        Confirm that app_index returns an appropriate response by checking the
+        Confirm that app detail returns an appropriate response by checking the
         status_code and context.
         """
 
         get_response = self.client.get(self.url)
         ok_(get_response.status_code, 200)
 
+        model_key_eq(get_response.context['app'], self.app)
+
+        # We really shouldn't be passing up HTML fragments here, so we're
+        # putting simple tests here and refactor them out.
+        ok_(isinstance(get_response.context['app_form_fragment'], basestring))
+        ok_(isinstance(get_response.context['adunit_form_fragment'], basestring))
+
+        # These exist in the context of every page, so should we them here?
+        # eq_(get_response.context['start_date'], 'datetime')
+        # eq_(get_response.context['end_date'], 'datetime')
+        # eq_(get_response.context['date_range'], 'integer')
+
+        # These are StatsModels.
+        # eq_(get_response.context['today'], 'POOP')
+        # eq_(get_response.context['yesterday'], 'POOP')
+
+        model_key_eq(get_response.context['account'], self.account)
+
+        ok_(get_response.context['helptext'] is None)
+
+        # Why is this a list of dicts of lists. Needs a serious refactor.
+        # TODO: Fill this in. Also don't do bullshit.
+        expected_gtee = [
+            {
+                'name': 'high',
+                'campaigns': [],
+            },
+            {
+                'name': 'normal',
+                'campaigns': [],
+            },
+            {
+                'name': 'low',
+                'campaigns': [],
+            },
+        ]
+        list_eq(get_response.context['gtee'], expected_gtee)
+
+        # These are just lists of campaigns.
+        # TODO: Add a generator function to Advertiser mptests so we can
+        # actually make a meaningful comparison.
+        # list_eq(get_response.context['promo'], [self.promo_campaign])
+        # list_eq(get_response.context['marketplace'], [self.marketplace_campaign])
+        # list_eq(get_response.context['network'], [self.network_campaign])
+        # list_eq(get_response.context['backfill_promo'], [self.backfill_promo_campaign])
+
+        # These are both false right now, but as we add campaigns we should
+        # revisit them.
+        eq_(get_response.context['marketplace_activated'], False)
+        eq_(get_response.context['active_mpx_adunit_exists'], False)
+
+        # TODO: Fix everything.
+
+    def mptest_get_authorization(self):
+        """
+        Confirm that app detail returns a 404 when an unauthorized account
+        attempts to access it.
+        """
+
+        self.login_secondary_account()
+
+        get_response = self.client.get(self.url)
+        ok_(get_response.status_code, 404)
+
+
+class ExportFileViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    def setUp(self):
+        super(ExportFileViewTestCase, self).setUp()
+
+        self.app = _generate_app(self.account)
+        self.adunit = _generate_adunit(self.account, self.app)
+
+        self.url = reverse('exporter', args=('csv', 'app', str(self.app.key())))
+
+    def mptest_get(self):
+        """
+        Confirm that export file returns an appropriate response by checking the
+        status_code and context.
+        """
+
+        get_response = self.client.get(self.url)
+        eq_(get_response.status_code, 200)
+
+        # TODO: actually test this POS
+
+    def mptest_get_authorization(self):
+        """
+        """
+        self.login_secondary_account()
+
+        get_response = self.client.get(self.url)
+        ok_(get_response.status_code, 404)
+
+
+class AdUnitShowViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    def setUp(self):
+        super(AdUnitShowViewTestCase, self).setUp()
+
+        self.app = _generate_app(self.account)
+        self.adunit = _generate_adunit(self.account, self.app)
+
+        self.url = reverse('publisher_adunit_show', args=[str(self.adunit.key())])
+
+    def mptest_get(self):
+        """
+        Confirm that adunit detail returns an appropriate response by checking 
+        the status_code and context.
+        """
+
+        get_response = self.client.get(self.url)
+        ok_(get_response.status_code, 200)
+
+        # I HATE MY LIFE
+        model_key_eq(get_response.context['site'], self.adunit)
+        model_key_eq(get_response.context['adunit'], self.adunit)
+
+        # We really shouldn't be passing up HTML fragments here, so we're
+        # putting simple tests here and refactor them out.
+        ok_(isinstance(get_response.context['adunit_form_fragment'], basestring))
+
+        # These exist in the context of every page, so should we them here?
+        # eq_(get_response.context['start_date'], 'datetime')
+        # eq_(get_response.context['end_date'], 'datetime')
+        # eq_(get_response.context['date_range'], 'integer')
+        # eq_(get_response.context['days'], 'list of datetimes')
+
+        # These are StatsModels.
+        # eq_(get_response.context['today'], 'POOP')
+        # eq_(get_response.context['yesterday'], 'POOP')
+
+        model_key_eq(get_response.context['account'], self.account)
+
+        # Why is this a list of dicts of lists. Needs a serious refactor.
+        # TODO: Fill this in. Also don't do bullshit. Campaign => adgroup???
+        expected_gtee = [
+            {
+                'name': 'high',
+                'adgroups': [],
+            },
+            {
+                'name': 'normal',
+                'adgroups': [],
+            },
+            {
+                'name': 'low',
+                'adgroups': [],
+            },
+        ]
+        list_eq(get_response.context['gtee'], expected_gtee)
+
+        # These are just lists of campaigns.
+        # TODO: Add a generator function to Advertiser mptests so we can
+        # actually make a meaningful comparison.
+        # list_eq(get_response.context['promo'], [self.promo_campaign])
+        # list_eq(get_response.context['marketplace'], [self.marketplace_campaign])
+        # list_eq(get_response.context['network'], [self.network_campaign])
+        # list_eq(get_response.context['backfill_promo'], [self.backfill_promo_campaign])
+
+        # These are both false right now, but as we add campaigns we should
+        # revisit them.
+        eq_(get_response.context['marketplace_activated'], False)
+
+        # TODO: Fix everything.
+
+    def mptest_get_authorization(self):
+        """
+        Confirm that adunit detail returns a 404 when an unauthorized account
+        attempts to access it.
+        """
+
+        self.login_secondary_account()
+
+        get_response = self.client.get(self.url)
+        ok_(get_response.status_code, 404)
         # TODO: check context
 
-
-# class ExportFileViewTestCase(BaseViewTestCase):
-#     """
-#     author: Ignatius, Peter
-#     """
-
-#     def setUp(self):
-#         super(ExportFileViewTestCase, self).setUp()
-
-#         self.app = _generate_app(self.account)
-
-#     def mptest_get(self):
-#         """
-#         Confirm that app_index returns an appropriate response by checking the
-#         status_code and context.
-#         """
-
-#         url = reverse('exporter', args=('csv', 'app', str(self.app.key())))
-
-#         get_response = self.client.get(url)
-#         eq_(get_response.status_code, 200)
-
-
-# class AdUnitShowViewTestCase(BaseViewTestCase):
-#     """
-#     author: Ignatius, Peter
-#     """
-
-#     def setUp(self):
-#         super(AdUnitShowViewTestCase, self).setUp()
-
-#         self.app = _generate_app(self.account)
-#         self.adunit = _generate_adunit(self.account, self.app)
-
-#         self.url = reverse('publisher_adunit_show', args=[str(self.adunit.key())])
-
-#     def mptest_get(self):
-#         """
-#         Confirm that app_index returns an appropriate response by checking the
-#         status_code and context.
-#         """
-
-#         get_response = self.client.get(self.url)
-#         eq_(get_response.status_code, 200)
-
-#         # TODO: check context
-
-#     # TODO: check authorization
+    # TODO: check authorization
 
 
 # class IntegrationHelpViewTestCase(BaseViewTestCase):
@@ -249,14 +385,14 @@ class AppDetailViewTestCase(BaseViewTestCase):
 #         eq_(post_response.status_code, 200)
 
 
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
+# ###############################################################################
+# ###############################################################################
+# ###############################################################################
+# ###############################################################################
+# ###############################################################################
+# ###############################################################################
+# ###############################################################################
+# ###############################################################################
 
 # class CreateAppViewTestCase(BaseViewTestCase):
 #     """
@@ -905,6 +1041,19 @@ class AppDetailViewTestCase(BaseViewTestCase):
 #         eq_(len(adunits_dict), 1)
 
 
+# GET SKIPPED
+# def _generate_campaign(account, **kwargs):
+#     campaign_dict = {
+#         'account': account,
+#         'name': 'Book App',
+#         'app_type': 'iphone',
+#         'primary_category': 'books',
+#     }
+#     campaign_dict.update(kwargs)
+#     campaign = Campaign(**campaign_dict)
+#     campaign.put()
+#     return campaign
+
 def _generate_app(account, **kwargs):
     app_dict = {
         'account': account,
@@ -920,17 +1069,17 @@ def _generate_app(account, **kwargs):
 
 def _generate_adunit(account, app, **kwargs):
     adunit_dict = {
-            'app_key': app,
-            'account': account,
-            'name': 'Banner Ad',
-            'device_format': 'phone',
-            'format': '320x50',
-            'ad_type': None,
-            'color_border': '336699',
-            'color_bg': 'FFFFFF',
-            'color_link': '0000FF',
-            'color_text': '000000',
-            'color_url': '008000',
+        'app_key': app,
+        'account': account,
+        'name': 'Banner Ad',
+        'device_format': 'phone',
+        'format': '320x50',
+        'ad_type': None,
+        'color_border': '336699',
+        'color_bg': 'FFFFFF',
+        'color_link': '0000FF',
+        'color_text': '000000',
+        'color_url': '008000',
     }
     adunit_dict.update(kwargs)
     adunit = AdUnit(**adunit_dict)

@@ -48,7 +48,7 @@ class BaseViewTestCase(unittest.TestCase):
         self.client.login(username=username, password=password)
 
     @staticmethod
-    def test_reverse(viewname, urlconf=None, args=None, kwargs=None,
+    def test_client_reverse(viewname, urlconf=None, args=None, kwargs=None,
                      current_app=None):
         # django.test.Client uses 'testserver' as the host name.
         url = 'http://testserver'

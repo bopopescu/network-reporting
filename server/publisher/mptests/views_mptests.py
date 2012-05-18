@@ -78,7 +78,7 @@ class AppIndexViewTestCase(BaseViewTestCase):
         get_response = self.client.get(self.url)
         eq_(get_response.status_code, 302)
 
-        redirect_url = self.test_reverse('publisher_create_app')
+        redirect_url = self.test_client_reverse('publisher_create_app')
         eq_(get_response['Location'], redirect_url)
 
     def mptest_get_with_app(self):
@@ -623,6 +623,13 @@ class CreateAppViewTestCase(BaseViewTestCase):
         adunit = adunits_dict.values()[0]
         adunit_dict = model_to_dict(adunit, exclude=['t'])
 
+        # This page should redirect to the integration help page because this
+        # is the first app for this account.
+        redirect_url = self.test_client_reverse('publisher_integration_help',
+                                                args=[str(adunit.key())])
+        redirect_url += '?status=welcome'
+        eq_(post_response['Location'], redirect_url)
+
         # Build dicts of expected app/adunit properties and compare them to
         # the actual state of the db.
         expected_app_dict = default_app_dict(self.account)
@@ -1100,6 +1107,9 @@ class DeleteAppViewTestCase(BaseViewTestCase):
         post_response = self.client.post(self.url)
         eq_(post_response.status_code, 302)
 
+        redirect_url = self.test_client_reverse('app_index')
+        eq_(post_response['Location'], redirect_url)
+
         # There should no longer be any apps or adunits associated with this
         # account.
         apps_dict = PublisherQueryManager.get_apps_dict_for_account(
@@ -1155,6 +1165,10 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
         # code of 302.
         post_response = self.client.post(self.url)
         eq_(post_response.status_code, 302)
+
+        redirect_url = self.test_client_reverse('publisher_app_show',
+                                                args=[str(self.app.key())])
+        eq_(post_response['Location'], redirect_url)
 
         # There should exactly one app and zero adunits associated with this
         # account.

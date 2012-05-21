@@ -60,3 +60,10 @@ def generate_adgroup(account, campaign, put=False, **kwargs):
         'campaign': campaign,
     }
     return _generate_model_instance(AdGroup, put, defaults, **kwargs)
+
+def generate_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'adgroup': adgroup,
+    }
+    return _generate_model_instance(Creative, put, defaults, **kwargs)

@@ -11,7 +11,8 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from common.utils.test.views import BaseViewTestCase
-from common.utils.test.test_utils import dict_eq, time_almost_eq
+from common.utils.test.test_utils import dict_eq, time_almost_eq, confirm_db
+from common.utils.decorators import decorate_all_methods
 
 from google.appengine.ext import db
 
@@ -127,7 +128,6 @@ class OrderViewTestCase(BaseViewTestCase):
         self.mock_line_item = line_item_form.save()
         self.mock_line_item.account = self.account
         self.mock_line_item.campaign = self.mock_order
-
 
 class OrderIndexTestCase(OrderViewTestCase):
     """
@@ -493,7 +493,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         pass
 
 
-class NewOrEditLineItemGetTestCase(OrderViewTestCase):
+class NewOrEditLineItemGetTestCase(object):
     """
     Tests for the new/edit line item POST method.
     """

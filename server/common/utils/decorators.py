@@ -171,7 +171,6 @@ def deprecated(func):
     return new_func
 
 
-
 class wraps_first_arg(object):
     """ Decorator that wraps all nonlist arguments and turns them into lists.
     Only works for bound methods """
@@ -208,6 +207,8 @@ def decorate_all_methods(decorator):
     """
     def decorate(cls):
         for method in inspect.getmembers(cls, inspect.ismethod):
-            setattr(cls, method, decorator(getattr(cls, method)))
+            method_name = method[1].__name__
+            if 'mptest' in method_name:
+                setattr(cls, method_name, decorator(getattr(cls, method_name)))
         return cls
     return decorate

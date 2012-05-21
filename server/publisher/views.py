@@ -771,14 +771,8 @@ class AdUnitShowHandler(RequestHandler):
 
 
 @login_required
-<<<<<<< HEAD
-def adunit_show(request,*args,**kwargs):
-    t='publisher/adunit.html',
-    return AdUnitShowHandler(template=t, id='adunit_key')(request, use_cache=False, *args, **kwargs)
-=======
 def adunit_show(request, *args, **kwargs):
     return AdUnitShowHandler(id='adunit_key')(request, use_cache=False, *args, **kwargs)
->>>>>>> e94a552f6b5e7b0ecb282326b410564a844a8b63
 
 
 class AppUpdateAJAXHandler(RequestHandler):

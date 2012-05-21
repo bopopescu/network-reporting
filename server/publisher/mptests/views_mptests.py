@@ -640,17 +640,18 @@ class CreateAppViewTestCase(BaseViewTestCase):
         expected_app = generate_app(self.account)
         model_eq(app, expected_app, check_primary_key=False)
 
+        expected_adunit = generate_adunit(self.account, app)
+        model_eq(adunit, expected_adunit, check_primary_key=False)
+
         # TODO:
         # expected_app_network_config = generate_network_config(self.account)
         # model_eq(app.network_config, expected_app_network_config)
-
-        expected_adunit = generate_adunit(self.account, app)
-        model_eq(adunit, expected_adunit, check_primary_key=False)
 
         # TODO:
         # expected_adunit_network_config = generate_network_config(self.account)
         # model_eq(adunit.network_config, expected_adunit_network_config)
 
+        # CAMPAIGNS
         campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account)
         eq_(len(campaigns_dict), 2)
 
@@ -674,11 +675,37 @@ class CreateAppViewTestCase(BaseViewTestCase):
             " application")
         model_eq(backfill_promo_campaign, expected_backfill_promo_campaign, check_primary_key=False)
 
+        # ADGROUPS
         adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
         eq_(len(adgroups_dict), 2)
 
+        marketplace_adgroups = [adgroup for adgroup in adgroups_dict.values() if adgroup.campaign.campaign_type == 'marketplace']
+        eq_(len(marketplace_adgroups), 1)
+        marketplace_adgroup = marketplace_adgroups[0]
+
+        # todo: generate and compare
+
+        backfill_promo_adgroups = [adgroup for adgroup in adgroups_dict.values() if adgroup.campaign.campaign_type == 'backfill_promo']
+        eq_(len(backfill_promo_adgroups), 1)
+        marketplace_adgroup = backfill_promo_adgroups[0]
+
+        # todo: generate and compare
+
+        # CREATIVES
         creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(self.account)
         eq_(len(creatives_dict), 2)
+
+        marketplace_creatives = [creative for creative in creatives_dict.values() if creative.ad_group == marketplace_adgroup]
+        eq_(len(marketplace_creatives), 1)
+        marketplace_creative = marketplace_creatives[0]
+
+        # todo: generate and compare
+
+        backfill_promo_creatives = [creative for creative in creatives_dict.values() if creative.ad_group == backfill_promo_adgroup]
+        eq_(len(backfill_promo_creatives), 1)
+        backfill_promo_creative = backfill_promo_creatives[0]
+
+        # todo: generate and compare
 
         # Make sure the app/adunit were created within the last minute.
         time_almost_eq(app.t,

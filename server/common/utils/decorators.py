@@ -208,6 +208,9 @@ def decorate_all_methods(decorator):
     """
     def decorate(cls):
         for method in inspect.getmembers(cls, inspect.ismethod):
-            setattr(cls, method, decorator(getattr(cls, method)))
+            print cls
+            method_name = method[1].__name__
+            if 'mptest' in method_name:
+                setattr(cls, method_name, decorator(getattr(cls, method_name)))
         return cls
     return decorate

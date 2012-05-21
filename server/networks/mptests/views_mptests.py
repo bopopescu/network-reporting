@@ -14,12 +14,12 @@ from django.core.urlresolvers import reverse
 from google.appengine.ext import db
 
 from admin.randomgen import generate_app, generate_adunit
-from common.utils.test.views import BaseViewTestCase
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION, \
         REPORTING_NETWORKS
 from publisher.query_managers import PublisherQueryManager
 
+from networks.mptests.network_test_case import NetworkTestCase
 from networks.views import NETWORKS_WITH_PUB_IDS
 from networks.forms import NetworkCampaignForm, \
         NetworkAdGroupForm, \
@@ -59,15 +59,15 @@ def skip_if_no_mappers(test_method):
             return test_method(self)
     return wrapper
 
-class EditNetworkTestCase(BaseViewTestCase):
+class EditNetworkTestCase(NetworkTestCase):
     def setUp(self):
         super(EditNetworkTestCase, self).setUp()
 
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
-        self.existing_apps = get_apps_with_adunits(self.account)
+        self.existing_apps = self.get_apps_with_adunits(self.account)
 
-        self.existing_campaign = generate_network_campaign(self.network_type,
+        self.existing_campaign = self.generate_network_campaign(self.network_type,
             self.account, self.existing_apps)
 
         app_pub_ids = {}
@@ -83,23 +83,12 @@ class EditNetworkTestCase(BaseViewTestCase):
         self.url = reverse('edit_network',
                 kwargs={'campaign_key': str(self.existing_campaign.key())})
 
-        self.post_data = setup_post_request_data(apps=self.existing_apps,
+        self.post_data = self.setup_post_request_data(apps=self.existing_apps,
                 network_type=self.network_type, app_pub_ids=app_pub_ids,
                 adunit_pub_ids=adunit_pub_ids)
 
     def network_type_to_test(self):
         return 'admob'
-
-    def set_up_existing_apps_and_adunits(self):
-        """Creates one app with one adunit for use as a test fixture.
-
-        This method may be overridden in a test case subclass to modify the
-        test fixture.
-
-        Author: Andrew He
-        """
-        app = generate_app(self.account)
-        generate_adunit(app, self.account)
 
     def mptest_response_code(self):
         """When editing a network campaign, response code should be 200.
@@ -134,7 +123,7 @@ class EditNetworkTestCase(BaseViewTestCase):
 
     def mptest_only_allows_activating_adgroups_with_pub_ids(self):
         """Setting adgroup.active to True should not work if there's no pub ID.
-        
+
         Author: Andrew He
         """
         # Prepare a request that marks one of the adunits as 'enabled' without
@@ -142,7 +131,7 @@ class EditNetworkTestCase(BaseViewTestCase):
         app = self.existing_apps[0]
         adunit = app.adunits[0]
 
-        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit.key(), 
+        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit.key(),
                 self.network_type)
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_pub_id_key] = ''
@@ -190,7 +179,7 @@ class EditNetworkTestCase(BaseViewTestCase):
 
     def mptest_updates_network_configs(self):
         """All network config objects should be updated with correct pub IDs.
-        
+
         Author: Andrew He
         """
         if self.network_type not in NETWORKS_WITH_PUB_IDS:
@@ -206,7 +195,7 @@ class EditNetworkTestCase(BaseViewTestCase):
         self.post_data[app_pub_id_key] = new_app_pub_id
 
         new_adunit_pub_id = 'TEST_ADUNIT_PUB_ID'
-        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit_to_modify.key(), 
+        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit_to_modify.key(),
                 self.network_type)
         self.post_data[adunit_pub_id_key] = new_adunit_pub_id
 
@@ -216,12 +205,12 @@ class EditNetworkTestCase(BaseViewTestCase):
 
         # Check that the specified network configs were modified as expected,
         # and that all other network configs were unchanged.
-        for app in get_apps_with_adunits(self.account):
+        for app in self.get_apps_with_adunits(self.account):
             if app.key() == app_to_modify.key():
                 expected_app_pub_id = new_app_pub_id
             else:
                 expected_app_pub_id = self.app_pub_ids[app.key()]
-            
+
             eq_(getattr(app.network_config, '%s_pub_id' %
                     self.network_type), expected_app_pub_id)
 
@@ -253,7 +242,7 @@ class EditNetworkTestCase(BaseViewTestCase):
         # Send the request.
         self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        
+
         # Fetch all mappers for our app and this network type.
         mappers = AdNetworkAppMapper.all(). \
             filter('application in', self.existing_apps). \
@@ -289,7 +278,7 @@ class EditNetworkTestCase(BaseViewTestCase):
                 self.existing_campaign, adunit.key(), self.account.key(),
                 get_from_db=True)
         eq_(adgroup.bid, new_bid)
-    
+
     def mptest_updates_advanced_targeting(self):
         """Updating advanced targeting for a campaign should work.
 
@@ -346,13 +335,13 @@ class EditNetworkTestCase(BaseViewTestCase):
         eq_(adgroup.hourly_frequency_cap, new_hourly_frequency_cap)
 
 
-class CreateNetworkTestCase(BaseViewTestCase):
+class CreateNetworkTestCase(NetworkTestCase):
     def setUp(self):
         super(CreateNetworkTestCase, self).setUp()
 
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
-        self.existing_apps = get_apps_with_adunits(self.account)
+        self.existing_apps = self.get_apps_with_adunits(self.account)
 
         self.app_pub_ids = {}
         self.adunit_pub_ids = {}
@@ -367,23 +356,12 @@ class CreateNetworkTestCase(BaseViewTestCase):
 
         self.url = reverse('edit_network',
                 kwargs={'network': self.network_type})
-        self.post_data = setup_post_request_data(apps=self.existing_apps,
+        self.post_data = self.setup_post_request_data(apps=self.existing_apps,
                 network_type=self.network_type, app_pub_ids=self.app_pub_ids,
                 adunit_pub_ids=self.adunit_pub_ids)
 
     def network_type_to_test(self):
         return 'admob'
-
-    def set_up_existing_apps_and_adunits(self):
-        """Creates one app with one adunit for use as a test fixture.
-
-        This method may be overridden in a test case subclass to modify the
-        test fixture.
-
-        Author: Andrew He
-        """
-        app = generate_app(self.account)
-        generate_adunit(app, self.account)
 
     def mptest_response_code(self):
         """When adding a network campaign, response code should be 200.
@@ -426,7 +404,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
         if self.network_type in ('custom', 'custom_native'):
             return
 
-        generate_network_campaign(self.network_type, self.account,
+        self.generate_network_campaign(self.network_type, self.account,
                 self.existing_apps)
 
         existing_campaigns = self.get_network_campaigns()
@@ -535,7 +513,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
             self.account = AccountQueryManager.get(self.account.key())
             eq_(self.account.network_config.jumptap_pub_id, DEFAULT_PUB_ID)
 
-        actual_apps = get_apps_with_adunits(self.account)
+        actual_apps = self.get_apps_with_adunits(self.account)
         for app in actual_apps:
             expected_app_pub_id = self.app_pub_ids[app.key()]
             eq_(getattr(app.network_config, '%s_pub_id' %
@@ -565,7 +543,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
 
         Author: Andrew He
         """
-        ad_network_login = generate_ad_network_login(self.network_type,
+        ad_network_login = self.generate_ad_network_login(self.network_type,
                 self.account)
         self.client.post(self.url, self.post_data,
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -667,7 +645,7 @@ class CreateNetworkTestCase(BaseViewTestCase):
         login = AdNetworkLoginCredentials.get_by_ad_network_name(
                 self.account, ad_network_name)
         if not login:
-            login = generate_ad_network_login(ad_network_name, self.account)
+            login = self.generate_ad_network_login(ad_network_name, self.account)
 
         # Create the mapper and save it.
         mapper = AdNetworkAppMapper(ad_network_login=login,
@@ -778,18 +756,18 @@ class ComplexEditNetworkTestCase(CreateNetworkTestCase):
                 generate_adunit(app, self.account)
 
 
-class PauseNetworkTestCase(BaseViewTestCase):
+class PauseNetworkTestCase(NetworkTestCase):
     def setUp(self):
         super(PauseNetworkTestCase, self).setUp()
 
         self.url = reverse('pause_network')
 
         self.set_up_existing_apps_and_adunits()
-        self.existing_apps = get_apps_with_adunits(self.account)
+        self.existing_apps = self.get_apps_with_adunits(self.account)
 
         # all network campaigns are treated the same
         network_type = 'admob'
-        self.campaign = generate_network_campaign(network_type,
+        self.campaign = self.generate_network_campaign(network_type,
                 self.account, self.existing_apps)
 
         self.campaign.put()
@@ -840,31 +818,20 @@ class PauseNetworkTestCase(BaseViewTestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-    def set_up_existing_apps_and_adunits(self):
-        """Creates one app with one adunit for use as a test fixture.
 
-        This method may be overridden in a test case subclass to modify the
-        test fixture.
-
-        Author: Andrew He
-        """
-        app = generate_app(self.account)
-        generate_adunit(app, self.account)
-
-
-class DeleteNetworkTestCase(BaseViewTestCase):
+class DeleteNetworkTestCase(NetworkTestCase):
     def setUp(self):
         super(DeleteNetworkTestCase, self).setUp()
 
         self.url = reverse('delete_network')
 
         self.set_up_existing_apps_and_adunits()
-        self.existing_apps = get_apps_with_adunits(self.account)
+        self.existing_apps = self.get_apps_with_adunits(self.account)
 
         self.network_type = 'admob'
-        self.campaign = generate_network_campaign(self.network_type, self.account,
+        self.campaign = self.generate_network_campaign(self.network_type, self.account,
                 self.existing_apps)
-        generate_ad_network_login(self.network_type, self.account)
+        self.generate_ad_network_login(self.network_type, self.account)
         self.post_data = {'campaign_key': str(self.campaign.key())}
 
     def mptest_response_code(self):
@@ -908,7 +875,7 @@ class DeleteNetworkTestCase(BaseViewTestCase):
         """
         num_of_custom_campaigns = 2
         for x in range(num_of_custom_campaigns):
-            generate_network_campaign(self.network_type, self.account,
+            self.generate_network_campaign(self.network_type, self.account,
                     self.existing_apps)
         response = self.client.post(self.url, self.post_data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -933,19 +900,8 @@ class DeleteNetworkTestCase(BaseViewTestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-    def set_up_existing_apps_and_adunits(self):
-        """Creates one app with one adunit for use as a test fixture.
 
-        This method may be overridden in a test case subclass to modify the
-        test fixture.
-
-        Author: Andrew He
-        """
-        app = generate_app(self.account)
-        generate_adunit(app, self.account)
-
-
-class NetworksTestCase(BaseViewTestCase):
+class NetworksTestCase(NetworkTestCase):
     def setUp(self):
         super(NetworksTestCase, self).setUp()
 
@@ -953,10 +909,10 @@ class NetworksTestCase(BaseViewTestCase):
         AccountQueryManager.put(self.account)
 
         self.set_up_existing_apps_and_adunits()
-        self.existing_apps = get_apps_with_adunits(self.account)
+        self.existing_apps = self.get_apps_with_adunits(self.account)
 
         for network_type in NETWORKS:
-            generate_network_campaign(network_type, self.account,
+            self.generate_network_campaign(network_type, self.account,
                     self.existing_apps)
 
         self.url = reverse('networks')
@@ -969,27 +925,16 @@ class NetworksTestCase(BaseViewTestCase):
         response = self.client.get(self.url)
         eq_(response.status_code, 200)
 
-    def set_up_existing_apps_and_adunits(self):
-        """Creates one app with one adunit for use as a test fixture.
 
-        This method may be overridden in a test case subclass to modify the
-        test fixture.
-
-        Author: Andrew He
-        """
-        app = generate_app(self.account)
-        generate_adunit(app, self.account)
-
-
-class NetworkDetailsTestCase(BaseViewTestCase):
+class NetworkDetailsTestCase(NetworkTestCase):
     def setUp(self):
         super(NetworkDetailsTestCase, self).setUp()
 
         self.set_up_existing_apps_and_adunits()
-        self.existing_apps = get_apps_with_adunits(self.account)
+        self.existing_apps = self.get_apps_with_adunits(self.account)
 
         self.network_type = self.network_type_to_test()
-        campaign = generate_network_campaign(self.network_type, self.account,
+        campaign = self.generate_network_campaign(self.network_type, self.account,
                 self.existing_apps)
 
         self.url = reverse('network_details',
@@ -1005,17 +950,6 @@ class NetworkDetailsTestCase(BaseViewTestCase):
         """
         response = self.client.get(self.url)
         eq_(response.status_code, 200)
-
-    def set_up_existing_apps_and_adunits(self):
-        """Creates one app with one adunit for use as a test fixture.
-
-        This method may be overridden in a test case subclass to modify the
-        test fixture.
-
-        Author: Andrew He
-        """
-        app = generate_app(self.account)
-        generate_adunit(app, self.account)
 
 
 class JumpTapDetailsTestCase(NetworkDetailsTestCase):
@@ -1066,99 +1000,3 @@ class CustomDetailsTestCase(NetworkDetailsTestCase):
 class CustomNativeDetailsTestCase(NetworkDetailsTestCase):
     def network_type_to_test(self):
         return 'custom_native'
-
-
-# Helper functions.
-
-def get_apps_with_adunits(account):
-        apps = PublisherQueryManager.get_objects_dict_for_account(
-                account=account).values()
-        return sorted(apps, key=lambda a: a.name)
-
-def generate_network_campaign(network_type, account, apps):
-    """Creates a network campaign along with any necessary adgroups/creatives.
-
-    NOTE: argument apps needs adunits attached.
-
-    Author: Andrew He
-    """
-    campaigns = CampaignQueryManager.get_network_campaigns(account,
-            network_type=network_type)
-    # Generate the campaign object.
-    if network_type in ('custom', 'custom_native') or campaigns:
-        campaign = Campaign(name=NETWORKS[network_type],
-                            campaign_type='network',
-                            network_type=network_type,
-                            network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
-                            account=account)
-    else:
-        campaign = CampaignQueryManager.get_default_network_campaign(
-            account, network_type)
-
-    CampaignQueryManager.put(campaign)
-
-    # Generate one adgroup per adunit.
-    for app in apps:
-        for adunit in app.adunits:
-            adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
-                    adunit.key(), account.key())
-            AdGroupQueryManager.put(adgroup)
-
-            # Generate the creative for this adgroup.
-            if network_type in ('custom', 'custom_native'):
-                creative = adgroup.default_creative(custom_html=DEFAULT_HTML)
-            else:
-                creative = adgroup.default_creative()
-            creative.account = account
-            CreativeQueryManager.put(creative)
-
-    return campaign
-
-def setup_post_request_data(apps=[], network_type=None, app_pub_ids={},
-        adunit_pub_ids={}):
-
-    post_data = {}
-
-    campaign_name = NETWORKS[network_type]
-    campaign_form = NetworkCampaignForm({'name': campaign_name})
-    post_data.update(campaign_form.data)
-
-    default_adgroup_form = NetworkAdGroupForm()
-    post_data.update(default_adgroup_form.data)
-
-    if network_type == 'jumptap':
-        post_data['jumptap_pub_id'] = DEFAULT_PUB_ID
-
-    for app in apps:
-        app_post_key = 'app_%s-%s_pub_id' % (app.key(), network_type)
-        post_data[app_post_key] = app_pub_ids[app.key()]
-
-        for adunit in app.adunits:
-            adunit_post_key = 'adunit_%s-%s_pub_id' % \
-                    (adunit.key(), network_type)
-            post_data[adunit_post_key] = adunit_pub_ids[adunit.key()]
-
-            adgroup_form_data = {'bid': DEFAULT_BID}
-            if network_type == 'custom':
-                adgroup_form_data['custom_html'] = DEFAULT_HTML
-            elif network_type == 'custom_native':
-                adgroup_form_data['custom_method'] = DEFAULT_HTML
-            adgroup_form = AdUnitAdGroupForm(adgroup_form_data)
-
-            for key, item in adgroup_form.data.items():
-                prefixed_key = '%s-%s' % (adunit.key(), key)
-                post_data[prefixed_key] = item
-
-    print post_data
-    return post_data
-
-def generate_ad_network_login(network_type, account):
-    """Creates and saves an AdNetworkLoginCredentials object.
-
-    Author: Andrew He
-    """
-    login = AdNetworkLoginCredentials(account=account,
-                                      ad_network_name=network_type)
-    login.put()
-    return login
-

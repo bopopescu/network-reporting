@@ -197,9 +197,10 @@ def returns_unicode(func):
     return new_func
 
 
-def decorate_all_methods(decorator):
+def decorate_all_test_methods(decorator):
     """
     Decorator that applies a decorator to all methods in a class 
+    that contain 'mptest'
 
     NOTE: This will also wrap nested methods
 

@@ -1,14 +1,20 @@
+import os
+import sys
+
+sys.path.append(os.environ['PWD'])
+
+import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
 from admin.randomgen import generate_app, generate_adunit
 
 from publisher.query_managers import PublisherQueryManager
 
-from advertiser.query_managers import AdvertiserQueryManager, \
-        CampaignQueryManager, \
+from advertiser.query_managers import CampaignQueryManager, \
         AdGroupQueryManager, \
         CreativeQueryManager
 
-from advertiser.models import Campaign
+from advertiser.models import Campaign, \
+        NetworkStates
 from ad_network_reports.models import AdNetworkLoginCredentials
 
 from networks.forms import NetworkCampaignForm, \

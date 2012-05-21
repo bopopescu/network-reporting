@@ -29,6 +29,7 @@ class BaseViewTestCase(unittest.TestCase):
 
         # generate data
         self.account = generate_account()
+        self._create_secondary_account()
 
         # log in
         self.client.login(username=USERNAME, password=PASSWORD)
@@ -41,11 +42,15 @@ class BaseViewTestCase(unittest.TestCase):
         pass
 
     def login_secondary_account(self):
-        username = 'user@domain.com'
-        password = 'password'
+        username, password = self._secondary_credentials()
+        self.client.login(username=username, password=password)
+
+    def _create_secondary_account(self):
+        username, password = self._secondary_credentials()
         generate_account(username, password, username)
 
-        self.client.login(username=username, password=password)
+    def _secondary_credentials(self):
+        return 'username', 'password'
 
     @staticmethod
     def test_client_reverse(viewname, urlconf=None, args=None, kwargs=None,

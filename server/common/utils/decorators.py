@@ -196,3 +196,18 @@ def returns_unicode(func):
             return unencoded
     return new_func
 
+
+def decorate_all_methods(decorator):
+    """
+    Decorator that applies a decorator to all methods in a class 
+
+    NOTE: This will also wrap nested methods
+
+    Author:
+        Haydn (5/21/2012)
+    """
+    def decorate(cls):
+        for method in inspect.getmembers(cls, inspect.ismethod):
+            setattr(cls, method, decorator(getattr(cls, method)))
+        return cls
+    return decorate

@@ -10,8 +10,10 @@ import common.utils.test.setup
 from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
-from common.utils.test.test_utils import dict_eq, model_to_dict, time_almost_eq
+from common.utils.test.test_utils import dict_eq, model_eq, model_to_dict, \
+                                         time_almost_eq, confirm_db
 from common.utils.test.views import BaseViewTestCase
+from account.models import NetworkConfig
 from publisher.forms import AppForm, AdUnitForm
 from publisher.models import App, AdUnit
 from publisher.query_managers import PublisherQueryManager
@@ -87,12 +89,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
         ok_(not get_response.context['adunit_form'].is_bound)
 
+    @confirm_db(modified=[App, AdUnit])
     def mptest_create_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
         parameters, and confirming the app/adunit were created as expected.
         """
-
         post_data = self._generate_post_data()
 
         # We're expecting a statuc code 302 because this view, on successful
@@ -110,7 +112,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         # Obtain the created app/adunit and convert their models to dicts.
         app = apps_dict.values()[0]
-        app_dict = model_to_dict(app, exclude=['t'])
+        app_dict = model_to_dict(app)
         adunit = adunits_dict.values()[0]
         adunit_dict = model_to_dict(adunit, exclude=['t'])
 
@@ -120,6 +122,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         dict_eq(app_dict, expected_app_dict, exclude=['t'])
         expected_adunit_dict = _default_adunit_dict(self.account, app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
+
+        # Test the models in the db with what we expect
+        expected_app = _default_app(self.account)
+        model_eq(app, expected_app, check_primary_key=False)
+        expected_adunit = _default_adunit(self.account, app)
+        model_eq(adunit, expected_adunit, check_primary_key=False)
 
         # Make sure the app/adunit were created within the last minute.
         time_almost_eq(app.t,
@@ -132,6 +140,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
     # This test is broken because of an existing bug in both AppForm (name isn't
     # required) and CreateAppHandler.post (attempts to put None app when form
     # validation fails).
+    @confirm_db(modified=[])
     def mptest_create_app_and_adunit_app_validation(self):
         """
         Confirm that create_app returns the appropriate validation errors when
@@ -163,6 +172,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(adunits_dict, {})
 
+    @confirm_db(modified=[])
     def mptest_create_app_and_adunit_adunit_validation(self):
         """
         Confirm that create_app returns the appropriate validation errors when
@@ -233,6 +243,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         post_data.update(kwargs)
         return post_data
 
+    @confirm_db(modified=[App])
     def mptest_update_app(self):
         """
         Confirm that app editing works by submitting known good parameters and
@@ -272,18 +283,30 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         # primary_category to have changed. AdUnit properties should not change.
         expected_app_dict = _default_app_dict(
             self.account,
-            name=u'Business App',
-            primary_category=u'business')
+            name=post_data['name'][0],
+            primary_category=post_data['primary_category'][0])
+
         dict_eq(app_dict, expected_app_dict, exclude=['t'])
         expected_adunit_dict = _default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
+        # compares to the the modified models in the db with
+        # the expected values as intended by the POST.
+        expected_app = _default_app(self.account,
+                        key=self.app.key(),
+                        name=post_data['name'][0],
+                        primary_category=post_data['primary_category'][0])
+        model_eq(app, expected_app)
+
+        expected_adunit = _default_adunit(self.account, app, key=self.adunit.key())
+        model_eq(adunit, expected_adunit)
+
+    @confirm_db(modified=[])
     def mptest_update_app_validation(self):
         """
         Confirm that posting invalid parameters (i.e. empty app name) will
         result in validation errors and no change to the db state.
         """
-
         # Remove name from the post parameters to generate a validation error.
         post_data = self._generate_post_data(name=[u''])
 
@@ -319,6 +342,16 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit_dict = _default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
+        # compares to the the models in the db, expecting
+        # no change since the form(s) were invalid
+        expected_app = _default_app(self.account,
+                        key=self.app.key())
+        model_eq(app, expected_app)
+
+        expected_adunit = _default_adunit(self.account, app, key=self.adunit.key())
+        model_eq(adunit, expected_adunit)
+
+    @confirm_db(modified=[])
     def mptest_update_app_authorization(self):
         """
         Attempt to update an app using an unauthorized account. Confirm that the
@@ -356,6 +389,15 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit_dict = _default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
+        # compares to the the models in the db, expecting
+        # no change
+        expected_app = _default_app(self.account,
+                        key=self.app.key())
+        model_eq(app, expected_app)
+
+        expected_adunit = _default_adunit(self.account, app, key=self.adunit.key())
+        model_eq(adunit, expected_adunit)
+
 
 class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
     """
@@ -391,6 +433,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         post_data.update(kwargs)
         return post_data
 
+    @confirm_db(modified=[AdUnit])
     def mptest_create_adunit(self):
         """
         Confirm that adunit creation works by submitting known good parameters,
@@ -408,7 +451,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             'errors': [],
         })
 
-        # This account should now have two adunit.
+        # This account should now have two adunits.
         adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
             account=self.account)
         eq_(len(adunits_dict), 2)
@@ -427,11 +470,17 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit_dict = _default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
+        # check the model is in the db as expected
+        expected_adunit = _default_adunit(self.account, self.app,
+                                name=post_data['adunit-name'][0])
+        model_eq(adunit, expected_adunit, check_primary_key=False)
+
         # Make sure the adunit was created within the last minute.
         time_almost_eq(adunit.t,
                        datetime.datetime.utcnow(),
                        datetime.timedelta(minutes=1))
 
+    @confirm_db(modified=[])
     def mptest_create_adunit_validation(self):
         """
         Confirm that create_adunit returns the appropriate validation errors
@@ -457,6 +506,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
+    @confirm_db(modified=[])
     def mptest_update_adunit(self):
         """
         Confirm that adunit updating works by submitting known good parameters,
@@ -497,6 +547,14 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             name=u'Updated Banner Ad')
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
+        # check the model is in the db as expected per the post
+        # paramaters
+        expected_adunit = _default_adunit(self.account, self.app,
+                                key=self.adunit.key(),
+                                name=post_data['adunit-name'][0])
+        model_eq(adunit, expected_adunit)
+
+    @confirm_db(modified=[])
     def mptest_update_adunit_validation(self):
         """
         Confirm that editing an adunit returns the appropriate validation errors
@@ -534,6 +592,12 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit_dict = _default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
+        # check the model is in the db has not changed
+        expected_adunit = _default_adunit(self.account, self.app,
+                                key=self.adunit.key(),)
+        model_eq(adunit, expected_adunit)
+
+    @confirm_db(modified=[])
     def mptest_update_adunit_authorization(self):
         """
         Attempt to update an adunit using an unauthorized account. Confirm that
@@ -566,6 +630,11 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit_dict = _default_adunit_dict(self.account, self.app)
         dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
 
+        # check the model is in the db has not changed
+        expected_adunit = _default_adunit(self.account, self.app,
+                                key=self.adunit.key(),)
+        model_eq(adunit, expected_adunit)
+
 
 class DeleteAppViewTestCase(BaseViewTestCase):
     """
@@ -580,6 +649,7 @@ class DeleteAppViewTestCase(BaseViewTestCase):
 
         self.url = reverse('publisher_delete_app', args=[str(self.app.key())])
 
+    @confirm_db(modified=[App])
     def mptest_delete_app(self):
         """
         Delete an app and confirm that it and its child adunit are no longer
@@ -600,6 +670,7 @@ class DeleteAppViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(adunits_dict, {})
 
+    @confirm_db(modified=[])
     def mptest_delete_app_authorization(self):
         """
         Confirm that an attempt to delete an app belonging to a different
@@ -636,6 +707,7 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
         self.url = reverse('publisher_delete_adunit',
                            args=[str(self.adunit.key())])
 
+    @confirm_db(modified=[AdUnit])
     def mptest_delete_adunit(self):
         """
         Delete an adunit and confirm that it is no longer returned by the query
@@ -656,6 +728,7 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(adunits_dict, {})
 
+    @confirm_db(modified=[])
     def mptest_delete_adunit_authorization(self):
         """
         Confirm that an attempt to delete an adunit belonging to a different
@@ -743,6 +816,11 @@ def _default_app_dict(account, **kwargs):
     return app_dict
 
 
+def _default_app(account, key=None, **kwargs):
+    app_params = _default_app_dict(account, **kwargs)
+    return App(key=key, **app_params)
+
+
 def _default_adunit_dict(account, app, **kwargs):
     adunit_dict = {
         'name': u'Banner Ad',
@@ -774,3 +852,8 @@ def _default_adunit_dict(account, app, **kwargs):
 
     adunit_dict.update(kwargs)
     return adunit_dict
+
+
+def _default_adunit(account, app, key=None, **kwargs):
+    adunit_params = _default_adunit_dict(account, app, **kwargs)
+    return AdUnit(key=key, **adunit_params)

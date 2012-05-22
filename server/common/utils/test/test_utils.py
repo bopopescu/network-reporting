@@ -1,5 +1,6 @@
 import os
 import sys
+import inspect
 
 sys.path.append(os.environ['PWD'])
 
@@ -57,11 +58,16 @@ def dict_eq(dict1, dict2, exclude=[]):
     eq_(dict1_keys, dict2_keys, msg)
 
     for key in dict1_keys:
-        if isinstance(dict1[key], db.Model):
-            model_key_eq(dict1[key], dict2[key])
+        value1 = dict1[key]
+        value2 = dict2[key]
+
+        if isinstance(value1, db.Model):
+            model_key_eq(value1, value2)
+        elif isinstance(value1, dict):
+            dict_eq(value1, value2)
+        elif isinstance(value1, list):
+            list_eq(value1, value2)
         else:
-            value1 = dict1[key]
-            value2 = dict2[key]
             msg = "%s != %s for key %s" % (value1, value2, key)
             eq_(value1, value2, msg)
 
@@ -182,7 +188,7 @@ def confirm_db(modified=None):
             messages = []  # compiles all the failures
             error = False
             for Model in MODELS:
-                if not Model in modified:
+                if Model not in modified:
                     pre_test_count = pre_test_count_dict[Model]
                     post_test_count = Model.all().count()
                     msg = 'Model %s had %s objects but now has %s' % \

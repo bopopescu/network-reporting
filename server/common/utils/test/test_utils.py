@@ -1,5 +1,6 @@
 import os
 import sys
+import inspect
 
 sys.path.append(os.environ['PWD'])
 
@@ -57,10 +58,32 @@ def dict_eq(dict1, dict2, exclude=[]):
     eq_(dict1_keys, dict2_keys, msg)
 
     for key in dict1_keys:
-        if isinstance(dict1[key], db.Model):
-            model_key_eq(dict1[key], dict2[key])
+        value1 = dict1[key]
+        value2 = dict2[key]
+
+        if isinstance(value1, db.Model):
+            model_key_eq(value1, value2)
+        elif isinstance(value1, dict):
+            dict_eq(value1, value2)
+        elif isinstance(value1, list):
+            list_eq(value1, value2)
         else:
-            eq_(dict1[key], dict2[key])
+            msg = "%s != %s for key %s" % (value1, value2, key)
+            eq_(value1, value2, msg)
+
+
+def list_eq(list1, list2):
+    eq_(len(list1), len(list2))
+
+    for item1, item2 in zip(list1, list2):
+        if isinstance(item1, db.Model):
+            model_key_eq(item1, item2)
+        elif isinstance(item1, dict):
+            dict_eq(item1, item2)
+        elif isinstance(item1, list):
+            list_eq(item1, item2)
+        else:
+            eq_(item1, item2)
 
 
 def model_key_eq(model1, model2):
@@ -163,18 +186,23 @@ def confirm_db(modified=None):
             messages = []  # compiles all the failures
             error = False
             for Model in MODELS:
-                if not Model in modified:
+                if Model not in modified:
                     pre_test_count = pre_test_count_dict[Model]
-                    post_test_count = Model.all().count()
+
+                    model_query = Model.all()
+                    post_test_count = model_query.count()
+                    post_test_delete_count = model_query.filter('deleted =', True).count()
+
                     msg = 'Model %s had %s objects but now has %s' % \
                             (Model.__name__, pre_test_count, post_test_count)
 
                     if pre_test_count != post_test_count:
-                        messages.append(msg)
-                        error = True
+                        if (post_test_count - pre_test_count) != post_test_delete_count:
+                            messages.append(msg)
+                            error = True
 
             # raises an assertion error if any of the model tests failed
-            assert not error, ', '.join(messages)
+            ok_(not error, ', '.join(messages))
         return _wrapped_method
     return _outer
 

@@ -1,5 +1,6 @@
 import os
 import sys
+import inspect
 
 sys.path.append(os.environ['PWD'])
 
@@ -11,9 +12,12 @@ from account.models import Account, User, NetworkConfig
 from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import App, AdUnit
 from reporting.models import StatsModel
+from ad_network_reports.models import AdNetworkLoginCredentials, \
+        AdNetworkAppMapper
 
 MODELS = [Account, User, NetworkConfig, App, AdUnit,
-          Campaign, AdGroup, Creative, StatsModel]
+          Campaign, AdGroup, Creative, StatsModel,
+          AdNetworkLoginCredentials, AdNetworkAppMapper]
 
 
 def prepend_list(e, li):
@@ -181,7 +185,7 @@ def confirm_db(modified=None):
 
 def decorate_all_test_methods(decorator):
     """
-    Decorator that applies a decorator to all methods in a class 
+    Decorator that applies a decorator to all methods in a class
 
     NOTE: This will also wrap nested methods
 

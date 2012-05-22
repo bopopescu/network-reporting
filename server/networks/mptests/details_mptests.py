@@ -10,7 +10,9 @@ from nose.tools import ok_, \
 
 from django.core.urlresolvers import reverse
 
-from common.utils.test.test_utils import dict_eq
+from common.utils.test.test_utils import dict_eq, \
+        decorate_all_test_methods, \
+        confirm_db
 from common.constants import NETWORKS
 from networks.mptests.network_test_case import NetworkTestCase, \
         DEFAULT_BID
@@ -18,6 +20,7 @@ from networks.mptests.network_test_case import NetworkTestCase, \
 from ad_network_reports.models import LoginStates
 
 
+@decorate_all_test_methods(confirm_db())
 class NetworkDetailsTestCase(NetworkTestCase):
     def setUp(self):
         super(NetworkDetailsTestCase, self).setUp()

@@ -7,6 +7,8 @@ import unittest
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
+from nose.tools import ok_
+
 from google.appengine.ext import testbed
 
 from advertiser.models import Order, LineItem
@@ -14,6 +16,7 @@ from advertiser.forms import (OrderForm, LineItemForm, ImageCreativeForm,
                               TextAndTileCreativeForm, HtmlCreativeForm)
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import UTC
+from common.utils.test.test_utils import time_almost_eq
 
 
 class TestOrderForm(unittest.TestCase):
@@ -23,14 +26,18 @@ class TestOrderForm(unittest.TestCase):
             'advertiser': 'Test Order Advertiser',
         }
 
-    def test_required(self):
+    def mptest_required(self):
         form = OrderForm(self.data)
-        self.assertTrue(form.is_valid(), "OrderForm(%s): %s" % (self.data, form._errors.as_text()))
+        ok_(form.is_valid(), 
+            "OrderForm(%s): %s" % (self.data, form._errors.as_text()))
+
         for key in self.data:
             incomplete_data = copy.deepcopy(self.data)
             del incomplete_data[key]
             form = OrderForm(incomplete_data)
-            self.assertFalse(form.is_valid(), "OrderForm(%s): %s was missing but form validated." % (incomplete_data, key))
+            ok_(not form.is_valid(), 
+                "OrderForm(%s): %s was missing but form validated." % \
+                (incomplete_data, key))
 
 
 GUARANTEED_LINE_ITEM_DATA = [
@@ -88,7 +95,7 @@ class TestLineItemForm(unittest.TestCase):
     def setUp(self):
         self.data = GUARANTEED_LINE_ITEM_DATA + PROMOTIONAL_LINE_ITEM_DATA
 
-    def test_new_line_item_datetimes(self):
+    def mptest_new_line_item_datetimes(self):
         now = datetime.datetime.now(Pacific_tzinfo())
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday = now - datetime.timedelta(days=1)
@@ -128,32 +135,61 @@ class TestLineItemForm(unittest.TestCase):
         data = copy.deepcopy(self.data)
         for test_data in data:
             for start_datetime, end_datetime in invalid_datetimes:
-                test_data['start_datetime_0'] = start_datetime.date().strftime('%m/%d/%Y') if start_datetime else ''
-                test_data['start_datetime_1'] = start_datetime.time().strftime('%I:%M %p') if start_datetime else ''
-                test_data['end_datetime_0'] = end_datetime.date().strftime('%m/%d/%Y') if end_datetime else ''
-                test_data['end_datetime_1'] = end_datetime.time().strftime('%I:%M %p') if end_datetime else ''
+                test_data['start_datetime_0'] = _parse_datetime(start_datetime)
+                test_data['start_datetime_1'] = _parse_hour_time(start_datetime)
+                test_data['end_datetime_0'] = _parse_datetime(end_datetime)
+                test_data['end_datetime_1'] = _parse_hour_time(end_datetime)
                 form = LineItemForm(test_data)
-                self.assertFalse(form.is_valid(), "Form validated with invalid datetimes: start_datetime=%s end_datetime=%s" % (start_datetime, end_datetime))
+                ok_(not form.is_valid(), 
+                    "Form validated with invalid datetimes: start_datetime=%s end_datetime=%s" % \
+                    (start_datetime, end_datetime))
+
             for start_datetime, end_datetime, output_start_datetime, output_end_datetime in valid_datetimes:
-                test_data['start_datetime_0'] = start_datetime.date().strftime('%m/%d/%Y') if start_datetime else ''
-                test_data['start_datetime_1'] = start_datetime.time().strftime('%I:%M %p') if start_datetime else ''
-                test_data['end_datetime_0'] = end_datetime.date().strftime('%m/%d/%Y') if end_datetime else ''
-                test_data['end_datetime_1'] = end_datetime.time().strftime('%I:%M %p') if end_datetime else ''
+                test_data['start_datetime_0'] = _parse_datetime(start_datetime)
+                test_data['start_datetime_1'] = _parse_hour_time(start_datetime)
+                test_data['end_datetime_0'] = _parse_datetime(end_datetime)
+                test_data['end_datetime_1'] = _parse_hour_time(end_datetime)
+
                 form = LineItemForm(test_data)
                 self.assertTrue(form.is_valid(), form._errors.as_text())
                 line_item = form.save()
+
+                should_have_been_message = "%s should have been %s, was %s \
+                                            (start_datetime: %s, end_datetime: %s)."
+                datetime_none_message = "Input: start_datetime=%s end_datetime=%s. %s was %s"
+
                 if output_start_datetime:
-                    self.assertTrue(abs(line_item.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()) - output_start_datetime) < datetime.timedelta(minutes=1),
-                        "start_datetime should have been %s, was %s (start_datetime: %s, end_datetime: %s)." % (output_start_datetime, line_item.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()), start_datetime, end_datetime))
+                    pac_start_datetime = _as_pacific_time(line_item.start_datetime)
+                    time_almost_eq(pac_start_datetime, output_start_datetime,
+                                   should_have_been_message % ('start_datetime', 
+                                                               output_start_datetime, pac_start_datetime, 
+                                                               start_datetime, end_datetime))
                 else:
-                    self.assertEqual(line_item.start_datetime, None, "Input: start_datetime=%s end_datetime=%s. start_datetime was %s" % (start_datetime, end_datetime, line_item.start_datetime))
+                    ok_(not line_item.start_datetime, datetime_none_message % \
+                        (start_datetime, end_datetime, 'start_datetime', line_item.start_datetime))
+
                 if output_end_datetime:
-                    self.assertTrue(abs(line_item.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()) - output_end_datetime) < datetime.timedelta(minutes=1),
-                        "end_datetime should have been %s, was %s (start_datetime: %s, end_datetime: %s)." % (output_end_datetime, line_item.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()), start_datetime, end_datetime))
+                    pac_end_datetime = _as_pacific_time(line_item.end_datetime)
+                    time_almost_eq(pac_end_datetime, output_end_datetime,
+                                   should_have_been_message % ('end_datetime', 
+                                                               output_start_datetime, pac_end_datetime, 
+                                                               start_datetime, end_datetime))
                 else:
-                    self.assertEqual(line_item.end_datetime, None, "Input: start_datetime=%s end_datetime=%s. end_datetime was %s" % (start_datetime, end_datetime, line_item.end_datetime))
+                    ok_(not line_item.end_datetime, datetime_none_message % \
+                        (start_datetime, end_datetime, 'end_datetime', line_item.end_datetime))
 
     # TODO: keywords > 500 characters causes exception
+
+def _parse_hour_time(date):
+    return date.time().strftime('%I:%M %p') if date else ''
+
+
+def _parse_datetime(date):
+    return date.date().strftime('%m/%d/%Y') if date else ''
+
+
+def _as_pacific_time(date):
+    return date.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
 
 class TestGuaranteedLineItemForm(unittest.TestCase):

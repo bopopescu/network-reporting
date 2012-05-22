@@ -142,10 +142,10 @@ def model_to_dict(model, exclude=[], reference_only=False):
     return model_dict
 
 
-def time_almost_eq(time1, time2, delta=None):
+def time_almost_eq(time1, time2, delta=None, message=None):
     if not delta:
         delta = timedelta(minutes=1)
-    ok_(time1 < time2 + delta and time1 > time2 - delta)
+    ok_((time1 < time2 + delta) and (time1 > time2 - delta), message)
 
 
 def confirm_db(modified=None):

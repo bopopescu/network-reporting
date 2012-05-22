@@ -57,32 +57,10 @@ def dict_eq(dict1, dict2, exclude=[]):
     eq_(dict1_keys, dict2_keys, msg)
 
     for key in dict1_keys:
-        value1 = dict1[key]
-        value2 = dict2[key]
-
-        if isinstance(value1, db.Model):
-            model_key_eq(value1, value2)
-        elif isinstance(value1, dict):
-            dict_eq(value1, value2)
-        elif isinstance(value1, list):
-            list_eq(value1, value2)
+        if isinstance(dict1[key], db.Model):
+            model_key_eq(dict1[key], dict2[key])
         else:
-            msg = "%s != %s for key %s" % (value1, value2, key)
-            eq_(value1, value2, msg)
-
-
-def list_eq(list1, list2):
-    eq_(len(list1), len(list2))
-
-    for item1, item2 in zip(list1, list2):
-        if isinstance(item1, db.Model):
-            model_key_eq(item1, item2)
-        elif isinstance(item1, dict):
-            dict_eq(item1, item2)
-        elif isinstance(item1, list):
-            list_eq(item1, item2)
-        else:
-            eq_(item1, item2)
+            eq_(dict1[key], dict2[key])
 
 
 def model_key_eq(model1, model2):
@@ -185,7 +163,7 @@ def confirm_db(modified=None):
             messages = []  # compiles all the failures
             error = False
             for Model in MODELS:
-                if Model not in modified:
+                if not Model in modified:
                     pre_test_count = pre_test_count_dict[Model]
                     post_test_count = Model.all().count()
                     msg = 'Model %s had %s objects but now has %s' % \
@@ -199,3 +177,21 @@ def confirm_db(modified=None):
             assert not error, ', '.join(messages)
         return _wrapped_method
     return _outer
+
+
+def decorate_all_test_methods(decorator):
+    """
+    Decorator that applies a decorator to all methods in a class 
+
+    NOTE: This will also wrap nested methods
+
+    Author:
+        Haydn (5/21/2012)
+    """
+    def decorate(cls):
+        for method in inspect.getmembers(cls, inspect.ismethod):
+            method_name = method[1].__name__
+            if 'mptest' in method_name:
+                setattr(cls, method_name, decorator(getattr(cls, method_name)))
+        return cls
+    return decorate

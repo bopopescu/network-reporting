@@ -203,7 +203,9 @@ class OrderIndexTestCase(OrderViewTestCase):
         line_items = response.context['line_items']
         for line_item in line_items:
             ok_(line_item.campaign.is_order)
-
+    
+        CampaignQueryManager.delete(mpx_campaign)
+        AdGroupQueryManager.delete(mpx_adgroup)
 
 @decorate_all_test_methods(confirm_db())
 class OrderDetailHandlerTestCase(OrderViewTestCase):
@@ -592,14 +594,11 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        diff_acct = generate_account(username='slamboomington@c.com')
-        diff_order = generate_campaign(account=diff_acct)
-        diff_url = reverse('advertiser_line_item_form_new', kwargs={
-            'order_key':unicode(diff_order.key())
-        })
+        self.client.login_secondary_account()
 
-        response = self.client.get(diff_url)
+        response = self.client.get(self.new_url)
         eq_(response.status_code, 404)
+
 
     def mptest_fail_on_editing_unowned_line_item(self):
         """
@@ -607,18 +606,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        diff_acct = generate_account(username='diff')
-        diff_order = generate_campaign(account=diff_acct)
-        diff_line_item = generate_adgroup(diff_order,
-                                          [],
-                                          diff_acct,
-                                          'gtee')
-
-        diff_url = reverse('advertiser_line_item_form_edit',
-                           kwargs={'line_item_key':
-                                   unicode(diff_line_item.key())})
-
-        response = self.client.get(diff_url)
+        self.client.login_secondary_account()
+        
+        response = self.client.get(self.edit_url)
         eq_(response.status_code, 404)
 
     def mptest_gets_correct_apps(self):
@@ -639,6 +629,9 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         eq_(len(actual_apps), len(expected_apps))
         for actual_app, expected_app in zip(actual_apps, expected_apps):
             eq_(actual_app.key(), expected_app.key())
+
+        AppQueryManager.delete(app1)
+        AppQueryManager.delete(app2)
 
 
 class NewOrEditLineItemPostTestCase(OrderViewTestCase):
@@ -708,6 +701,9 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
+        CampaignQueryManager.delete(non_order_mpx)
+        CampaignQueryManager.delete(non_order_network)
+
     @confirm_db()
     def mptest_fail_when_line_item_not_owned(self):
         """
@@ -716,14 +712,9 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        diff_account = generate_account(username='diff')
-        order = generate_campaign(diff_account)
-        line_item = generate_adgroup(order, [], diff_account, 'gtee')
-        url = reverse('advertiser_line_item_form_edit', kwargs = {
-            'line_item_key': unicode(line_item.key())
-        })
+        self.client.login_secondary_account()
 
-        response = self.client.post(url, self.post_body,
+        response = self.client.post(self.edit_url, self.post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
         eq_(response.status_code, 404)
@@ -736,17 +727,13 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        url = reverse('advertiser_line_item_form_new', kwargs = {
-            'order_key': unicode(self.order.key())
-        })
-
         new_line_item_name = u'New really awesome lineitem' + unicode(uuid.uuid4())
 
         post_body = self.post_body
         post_body['name'] = new_line_item_name
 
         # Get the response from the post
-        response = self.client.post(url, post_body,
+        response = self.client.post(self.new_url, post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         response_json = json.loads(response.content)
 
@@ -776,16 +763,12 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         
         Author: John Pena
         """
-        url = reverse('advertiser_line_item_form_edit', kwargs = {
-            'line_item_key': unicode(self.line_item.key())
-        })
-
         # update the name for the post body
         new_name = 'new new name yeah'
         post_body = self.post_body
         post_body['name'] = new_name
 
-        response = self.client.post(url, post_body,
+        response = self.client.post(self.edit_url, post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
         line_item = AdGroupQueryManager.get(self.line_item.key())
@@ -800,18 +783,10 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        line_item = generate_adgroup(self.order,
-                                     [],
-                                     self.account,
-                                     'gtee')
-        url = reverse('advertiser_line_item_form_edit', kwargs = {
-            'line_item_key': unicode(line_item.key())
-        })
-
         post_body = self.post_body
         post_body['name'] = ''
 
-        response = self.client.post(url, post_body,
+        response = self.client.post(self.edit_url, post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         response_json = json.loads(response.content)
 

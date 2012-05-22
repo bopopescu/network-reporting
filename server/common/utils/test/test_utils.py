@@ -7,10 +7,6 @@ sys.path.append(os.environ['PWD'])
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
-<<<<<<< HEAD
-import inspect
-=======
->>>>>>> ae23ed7f15e5cb8b3a99681cf6c16cfe0f954f05
 
 from account.models import Account, User, NetworkConfig
 from advertiser.models import Campaign, AdGroup, Creative

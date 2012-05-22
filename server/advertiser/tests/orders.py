@@ -39,7 +39,8 @@ from advertiser.query_managers import (CampaignQueryManager,
 from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
 from advertiser.models import (Creative, TextAndTileCreative, 
-                               HtmlCreative, ImageCreative)
+                               HtmlCreative, ImageCreative, AdGroup, Campaign)
+from account.models import Account
 from advertiser.views.orders import get_targeted_apps
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
@@ -402,6 +403,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         super(OrderAndLineItemCreatePostTestCase, self).setUp()
         self.url = reverse('advertiser_order_and_line_item_form_new')
 
+    @confirm_db(modified=[AdGroup, Campaign])
     def mptest_http_response_code(self):
         """
         A valid get should return a valid (200, 302) response (regardless
@@ -411,6 +413,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(response.status_code in [200, 302])
 
+    @confirm_db()
     def mptest_graceful_fail_without_data(self):
         """
         Posting to the form handler should fail if there's no post body.
@@ -421,6 +424,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
+    @confirm_db()
     def mptest_graceful_fail_without_ajax(self):
         """
         Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
@@ -430,6 +434,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         response = self.client.post(self.url)
         eq_(response.status_code, 404)
 
+    @confirm_db(modified=[AdGroup, Campaign])
     def mptest_puts_new_valid_order_and_line_item(self):
         """
         A valid POST with valid order and line item data should
@@ -653,7 +658,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
             'line_item_key': unicode(self.line_item.key())
         })
 
-
+    @confirm_db()
     def mptest_graceful_fail_without_data(self):
         """
         Posting to the form handler should fail if there's no post body.
@@ -668,7 +673,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-
+    @confirm_db()
     def mptest_graceful_fail_without_ajax(self):
         """
         Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
@@ -681,7 +686,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(self.edit_url)
         eq_(response.status_code, 404)
 
-
+    @confirm_db()
     def mptest_graceful_fail_for_non_order(self):
         """
         Posting to the edit form handler with a non-order campaign (marketplace
@@ -703,7 +708,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
-
+    @confirm_db()
     def mptest_fail_when_line_item_not_owned(self):
         """
         A line item should not be editable by accounts that don't
@@ -723,7 +728,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         eq_(response.status_code, 404)
 
-
+    @confirm_db(modified=[AdGroup])
     def mptest_puts_new_valid_line_item(self):
         """
         Posting valid line item data should result in a new line item being
@@ -731,7 +736,6 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-#        order = generate_campaign(self.account)
         url = reverse('advertiser_line_item_form_new', kwargs = {
             'order_key': unicode(self.order.key())
         })
@@ -764,6 +768,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         expected_line_item_dict['name'] = new_line_item_name
         dict_eq(expected_line_item_dict, actual_line_item_dict)
 
+    @confirm_db(modified=[AdGroup])
     def mptest_puts_changed_valid_line_item(self):
         """
         Posting valid line item information should update the line item
@@ -787,6 +792,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         eq_(line_item.name, new_name)
 
+    @confirm_db()
     def mptest_fails_gracefully_invalid_line_item(self):
         """
         Posting invalid line item information should not result
@@ -811,7 +817,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         ok_(not response_json['success'])
 
-
+    @confirm_db(modified=[Account, Campaign, AdGroup])
     def mptest_complete_onboarding_after_first_campaign(self):
         """
         Sets the accounts status to Step 4. If a campaign is 
@@ -829,6 +835,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         eq_(acct.status, '')
 
     # TODO
+    @confirm_db()
     def mptest_datetime_alias_for_jquery_on_fail(self):
         """
         There is a block at the end of the post (L:351-359)
@@ -839,7 +846,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         pass
 
-#TODO: Change this if confirm_db actually checks the models
+#TODO: Change this if confirm_db actually checks the models, rather than count
 @decorate_all_test_methods(confirm_db())
 class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):
@@ -1415,6 +1422,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         self.mock_creative.account = self.account
         self.mock_creative.ad_group = self.line_item
 
+    @confirm_db(modified=[Creative])
     def mptest_http_response_code(self):
         """
         A valid post should return a valid (200, 302) response (regardless
@@ -1430,7 +1438,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(edit_response.status_code in [200, 302])
 
-
+    @confirm_db()
     def mptest_graceful_fail_without_ajax(self):
         """
         Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
@@ -1445,6 +1453,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
         eq_(edit_response.status_code, 404)
 
+    @confirm_db(modified=[Creative])
     def mptest_ensure_proper_redirect(self):
         new_response = self.client.post(self.new_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1473,6 +1482,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         db.Key(new_redirect_split[3])
         db.Key(edit_redirect_split[3])
 
+    @confirm_db(modified=[Creative])
     def mptest_puts_valid_new_creative(self):
         response = self.client.post(self.new_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1491,6 +1501,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(to_dict(creative), 
                 to_dict(self.mock_creative), exclude=['id'])
 
+    @confirm_db(modified=[Creative])
     def mptest_puts_valid_edited_creative(self):
         response = self.client.post(self.edit_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1513,6 +1524,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(to_dict(creative), 
                 to_dict(updated_creative), exclude=['id'])
 
+    @confirm_db(modified=[Creative])
     def mptest_uses_correct_form_for_html(self):
         ad_type_dict = {
                         'html': self.html_creative_post_body,
@@ -1533,6 +1545,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
     # TODO: Make a mopub exception to catch, so we dont have to hardcode
     #       error messages into tests?
+    @confirm_db()
     def mptest_fails_with_unsupported_ad_type(self):
         self.html_creative_post_body.update({u'ad_type': u'fake_ad_type'})
         try:
@@ -1542,6 +1555,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         except Exception, e:
             eq_(e.message, 'Unsupported creative type fake_ad_type.')
 
+    @confirm_db(modified=[Creative])
     def mptest_line_item_owns_creative(self):
         """
         Check that when a new creative is made, it's owned by the line
@@ -1557,6 +1571,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         current_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
         eq_(len(current_creatives), (len(past_creatives) + 1))
 
+    @confirm_db(modified=[Creative])
     def mptest_account_owns_creative(self):
         """
         Check that when a new creative is made, it's owned by the
@@ -1582,6 +1597,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         # make sure its owned by the current account
         eq_(unicode(new_creative.account.key()), unicode(self.account.key()))
 
+    @confirm_db()
     def mptest_fails_gracefully_with_form_errors(self):
         """
         Check that when invalid form data is posted, a valid (status
@@ -1606,13 +1622,15 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(response_json['errors'],
                 {u'image_file': 
                  u'You must upload an image file for a creative of this type.'})
-
+    
+    @confirm_db()
     def mptest_fails_when_creative_is_unowned(self):
         self.login_secondary_account()
         response = self.client.post(self.edit_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
+    @confirm_db()
     def mptest_fails_when_line_item_is_unowned(self):
         self.login_secondary_account()
         response = self.client.post(self.new_url, self.html_creative_post_body,

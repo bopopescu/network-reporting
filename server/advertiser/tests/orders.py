@@ -11,7 +11,7 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from common.utils.test.views import BaseViewTestCase
-from common.utils.test.test_utils import dict_eq, time_almost_eq
+from common.utils.test.test_utils import dict_eq, time_almost_eq, confirm_db, decorate_all_test_methods
 
 from google.appengine.ext import db
 
@@ -28,6 +28,7 @@ from admin.randomgen import (generate_campaign,
                              generate_adgroup,
                              generate_creative,
                              generate_app,
+                             generate_adunit,
                              generate_account,
                              generate_marketplace_campaign)
 
@@ -35,10 +36,12 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 
-from advertiser.forms import (OrderForm, LineItemForm, 
+from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
 from advertiser.models import (Creative, TextAndTileCreative, 
-                               HtmlCreative, ImageCreative)
+                               HtmlCreative, ImageCreative, AdGroup, Campaign)
+from account.models import Account
+from advertiser.views.orders import get_targeted_apps
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
@@ -55,6 +58,8 @@ class OrderViewTestCase(BaseViewTestCase):
 
         # Set up some basic items. These can be used for
         # initial objects and for resolving urls.
+        self.app = generate_app(self.account)
+        self.adunit = generate_adunit(self.app, self.account)
         self.order = generate_campaign(self.account)
         self.line_item = generate_adgroup(self.order,[],self.account,'gtee')
         # HTML Creative
@@ -125,83 +130,230 @@ class OrderViewTestCase(BaseViewTestCase):
         self.mock_line_item.campaign = self.mock_order
 
 
+@decorate_all_test_methods(confirm_db())
 class OrderIndexTestCase(OrderViewTestCase):
+    """
+    Tests the order index handler
+
+    Author: Haydn Dufrene
+    """
     def setUp(self):
+        """
+        Sets up the index url
+        """
         super(OrderIndexTestCase, self).setUp()
-        self.url = ''
+        self.url = reverse('advertiser_order_index')
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
 
     def mptest_gets_all_orders(self):
-        pass
+        """
+        Checks to see that all orders of a given account are returned
+        """
+        expected_orders = CampaignQueryManager.get_order_campaigns(account=self.account)
+        expected_orders = expected_orders.fetch(1000)
+
+        response = self.client.get(self.url)
+        actual_orders = response.context['orders'].fetch(1000)
+
+        eq_(len(actual_orders), len(expected_orders))
+        for actual_order, expected_order in zip(actual_orders, expected_orders):
+            eq_(actual_order.key(), expected_order.key())
+
 
     def mptest_gets_all_line_items(self):
-        pass
+        """
+        Checks to see that all line_items of an account are returned
+        """
+        expected_line_items = AdGroupQueryManager.get_adgroups(account=self.account)
+
+        response = self.client.get(self.url)
+        actual_line_items = response.context['line_items']
+
+        eq_(len(actual_line_items), len(expected_line_items))
+        for actual_line_item, expected_line_items in zip(actual_line_items, expected_line_items):
+            eq_(actual_line_item.key(), expected_line_items.key())
+
 
     def mptest_account_owns_all_items(self):
-        pass
+        """
+        We query for items by account in the previous two tests
+        and therefore this test implicitly passes if they do.
 
-    def mptest_all_campaigns_are_orders(self):
-        pass
-
-    def mptest_all_line_items_are_for_orders(self):
+        Author: Haydn Dufrene
+        """
         pass
 
     def mptest_all_orders_returned_are_orders(self):
-        pass
+        response = self.client.get(self.url)
+        orders = response.context['orders'].fetch(1000)
+        for order in orders:
+            ok_(order.is_order)
+
+    def mptest_all_line_items_are_for_orders(self):
+        mpx_campaign = generate_marketplace_campaign(self.account, None)
+        mpx_adgroup = generate_adgroup(mpx_campaign, [], self.account, 'marketplace')
+        response = self.client.get(self.url)
+        line_items = response.context['line_items']
+        for line_item in line_items:
+            ok_(line_item.campaign.is_order)
 
 
+@decorate_all_test_methods(confirm_db())
 class OrderDetailHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(OrderDetailHandlerTestCase, self).setUp()
-        self.url = ''
+        self.url = reverse('advertiser_order_detail', 
+                           kwargs={
+                                'order_key': unicode(self.order.key())
+                           })
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
 
     def mptest_fails_on_unowned_order(self):
-        pass
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)
 
-    def mptest_returns_all_targeted_adunits(self):
-        pass
+    def mptest_returns_all_targeted_adunits_apps_and_keys(self):
+        # Formatted lists properly so they match the view
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        expected_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                               for line_item in self.order.adgroups]))
+
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            eq_(actual_adunit.key(), expected_adunit.key())
 
     def mptest_returns_all_targeted_apps_and_keys(self):
-        pass
+        # Formatted lists properly so they match the view
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        expected_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                               for line_item in self.order.adgroups]))
+        expected_apps = get_targeted_apps(expected_adunits)
+        expected_app_keys = expected_apps.keys()
 
-    def mptest_proper_order_form_is_returned(self):
-        pass
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+        actual_apps = response.context['targeted_apps']
+        actual_app_keys = response.context['targeted_app_keys']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            eq_(actual_adunit.key(), expected_adunit.key())
+
+        eq_(len(actual_apps), len(expected_apps))
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            eq_(actual_app.key(), expected_app.key())
+
+        eq_(actual_app_keys, expected_app_keys)
+
+    def mptest_returns_proper_order_form(self):
+        expected_order_form = OrderForm(instance=self.order)
+
+        response = self.client.get(self.url)
+        actual_order_form = response.context['order_form']
+
+        eq_(expected_order_form.instance.key(), 
+            actual_order_form.instance.key())
 
     def mptest_returns_proper_order(self):
-        pass
+        expected_order = self.order
+
+        response = self.client.get(self.url)
+        actual_order = response.context['order']
+
+        eq_(expected_order.key(), actual_order.key())
 
 
+@decorate_all_test_methods(confirm_db())
 class LineItemDetailHandler(OrderViewTestCase):
     def setUp(self):
         super(LineItemDetailHandler, self).setUp()
-        self.url = ''
+        self.url = reverse('advertiser_line_item_detail',
+                           kwargs={'line_item_key': self.line_item.key()})
 
     def mptest_http_response_code(self):
-        pass
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
 
     def mptest_fails_on_unowned_line_item(self):
-        pass
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)
 
-    def mptest_returns_all_targetd_adunits(self):
-        pass
+    def mptest_returns_all_targeted_adunits(self):
+        expected_adunits = AdUnitQueryManager.get(self.line_item.site_keys)
+
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            eq_(actual_adunit.key(), expected_adunit.key())
+
 
     def mptest_returns_all_targeted_apps_and_keys(self):
-        pass
+        expected_adunits = AdUnitQueryManager.get(self.line_item.site_keys)
+        expected_apps = get_targeted_apps(expected_adunits)
+        expected_app_keys = expected_apps.keys()
+
+        response = self.client.get(self.url)
+        actual_apps = response.context['targeted_apps']
+        actual_app_keys = response.context['targeted_app_keys']
+
+        eq_(len(actual_apps), len(expected_apps))
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            eq_(actual_app.key(), expected_app.key())
+
+        eq_(actual_app_keys, expected_app_keys)
 
     def mptest_returns_new_creative_form(self):
-        pass
+        response = self.client.get(self.url)
+        creative_form = response.context['creative_form']
+        ok_(isinstance(creative_form, NewCreativeForm))
+        ok_(creative_form.instance is None)
 
     def mptest_returns_proper_line_item(self):
-        pass
+        expected_line_item = self.line_item
+
+        response = self.client.get(self.url)
+        actual_line_item = response.context['line_item']
+
+        eq_(expected_line_item.key(),
+            actual_line_item.key())
 
     def mptest_returns_order_which_owns_line_item(self):
-        pass
+        expected_order = self.order
 
+        response = self.client.get(self.url)
+        actual_line_item = response.context['line_item']
+        actual_order = response.context['order']
+
+        eq_(actual_line_item.campaign.key(), actual_order.key())
+        eq_(actual_order.key(), expected_order.key())
+
+
+@decorate_all_test_methods(confirm_db())
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
     """
     Tests for the order and line item create view's GET method.
@@ -251,6 +403,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         super(OrderAndLineItemCreatePostTestCase, self).setUp()
         self.url = reverse('advertiser_order_and_line_item_form_new')
 
+    @confirm_db(modified=[AdGroup, Campaign])
     def mptest_http_response_code(self):
         """
         A valid get should return a valid (200, 302) response (regardless
@@ -260,6 +413,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(response.status_code in [200, 302])
 
+    @confirm_db()
     def mptest_graceful_fail_without_data(self):
         """
         Posting to the form handler should fail if there's no post body.
@@ -270,6 +424,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
+    @confirm_db()
     def mptest_graceful_fail_without_ajax(self):
         """
         Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
@@ -279,6 +434,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         response = self.client.post(self.url)
         eq_(response.status_code, 404)
 
+    @confirm_db(modified=[AdGroup, Campaign])
     def mptest_puts_new_valid_order_and_line_item(self):
         """
         A valid POST with valid order and line item data should
@@ -347,9 +503,10 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         pass
 
 
+@decorate_all_test_methods(confirm_db())
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     """
-    Tests for the new/edit line item POST method.
+    Tests for the new/edit line item GET method.
     """
 
     def setUp(self):
@@ -501,7 +658,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
             'line_item_key': unicode(self.line_item.key())
         })
 
-
+    @confirm_db()
     def mptest_graceful_fail_without_data(self):
         """
         Posting to the form handler should fail if there's no post body.
@@ -516,7 +673,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-
+    @confirm_db()
     def mptest_graceful_fail_without_ajax(self):
         """
         Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
@@ -529,7 +686,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(self.edit_url)
         eq_(response.status_code, 404)
 
-
+    @confirm_db()
     def mptest_graceful_fail_for_non_order(self):
         """
         Posting to the edit form handler with a non-order campaign (marketplace
@@ -551,7 +708,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
-
+    @confirm_db()
     def mptest_fail_when_line_item_not_owned(self):
         """
         A line item should not be editable by accounts that don't
@@ -571,7 +728,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         eq_(response.status_code, 404)
 
-
+    @confirm_db(modified=[AdGroup])
     def mptest_puts_new_valid_line_item(self):
         """
         Posting valid line item data should result in a new line item being
@@ -579,7 +736,6 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-#        order = generate_campaign(self.account)
         url = reverse('advertiser_line_item_form_new', kwargs = {
             'order_key': unicode(self.order.key())
         })
@@ -612,6 +768,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         expected_line_item_dict['name'] = new_line_item_name
         dict_eq(expected_line_item_dict, actual_line_item_dict)
 
+    @confirm_db(modified=[AdGroup])
     def mptest_puts_changed_valid_line_item(self):
         """
         Posting valid line item information should update the line item
@@ -635,6 +792,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         eq_(line_item.name, new_name)
 
+    @confirm_db()
     def mptest_fails_gracefully_invalid_line_item(self):
         """
         Posting invalid line item information should not result
@@ -659,7 +817,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         ok_(not response_json['success'])
 
-
+    @confirm_db(modified=[Account, Campaign, AdGroup])
     def mptest_complete_onboarding_after_first_campaign(self):
         """
         Sets the accounts status to Step 4. If a campaign is 
@@ -677,6 +835,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         eq_(acct.status, '')
 
     # TODO
+    @confirm_db()
     def mptest_datetime_alias_for_jquery_on_fail(self):
         """
         There is a block at the end of the post (L:351-359)
@@ -687,9 +846,9 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         pass
 
-
+#TODO: Change this if confirm_db actually checks the models, rather than count
+@decorate_all_test_methods(confirm_db())
 class AdSourceChangeTestCase(OrderViewTestCase):
-
     def setUp(self):
         super(AdSourceChangeTestCase, self).setUp()
         self.url = reverse('advertiser_ad_source_status_change')
@@ -1150,6 +1309,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(actual_order.deleted)
 
 
+@decorate_all_test_methods(confirm_db())
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):
     #qwer
     def setUp(self):
@@ -1264,6 +1424,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         ok_(response.content.find("<html><body style='margin:0px;'>") >= 0)
 
 
+@decorate_all_test_methods(confirm_db())
 class CreativeImageHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(CreativeImageHandlerTestCase, self).setUp()
@@ -1348,6 +1509,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         self.mock_creative.account = self.account
         self.mock_creative.ad_group = self.line_item
 
+    @confirm_db(modified=[Creative])
     def mptest_http_response_code(self):
         """
         A valid post should return a valid (200, 302) response (regardless
@@ -1364,6 +1526,22 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         ok_(edit_response.status_code in [200, 302])
 
 
+    @confirm_db()
+    def mptest_graceful_fail_without_ajax(self):
+        """
+        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
+
+        Author: John Pena
+        """
+        self.html_creative_post_body.pop('ajax')
+
+        new_response = self.client.post(self.new_url, self.html_creative_post_body)
+        eq_(new_response.status_code, 404)
+
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
+        eq_(edit_response.status_code, 404)
+
+    @confirm_db(modified=[Creative])
     def mptest_ensure_proper_redirect(self):
         new_response = self.client.post(self.new_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1392,6 +1570,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         db.Key(new_redirect_split[3])
         db.Key(edit_redirect_split[3])
 
+    @confirm_db(modified=[Creative])
     def mptest_puts_valid_new_creative(self):
         response = self.client.post(self.new_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1410,6 +1589,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(to_dict(creative), 
                 to_dict(self.mock_creative), exclude=['id'])
 
+    @confirm_db(modified=[Creative])
     def mptest_puts_valid_edited_creative(self):
         response = self.client.post(self.edit_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1432,6 +1612,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(to_dict(creative), 
                 to_dict(updated_creative), exclude=['id'])
 
+    @confirm_db(modified=[Creative])
     def mptest_uses_correct_form_for_html(self):
         ad_type_dict = {
                         'html': self.html_creative_post_body,
@@ -1452,6 +1633,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
     # TODO: Make a mopub exception to catch, so we dont have to hardcode
     #       error messages into tests?
+    @confirm_db()
     def mptest_fails_with_unsupported_ad_type(self):
         self.html_creative_post_body.update({u'ad_type': u'fake_ad_type'})
         try:
@@ -1461,6 +1643,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         except Exception, e:
             eq_(e.message, 'Unsupported creative type fake_ad_type.')
 
+    @confirm_db(modified=[Creative])
     def mptest_line_item_owns_creative(self):
         """
         Check that when a new creative is made, it's owned by the line
@@ -1476,6 +1659,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         current_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
         eq_(len(current_creatives), (len(past_creatives) + 1))
 
+    @confirm_db(modified=[Creative])
     def mptest_account_owns_creative(self):
         """
         Check that when a new creative is made, it's owned by the
@@ -1501,6 +1685,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         # make sure its owned by the current account
         eq_(unicode(new_creative.account.key()), unicode(self.account.key()))
 
+    @confirm_db()
     def mptest_fails_gracefully_with_form_errors(self):
         """
         Check that when invalid form data is posted, a valid (status
@@ -1525,13 +1710,15 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         dict_eq(response_json['errors'],
                 {u'image_file': 
                  u'You must upload an image file for a creative of this type.'})
-
+    
+    @confirm_db()
     def mptest_fails_when_creative_is_unowned(self):
         self.login_secondary_account()
         response = self.client.post(self.edit_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
+    @confirm_db()
     def mptest_fails_when_line_item_is_unowned(self):
         self.login_secondary_account()
         response = self.client.post(self.new_url, self.html_creative_post_body,

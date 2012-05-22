@@ -50,10 +50,10 @@ class OrderIndexHandler(RequestHandler):
       - name, dates, budgeting information, top-level stats.
     """
     def get(self):
-
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        line_items = AdGroupQueryManager.get_adgroups(account=self.account)
-        line_items = [l for l in line_items if not (l.campaign.advertiser == "marketplace")]
+        adgroups = AdGroupQueryManager.get_adgroups(account=self.account)
+        line_items = [ag for ag in adgroups 
+                      if (orders.filter('__key__ = ', ag.campaign).count() == 1)]
         for line_item in line_items:
             logging.warn(line_item.budget_goal_display)
 
@@ -560,4 +560,3 @@ def get_targeted_apps(adunits):
             targeted_apps[app_key] = app
         targeted_apps[app_key].adunits += [adunit]
     return targeted_apps
-

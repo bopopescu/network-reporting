@@ -10,17 +10,20 @@ What this script does when you run it:
    e.g. git commit -m '[#123 state:fixed]')
 4. Minifies javascript
 5. Updating all version numbers
-6. Notifying hipchat
-7. Actually deploying
+6. Notifies hipchat (notifies the Mopub room for frontend-0 deploys only, notifies
+   the Mopub frontend/product room for all deploys).
+7. Actually deploys using appcfg.py
 
-server_name is an optional argument to this script, specifying which server
+`server_name` is an optional argument to this script, specifying which server
 (frontend-0, frontend-staging, frontend-boom, etc) you want to deploy to. If
 you don't specify it, it'll default to frontend-staging.
 
 Author: John Pena
 """
+
 # TODO: Figure out why envoy fucks up commands that have messages
 # like git tag and git commit
+
 import sys
 import os
 
@@ -60,7 +63,6 @@ def prompt_before_executing(original, override=None):
     return inner
 
 
-# Git stuff
 def git(cmd, git_dir=None):
     """
     Calls a git command `cmd` from the repository in `git_dir`.

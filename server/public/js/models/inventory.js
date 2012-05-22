@@ -19,7 +19,7 @@ var mopub = mopub || {};
     "use strict";
 
 
-    // Gets the url from a backbone model/collection. 
+    // Gets the url from a backbone model/collection.
     // Sometimes it's a string, sometimes its a function.
     // This is used as utility for localStorage caching,
     // but could be used for anything.
@@ -49,8 +49,6 @@ var mopub = mopub || {};
         this.message = message || "";
     }
     StatsError.prototype = Error.prototype;
-    
-
 
     /*
      * Helper functions for stats
@@ -105,7 +103,7 @@ var mopub = mopub || {};
             throw 'Unsupported stat "' + stat + '".';
         }
     }
-    
+
     // Records an event in all of the metrics tracking services we
     // use.
     function record_metric (name, args) {
@@ -154,7 +152,7 @@ var mopub = mopub || {};
                 throw 'Unsupported stat "' + stat + '".';
             }
         }
-        
+
     };
 
     /*
@@ -162,10 +160,10 @@ var mopub = mopub || {};
      * If the browser has localstorage, then use it to cache model/collection
      * properties. If cached properties are found in localstorage, load them
      * and then perform the sync over ajax to make sure we have the most up
-     * to date data. 
-     * 
+     * to date data.
+     *
      * This will *always* sync over ajax to make sure we have the most up to
-     * date data. 
+     * date data.
      */
     var LocalStorageMixin = {
         sync: function (method, model, options) {
@@ -178,7 +176,7 @@ var mopub = mopub || {};
                 delete: 'DELETE',
                 read: 'GET'
             };
-            
+
             // Taken from Modernizr. Determines if we have
             // localstorage or not.
             function supports_local_storage() {
@@ -188,15 +186,15 @@ var mopub = mopub || {};
                     return false;
                 }
             }
-            
+
             var type = methodMap[method];
-            
+
             // Default JSON-request options.
             var params = _.extend({
                 type: type,
                 dataType: 'json'
             }, options);
-            
+
             // Ensure that we have a URL.
             if (!params.url) {
                 params.url = getUrl(model);
@@ -204,19 +202,19 @@ var mopub = mopub || {};
                     throw new UrlError('Unable to retrieve a valid url from model');
                 }
             }
-            
+
             // Ensure that we have the appropriate request data.
             if (!params.data && model && (method == 'create' || method == 'update')) {
                 params.contentType = 'application/json';
                 params.data = JSON.stringify(model.toJSON());
             }
-            
+
             // For older servers, emulate JSON by encoding the request into an HTML-form.
             if (Backbone.emulateJSON) {
                 params.contentType = 'application/x-www-form-urlencoded';
                 params.data = params.data ? {model : params.data} : {};
             }
-            
+
             // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
             // And an `X-HTTP-Method-Override` header.
             if (Backbone.emulateHTTP) {
@@ -228,12 +226,12 @@ var mopub = mopub || {};
                     };
                 }
             }
-            
+
             // Don't process data on a non-GET request.
             if (params.type !== 'GET' && !Backbone.emulateJSON) {
                 params.processData = false;
             }
-            
+
             // This is the modified part:
             // - Look for the cached version and trigger success if it's present.
             // - Modify the AJAX request so it'll save the data on success.
@@ -244,7 +242,7 @@ var mopub = mopub || {};
                 // Look for the cached version
                 var val = localStorage.getItem(key);
                 var success_function = params.success;
-                
+
                 // If we have the last response cached, use it with
                 // the success callback
                 if (val) {
@@ -252,14 +250,14 @@ var mopub = mopub || {};
                         success_function(JSON.parse(val), "success");
                     });
                 }
-                
+
                 // Overwrite the success callback to save data to localStorage
                 params.success = function (resp, status, xhr) {
                     success_function(resp, status, xhr);
                     localStorage.removeItem(key);
                     localStorage.setItem(key, xhr.responseText);
                 };
-                
+
             } else if (method === 'update' || method === 'delete') {
                 // If we're updating or deleting the model, invalidate
                 // everything associated with it. If the model doesn't
@@ -270,15 +268,15 @@ var mopub = mopub || {};
                     var key = "mopub-cache/" + invalidation_key;
                     localStorage.removeItem(key);
                 });
-                
+
             }
-            
+
             // Make the request.
             return $.ajax(params);
         }
     };
-        
-    
+
+
     var ModelHelpers = {
         calculate_ctr: calculate_ctr,
         calculate_fill_rate: calculate_fill_rate,
@@ -334,7 +332,7 @@ var mopub = mopub || {};
                 return null;
             }
             return day_stats[stat];
-        },
+        }
     });
 
     /*
@@ -487,7 +485,7 @@ var mopub = mopub || {};
         }
     });
 
-    
+
     /*
      * ## Campaign Model
      */
@@ -517,7 +515,7 @@ var mopub = mopub || {};
                     campaign_data.req = campaign_data.att;
                 } else if(campaign_data.att == null || campaign_data.att == undefined) {
                     campaign_data.att = campaign_data.req;
-                } 
+                }
 
                 return campaign_data;
             }
@@ -538,7 +536,6 @@ var mopub = mopub || {};
      * This will most likely need to be refactored soon when we change how
      * AdGroups work on the backend.
      */
-
     var AdGroup = StatsModel.extend({
         url: function() {
             return '/api/adgroup/' + this.id;
@@ -590,8 +587,9 @@ var mopub = mopub || {};
             }
         },
         url: function() {
-            // window.location.search.substring(1) is used to preserve date ranges from the url
-            // this makes the fetching work with the datepicker.
+            // window.location.search.substring(1) is used to preserve
+            // date ranges from the url this makes the fetching work
+            // with the datepicker.
             var stats_endpoint = this.get('stats_endpoint');
             return '/api/app/'
                 + this.app_id
@@ -633,7 +631,6 @@ var mopub = mopub || {};
                     + this.stats_endpoint;
             }
         },
-
         parse: function(response) {
             var collection = this;
             // REFACTOR attempts vs requests
@@ -768,7 +765,7 @@ var mopub = mopub || {};
     var LineItem = Backbone.Model.extend({
         url: function() {
             var stats_endpoint = this.stats_endpoint;
-            return '/api/adgroup/' 
+            return '/api/adgroup/'
                 + this.id
                 + "?"
                 + window.location.search.substring(1)
@@ -783,7 +780,7 @@ var mopub = mopub || {};
         model: LineItem,
         url: function() {
             var stats_endpoint = this.stats_endpoint;
-            return '/api/campaign/' 
+            return '/api/campaign/'
                 + this.campaign_id
                 + "?"
                 + window.location.search.substring(1)
@@ -799,7 +796,7 @@ var mopub = mopub || {};
     var Order = Backbone.Model.extend({
         url: function() {
             var stats_endpoint = this.get('stats_endpoint');
-            return '/api/campaign/' 
+            return '/api/campaign/'
                 + this.get('id')
                 + "?"
                 + window.location.search.substring(1)
@@ -848,4 +845,4 @@ var mopub = mopub || {};
     window.OrderCollection = OrderCollection;
     window.LineItemCollection = LineItemCollection;
 
-}(this.jQuery, this.Backbone, this._));
+} (this.jQuery, this.Backbone, this._));

@@ -11,7 +11,9 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from common.utils.test.views import BaseViewTestCase
-from common.utils.test.test_utils import dict_eq, time_almost_eq, confirm_db, decorate_all_test_methods
+from common.utils.test.test_utils import (dict_eq, time_almost_eq, 
+                                          model_eq, model_key_eq, 
+                                          confirm_db, decorate_all_test_methods)
 
 from google.appengine.ext import db
 
@@ -164,7 +166,7 @@ class OrderIndexTestCase(OrderViewTestCase):
 
         eq_(len(actual_orders), len(expected_orders))
         for actual_order, expected_order in zip(actual_orders, expected_orders):
-            eq_(actual_order.key(), expected_order.key())
+            model_key_eq(actual_order, expected_order)
 
 
     def mptest_gets_all_line_items(self):
@@ -178,7 +180,7 @@ class OrderIndexTestCase(OrderViewTestCase):
 
         eq_(len(actual_line_items), len(expected_line_items))
         for actual_line_item, expected_line_items in zip(actual_line_items, expected_line_items):
-            eq_(actual_line_item.key(), expected_line_items.key())
+            model_key_eq(actual_line_item, expected_line_items)
 
 
     def mptest_account_owns_all_items(self):
@@ -240,7 +242,7 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
 
         eq_(len(actual_adunits), len(expected_adunits))
         for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
-            eq_(actual_adunit.key(), expected_adunit.key())
+            model_key_eq(actual_adunit, expected_adunit)
 
     def mptest_returns_all_targeted_apps_and_keys(self):
         # Formatted lists properly so they match the view
@@ -257,11 +259,11 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
 
         eq_(len(actual_adunits), len(expected_adunits))
         for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
-            eq_(actual_adunit.key(), expected_adunit.key())
+            model_key_eq(actual_adunit, expected_adunit)
 
         eq_(len(actual_apps), len(expected_apps))
         for actual_app, expected_app in zip(actual_apps, expected_apps):
-            eq_(actual_app.key(), expected_app.key())
+            model_key_eq(actual_app, expected_app)
 
         eq_(actual_app_keys, expected_app_keys)
 
@@ -271,8 +273,8 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
         response = self.client.get(self.url)
         actual_order_form = response.context['order_form']
 
-        eq_(expected_order_form.instance.key(), 
-            actual_order_form.instance.key())
+        model_key_eq(expected_order_form.instance, 
+                     actual_order_form.instance)
 
     def mptest_returns_proper_order(self):
         expected_order = self.order
@@ -280,7 +282,7 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
         response = self.client.get(self.url)
         actual_order = response.context['order']
 
-        eq_(expected_order.key(), actual_order.key())
+        model_key_eq(expected_order, actual_order)
 
 
 @decorate_all_test_methods(confirm_db())
@@ -311,7 +313,7 @@ class LineItemDetailHandler(OrderViewTestCase):
 
         eq_(len(actual_adunits), len(expected_adunits))
         for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
-            eq_(actual_adunit.key(), expected_adunit.key())
+            model_key_eq(actual_adunit, expected_adunit)
 
 
     def mptest_returns_all_targeted_apps_and_keys(self):
@@ -325,7 +327,7 @@ class LineItemDetailHandler(OrderViewTestCase):
 
         eq_(len(actual_apps), len(expected_apps))
         for actual_app, expected_app in zip(actual_apps, expected_apps):
-            eq_(actual_app.key(), expected_app.key())
+            model_key_eq(actual_app, expected_app)
 
         eq_(actual_app_keys, expected_app_keys)
 
@@ -341,8 +343,7 @@ class LineItemDetailHandler(OrderViewTestCase):
         response = self.client.get(self.url)
         actual_line_item = response.context['line_item']
 
-        eq_(expected_line_item.key(),
-            actual_line_item.key())
+        model_key_eq(expected_line_item, actual_line_item)
 
     def mptest_returns_order_which_owns_line_item(self):
         expected_order = self.order
@@ -351,8 +352,8 @@ class LineItemDetailHandler(OrderViewTestCase):
         actual_line_item = response.context['line_item']
         actual_order = response.context['order']
 
-        eq_(actual_line_item.campaign.key(), actual_order.key())
-        eq_(actual_order.key(), expected_order.key())
+        model_key_eq(actual_line_item.campaign, actual_order)
+        model_key_eq(actual_order, expected_order)
 
 
 @decorate_all_test_methods(confirm_db())
@@ -466,23 +467,17 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         # Tests to see that this line_item was created and modified
         # within the last minute
 
-        time_almost_eq(line_item.t,
-                       datetime.utcnow(),
-                       timedelta(minutes=1))
-        time_almost_eq(line_item.created,
-                       datetime.utcnow(),
-                       timedelta(minutes=1))
+        time_almost_eq(line_item.t, datetime.utcnow())
+        time_almost_eq(line_item.created, datetime.utcnow())
 
-        dict_eq(to_dict(line_item, ignore=['id', 'campaign', 'created', 't']),
-                 to_dict(self.mock_line_item, ignore=['id', 'campaign', 'created', 't']))
+        model_eq(line_item, self.mock_line_item, exclude=['campaign', 'created', 't'],
+                 check_primary_key=False)
 
         order = line_item.campaign
-        time_almost_eq(order.created,
-                       datetime.utcnow(),
-                       timedelta(minutes=1))
+        time_almost_eq(order.created, datetime.utcnow())
 
-        dict_eq(to_dict(order, ignore=['id', 'created']),
-                 to_dict(self.mock_order, ignore=['id', 'created']))
+        model_eq(order, self.mock_order, exclude=['created', 't'], 
+                 check_primary_key=False)
 
     def mptest_order_owns_line_item(self):
         """
@@ -546,8 +541,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         order_form = OrderForm(instance=self.order, prefix='order')
 
         response = self.client.get(self.new_url)
-        eq_(response.context['order_form'].instance.key(),
-            order_form.instance.key())
+        model_key_eq(response.context['order_form'].instance,
+                     order_form.instance)
         ok_(response.context['line_item_form'].instance is None)
 
     def mptest_get_correct_forms_with_line_item(self):
@@ -561,10 +556,10 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         line_item_form = LineItemForm(instance=self.line_item)
 
         response = self.client.get(self.edit_url)
-        eq_(response.context['order_form'].instance.key(),
-            order_form.instance.key())
-        eq_(response.context['line_item_form'].instance.key(),
-            line_item_form.instance.key())
+        model_key_eq(response.context['order_form'].instance,
+                     order_form.instance)
+        model_key_eq(response.context['line_item_form'].instance,
+                     line_item_form.instance)
 
     def mptest_order_owns_line_item(self):
         """
@@ -585,8 +580,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         response = self.client.get(self.edit_url)
         actual_order = response.context['order']
         actual_line_item = response.context['line_item']
-        dict_eq(to_dict(self.order), to_dict(actual_order))
-        dict_eq(to_dict(self.line_item), to_dict(actual_line_item))
+        model_eq(self.order, actual_order)
+        model_eq(self.line_item, actual_line_item)
 
     def mptest_fail_on_unowned_order(self):
         """
@@ -628,7 +623,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
         eq_(len(actual_apps), len(expected_apps))
         for actual_app, expected_app in zip(actual_apps, expected_apps):
-            eq_(actual_app.key(), expected_app.key())
+            model_key_eq(actual_app, expected_app)
 
         AppQueryManager.delete(app1)
         AppQueryManager.delete(app2)
@@ -747,13 +742,11 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
         line_item = AdGroupQueryManager.get(line_item_key)
 
-        expected_line_item_dict = to_dict(self.mock_line_item,
-                                          ignore=['id', 'campaign', 'created', 't'])
-        actual_line_item_dict = to_dict(line_item,
-                                        ignore=['id', 'campaign', 'created', 't'])
+        time_almost_eq(self.mock_line_item.t, line_item.t)
 
-        expected_line_item_dict['name'] = new_line_item_name
-        dict_eq(expected_line_item_dict, actual_line_item_dict)
+        model_eq(self.mock_line_item, line_item, exclude=['name', 'campaign', 
+                                                          'created', 't'],
+                                                 check_primary_key=False)
 
     @confirm_db(modified=[AdGroup])
     def mptest_puts_changed_valid_line_item(self):
@@ -1561,8 +1554,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         eq_(creatives.count(), 2)
 
         creative = creatives.filter('name =', self.html_creative_post_body['name']).fetch(1)[0]
-        dict_eq(to_dict(creative), 
-                to_dict(self.mock_creative), exclude=['id'])
+        model_eq(creative, self.mock_creative, check_primary_key=False)
 
     @confirm_db(modified=[Creative])
     def mptest_puts_valid_edited_creative(self):
@@ -1584,8 +1576,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                                                  instance=self.creative)
         updated_creative = updated_creative_form.save()
 
-        dict_eq(to_dict(creative), 
-                to_dict(updated_creative), exclude=['id'])
+        model_eq(creative, updated_creative, check_primary_key=False)
 
     @confirm_db(modified=[Creative])
     def mptest_uses_correct_form_for_html(self):
@@ -1594,6 +1585,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                         'image': self.image_creative_post_body,
                         'text_icon': self.text_tile_creative_post_body
                         }
+
         for ad_type, post_body in ad_type_dict.iteritems():
             response = self.client.post(self.new_url, post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1658,7 +1650,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         new_creative = new_creatives[0]
 
         # make sure its owned by the current account
-        eq_(unicode(new_creative.account.key()), unicode(self.account.key()))
+        model_key_eq(new_creative.account, self.account)
 
     @confirm_db()
     def mptest_fails_gracefully_with_form_errors(self):

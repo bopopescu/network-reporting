@@ -12,9 +12,14 @@ from django.core.urlresolvers import reverse
 
 from networks.mptests.network_test_case import NetworkTestCase
 
+from common.utils.test.test_utils import confirm_db
+
 from advertiser.query_managers import AdvertiserQueryManager
 
-from advertiser.models import NetworkStates
+from advertiser.models import NetworkStates, \
+        Campaign, \
+        AdGroup, \
+        Creative
 from ad_network_reports.models import AdNetworkLoginCredentials
 
 class DeleteNetworkTestCase(NetworkTestCase):
@@ -27,11 +32,13 @@ class DeleteNetworkTestCase(NetworkTestCase):
         self.existing_apps = self.get_apps_with_adunits(self.account)
 
         self.network_type = 'admob'
-        self.campaign = self.generate_network_campaign(self.network_type, self.account,
-                self.existing_apps)
+        self.campaign = self.generate_network_campaign(self.network_type,
+                self.account, self.existing_apps)
         self.generate_ad_network_login(self.network_type, self.account)
         self.post_data = {'campaign_key': str(self.campaign.key())}
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative,
+        AdNetworkLoginCredentials])
     def mptest_response_code(self):
         """When adding a network campaign, response code should be 200.
 
@@ -41,6 +48,8 @@ class DeleteNetworkTestCase(NetworkTestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 200)
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative,
+        AdNetworkLoginCredentials])
     def mptest_delete_campaign(self):
         """Delete a campaign and all associated adgroups, creatives and login
         credentials.
@@ -65,6 +74,7 @@ class DeleteNetworkTestCase(NetworkTestCase):
         logins = AdNetworkLoginCredentials.all().get()
         ok_(not logins)
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative])
     def mptest_new_default_campaign_chosen(self):
         """When a default campaign is deleted and other campaigns of this
         network_type exist a new default campaign is chosen.
@@ -87,6 +97,7 @@ class DeleteNetworkTestCase(NetworkTestCase):
         login = AdNetworkLoginCredentials.all().get()
         ok_(login)
 
+    @confirm_db()
     def mptest_delete_campaign_for_other_account(self):
         """Attempting to delete a campaign for another account should result
         in an error.

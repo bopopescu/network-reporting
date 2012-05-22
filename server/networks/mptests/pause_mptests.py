@@ -12,7 +12,11 @@ from django.core.urlresolvers import reverse
 from networks.mptests.network_test_case import NetworkTestCase
 
 from advertiser.query_managers import CampaignQueryManager
+from common.utils.test.test_utils import decorate_all_test_methods, \
+        confirm_db
 
+
+@decorate_all_test_methods(confirm_db())
 class PauseNetworkTestCase(NetworkTestCase):
     def setUp(self):
         super(PauseNetworkTestCase, self).setUp()

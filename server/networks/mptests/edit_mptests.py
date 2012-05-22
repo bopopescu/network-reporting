@@ -18,7 +18,9 @@ from networks.mptests.network_test_case import NetworkTestCase, \
         DEFAULT_BID, \
         DEFAULT_HTML, \
         DEFAULT_PUB_ID
-from common.utils.test.test_utils import dict_eq
+from common.utils.test.test_utils import dict_eq, \
+        decorate_all_test_methods, \
+        confirm_db
 from common.constants import NETWORKS
 
 from networks.views import NETWORKS_WITH_PUB_IDS
@@ -39,6 +41,7 @@ from networks.forms import NetworkCampaignForm, \
         AdUnitAdGroupForm
 
 
+@decorate_all_test_methods(confirm_db())
 class EditNetworkGetTestCase(NetworkTestCase):
     def setUp(self):
         super(EditNetworkGetTestCase, self).setUp()
@@ -124,6 +127,7 @@ class EditNetworkGetTestCase(NetworkTestCase):
         ok_(not context['reporting'])
 
 
+@decorate_all_test_methods(confirm_db(modified=[NetworkConfig, AdNetworkAppMapper]))
 class EditNetworkPostTestCase(NetworkTestCase):
     def setUp(self):
         super(EditNetworkPostTestCase, self).setUp()

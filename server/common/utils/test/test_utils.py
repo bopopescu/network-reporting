@@ -1,9 +1,10 @@
 import os
 import sys
-import inspect
 
 sys.path.append(os.environ['PWD'])
 
+import inspect
+from datetime import timedelta
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
@@ -87,7 +88,8 @@ def list_eq(list1, list2):
 
 
 def model_key_eq(model1, model2):
-    eq_(model1.key(), model2.key())
+    eq_(model1.key(), model2.key(),
+        'Primary key %s does not equal %s' % (model1.key(), model2.key()))
 
 
 def model_eq(model1, model2, exclude=None, check_primary_key=True):
@@ -117,8 +119,7 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
 
     # only check that the keys are equal if both objects are in db
     if check_primary_key:
-        eq_(model1.key(), model2.key(),
-            'Primary key %s does not equal %s' % (model1.key(), model2.key()))
+        model_key_eq(model1, model2)
     dict_eq(model1_dict, model2_dict)
 
 
@@ -126,6 +127,7 @@ def model_to_dict(model, exclude=[], reference_only=False):
     model_dict = {}
 
     for key, prop in model.properties().iteritems():
+        print key, prop
         if key in exclude:
             continue
         # by prepending the attribute with '_'
@@ -133,13 +135,16 @@ def model_to_dict(model, exclude=[], reference_only=False):
         # in particular, for reference properties this will
         # not dereference, but will only get the foreign key
         if reference_only:
-            key = '_' + key
+            if '_' != key[0]:
+                key = '_' + key
         model_dict[key] = getattr(model, key)
 
     return model_dict
 
 
-def time_almost_eq(time1, time2, delta):
+def time_almost_eq(time1, time2, delta=None):
+    if not delta:
+        delta = timedelta(minutes=1)
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 

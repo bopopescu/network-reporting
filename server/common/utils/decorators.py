@@ -195,22 +195,3 @@ def returns_unicode(func):
         else:
             return unencoded
     return new_func
-
-
-def decorate_all_test_methods(decorator):
-    """
-    Decorator that applies a decorator to all methods in a class 
-    that contain 'mptest'
-
-    NOTE: This will also wrap nested methods
-
-    Author:
-        Haydn (5/21/2012)
-    """
-    def decorate(cls):
-        for method in inspect.getmembers(cls, inspect.ismethod):
-            method_name = method[1].__name__
-            if 'mptest' in method_name:
-                setattr(cls, method_name, decorator(getattr(cls, method_name)))
-        return cls
-    return decorate

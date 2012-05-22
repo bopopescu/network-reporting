@@ -6,7 +6,7 @@ from django.test.utils import setup_test_environment
 from google.appengine.ext import testbed
 
 from admin.randomgen import generate_account, USERNAME, PASSWORD
-
+from advertiser.query_managers import CampaignQueryManager
 
 setup_test_environment()
 
@@ -30,6 +30,10 @@ class BaseViewTestCase(unittest.TestCase):
         # generate data
         self.account = generate_account()
         self._create_secondary_account()
+
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+                self.account)
+        self.marketplace_campaign.put()
 
         # log in
         self.client.login(username=USERNAME, password=PASSWORD)

@@ -20,10 +20,12 @@ from advertiser.query_managers import (AdvertiserQueryManager,
 from common.utils.date_magic import gen_days
 from common.utils.test.fixtures import (generate_network_config, generate_app,
                                         generate_adunit, generate_campaign,
-                                        generate_adgroup)
+                                        generate_adgroup,
+                                        generate_marketplace_creative,
+                                        generate_html_creative)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
-                                          model_key_eq, model_to_dict,
-                                          time_almost_eq, model_eq)
+                                          model_key_eq, time_almost_eq,
+                                          model_eq)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
@@ -63,6 +65,7 @@ class DashboardViewTestCase(BaseViewTestCase):
             'network': 'Ad Networks',
             str(self.app.key()): self.app.name,
             str(self.adunit.key()): self.adunit.name,
+            str(self.marketplace_campaign.key()): self.marketplace_campaign.name
         }
         dict_eq(get_response.context['names'], names)
 
@@ -149,11 +152,8 @@ class AppDetailViewTestCase(BaseViewTestCase):
         generate_adgroup(
                 self.account, self.backfill_promo_campaign, put=True, site_keys=site_keys)
 
-        # Use the query manager methods to create marketplace campaigns and
-        # adgroups and put them to the db.
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-                self.account)
-        self.marketplace_campaign.put()
+        # Use the query manager methods to create marketplace adgroups and put
+        # it to the db.
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
                 self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
@@ -330,11 +330,8 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         self.backfill_promo_adgroup = generate_adgroup(
                 self.account, self.backfill_promo_campaign, put=True, site_keys=site_keys)
 
-        # Use the query manager methods to create marketplace campaigns and
-        # adgroups and put them to the db.
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-                self.account)
-        self.marketplace_campaign.put()
+        # Use the query manager methods to create marketplace adgroup and put
+        # it to the db.
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
                 self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
@@ -603,7 +600,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
         ok_(not get_response.context['adunit_form'].is_bound)
 
-    @confirm_db(modified=[App, AdUnit, NetworkConfig, Campaign])
+    @confirm_db(modified=[App, AdUnit, NetworkConfig, Campaign, AdGroup, Creative])
     def mptest_create_first_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -613,7 +610,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         post_data = self.generate_post_data()
 
         # We're expecting a status code 302 because this view, on successful
-        # creation, redirects to the app detail page.
+        # creation, redirects to the integration help page.
         post_response = self.client.post(self.url, post_data)
         eq_(post_response.status_code, 302)
 
@@ -625,87 +622,22 @@ class CreateAppViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-        # Obtain the created app/adunit and convert their models to dicts.
+        # Obtain the created app/adunit.
         app = apps_dict.values()[0]
         adunit = adunits_dict.values()[0]
 
-        # This page should redirect to the integration help page because this
-        # is the first app for this account.
+        # This page should redirect to the integration help page.
         redirect_url = self.test_client_reverse('publisher_integration_help',
                                                 args=[str(adunit.key())])
         redirect_url += '?status=welcome'
         eq_(post_response['Location'], redirect_url)
 
-        # Test the models in the db with what we expect
+        # Compare the app/adunit to their expected models.
         expected_app = generate_app(self.account)
         model_eq(app, expected_app, check_primary_key=False)
 
         expected_adunit = generate_adunit(self.account, app)
         model_eq(adunit, expected_adunit, check_primary_key=False)
-
-        # TODO:
-        # expected_app_network_config = generate_network_config(self.account)
-        # model_eq(app.network_config, expected_app_network_config)
-
-        # TODO:
-        # expected_adunit_network_config = generate_network_config(self.account)
-        # model_eq(adunit.network_config, expected_adunit_network_config)
-
-        # CAMPAIGNS
-        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account)
-        eq_(len(campaigns_dict), 2)
-
-        marketplace_campaigns = [campaign for campaign in campaigns_dict.values() if campaign.campaign_type == 'marketplace']
-        eq_(len(marketplace_campaigns), 1)
-        marketplace_campaign = marketplace_campaigns[0]
-
-        expected_marketplace_campaign = generate_campaign(
-            self.account, active=False, name="MarketPlace",
-            campaign_type="marketplace")
-        model_eq(marketplace_campaign, expected_marketplace_campaign, check_primary_key=False)
-
-        backfill_promo_campaigns = [campaign for campaign in campaigns_dict.values() if campaign.campaign_type == 'backfill_promo']
-        eq_(len(backfill_promo_campaigns), 1)
-        backfill_promo_campaign = backfill_promo_campaigns[0]
-
-        expected_backfill_promo_campaign = generate_campaign(
-            self.account, name="MoPub Demo Campaign",
-            campaign_type="backfill_promo",
-            description="Demo campaign for checking that MoPub works for your" +
-            " application")
-        model_eq(backfill_promo_campaign, expected_backfill_promo_campaign, check_primary_key=False)
-
-        # ADGROUPS
-        adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
-        eq_(len(adgroups_dict), 2)
-
-        marketplace_adgroups = [adgroup for adgroup in adgroups_dict.values() if adgroup.campaign.campaign_type == 'marketplace']
-        eq_(len(marketplace_adgroups), 1)
-        marketplace_adgroup = marketplace_adgroups[0]
-
-        # todo: generate and compare
-
-        backfill_promo_adgroups = [adgroup for adgroup in adgroups_dict.values() if adgroup.campaign.campaign_type == 'backfill_promo']
-        eq_(len(backfill_promo_adgroups), 1)
-        marketplace_adgroup = backfill_promo_adgroups[0]
-
-        # todo: generate and compare
-
-        # CREATIVES
-        creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(self.account)
-        eq_(len(creatives_dict), 2)
-
-        marketplace_creatives = [creative for creative in creatives_dict.values() if creative.ad_group == marketplace_adgroup]
-        eq_(len(marketplace_creatives), 1)
-        marketplace_creative = marketplace_creatives[0]
-
-        # todo: generate and compare
-
-        backfill_promo_creatives = [creative for creative in creatives_dict.values() if creative.ad_group == backfill_promo_adgroup]
-        eq_(len(backfill_promo_creatives), 1)
-        backfill_promo_creative = backfill_promo_creatives[0]
-
-        # todo: generate and compare
 
         # Make sure the app/adunit were created within the last minute.
         time_almost_eq(app.t,
@@ -714,6 +646,182 @@ class CreateAppViewTestCase(BaseViewTestCase):
         time_almost_eq(adunit.t,
                        datetime.datetime.utcnow(),
                        datetime.timedelta(minutes=1))
+
+        # TODO check network configs:
+        # expected_app_network_config = generate_network_config(self.account)
+        # model_eq(app.network_config, expected_app_network_config)
+
+        # expected_adunit_network_config = generate_network_config(self.account)
+        # model_eq(adunit.network_config, expected_adunit_network_config)
+
+        # CAMPAIGNS
+        # When you create your first app/adunit, marketplace and
+        # backfill_promo campaigns/adgroups/creatives are created.
+        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account)
+        eq_(len(campaigns_dict), 2)
+
+        marketplace_campaign = self._get_object(
+            lambda campaign: campaign.campaign_type == 'marketplace',
+            campaigns_dict.values())
+        expected_marketplace_campaign = generate_campaign(
+            self.account, active=False, name="MarketPlace",
+            campaign_type="marketplace")
+        model_eq(marketplace_campaign, expected_marketplace_campaign,
+            check_primary_key=False)
+
+        backfill_promo_campaign = self._get_object(
+            lambda campaign: campaign.campaign_type == 'backfill_promo',
+            campaigns_dict.values())
+        expected_backfill_promo_campaign = generate_campaign(
+            self.account, name="MoPub Demo Campaign",
+            campaign_type="backfill_promo",
+            description="Demo campaign for checking that MoPub works for your" +
+            " application")
+        model_eq(backfill_promo_campaign, expected_backfill_promo_campaign,
+            check_primary_key=False)
+
+        # ADGROUPS
+        adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
+        eq_(len(adgroups_dict), 2)
+
+        marketplace_adgroup = self._get_object(
+            lambda adgroup: adgroup.campaign.campaign_type == 'marketplace',
+            adgroups_dict.values())
+        expected_marketplace_adgroup = generate_adgroup(
+            self.account, marketplace_campaign, name='Marketplace',
+            site_keys=[adunit.key()])
+        model_eq(marketplace_adgroup, expected_marketplace_adgroup,
+            check_primary_key=False, exclude=['created', 't'])
+
+        backfill_promo_adgroup = self._get_object(
+            lambda adgroup: adgroup.campaign.campaign_type == 'backfill_promo',
+            adgroups_dict.values())
+        expected_backfill_promo_adgroup = generate_adgroup(
+            self.account, backfill_promo_campaign, site_keys=[adunit.key()],
+            bid=1.0, name="MoPub Demo Campaign")
+        model_eq(backfill_promo_adgroup, expected_backfill_promo_adgroup,
+            check_primary_key=False, exclude=['created', 't'])
+
+        # CREATIVES
+        creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(self.account)
+        eq_(len(creatives_dict), 2)
+
+        marketplace_creative = self._get_object(
+            lambda creative: creative.ad_group.key() == marketplace_adgroup.key(),
+            creatives_dict.values())
+        expected_marketplace_creative = generate_marketplace_creative(
+            self.account, marketplace_adgroup, name='marketplace dummy',
+            ad_type='html')
+        # TODO: why does one of these have _class and the other doesn't?
+        model_eq(marketplace_creative, expected_marketplace_creative,
+            check_primary_key=False, exclude=['_class', 't'])
+
+        backfill_promo_creative = self._get_object(
+            lambda creative: creative.ad_group.key() == backfill_promo_adgroup.key(),
+            creatives_dict.values())
+        default_creative_html = """
+    <style type="text/css">
+    body {
+      font-size: 12px;
+      font-family: helvetica,arial,sans-serif;
+      margin:0;
+      padding:0;
+      text-align:center;
+      background:white
+    }
+    .creative_headline {
+      font-size: 18px;
+    }
+    .creative_promo {
+      color: green;
+      text-decoration: none;
+    }
+    </style>
+    <div class="creative_headline">
+      Welcome to mopub!
+    </div>
+    <div class="creative_promo">
+      <a href="http://www.mopub.com">
+        Click here to test ad
+      </a>
+    </div>
+    <div>
+      You can now set up a new campaign to serve other ads.
+    </div>
+    """
+        expected_backfill_promo_creative = generate_html_creative(
+            self.account, backfill_promo_adgroup, name="Demo HTML Creative",
+            html_data=default_creative_html, ad_type="html")
+        # TODO: why does one of these have _class and the other doesn't?
+        model_eq(backfill_promo_creative, expected_backfill_promo_creative,
+            check_primary_key=False, exclude=['_class', 't'])
+
+    @confirm_db(modified=[App, AdUnit, NetworkConfig, Campaign, AdGroup, Creative])
+    def mptest_create_additional_app_and_adunit(self):
+        """
+        Confirm the entire app creation workflow by submitting known good
+        parameters, and confirming the app/adunit were created as expected.
+        """
+
+        # Generate a filler app/adunit pair to test creation of additional
+        # apps/adunits.
+        filler_app = generate_app(self.account, put=True)
+        filler_adunit = generate_adunit(self.account, filler_app, put=True)
+
+        post_data = self.generate_post_data()
+
+        # We're expecting a status code 302 because this view, on successful
+        # creation, redirects to the integration help page.
+        post_response = self.client.post(self.url, post_data)
+        eq_(post_response.status_code, 302)
+
+        # Make sure there are exactly two app/adunit pairs for this account.
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account)
+        eq_(len(apps_dict), 2)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
+        eq_(len(adunits_dict), 2)
+
+        # Obtain the created app/adunit.
+        new_apps = filter(lambda app: app.key() != filler_app.key(), apps_dict.values())
+        app = new_apps[0]
+        new_adunits = filter(lambda adunit: adunit.key() != filler_adunit.key(), adunits_dict.values())
+        adunit = new_adunits[0]
+
+        # This page should redirect to the integration help page.
+        redirect_url = self.test_client_reverse('publisher_integration_help',
+                                                args=[str(adunit.key())])
+        redirect_url += '?status=welcome'
+        eq_(post_response['Location'], redirect_url)
+
+        # Compare the app/adunit to their expected models.
+        expected_app = generate_app(self.account)
+        model_eq(app, expected_app, check_primary_key=False)
+
+        expected_adunit = generate_adunit(self.account, app)
+        model_eq(adunit, expected_adunit, check_primary_key=False)
+
+        # Make sure the app/adunit were created within the last minute.
+        time_almost_eq(app.t,
+                       datetime.datetime.utcnow(),
+                       datetime.timedelta(minutes=1))
+        time_almost_eq(adunit.t,
+                       datetime.datetime.utcnow(),
+                       datetime.timedelta(minutes=1))
+
+        # TODO check network configs:
+        # expected_app_network_config = generate_network_config(self.account)
+        # model_eq(app.network_config, expected_app_network_config)
+
+        # expected_adunit_network_config = generate_network_config(self.account)
+        # model_eq(adunit.network_config, expected_adunit_network_config)
+
+    @staticmethod
+    def _get_object(lambda_, list_):
+        objects = filter(lambda_, list_)
+        eq_(len(objects), 1)
+        return objects[0]
 
     @confirm_db(modified=[])
     def mptest_create_app_and_adunit_app_validation(self):
@@ -846,34 +954,19 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-        # Obtain the updated app/adunit and convert them to dicts. Exclude 't'
-        # because the exact creation time is unknown.
+        # Obtain the updated app/adunit.
         app = apps_dict.values()[0]
-        app_dict = model_to_dict(app, exclude=['t'])
         adunit = adunits_dict.values()[0]
-        adunit_dict = model_to_dict(adunit, exclude=['t'])
 
-        # Build dicts of expected app/adunit properties and compare them to the
-        # actual state of the db. Based on our POST data, we expect app name and
-        # primary_category to have changed. AdUnit properties should not change.
-        expected_app_dict = default_app_dict(
-            self.account,
-            name=post_data['name'][0],
-            primary_category=post_data['primary_category'][0])
-
-        dict_eq(app_dict, expected_app_dict, exclude=['t'])
-        expected_adunit_dict = default_adunit_dict(self.account, self.app)
-        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
-
-        # compares to the the modified models in the db with
-        # the expected values as intended by the POST.
-        expected_app = default_app(self.account,
+        # Compare the app/adunit to their expected models. Name and
+        # primary_category should have been updated.
+        expected_app = generate_app(self.account,
                         key=self.app.key(),
                         name=post_data['name'][0],
                         primary_category=post_data['primary_category'][0])
         model_eq(app, expected_app)
 
-        expected_adunit = default_adunit(self.account, app, key=self.adunit.key())
+        expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
     @confirm_db(modified=[])
@@ -903,27 +996,17 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-        # Obtain the app/adunit and convert them to dicts. Exclude 't' because
-        # the exact creation time is unknown.
+        # Obtain the app/adunit.
         app = apps_dict.values()[0]
-        app_dict = model_to_dict(app, exclude=['t'])
         adunit = adunits_dict.values()[0]
-        adunit_dict = model_to_dict(adunit, exclude=['t'])
 
-        # Build dicts of the expected app/adunit properties and compare them to
-        # actual state of the db, which should not have changed.
-        expected_app_dict = default_app_dict(self.account)
-        dict_eq(app_dict, expected_app_dict, exclude=['t'])
-        expected_adunit_dict = default_adunit_dict(self.account, self.app)
-        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
-
-        # compares to the the models in the db, expecting
-        # no change since the form(s) were invalid
-        expected_app = default_app(self.account,
+        # Compare the app/adunit to their expected models. Nothing should have
+        # changed due to the validation error.
+        expected_app = generate_app(self.account,
                         key=self.app.key())
         model_eq(app, expected_app)
 
-        expected_adunit = default_adunit(self.account, app, key=self.adunit.key())
+        expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
     @confirm_db(modified=[])
@@ -950,27 +1033,25 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-        # Obtain the app/adunit and convert them to dicts. Exclude 't' because
-        # the exact creation time is unknown.
+        # The account should still own exactly one app and one adunit.
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account)
+        eq_(len(apps_dict), 1)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account)
+        eq_(len(adunits_dict), 1)
+
+        # Obtain the app/adunit.
         app = apps_dict.values()[0]
-        app_dict = model_to_dict(app, exclude=['t'])
         adunit = adunits_dict.values()[0]
-        adunit_dict = model_to_dict(adunit, exclude=['t'])
 
-        # Build dicts of the expected app/adunit properties and compare them to
-        # actual state of the db, which should not have changed.
-        expected_app_dict = default_app_dict(self.account)
-        dict_eq(app_dict, expected_app_dict, exclude=['t'])
-        expected_adunit_dict = default_adunit_dict(self.account, self.app)
-        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
-
-        # compares to the the models in the db, expecting
-        # no change
-        expected_app = default_app(self.account,
+        # Compare the app/adunit to their expected models. Nothing should have
+        # changed due to the authorization error.
+        expected_app = generate_app(self.account,
                         key=self.app.key())
         model_eq(app, expected_app)
 
-        expected_adunit = default_adunit(self.account, app, key=self.adunit.key())
+        expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
 
@@ -1008,7 +1089,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         post_data.update(kwargs)
         return post_data
 
-    @confirm_db(modified=[AdUnit])
+    @confirm_db(modified=[AdUnit, AdGroup, Creative])
     def mptest_create_adunit(self):
         """
         Confirm that adunit creation works by submitting known good parameters,
@@ -1038,15 +1119,8 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         if adunit.key() == self.adunit.key():
             adunit = adunits_dict.values()[1]
 
-        adunit_dict = model_to_dict(adunit, exclude=['t'])
-
-        # Build a dict of the expected adunit properties and compare it to
-        # actual state of the db.
-        expected_adunit_dict = default_adunit_dict(self.account, self.app)
-        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
-
-        # check the model is in the db as expected
-        expected_adunit = default_adunit(self.account, self.app,
+        # Compare the adunit to its expected models.
+        expected_adunit = generate_adunit(self.account, self.app,
                                 name=post_data['adunit-name'][0])
         model_eq(adunit, expected_adunit, check_primary_key=False)
 
@@ -1059,8 +1133,23 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adgroups_dict), 1)
 
-        adgroup = adgroups_dict.values()[0]
+        marketplace_adgroup = adgroups_dict.values()[0]
+        expected_marketplace_adgroup = generate_adgroup(
+            self.account, self.marketplace_campaign, name='Marketplace',
+            site_keys=[adunit.key()])
+        model_eq(marketplace_adgroup, expected_marketplace_adgroup,
+            check_primary_key=False, exclude=['created', 't'])
 
+        creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(self.account)
+        eq_(len(creatives_dict), 1)
+
+        marketplace_creative = creatives_dict.values()[0]
+        expected_marketplace_creative = generate_marketplace_creative(
+            self.account, marketplace_adgroup, name='marketplace dummy',
+            ad_type='html')
+        # TODO: why does one of these have _class and the other doesn't?
+        model_eq(marketplace_creative, expected_marketplace_creative,
+            check_primary_key=False, exclude=['_class', 't'])
 
     @confirm_db(modified=[])
     def mptest_create_adunit_validation(self):
@@ -1116,22 +1205,12 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-        # Obtain the updated adunit and convert it to a dict. Exclude 't'
-        # because the exact creation time is unknown.
+        # Obtain the updated adunit.
         adunit = adunits_dict.values()[0]
-        adunit_dict = model_to_dict(adunit, exclude=['t'])
 
-        # Build a dict of the expected adunit properties and compare it to
-        # actual state of the db.
-        expected_adunit_dict = default_adunit_dict(
-            self.account,
-            self.app,
-            name=u'Updated Banner Ad')
-        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
-
-        # check the model is in the db as expected per the post
-        # paramaters
-        expected_adunit = default_adunit(self.account, self.app,
+        # Compare the adunit to its expected models. The name should have been
+        # changed.
+        expected_adunit = generate_adunit(self.account, self.app,
                                 key=self.adunit.key(),
                                 name=post_data['adunit-name'][0])
         model_eq(adunit, expected_adunit)
@@ -1164,18 +1243,12 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-        # Obtain the adunit and convert it to a dict. Exclude 't' because the
-        # exact creation time is unknown.
+        # Obtain the adunit.
         adunit = adunits_dict.values()[0]
-        adunit_dict = model_to_dict(adunit, exclude=['t'])
 
-        # Build a dict of the expected adunit properties and compare it to
-        # actual state of the db, which should not have changed.
-        expected_adunit_dict = default_adunit_dict(self.account, self.app)
-        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
-
-        # check the model is in the db has not changed
-        expected_adunit = default_adunit(self.account, self.app,
+        # Compare the adunit to its expected models. Nothing should have changed
+        # due to the validation error.
+        expected_adunit = generate_adunit(self.account, self.app,
                                 key=self.adunit.key(),)
         model_eq(adunit, expected_adunit)
 
@@ -1205,15 +1278,10 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         # Obtain the adunit and convert it to a dict. Exclude 't' because the
         # exact creation time is unknown.
         adunit = adunits_dict.values()[0]
-        adunit_dict = model_to_dict(adunit, exclude=['t'])
 
-        # Build a dict of the expected adunit properties and compare it to
-        # actual state of the db, which should not have changed.
-        expected_adunit_dict = default_adunit_dict(self.account, self.app)
-        dict_eq(adunit_dict, expected_adunit_dict, exclude=['t'])
-
-        # check the model is in the db has not changed
-        expected_adunit = default_adunit(self.account, self.app,
+        # Compare the adunit to its expected models. Nothing should have changed
+        # due to the authorization error.
+        expected_adunit = generate_adunit(self.account, self.app,
                                 key=self.adunit.key(),)
         model_eq(adunit, expected_adunit)
 

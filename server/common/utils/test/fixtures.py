@@ -1,5 +1,6 @@
 from account.models import NetworkConfig
-from advertiser.models import Campaign, AdGroup
+from advertiser.models import (Campaign, AdGroup, Creative, MarketplaceCreative,
+                               HtmlCreative)
 from publisher.models import App, AdUnit
 
 
@@ -61,9 +62,26 @@ def generate_adgroup(account, campaign, put=False, **kwargs):
     }
     return _generate_model_instance(AdGroup, put, defaults, **kwargs)
 
+
 def generate_creative(account, adgroup, put=False, **kwargs):
     defaults = {
         'account': account,
         'adgroup': adgroup,
     }
     return _generate_model_instance(Creative, put, defaults, **kwargs)
+
+
+def generate_marketplace_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+    }
+    return _generate_model_instance(MarketplaceCreative, put, defaults, **kwargs)
+
+
+def generate_html_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+    }
+    return _generate_model_instance(HtmlCreative, put, defaults, **kwargs)

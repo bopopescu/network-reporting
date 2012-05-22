@@ -72,7 +72,9 @@ def dict_eq(dict1, dict2, exclude=[]):
 
 
 def list_eq(list1, list2):
-    eq_(len(list1), len(list2))
+    msg = "passed lists have unequal lengths: %s %s" % (
+            len(list1), len(list2))
+    eq_(len(list1), len(list2), msg)
 
     for item1, item2 in zip(list1, list2):
         if isinstance(item1, db.Model):

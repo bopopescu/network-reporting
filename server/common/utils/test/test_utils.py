@@ -188,16 +188,21 @@ def confirm_db(modified=None):
             for Model in MODELS:
                 if Model not in modified:
                     pre_test_count = pre_test_count_dict[Model]
-                    post_test_count = Model.all().count()
+
+                    model_query = Model.all()
+                    post_test_count = model_query.count()
+                    post_test_delete_count = model_query.filter('deleted =', True).count()
+
                     msg = 'Model %s had %s objects but now has %s' % \
                             (Model.__name__, pre_test_count, post_test_count)
 
                     if pre_test_count != post_test_count:
-                        messages.append(msg)
-                        error = True
+                        if (post_test_count - pre_test_count) != post_test_delete_count:
+                            messages.append(msg)
+                            error = True
 
             # raises an assertion error if any of the model tests failed
-            assert not error, ', '.join(messages)
+            ok_(not error, ', '.join(messages))
         return _wrapped_method
     return _outer
 

@@ -18,7 +18,9 @@ from functools import wraps
 
 from admin.randomgen import generate_app, generate_adunit
 
-from common.utils.test.test_utils import dict_eq
+from common.utils.test.test_utils import dict_eq, \
+        decorate_all_test_methods, \
+        confirm_db
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION, \
         REPORTING_NETWORKS
@@ -36,11 +38,15 @@ from advertiser.query_managers import AdvertiserQueryManager, \
         AdGroupQueryManager, \
         CreativeQueryManager
 
-from advertiser.models import AdGroup, \
+from account.models import NetworkConfig
+from advertiser.models import Campaign, \
+        AdGroup, \
+        Creative, \
         NetworkStates
 from ad_network_reports.models import AdNetworkLoginCredentials, \
         AdNetworkAppMapper, \
-        AdNetworkScrapeStats
+        AdNetworkScrapeStats, \
+        LoginStates
 
 from ad_network_reports.forms import LoginCredentialsForm
 from networks.forms import NetworkCampaignForm, \
@@ -57,9 +63,10 @@ def skip_if_no_mappers(test_method):
     return wrapper
 
 
+@decorate_all_test_methods(confirm_db())
 class CreateNetworkGetTestCase(NetworkTestCase):
     def setUp(self):
-        super(EditNetworkGetTestCase, self).setUp()
+        super(CreateNetworkGetTestCase, self).setUp()
 
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
@@ -143,6 +150,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
     def network_type_to_test(self):
         return 'admob'
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_response_code(self):
         """When adding a network campaign, response code should be 200.
 
@@ -152,6 +161,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 200)
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_puts_campaign(self):
         """A new network campaign should be initialized and saved properly.
 
@@ -175,6 +186,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         self.check_campaign_init(new_campaign, self.network_type,
                 expected_network_state)
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_puts_custom_campaign_if_default_exists(self):
         """When a default campaign already exists for the given network type,
         a custom campaign should be added to the datastore.
@@ -199,6 +212,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         self.check_campaign_init(new_campaign, self.network_type,
                 NetworkStates.CUSTOM_NETWORK_CAMPAIGN)
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_puts_one_adgroup_for_each_adunit(self):
         """There should be one new adgroup w/ a valid creative for each adunit.
 
@@ -232,6 +247,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 if self.network_type in ('custom', 'custom_native'):
                     eq_(creative.html_data, DEFAULT_HTML)
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_activates_adgroups_properly_on_creation(self):
         """Setting adgroup.active should work.
 
@@ -253,6 +270,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
 
         eq_(adgroup.active, True)
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_only_allow_activating_adgroups_with_pub_ids(self):
         """Setting adgroup.active should not work if its pub ID isn't set.
 
@@ -278,6 +297,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         eq_(response_json['success'], False)
         ok_(adunit_pub_id_key in response_json['errors'])
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_updates_network_configs(self):
         """All network config objects should be updated with correct pub IDs.
 
@@ -306,6 +327,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                             self.network_type), expected_adunit_pub_id)
 
     @skip_if_no_mappers
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_creates_new_mapper_only_if_login_saved(self):
         """If the user has no logins, mappers should not be created.
 
@@ -318,6 +341,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         eq_(len(actual_mappers), 0)
 
     @skip_if_no_mappers
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper, AdNetworkLoginCredentials])
     def mptest_creates_new_mapper_if_no_existing_mappers(self):
         """If a mapper does not exist, a new one should be created.
 
@@ -350,6 +375,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 eq_(mapper.ad_network_login.key(), ad_network_login.key())
 
     @skip_if_no_mappers
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper, AdNetworkLoginCredentials])
     def mptest_deletes_existing_mapper_if_no_stats(self):
         """Stats-less mappers should be replaced with new mappers.
 
@@ -369,6 +396,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         ok_(existing_mapper.key() != actual_mappers[0].key())
 
     @skip_if_no_mappers
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper, AdNetworkLoginCredentials])
     def mptest_creates_new_mapper_if_existing_mapper_has_stats(self):
         """If a mapper already exists for this app / network type pair and it
         has stats, a new mapper should be created without deleting the old one.
@@ -391,6 +420,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 self.network_type)
         eq_(old_mapper.key(), existing_mapper.key())
 
+    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
+        AdNetworkAppMapper])
     def mptest_updates_onboarding(self):
         """An account should be finished onboarding once a campaign is created.
 

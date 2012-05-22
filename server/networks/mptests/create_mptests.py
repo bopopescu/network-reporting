@@ -51,9 +51,65 @@ def skip_if_no_mappers(test_method):
     return wrapper
 
 
-class CreateNetworkTestCase(NetworkTestCase):
+class CreateNetworkGetTestCase(NetworkTestCase):
     def setUp(self):
-        super(CreateNetworkTestCase, self).setUp()
+        super(EditNetworkGetTestCase, self).setUp()
+
+        self.network_type = self.network_type_to_test()
+        self.set_up_existing_apps_and_adunits()
+        self.existing_apps = self.get_apps_with_adunits(self.account)
+
+        self.url = reverse('edit_network',
+                kwargs={'network': self.network_type})
+
+    def network_type_to_test(self):
+        return 'admob'
+
+    def mptest_response_code(self):
+        """When editing a network campaign, response code should be 200.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
+
+    def mptest_context(self):
+        """The context given to the template should be valid.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.get(self.url)
+        context = response.context
+
+        network_data = {'name': self.network_type,
+                        'pretty_name': NETWORKS[self.network_type],
+                        'show_login': False,
+                        'login_state': LoginStates.NOT_SETUP}
+
+        # TODO
+        dict_eq(network_data, context['network'])
+
+        eq_(str(self.account.key()), context['account_key'])
+
+        ok_(not custom_campaign or (self.network_type in ('custom',
+        'custom_native') and custom_campaign))
+
+        ok_(isinstance(response.context['campaign_form'], NetworkCampaignForm))
+
+        eq_('', context['campaign_key'])
+
+        ok_(isinstance(response.context['login_form'], LoginCredentialsForm))
+
+        ok_(isinstance(response.context['adgroup_form'], AdGroupForm))
+
+        eq_(len(self.existing_apps), len(context['apps']))
+
+        ok_(not reporting)
+
+
+class CreateNetworkPostTestCase(NetworkTestCase):
+    def setUp(self):
+        super(CreateNetworkPostTestCase, self).setUp()
 
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
@@ -412,58 +468,58 @@ class CreateNetworkTestCase(NetworkTestCase):
         return filtered_campaigns
 
 
-class CreateJumptapNetworkTestCase(CreateNetworkTestCase):
+class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'jumptap'
 
-class CreateIAdNetworkTestCase(CreateNetworkTestCase):
+class CreateIAdNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'iad'
 
 
-class CreateInmobiNetworkTestCase(CreateNetworkTestCase):
+class CreateInmobiNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'inmobi'
 
 
-class CreateMobfoxNetworkTestCase(CreateNetworkTestCase):
+class CreateMobfoxNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'mobfox'
 
 
-class CreateMillennialNetworkTestCase(CreateNetworkTestCase):
+class CreateMillennialNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'millennial'
 
 
-class CreateAdsenseNetworkTestCase(CreateNetworkTestCase):
+class CreateAdsenseNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'adsense'
 
 
-class CreateEjamNetworkTestCase(CreateNetworkTestCase):
+class CreateEjamNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'ejam'
 
 
-class CreateBrightrollNetworkTestCase(CreateNetworkTestCase):
+class CreateBrightrollNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'brightroll'
 
 
-class CreateCustomNetworkTestCase(CreateNetworkTestCase):
+class CreateCustomNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'custom'
 
 
-class CreateCustomNativeNetworkTestCase(CreateNetworkTestCase):
+class CreateCustomNativeNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'custom_native'
 
 
 NUM_APPS = 3
 NUM_ADUNITS = 3
-class ComplexEditNetworkTestCase(CreateNetworkTestCase):
+class ComplexEditNetworkTestCase(CreateNetworkPostTestCase):
     def set_up_existing_apps_and_adunits(self):
         """Overrides method in superclass."""
         for app_index in range(NUM_APPS):

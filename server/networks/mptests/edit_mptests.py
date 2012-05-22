@@ -26,9 +26,89 @@ from advertiser.query_managers import AdGroupQueryManager
 from advertiser.models import AdGroup
 from ad_network_reports.models import AdNetworkAppMapper
 
-class EditNetworkTestCase(NetworkTestCase):
+
+class EditNetworkGetTestCase(NetworkTestCase):
     def setUp(self):
-        super(EditNetworkTestCase, self).setUp()
+        super(EditNetworkGetTestCase, self).setUp()
+
+        self.network_type = self.network_type_to_test()
+        self.set_up_existing_apps_and_adunits()
+        self.existing_apps = self.get_apps_with_adunits(self.account)
+
+        self.existing_campaign = self.generate_network_campaign(
+                self.network_type, self.account, self.existing_apps)
+
+        if self.network_type in NETWORKS_WITH_PUB_IDS:
+            for app_idx, app in enumerate(self.existing_apps):
+                app.network_config = NetworkConfig()
+                setattr(app.network_config, '%s_pub_id' % self.network_type,
+                        '%s_%s' % (DEFAULT_PUB_ID, app_idx))
+                NetworkConfigQueryManager.put(app.network_config)
+
+                for adunit_idx, adunit in enumerate(app.adunits):
+                    app.network_config = NetworkConfig()
+                    setattr(app.network_config, '%s_pub_id' % self.network_type,
+                            '%s_%s' % (pub_id, adunit_idx))
+                    NetworkConfigQueryManager.put(app.network_config)
+
+        self.url = reverse('edit_network',
+                kwargs={'campaign_key': str(self.existing_campaign.key())})
+
+    def network_type_to_test(self):
+        return 'admob'
+
+    def mptest_response_code(self):
+        """When editing a network campaign, response code should be 200.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
+
+    def mptest_context(self):
+        """The context given to the template should be valid.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.get(self.url)
+        context = response.context
+
+        network_data = {'name': self.network_type,
+                        'pretty_name': NETWORKS[self.network_type],
+                        'show_login': False,
+                        'login_state': LoginStates.NOT_SETUP}
+
+        # TODO
+        dict_eq(network_data, context['network'])
+
+        eq_(str(self.account.key()), context['account_key'])
+
+        ok_(not custom_campaign or (self.network_type in ('custom',
+        'custom_native') and custom_campaign))
+
+        ok_(isinstance(response.context['campaign_form'], NetworkCampaignForm))
+
+        eq_(str(self.existing_campaign.key()), context['campaign_key'])
+
+        ok_(isinstance(response.context['login_form'], LoginCredentialsForm))
+
+        ok_(isinstance(response.context['adgroup_form'], AdGroupForm))
+
+        eq_(len(self.existing_apps), len(context['apps']))
+        for app_idx, app in enumerate(context['apps']):
+            eq_(getattr(app.network_config, '%s_pub_id' % self.network_type),
+                    '%s_%s' % (DEFAULT_PUB_ID, app_idx))
+
+            for adunit_idx, adunit in enumerate(app.adunits):
+                eq_(getattr(app.network_config, '%s_pub_id' %
+                    self.network_type), '%s_%s' % (pub_id, adunit_idx))
+
+        ok_(not reporting)
+
+
+class EditNetworkPostTestCase(NetworkTestCase):
+    def setUp(self):
+        super(EditNetworkPostTestCase, self).setUp()
 
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
@@ -300,5 +380,3 @@ class EditNetworkTestCase(NetworkTestCase):
         eq_(adgroup.allocation_percentage, new_allocation_percentage)
         eq_(adgroup.daily_frequency_cap, new_daily_frequency_cap)
         eq_(adgroup.hourly_frequency_cap, new_hourly_frequency_cap)
-
-

@@ -11,8 +11,7 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from common.utils.test.views import BaseViewTestCase
-from common.utils.test.test_utils import dict_eq, time_almost_eq, confirm_db
-from common.utils.decorators import decorate_all_methods
+from common.utils.test.test_utils import dict_eq, time_almost_eq, confirm_db, decorate_all_test_methods
 
 from google.appengine.ext import db
 
@@ -129,6 +128,8 @@ class OrderViewTestCase(BaseViewTestCase):
         self.mock_line_item.account = self.account
         self.mock_line_item.campaign = self.mock_order
 
+
+@decorate_all_test_methods(confirm_db())
 class OrderIndexTestCase(OrderViewTestCase):
     """
     Tests the order index handler
@@ -203,6 +204,7 @@ class OrderIndexTestCase(OrderViewTestCase):
             ok_(line_item.campaign.is_order)
 
 
+@decorate_all_test_methods(confirm_db())
 class OrderDetailHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(OrderDetailHandlerTestCase, self).setUp()
@@ -277,6 +279,8 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
 
         eq_(expected_order.key(), actual_order.key())
 
+
+@decorate_all_test_methods(confirm_db())
 class LineItemDetailHandler(OrderViewTestCase):
     def setUp(self):
         super(LineItemDetailHandler, self).setUp()
@@ -348,6 +352,7 @@ class LineItemDetailHandler(OrderViewTestCase):
         eq_(actual_order.key(), expected_order.key())
 
 
+@decorate_all_test_methods(confirm_db())
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
     """
     Tests for the order and line item create view's GET method.
@@ -493,9 +498,10 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         pass
 
 
-class NewOrEditLineItemGetTestCase(object):
+@decorate_all_test_methods(confirm_db())
+class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     """
-    Tests for the new/edit line item POST method.
+    Tests for the new/edit line item GET method.
     """
 
     def setUp(self):
@@ -833,9 +839,9 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         pass
 
-
+#TODO: Change this if confirm_db actually checks the models
+@decorate_all_test_methods(confirm_db())
 class AdSourceChangeTestCase(OrderViewTestCase):
-
     def setUp(self):
         super(AdSourceChangeTestCase, self).setUp()
         self.url = reverse('advertiser_ad_source_status_change')
@@ -1296,6 +1302,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(actual_order.deleted)
 
 
+@decorate_all_test_methods(confirm_db())
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(DisplayCreativeHandlerTestCase, self).setUp()
@@ -1323,6 +1330,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         pass
 
 
+@decorate_all_test_methods(confirm_db())
 class CreativeImageHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(CreativeImageHandlerTestCase, self).setUp()

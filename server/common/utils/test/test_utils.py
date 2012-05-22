@@ -6,6 +6,7 @@ sys.path.append(os.environ['PWD'])
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
+import inspect
 
 from account.models import Account, User, NetworkConfig
 from advertiser.models import Campaign, AdGroup, Creative
@@ -119,6 +120,29 @@ def model_to_dict(model, exclude=[], reference_only=False):
 def time_almost_eq(time1, time2, delta):
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
+def simple_decorator(decorator):
+    '''This decorator can be used to turn simple functions
+    into well-behaved decorators, so long as the decorators
+    are fairly simple. If a decorator expects a function and
+    returns a function (no descriptors), and if it doesn't
+    modify function attributes or docstring, then it is
+    eligible to use this. Simply apply @simple_decorator to
+    your decorator and it will automatically preserve the
+    docstring and function attributes of functions to which
+    it is applied.'''
+    def new_decorator(f):
+        g = decorator(f)
+        g.__name__ = f.__name__
+        g.__doc__ = f.__doc__
+        g.__dict__.update(f.__dict__)
+        return g
+    # Now a few lines needed to make simple_decorator itself
+    # be a well-behaved decorator.
+    new_decorator.__name__ = decorator.__name__
+    new_decorator.__doc__ = decorator.__doc__
+    new_decorator.__dict__.update(decorator.__dict__)
+    return new_decorator
+
 
 def confirm_db(modified=None):
     """Decorator that confirms that the rest of the db is unchanged
@@ -177,3 +201,21 @@ def confirm_db(modified=None):
             assert not error, ', '.join(messages)
         return _wrapped_method
     return _outer
+
+
+def decorate_all_test_methods(decorator):
+    """
+    Decorator that applies a decorator to all methods in a class 
+
+    NOTE: This will also wrap nested methods
+
+    Author:
+        Haydn (5/21/2012)
+    """
+    def decorate(cls):
+        for method in inspect.getmembers(cls, inspect.ismethod):
+            method_name = method[1].__name__
+            if 'mptest' in method_name:
+                setattr(cls, method_name, decorator(getattr(cls, method_name)))
+        return cls
+    return decorate

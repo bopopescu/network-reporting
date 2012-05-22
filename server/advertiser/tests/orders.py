@@ -594,7 +594,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        self.client.login_secondary_account()
+        self.login_secondary_account()
 
         response = self.client.get(self.new_url)
         eq_(response.status_code, 404)
@@ -606,7 +606,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        self.client.login_secondary_account()
+        self.login_secondary_account()
         
         response = self.client.get(self.edit_url)
         eq_(response.status_code, 404)
@@ -712,7 +712,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        self.client.login_secondary_account()
+        self.login_secondary_account()
 
         response = self.client.post(self.edit_url, self.post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')

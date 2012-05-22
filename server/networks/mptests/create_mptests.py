@@ -14,8 +14,11 @@ from google.appengine.ext import db
 from django.core.urlresolvers import reverse
 from collections import defaultdict
 
+from functools import wraps
+
 from admin.randomgen import generate_app, generate_adunit
 
+from common.utils.test.test_utils import dict_eq
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION, \
         REPORTING_NETWORKS
@@ -39,7 +42,10 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
         AdNetworkAppMapper, \
         AdNetworkScrapeStats
 
-from functools import wraps
+from ad_network_reports.forms import LoginCredentialsForm
+from networks.forms import NetworkCampaignForm, \
+        NetworkAdGroupForm, \
+        AdUnitAdGroupForm
 
 
 def skip_if_no_mappers(test_method):
@@ -86,25 +92,27 @@ class CreateNetworkGetTestCase(NetworkTestCase):
                         'show_login': False,
                         'login_state': LoginStates.NOT_SETUP}
 
-        # TODO
         dict_eq(network_data, context['network'])
 
         eq_(str(self.account.key()), context['account_key'])
 
-        ok_(not custom_campaign or (self.network_type in ('custom',
-        'custom_native') and custom_campaign))
+        ok_(not context['custom_campaign'] or (context['custom_campaign'] and
+            self.network_type in ('custom', 'custom_native')))
 
-        ok_(isinstance(response.context['campaign_form'], NetworkCampaignForm))
+        ok_(isinstance(context['campaign_form'], NetworkCampaignForm))
 
         eq_('', context['campaign_key'])
 
-        ok_(isinstance(response.context['login_form'], LoginCredentialsForm))
+        ok_(isinstance(context['login_form'], LoginCredentialsForm))
 
-        ok_(isinstance(response.context['adgroup_form'], AdGroupForm))
+        ok_(isinstance(context['adgroup_form'], NetworkAdGroupForm))
 
         eq_(len(self.existing_apps), len(context['apps']))
+        for app_idx, app in enumerate(context['apps']):
+            for adunit_idx, adunit in enumerate(app.adunits):
+                ok_(isinstance(adunit.adgroup_form, AdUnitAdGroupForm))
 
-        ok_(not reporting)
+        ok_(not context['reporting'])
 
 
 class CreateNetworkPostTestCase(NetworkTestCase):

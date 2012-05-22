@@ -18,13 +18,25 @@ from networks.mptests.network_test_case import NetworkTestCase, \
         DEFAULT_BID, \
         DEFAULT_HTML, \
         DEFAULT_PUB_ID
+from common.utils.test.test_utils import dict_eq
+from common.constants import NETWORKS
 
 from networks.views import NETWORKS_WITH_PUB_IDS
 
+from account.query_managers import NetworkConfigQueryManager
 from advertiser.query_managers import AdGroupQueryManager
+from publisher.query_managers import AppQueryManager, \
+        AdUnitQueryManager
 
+from account.models import NetworkConfig
 from advertiser.models import AdGroup
-from ad_network_reports.models import AdNetworkAppMapper
+from ad_network_reports.models import AdNetworkAppMapper, \
+        LoginStates
+
+from ad_network_reports.forms import LoginCredentialsForm
+from networks.forms import NetworkCampaignForm, \
+        NetworkAdGroupForm, \
+        AdUnitAdGroupForm
 
 
 class EditNetworkGetTestCase(NetworkTestCase):
@@ -40,16 +52,20 @@ class EditNetworkGetTestCase(NetworkTestCase):
 
         if self.network_type in NETWORKS_WITH_PUB_IDS:
             for app_idx, app in enumerate(self.existing_apps):
-                app.network_config = NetworkConfig()
-                setattr(app.network_config, '%s_pub_id' % self.network_type,
-                        '%s_%s' % (DEFAULT_PUB_ID, app_idx))
-                NetworkConfigQueryManager.put(app.network_config)
+                nc = NetworkConfig()
+                pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+                setattr(nc, '%s_pub_id' % self.network_type, pub_id)
+                NetworkConfigQueryManager.put(nc)
+                app.network_config = nc
+                AppQueryManager.put(app)
 
                 for adunit_idx, adunit in enumerate(app.adunits):
-                    app.network_config = NetworkConfig()
-                    setattr(app.network_config, '%s_pub_id' % self.network_type,
-                            '%s_%s' % (pub_id, adunit_idx))
-                    NetworkConfigQueryManager.put(app.network_config)
+                    nc = NetworkConfig()
+                    setattr(nc, '%s_pub_id' % self.network_type, '%s_%s' %
+                            (pub_id, adunit_idx))
+                    NetworkConfigQueryManager.put(nc)
+                    adunit.network_config = nc
+                    AdUnitQueryManager.put(adunit)
 
         self.url = reverse('edit_network',
                 kwargs={'campaign_key': str(self.existing_campaign.key())})
@@ -78,13 +94,12 @@ class EditNetworkGetTestCase(NetworkTestCase):
                         'show_login': False,
                         'login_state': LoginStates.NOT_SETUP}
 
-        # TODO
         dict_eq(network_data, context['network'])
 
         eq_(str(self.account.key()), context['account_key'])
 
-        ok_(not custom_campaign or (self.network_type in ('custom',
-        'custom_native') and custom_campaign))
+        ok_(not context['custom_campaign'] or (context['custom_campaign'] and
+            self.network_type in ('custom', 'custom_native')))
 
         ok_(isinstance(response.context['campaign_form'], NetworkCampaignForm))
 
@@ -92,18 +107,21 @@ class EditNetworkGetTestCase(NetworkTestCase):
 
         ok_(isinstance(response.context['login_form'], LoginCredentialsForm))
 
-        ok_(isinstance(response.context['adgroup_form'], AdGroupForm))
+        ok_(isinstance(response.context['adgroup_form'], NetworkAdGroupForm))
 
         eq_(len(self.existing_apps), len(context['apps']))
         for app_idx, app in enumerate(context['apps']):
+            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
             eq_(getattr(app.network_config, '%s_pub_id' % self.network_type),
-                    '%s_%s' % (DEFAULT_PUB_ID, app_idx))
+                    pub_id)
 
             for adunit_idx, adunit in enumerate(app.adunits):
-                eq_(getattr(app.network_config, '%s_pub_id' %
+                ok_(isinstance(adunit.adgroup_form, AdUnitAdGroupForm))
+
+                eq_(getattr(adunit.network_config, '%s_pub_id' %
                     self.network_type), '%s_%s' % (pub_id, adunit_idx))
 
-        ok_(not reporting)
+        ok_(not response.context['reporting'])
 
 
 class EditNetworkPostTestCase(NetworkTestCase):

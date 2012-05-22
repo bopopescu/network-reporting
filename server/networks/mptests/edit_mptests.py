@@ -101,13 +101,13 @@ class EditNetworkGetTestCase(NetworkTestCase):
         ok_(not context['custom_campaign'] or (context['custom_campaign'] and
             self.network_type in ('custom', 'custom_native')))
 
-        ok_(isinstance(response.context['campaign_form'], NetworkCampaignForm))
+        ok_(isinstance(context['campaign_form'], NetworkCampaignForm))
 
         eq_(str(self.existing_campaign.key()), context['campaign_key'])
 
-        ok_(isinstance(response.context['login_form'], LoginCredentialsForm))
+        ok_(isinstance(context['login_form'], LoginCredentialsForm))
 
-        ok_(isinstance(response.context['adgroup_form'], NetworkAdGroupForm))
+        ok_(isinstance(context['adgroup_form'], NetworkAdGroupForm))
 
         eq_(len(self.existing_apps), len(context['apps']))
         for app_idx, app in enumerate(context['apps']):
@@ -121,7 +121,7 @@ class EditNetworkGetTestCase(NetworkTestCase):
                 eq_(getattr(adunit.network_config, '%s_pub_id' %
                     self.network_type), '%s_%s' % (pub_id, adunit_idx))
 
-        ok_(not response.context['reporting'])
+        ok_(not context['reporting'])
 
 
 class EditNetworkPostTestCase(NetworkTestCase):

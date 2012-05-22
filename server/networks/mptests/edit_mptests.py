@@ -19,6 +19,7 @@ from networks.mptests.network_test_case import NetworkTestCase, \
         DEFAULT_HTML, \
         DEFAULT_PUB_ID
 from common.utils.test.test_utils import dict_eq, \
+        model_eq, \
         decorate_all_test_methods, \
         confirm_db
 from common.constants import NETWORKS
@@ -26,7 +27,8 @@ from common.constants import NETWORKS
 from networks.views import NETWORKS_WITH_PUB_IDS
 
 from account.query_managers import NetworkConfigQueryManager
-from advertiser.query_managers import AdGroupQueryManager
+from advertiser.query_managers import AdGroupQueryManager, \
+        AdvertiserQueryManager
 from publisher.query_managers import AppQueryManager, \
         AdUnitQueryManager
 
@@ -84,6 +86,16 @@ class EditNetworkGetTestCase(NetworkTestCase):
         response = self.client.get(self.url)
         eq_(response.status_code, 200)
 
+    def mptest_edit_campaign_for_other_account(self):
+        """Attempting to edit a campaign from another account should result in
+        an error.
+
+        Author: Tiago Bandeira
+        """
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)
+
     def mptest_context(self):
         """The context given to the template should be valid.
 
@@ -91,6 +103,12 @@ class EditNetworkGetTestCase(NetworkTestCase):
         """
         response = self.client.get(self.url)
         context = response.context
+
+        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
+        adgroups_by_adunit = {}
+        for adgroup in adgroups:
+            adgroups_by_adunit[adgroup.site_keys[0]] = adgroup
 
         network_data = {'name': self.network_type,
                         'pretty_name': NETWORKS[self.network_type],
@@ -120,6 +138,9 @@ class EditNetworkGetTestCase(NetworkTestCase):
 
             for adunit_idx, adunit in enumerate(app.adunits):
                 ok_(isinstance(adunit.adgroup_form, AdUnitAdGroupForm))
+                ok_(adunit.key() in adgroups_by_adunit)
+                model_eq(adunit.adgroup_form.instance,
+                        adgroups_by_adunit[adunit.key()])
 
                 eq_(getattr(adunit.network_config, '%s_pub_id' %
                     self.network_type), '%s_%s' % (pub_id, adunit_idx))
@@ -402,3 +423,13 @@ class EditNetworkPostTestCase(NetworkTestCase):
         eq_(adgroup.allocation_percentage, new_allocation_percentage)
         eq_(adgroup.daily_frequency_cap, new_daily_frequency_cap)
         eq_(adgroup.hourly_frequency_cap, new_hourly_frequency_cap)
+
+    def mptest_edit_campaign_for_other_account(self):
+        """Attempting to edit a campaign from another account should result in
+        an error.
+
+        Author: Tiago Bandeira
+        """
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)

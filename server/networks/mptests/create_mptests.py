@@ -20,7 +20,8 @@ from admin.randomgen import generate_app, generate_adunit
 
 from common.utils.test.test_utils import dict_eq, \
         decorate_all_test_methods, \
-        confirm_db
+        confirm_db, \
+        model_eq
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION, \
         REPORTING_NETWORKS
@@ -94,6 +95,12 @@ class CreateNetworkGetTestCase(NetworkTestCase):
         response = self.client.get(self.url)
         context = response.context
 
+        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
+        adgroups_by_adunit = {}
+        for adgroup in adgroups:
+            adgroups_by_adunit[adgroup.site_keys[0]] = adgroup
+
         network_data = {'name': self.network_type,
                         'pretty_name': NETWORKS[self.network_type],
                         'show_login': False,
@@ -116,8 +123,16 @@ class CreateNetworkGetTestCase(NetworkTestCase):
 
         eq_(len(self.existing_apps), len(context['apps']))
         for app_idx, app in enumerate(context['apps']):
+            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+            eq_(app.pub_id, pub_id)
+
             for adunit_idx, adunit in enumerate(app.adunits):
                 ok_(isinstance(adunit.adgroup_form, AdUnitAdGroupForm))
+                ok_(adunit.key() in adgroups_by_adunit)
+                model_eq(adunit.adgroup_form.instance,
+                        adgroups_by_adunit[adunit.key()])
+
+                eq_(adunit.pub_id, '%s_%s' % (pub_id, adunit_idx))
 
         ok_(not context['reporting'])
 
@@ -456,7 +471,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         login = AdNetworkLoginCredentials.get_by_ad_network_name(
                 self.account, ad_network_name)
         if not login:
-            login = self.generate_ad_network_login(ad_network_name, self.account)
+            login = self.generate_ad_network_login(ad_network_name,
+                    self.account)
 
         # Create the mapper and save it.
         mapper = AdNetworkAppMapper(ad_network_login=login,

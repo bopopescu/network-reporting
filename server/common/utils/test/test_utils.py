@@ -4,6 +4,8 @@ import inspect
 
 sys.path.append(os.environ['PWD'])
 
+import inspect
+from datetime import timedelta
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
@@ -89,7 +91,8 @@ def list_eq(list1, list2):
 
 
 def model_key_eq(model1, model2):
-    eq_(model1.key(), model2.key())
+    eq_(model1.key(), model2.key(),
+        'Primary key %s does not equal %s' % (model1.key(), model2.key()))
 
 
 def model_eq(model1, model2, exclude=None, check_primary_key=True):
@@ -119,8 +122,7 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
 
     # only check that the keys are equal if both objects are in db
     if check_primary_key:
-        eq_(model1.key(), model2.key(),
-            'Primary key %s does not equal %s' % (model1.key(), model2.key()))
+        model_key_eq(model1, model2)
     dict_eq(model1_dict, model2_dict)
 
 
@@ -129,20 +131,23 @@ def model_to_dict(model, exclude=[], reference_only=False):
 
     for key, prop in model.properties().iteritems():
         # Keys with prepended underscores are ignored by the datastore.
-        if key in exclude or key.startswith('_'):
+        if key in exclude:
             continue
         # by prepending the attribute with '_'
         # we the value of this field as stored in the db
         # in particular, for reference properties this will
         # not dereference, but will only get the foreign key
         if reference_only:
-            key = '_' + key
+            if not key.startswith('_'):
+                key = '_' + key
         model_dict[key] = getattr(model, key)
 
     return model_dict
 
 
-def time_almost_eq(time1, time2, delta):
+def time_almost_eq(time1, time2, delta=None):
+    if not delta:
+        delta = timedelta(minutes=1)
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
@@ -191,16 +196,21 @@ def confirm_db(modified=None):
             for Model in MODELS:
                 if Model not in modified:
                     pre_test_count = pre_test_count_dict[Model]
-                    post_test_count = Model.all().count()
+
+                    model_query = Model.all()
+                    post_test_count = model_query.count()
+                    post_test_delete_count = model_query.filter('deleted =', True).count()
+
                     msg = 'Model %s had %s objects but now has %s' % \
                             (Model.__name__, pre_test_count, post_test_count)
 
                     if pre_test_count != post_test_count:
-                        messages.append(msg)
-                        error = True
+                        if (post_test_count - pre_test_count) != post_test_delete_count:
+                            messages.append(msg)
+                            error = True
 
             # raises an assertion error if any of the model tests failed
-            assert not error, ', '.join(messages)
+            ok_(not error, ', '.join(messages))
         return _wrapped_method
     return _outer
 

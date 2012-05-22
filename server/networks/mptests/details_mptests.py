@@ -10,7 +10,12 @@ from nose.tools import ok_, \
 
 from django.core.urlresolvers import reverse
 
-from networks.mptests.network_test_case import NetworkTestCase
+from common.utils.test.test_utils import dict_eq
+from common.constants import NETWORKS
+from networks.mptests.network_test_case import NetworkTestCase, \
+        DEFAULT_BID
+
+from ad_network_reports.models import LoginStates
 
 
 class NetworkDetailsTestCase(NetworkTestCase):
@@ -21,11 +26,11 @@ class NetworkDetailsTestCase(NetworkTestCase):
         self.existing_apps = self.get_apps_with_adunits(self.account)
 
         self.network_type = self.network_type_to_test()
-        campaign = self.generate_network_campaign(self.network_type, self.account,
-                self.existing_apps)
+        self.existing_campaign = self.generate_network_campaign(
+                self.network_type, self.account, self.existing_apps)
 
         self.url = reverse('network_details',
-                kwargs={'campaign_key': campaign.key()})
+                kwargs={'campaign_key': self.existing_campaign.key()})
 
     def network_type_to_test(self):
         return 'admob'
@@ -37,6 +42,32 @@ class NetworkDetailsTestCase(NetworkTestCase):
         """
         response = self.client.get(self.url)
         eq_(response.status_code, 200)
+
+    def mptest_context(self):
+        """NetworkDetails shall pass a reasonable context to the template.
+
+        Author: Tiago Bandeira
+        """
+        response = self.client.get(self.url)
+        context = response.context
+
+        dict_eq(context['network'], {'name': self.network_type,
+                                     'pretty_name': NETWORKS[self.network_type],
+                                     'key': str(self.existing_campaign.key()),
+                                     'active': True,
+                                     'login_state': LoginStates.NOT_SETUP,
+                                     'reporting': False,
+                                     'targeting': 'All',
+                                     'min_cpm': DEFAULT_BID,
+                                     'max_cpm': DEFAULT_BID,},
+                                     exclude=['apps'])
+
+        eq_(len(context['network']['apps']), len(self.existing_apps))
+
+        for app, app_bid in context['network']['apps']:
+            dict_eq(app_bid, {'min_cpm': DEFAULT_BID, 'max_cpm': DEFAULT_BID})
+
+        eq_(len(context['apps']), len(self.existing_apps))
 
 
 class JumpTapDetailsTestCase(NetworkDetailsTestCase):

@@ -14,8 +14,8 @@ from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import App, AdUnit
 from reporting.models import StatsModel
 
-MODELS = [Account, User, NetworkConfig, App, AdUnit,
-          Campaign, AdGroup, Creative, StatsModel]
+MODELS = [Account, User, NetworkConfig, App, AdUnit, Campaign, AdGroup,
+          Creative, StatsModel]
 
 
 def prepend_list(e, li):
@@ -74,7 +74,9 @@ def dict_eq(dict1, dict2, exclude=[]):
 
 
 def list_eq(list1, list2):
-    eq_(len(list1), len(list2))
+    msg = "passed lists have unequal lengths: %s %s" % (
+            len(list1), len(list2))
+    eq_(len(list1), len(list2), msg)
 
     for item1, item2 in zip(list1, list2):
         if isinstance(item1, db.Model):
@@ -127,16 +129,14 @@ def model_to_dict(model, exclude=[], reference_only=False):
     model_dict = {}
 
     for key, prop in model.properties().iteritems():
-        print key, prop
         if key in exclude:
             continue
         # by prepending the attribute with '_'
         # we the value of this field as stored in the db
         # in particular, for reference properties this will
         # not dereference, but will only get the foreign key
-        if reference_only:
-            if '_' != key[0]:
-                key = '_' + key
+        if reference_only and not key.startswith('_')
+            key = '_' + key
         model_dict[key] = getattr(model, key)
 
     return model_dict
@@ -214,7 +214,7 @@ def confirm_db(modified=None):
 
 def decorate_all_test_methods(decorator):
     """
-    Decorator that applies a decorator to all methods in a class 
+    Decorator that applies a decorator to all methods in a class
 
     NOTE: This will also wrap nested methods
 

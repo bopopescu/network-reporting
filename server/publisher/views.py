@@ -213,69 +213,6 @@ def app_index(request, *args, **kwargs):
     return handler(request, use_cache=False, *args, **kwargs)
 
 
-class GeoPerformanceHandler(RequestHandler):
-    """
-    App performance stats broken down by geography.
-    """
-    def get(self):
-
-        now = datetime.now()
-
-        apps = AppQueryManager.get_apps(self.account)
-
-        if len(apps) == 0:
-            return HttpResponseRedirect(reverse('publisher_create_app'))
-
-        geo_dict = {}
-        totals = StatsModel(date=now) # sum across all days and countries
-
-        # hydrate geo count dicts with stats counts on account level
-        account_stats_mgr = StatsModelQueryManager(self.account,
-                                                   self.offline,
-                                                   include_geo=True)
-        all_stats = account_stats_mgr.get_stats_for_days(days=self.days, use_mongo=False)
-
-        for stats in all_stats:
-            totals = totals + StatsModel(request_count=stats.request_count,
-                                         impression_count=stats.impression_count,
-                                         click_count=stats.click_count,
-                                         user_count=stats.user_count,
-                                         date=now)
-            countries = stats.get_countries()
-            for c in countries:
-                country_info = geo_dict.get(c, StatsModel(country=c, date=now))
-                geo_counts_0 = stats.get_geo(c, GEO_COUNTS[0])
-                geo_counts_2 = stats.get_geo(c, GEO_COUNTS[2])
-                country_stats = StatsModel(country=c,
-                                           request_count = geo_counts_0,
-                                           impression_count = geo_counts_0,
-                                           click_count = geo_counts_2,
-                                           date = now)
-                geo_dict[c] =  country_info + country_stats
-
-        # creates a sorted table based on request count
-        geo_table = []
-        keys = geo_dict.keys()
-        keys.sort(lambda x,y: cmp(geo_dict[y].request_count, geo_dict[x].request_count))
-        for k in keys:
-            geo_table.append((k, geo_dict[k]))
-
-        return render_to_response(self.request,
-                                  'publisher/geo_performance.html',
-                                  {
-                                      'geo_dict': geo_dict,
-                                      'geo_table': geo_table,
-                                      'totals' : totals,
-                                      'date_range': self.date_range,
-                                      'account': self.account
-                                  })
-
-
-@login_required
-def geo_performance(request, *args, **kwargs):
-    return GeoPerformanceHandler()(request, *args, **kwargs)
-
-
 class CreateAppHandler(RequestHandler):
     """
     REFACTOR
@@ -364,7 +301,7 @@ class CreateAppHandler(RequestHandler):
             self.account.status = "step4"
             # skip to step 4 (add campaigns), but show step 2 (integrate)
             # TODO (Tiago): add the itunes info here for iOS apps for iAd syncing
-            network_config = NetworkConfig(account=self.account)
+            network_config = self.account.network_config or NetworkConfig(account=self.account)
             AccountQueryManager.update_config_and_put(account, network_config)
 
             # create the marketplace account for the first time
@@ -631,7 +568,7 @@ class ExportFileHandler(RequestHandler):
             adunits = AdUnitQueryManager.get_adunits(app=key)
             if len(adunits) == 0:
                 logging.warning("Apps is empty")
-            return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=self.days) for a in adunits])
+            return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=self.days) for a in adunits])
 
 
 @login_required

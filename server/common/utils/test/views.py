@@ -5,13 +5,22 @@ from django.test import Client
 from django.test.utils import setup_test_environment
 from google.appengine.ext import testbed
 
-from admin.randomgen import generate_account, USERNAME, PASSWORD
-
+from common.utils.test.fixtures import generate_account
 
 setup_test_environment()
 
 
 class BaseViewTestCase(unittest.TestCase):
+
+    PRIMARY_CREDENTIALS = {
+        'username': 'test_primary@mopub.com',
+        'password': 'lulzhax',
+    }
+
+    SECONDARY_CREDENTIALS = {
+        'username': 'test_secondary@mopub.com',
+        'password': 'lulzhax',
+    }
 
     @classmethod
     def setUpClass(cls):
@@ -28,11 +37,11 @@ class BaseViewTestCase(unittest.TestCase):
         self.client = Client()
 
         # generate data
-        self.account = generate_account()
-        self._create_secondary_account()
+        self.account = generate_account(**self.PRIMARY_CREDENTIALS)
+        self.secondary_account = generate_account(**self.SECONDARY_CREDENTIALS)
 
         # log in
-        self.client.login(username=USERNAME, password=PASSWORD)
+        self.login_primary_account()
 
     def tearDown(self):
         self.testbed.deactivate()
@@ -41,16 +50,11 @@ class BaseViewTestCase(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
+    def login_primary_account(self):
+        self.client.login(**self.PRIMARY_CREDENTIALS)
+
     def login_secondary_account(self):
-        username, password = self._secondary_credentials()
-        self.client.login(username=username, password=password)
-
-    def _create_secondary_account(self):
-        username, password = self._secondary_credentials()
-        generate_account(username, password, username)
-
-    def _secondary_credentials(self):
-        return 'username', 'password'
+        self.client.login(**self.SECONDARY_CREDENTIALS)
 
     @staticmethod
     def test_client_reverse(viewname, urlconf=None, args=None, kwargs=None,

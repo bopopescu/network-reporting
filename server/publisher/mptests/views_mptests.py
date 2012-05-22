@@ -25,12 +25,12 @@ from common.utils.test.fixtures import (generate_network_config, generate_app,
                                         generate_html_creative)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
                                           model_key_eq, time_almost_eq,
-                                          model_eq)
+                                          model_eq, decorate_all_test_methods)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
 from publisher.models import App, AdUnit
-from publisher.query_managers import PublisherQueryManager
+from publisher.query_managers import PublisherQueryManager, AppQueryManager
 from reporting.models import StatsModel
 
 
@@ -45,6 +45,7 @@ class DashboardViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
+    @confirm_db()
     def mptest_get(self):
         """
         Confirm that dashboard returns an appropriate response by checking the
@@ -57,6 +58,8 @@ class DashboardViewTestCase(BaseViewTestCase):
 
         eq_(get_response.context['page_width'], 'wide')
 
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+
         # Names is a dict mapping internal representation to readable names. It
         # includes source types and all model keys for an account.
         names = {
@@ -65,7 +68,7 @@ class DashboardViewTestCase(BaseViewTestCase):
             'network': 'Ad Networks',
             str(self.app.key()): self.app.name,
             str(self.adunit.key()): self.adunit.name,
-            str(self.marketplace_campaign.key()): self.marketplace_campaign.name
+            str(marketplace_campaign.key()): marketplace_campaign.name
         }
         dict_eq(get_response.context['names'], names)
 
@@ -80,6 +83,7 @@ class AppIndexViewTestCase(BaseViewTestCase):
 
         self.url = reverse('app_index')
 
+    @confirm_db()
     def mptest_get_without_app(self):
         """
         Confirm that app_index returns a redirect to the create app page when
@@ -91,6 +95,7 @@ class AppIndexViewTestCase(BaseViewTestCase):
         redirect_url = self.test_client_reverse('publisher_create_app')
         eq_(get_response['Location'], redirect_url)
 
+    @confirm_db()
     def mptest_get_with_app(self):
         """
         Confirm that app_index returns an appropriate response when the account
@@ -105,6 +110,9 @@ class AppIndexViewTestCase(BaseViewTestCase):
         eq_(get_response.context['app_keys'], json.dumps([str(app.key())]))
 
         # TODO: check account_stats and stats
+
+        app.deleted = True
+        AppQueryManager.put(app)
 
 
 class AppDetailViewTestCase(BaseViewTestCase):
@@ -229,8 +237,10 @@ class AppDetailViewTestCase(BaseViewTestCase):
         list_eq(get_response.context['gtee'], expected_gtee)
 
         list_eq(get_response.context['promo'], [self.promo_campaign])
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
         list_eq(get_response.context['marketplace'],
-                [self.marketplace_campaign])
+                [marketplace_campaign])
         # TODO: list_eq(get_response.context['network'], [self.network_campaign])
         list_eq(get_response.context['backfill_promo'],
                 [self.backfill_promo_campaign])
@@ -600,7 +610,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
         ok_(not get_response.context['adunit_form'].is_bound)
 
-    @confirm_db(modified=[App, AdUnit, NetworkConfig, Campaign, AdGroup, Creative])
+    @confirm_db(modified=[App, AdUnit, Campaign, AdGroup, Creative])
     def mptest_create_first_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -646,13 +656,6 @@ class CreateAppViewTestCase(BaseViewTestCase):
         time_almost_eq(adunit.t,
                        datetime.datetime.utcnow(),
                        datetime.timedelta(minutes=1))
-
-        # TODO check network configs:
-        # expected_app_network_config = generate_network_config(self.account)
-        # model_eq(app.network_config, expected_app_network_config)
-
-        # expected_adunit_network_config = generate_network_config(self.account)
-        # model_eq(adunit.network_config, expected_adunit_network_config)
 
         # CAMPAIGNS
         # When you create your first app/adunit, marketplace and
@@ -712,9 +715,8 @@ class CreateAppViewTestCase(BaseViewTestCase):
         expected_marketplace_creative = generate_marketplace_creative(
             self.account, marketplace_adgroup, name='marketplace dummy',
             ad_type='html')
-        # TODO: why does one of these have _class and the other doesn't?
         model_eq(marketplace_creative, expected_marketplace_creative,
-            check_primary_key=False, exclude=['_class', 't'])
+            check_primary_key=False, exclude=['t'])
 
         backfill_promo_creative = self._get_object(
             lambda creative: creative.ad_group.key() == backfill_promo_adgroup.key(),
@@ -752,11 +754,10 @@ class CreateAppViewTestCase(BaseViewTestCase):
         expected_backfill_promo_creative = generate_html_creative(
             self.account, backfill_promo_adgroup, name="Demo HTML Creative",
             html_data=default_creative_html, ad_type="html")
-        # TODO: why does one of these have _class and the other doesn't?
         model_eq(backfill_promo_creative, expected_backfill_promo_creative,
-            check_primary_key=False, exclude=['_class', 't'])
+            check_primary_key=False, exclude=['t'])
 
-    @confirm_db(modified=[App, AdUnit, NetworkConfig, Campaign, AdGroup, Creative])
+    @confirm_db(modified=[App, AdUnit, Campaign, AdGroup, Creative])
     def mptest_create_additional_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -809,13 +810,6 @@ class CreateAppViewTestCase(BaseViewTestCase):
         time_almost_eq(adunit.t,
                        datetime.datetime.utcnow(),
                        datetime.timedelta(minutes=1))
-
-        # TODO check network configs:
-        # expected_app_network_config = generate_network_config(self.account)
-        # model_eq(app.network_config, expected_app_network_config)
-
-        # expected_adunit_network_config = generate_network_config(self.account)
-        # model_eq(adunit.network_config, expected_adunit_network_config)
 
     @staticmethod
     def _get_object(lambda_, list_):
@@ -1133,9 +1127,11 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adgroups_dict), 1)
 
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+
         marketplace_adgroup = adgroups_dict.values()[0]
         expected_marketplace_adgroup = generate_adgroup(
-            self.account, self.marketplace_campaign, name='Marketplace',
+            self.account, marketplace_campaign, name='Marketplace',
             site_keys=[adunit.key()])
         model_eq(marketplace_adgroup, expected_marketplace_adgroup,
             check_primary_key=False, exclude=['created', 't'])
@@ -1147,9 +1143,8 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_marketplace_creative = generate_marketplace_creative(
             self.account, marketplace_adgroup, name='marketplace dummy',
             ad_type='html')
-        # TODO: why does one of these have _class and the other doesn't?
         model_eq(marketplace_creative, expected_marketplace_creative,
-            check_primary_key=False, exclude=['_class', 't'])
+            check_primary_key=False, exclude=['t'])
 
     @confirm_db(modified=[])
     def mptest_create_adunit_validation(self):

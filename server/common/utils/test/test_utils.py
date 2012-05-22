@@ -13,8 +13,8 @@ from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import App, AdUnit
 from reporting.models import StatsModel
 
-MODELS = [Account, User, NetworkConfig, App, AdUnit,
-          Campaign, AdGroup, Creative, StatsModel]
+MODELS = [Account, User, NetworkConfig, App, AdUnit, Campaign, AdGroup,
+          Creative, StatsModel]
 
 
 def prepend_list(e, li):
@@ -128,7 +128,8 @@ def model_to_dict(model, exclude=[], reference_only=False):
     model_dict = {}
 
     for key, prop in model.properties().iteritems():
-        if key in exclude:
+        # Keys with prepended underscores are ignored by the datastore.
+        if key in exclude or key.startswith('_'):
             continue
         # by prepending the attribute with '_'
         # we the value of this field as stored in the db

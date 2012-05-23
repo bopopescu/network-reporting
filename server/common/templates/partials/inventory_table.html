@@ -5,6 +5,7 @@
     <tr>
       <td class="icon"></td>
       <td class="name"></td>
+      <td class="adid"></td>
       <td class="stat">Requests</td>
       <td class="stat">Impressions</td>
       <td class="stat">Fill Rate</td>
@@ -33,6 +34,7 @@
           {% endif %}
           <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
         </td>
+        <td></td>
         {# these stats will be loaded over ajax #}
         <td class="req stat">--</td>
         <td class="imp stat">--</td>
@@ -48,6 +50,11 @@
             <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">
               {{ adunit.name }}
             </a>
+            <span class="appData-id muted unbold hidden">
+              AdUnit ID: {{ adunit.key }}
+            </span>
+          </td>
+          <td>
             <span class="appData-id muted unbold hidden">
               AdUnit ID: {{ adunit.key }}
             </span>

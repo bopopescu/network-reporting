@@ -760,7 +760,8 @@ var mopub = mopub || {};
      */
     var DashboardController = {
         initializeIndex: function (bootstrapping_data) {
-
+            console.log(bootstrapping_data);
+            
             // Adds click handlers for the top date buttons and stats breakdown
             // date buttons, and click handlers for the stats breakdown graph-
             // changing

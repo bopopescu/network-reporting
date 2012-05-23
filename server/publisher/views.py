@@ -86,7 +86,10 @@ class AppIndexHandler(RequestHandler):
     A list of apps and their real-time stats.
     """
     def get(self):
-        # Get all of the account's apps.
+        
+        # Get all of the account's apps for display.
+        # Also make a list of the app keys, which we'll use on the client side
+        # to fetch app stats. Apps are sorted by their name for display.
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
         app_keys = simplejson.dumps([str(key) for key in apps_dict.keys()])
         sorted_apps = sorted(apps_dict.values(), lambda x, y: cmp(x.name, y.name))
@@ -109,15 +112,15 @@ class AppIndexHandler(RequestHandler):
             return response_dict
 
         # Get stats totals for the stats breakdown pane
-        account_stats_manager = StatsModelQueryManager(
-                self.account, offline=self.offline)
-        stats_model_list = account_stats_manager.get_stats_for_days(
-                days=self.days)
-
-        stats_dict = self._build_stats_dict_from_stats_model_list(
-                stats_model_list)
+        account_stats_manager = StatsModelQueryManager(self.account,
+                                                       offline=self.offline)
+        stats_model_list = account_stats_manager.get_stats_for_days(days=self.days)
+        stats_dict = self._build_stats_dict_from_stats_model_list(stats_model_list)
         today_and_yesterday_stats = self._build_today_and_yesterday_stats_from_stats_model_list(stats_model_list)
 
+        logging.warn('\n\n\n\n\n\n\n')
+        logging.warn(today_and_yesterday_stats)
+        
         account_stats = {'status': 200, 'all_stats': stats_dict}
 
         response_dict['account_stats'] = simplejson.dumps(account_stats)

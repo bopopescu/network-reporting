@@ -871,6 +871,7 @@ if (window.console === undefined) {
     };
 
     Chart.setupDashboardStatsChart = function(seriesType) {
+
         // get active metric from breakdown
         var metricElement = $('#dashboard-stats .stats-breakdown .active');
         if (metricElement === null || metricElement.length === 0) return;
@@ -966,17 +967,19 @@ if (window.console === undefined) {
             tooltip: {
                 formatter: function() {
                     var text = '', value = '', total = '';
-                    metric_translation = {att: 'attempts',
-                                          clk: 'clicks',
-                                          conv: 'conversions',
-                                          imp: 'impressions',
-                                          req: 'requests',
-                                          cpm: 'CPM',
-                                          rev: 'revenue',
-                                          conv_rate: 'conversion rate',
-                                          ctr: 'click through rate',
-                                          fill_rate: 'fill rate', 
-                                          usr: 'user count'};
+                    metric_translation = {
+                        att: 'attempts',
+                        clk: 'clicks',
+                        conv: 'conversions',
+                        imp: 'impressions',
+                        req: 'requests',
+                        cpm: 'CPM',
+                        rev: 'revenue',
+                        conv_rate: 'conversion rate',
+                        ctr: 'click through rate',
+                        fill_rate: 'fill rate', 
+                        usr: 'user count'
+                    };
 
                     // If the metric isn't in the dict use the unformatted name
                     var metric_name = metric_translation[activeMetric];

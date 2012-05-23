@@ -109,7 +109,35 @@ class AppIndexViewTestCase(BaseViewTestCase):
         list_eq(get_response.context['apps'], [app])
         eq_(get_response.context['app_keys'], json.dumps([str(app.key())]))
 
-        # TODO: check account_stats and stats
+        expected_daily_stats = []
+        for day in range(14):
+            expected_daily_stats.append({'req': 0, 'imp': 0, 'clk': 0, 'usr': 0})
+
+        start_date = datetime.datetime.utcnow() - datetime.timedelta(days=14)
+        start_datetime = datetime.datetime(start_date.year, start_date.month, start_date.day)
+        expected_sum = StatsModel(account=self.account, date=start_datetime)
+
+        expected_account_stats = {
+            'status': 200,
+            'all_stats': {
+                '||': {
+                    'name': '||',
+                    'daily_stats': expected_daily_stats,
+                    'sum': expected_sum.to_dict(),
+                }
+            }
+        }
+        dict_eq(json.loads(get_response.context['account_stats']),
+                           expected_account_stats)
+
+        expected_stats = {}
+        for stat in ['req', 'imp', 'users', 'ctr', 'clk']:
+            expected_stats[stat] = {
+                'today': 0,
+                'yesterday': 0,
+                'total': 0,
+            }
+        dict_eq(get_response.context['stats'], expected_stats)
 
         app.deleted = True
         AppQueryManager.put(app)
@@ -170,6 +198,7 @@ class AppDetailViewTestCase(BaseViewTestCase):
 
         self.url = reverse('publisher_app_show', args=[str(self.app.key())])
 
+    @confirm_db()
     def mptest_get(self):
         """
         Confirm that app detail returns an appropriate response by checking the
@@ -250,6 +279,7 @@ class AppDetailViewTestCase(BaseViewTestCase):
         eq_(get_response.context['marketplace_activated'], True)
         eq_(get_response.context['active_mpx_adunit_exists'], True)
 
+    @confirm_db()
     def mptest_get_authorization(self):
         """
         Confirm that app detail returns a 404 when an unauthorized account
@@ -260,39 +290,6 @@ class AppDetailViewTestCase(BaseViewTestCase):
 
         get_response = self.client.get(self.url)
         ok_(get_response.status_code, 404)
-
-
-# class ExportFileViewTestCase(BaseViewTestCase):
-#     """
-#     author: Ignatius, Peter
-#     """
-
-#     def setUp(self):
-#         super(ExportFileViewTestCase, self).setUp()
-
-#         self.app = generate_app(self.account)
-#         self.adunit = generate_adunit(self.account, self.app)
-
-#         self.url = reverse('exporter', args=('csv', 'app', str(self.app.key())))
-
-#     def mptest_get(self):
-#         """
-#         Confirm that export file returns an appropriate response by checking the
-#         status_code and context.
-#         """
-
-#         get_response = self.client.get(self.url)
-#         eq_(get_response.status_code, 200)
-
-#         # TODO: actually test this POS
-
-#     def mptest_get_authorization(self):
-#         """
-#         """
-#         self.login_secondary_account()
-
-#         get_response = self.client.get(self.url)
-#         ok_(get_response.status_code, 404)
 
 
 class AdUnitShowViewTestCase(BaseViewTestCase):
@@ -351,6 +348,7 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         self.url = reverse('publisher_adunit_show',
                            args=[str(self.adunit.key())])
 
+    @confirm_db()
     def mptest_get(self):
         """
         Confirm that adunit detail returns an appropriate response by checking
@@ -430,6 +428,7 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         # This is true because we have an active marketplace campaign.
         eq_(get_response.context['marketplace_activated'], True)
 
+    @confirm_db()
     def mptest_get_authorization(self):
         """
         Confirm that adunit detail returns a 404 when an unauthorized account
@@ -456,6 +455,7 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
         self.url = reverse('publisher_integration_help',
                            args=[str(self.adunit.key())])
 
+    @confirm_db()
     def mptest_get(self):
         """
         Confirm that integration help returns an appropriate response by
@@ -474,6 +474,7 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
 
         model_key_eq(get_response.context['account'], self.account)
 
+    @confirm_db()
     def mptest_get_authorization(self):
         """
         Confirm that integration help returns a 404 when an unauthorized account
@@ -484,6 +485,37 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
 
         get_response = self.client.get(self.url)
         ok_(get_response.status_code, 404)
+
+
+# class ExportFileViewTestCase(BaseViewTestCase):
+#     """
+#     author: Ignatius, Peter
+#     """
+
+#     def setUp(self):
+#         super(ExportFileViewTestCase, self).setUp()
+
+#         self.app = generate_app(self.account)
+#         self.adunit = generate_adunit(self.account, self.app)
+
+#         self.url = reverse('exporter', args=('csv', 'app', str(self.app.key())))
+
+#     def mptest_get(self):
+#         """
+#         Confirm that export file returns an appropriate response by checking the
+#         status_code and context.
+#         """
+
+#         get_response = self.client.get(self.url)
+#         eq_(get_response.status_code, 200)
+
+#     def mptest_get_authorization(self):
+#         """
+#         """
+#         self.login_secondary_account()
+
+#         get_response = self.client.get(self.url)
+#         ok_(get_response.status_code, 404)
 
 
 # class AppExportViewTestCase(BaseViewTestCase):
@@ -594,6 +626,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         post_data.update(kwargs)
         return post_data
 
+    @confirm_db()
     def mptest_get(self):
         """
         Confirm that the create_app view returns the correct response to a GET
@@ -757,7 +790,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         model_eq(backfill_promo_creative, expected_backfill_promo_creative,
             check_primary_key=False, exclude=['t'])
 
-    @confirm_db(modified=[App, AdUnit, Campaign, AdGroup, Creative])
+    @confirm_db(modified=[App, AdUnit, AdGroup, Creative])
     def mptest_create_additional_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -1172,7 +1205,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-    @confirm_db(modified=[])
+    @confirm_db(modified=[AdUnit])
     def mptest_update_adunit(self):
         """
         Confirm that adunit updating works by submitting known good parameters,

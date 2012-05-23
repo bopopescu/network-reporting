@@ -48,6 +48,7 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
 
         # instance
+        # TODO: figure out if there is a less hacky way to get this
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         if instance and not instance.is_order:

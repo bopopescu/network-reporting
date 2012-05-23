@@ -39,6 +39,15 @@ class TestOrderForm(unittest.TestCase):
                 "OrderForm(%s): %s was missing but form validated." % \
                 (incomplete_data, key))
 
+    def mptest_campaign_must_be_order(self):
+        pass
+
+    def mptest_correct_form_is_returned(self):
+        pass
+
+    def mptest_saves_valid_order(self):
+        pass
+
 
 GUARANTEED_LINE_ITEM_DATA = [
     {
@@ -94,6 +103,22 @@ PROMOTIONAL_LINE_ITEM_DATA = [
 class TestLineItemForm(unittest.TestCase):
     def setUp(self):
         self.data = GUARANTEED_LINE_ITEM_DATA + PROMOTIONAL_LINE_ITEM_DATA
+
+    def mptest_valid_form(self):
+        data = PROMOTIONAL_LINE_ITEM_DATA[0]
+        form = LineItemForm(data)
+        ok_(form.is_valid(),
+            "LineItemForm(%s): %s" % (data, form._errors.as_text()))
+
+    def mptest_invalid_form(self):
+        data = PROMOTIONAL_LINE_ITEM_DATA[0]
+        for key in data:
+            incomplete_data = copy.deepcopy(data)
+            del incomplete_data[key]
+            form = LineItemForm(incomplete_data)
+            ok_(not form.is_valid(), 
+                "LineItemForm(%s): %s was missing but form validated." % \
+                (incomplete_data, key))
 
     def mptest_new_line_item_datetimes(self):
         now = datetime.datetime.now(Pacific_tzinfo())
@@ -213,7 +238,7 @@ class TestGuaranteedLineItemForm(unittest.TestCase):
     def mptest_cpm_full_budget(self):
         for test_data in self.data:
             cpm_budget = test_data['budget'] * test_data['bid'] / 1000
-            _test_line_item_for_budget(test_data, 'cpc', 'full_campaign', 
+            _test_line_item_for_budget(test_data, 'cpm', 'full_campaign', 
                                        [None, cpm_budget])
     def mptest_unlimited_budget(self):
         for test_data in self.data:

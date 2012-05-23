@@ -161,9 +161,9 @@ class TestLineItemForm(unittest.TestCase):
                 if output_start_datetime:
                     pac_start_datetime = _as_pacific_time(line_item.start_datetime)
                     time_almost_eq(pac_start_datetime, output_start_datetime,
-                                   should_have_been_message % ('start_datetime', 
-                                                               output_start_datetime, pac_start_datetime, 
-                                                               start_datetime, end_datetime))
+                                   message=should_have_been_message % ('start_datetime', 
+                                                                       output_start_datetime, pac_start_datetime, 
+                                                                       start_datetime, end_datetime))
                 else:
                     ok_(not line_item.start_datetime, datetime_none_message % \
                         (start_datetime, end_datetime, 'start_datetime', line_item.start_datetime))
@@ -171,9 +171,9 @@ class TestLineItemForm(unittest.TestCase):
                 if output_end_datetime:
                     pac_end_datetime = _as_pacific_time(line_item.end_datetime)
                     time_almost_eq(pac_end_datetime, output_end_datetime,
-                                   should_have_been_message % ('end_datetime', 
-                                                               output_start_datetime, pac_end_datetime, 
-                                                               start_datetime, end_datetime))
+                                   message=should_have_been_message % ('end_datetime', 
+                                                                       output_start_datetime, pac_end_datetime, 
+                                                                       start_datetime, end_datetime))
                 else:
                     ok_(not line_item.end_datetime, datetime_none_message % \
                         (start_datetime, end_datetime, 'end_datetime', line_item.end_datetime))
@@ -213,7 +213,7 @@ class TestGuaranteedLineItemForm(unittest.TestCase):
     def mptest_cpm_full_budget(self):
         for test_data in self.data:
             cpm_budget = test_data['budget'] * test_data['bid'] / 1000
-            _test_line_item_for_budget(t8est_data, 'cpc', 'full_campaign', 
+            _test_line_item_for_budget(test_data, 'cpc', 'full_campaign', 
                                        [None, cpm_budget])
     def mptest_unlimited_budget(self):
         for test_data in self.data:
@@ -230,14 +230,14 @@ class TestGuaranteedLineItemForm(unittest.TestCase):
                 "Form should not validate with full_campaign \
                 spread evenly.")
 
-            test_data['end_datetime_0'] = _parse_datetime(datetime.datetime.now().date() + datetime.timedelta(days=1))
-            test_data['end_datetime_1'] = _parse_hour_time(datetime)
+            test_data['end_datetime_0'] = _parse_datetime(datetime.datetime.now() + datetime.timedelta(days=1))
+            test_data['end_datetime_1'] = _parse_hour_time(datetime.time())
             form = LineItemForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
             line_item = form.save()
 
 
-def _test_line_item_for_budget(data, bid_strategy=None, budget_type=None, expected):
+def _test_line_item_for_budget(data, bid_strategy=None, budget_type=None, expected=[None, None]):
     if bid_strategy:
         data['bid_strategy'] = bid_strategy
     if budget_type:
@@ -245,12 +245,13 @@ def _test_line_item_for_budget(data, bid_strategy=None, budget_type=None, expect
 
     form = LineItemForm(data)
     ok_(form.is_valid(), form._errors.as_text())
+    line_item = form.save()
 
     eq_(line_item.daily_budget, expected[0])
     eq_(line_item.full_budget, expected[1])
 
-    eq_(line_item.bid_strategy, data['bid_strategy'])
-    eq_(line_item.budget_type, data['budget_type'])
+    eq_(line_item.bid_strategy, data.get('bid_strategy'))
+    eq_(line_item.budget_type, data.get('budget_type'))
 
 
 class TestPromotionalLineItemForm(unittest.TestCase):
@@ -259,7 +260,7 @@ class TestPromotionalLineItemForm(unittest.TestCase):
 
     def mptest_defaults(self):
         for test_data in self.data:
-            line_item = _test_line_item_for_budget(test_data, expected=[None, None])
+            _test_line_item_for_budget(test_data, expected=[None, None])
 
 
 class TestCreativeForm(unittest.TestCase):

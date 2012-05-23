@@ -145,6 +145,10 @@ def model_to_dict(model, exclude=[], reference_only=False):
 def time_almost_eq(time1, time2, delta=None, message=None):
     if not delta:
         delta = timedelta(minutes=1)
+
+    print (delta)
+    time1 < time2 + delta
+    time1 > time2 - delta
     ok_((time1 < time2 + delta) and (time1 > time2 - delta), message)
 
 

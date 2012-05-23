@@ -195,4 +195,3 @@ def returns_unicode(func):
         else:
             return unencoded
     return new_func
-

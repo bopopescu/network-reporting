@@ -1,8 +1,10 @@
 import os
 import sys
+import inspect
 
 sys.path.append(os.environ['PWD'])
 
+from datetime import timedelta
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
@@ -12,8 +14,8 @@ from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import App, AdUnit
 from reporting.models import StatsModel
 
-MODELS = [Account, User, NetworkConfig, App, AdUnit,
-          Campaign, AdGroup, Creative, StatsModel]
+MODELS = [Account, User, NetworkConfig, App, AdUnit, Campaign, AdGroup,
+          Creative, StatsModel]
 
 
 def prepend_list(e, li):
@@ -57,14 +59,39 @@ def dict_eq(dict1, dict2, exclude=[]):
     eq_(dict1_keys, dict2_keys, msg)
 
     for key in dict1_keys:
-        if isinstance(dict1[key], db.Model):
-            model_key_eq(dict1[key], dict2[key])
+        value1 = dict1[key]
+        value2 = dict2[key]
+
+        if isinstance(value1, db.Model):
+            model_key_eq(value1, value2)
+        elif isinstance(value1, dict):
+            dict_eq(value1, value2)
+        elif isinstance(value1, list):
+            list_eq(value1, value2)
         else:
-            eq_(dict1[key], dict2[key])
+            msg = "%s != %s for key %s" % (value1, value2, key)
+            eq_(value1, value2, msg)
+
+
+def list_eq(list1, list2):
+    msg = "passed lists have unequal lengths: %s %s" % (
+            len(list1), len(list2))
+    eq_(len(list1), len(list2), msg)
+
+    for item1, item2 in zip(list1, list2):
+        if isinstance(item1, db.Model):
+            model_key_eq(item1, item2)
+        elif isinstance(item1, dict):
+            dict_eq(item1, item2)
+        elif isinstance(item1, list):
+            list_eq(item1, item2)
+        else:
+            eq_(item1, item2)
 
 
 def model_key_eq(model1, model2):
-    eq_(model1.key(), model2.key())
+    eq_(model1.key(), model2.key(),
+        'Primary key %s does not equal %s' % (model1.key(), model2.key()))
 
 
 def model_eq(model1, model2, exclude=None, check_primary_key=True):
@@ -94,8 +121,7 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
 
     # only check that the keys are equal if both objects are in db
     if check_primary_key:
-        eq_(model1.key(), model2.key(),
-            'Primary key %s does not equal %s' % (model1.key(), model2.key()))
+        model_key_eq(model1, model2)
     dict_eq(model1_dict, model2_dict)
 
 
@@ -103,6 +129,7 @@ def model_to_dict(model, exclude=[], reference_only=False):
     model_dict = {}
 
     for key, prop in model.properties().iteritems():
+        # Keys with prepended underscores are ignored by the datastore.
         if key in exclude:
             continue
         # by prepending the attribute with '_'
@@ -110,13 +137,16 @@ def model_to_dict(model, exclude=[], reference_only=False):
         # in particular, for reference properties this will
         # not dereference, but will only get the foreign key
         if reference_only:
-            key = '_' + key
+            if not key.startswith('_'):
+                key = '_' + key
         model_dict[key] = getattr(model, key)
 
     return model_dict
 
 
-def time_almost_eq(time1, time2, delta):
+def time_almost_eq(time1, time2, delta=None):
+    if not delta:
+        delta = timedelta(minutes=1)
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
@@ -163,25 +193,30 @@ def confirm_db(modified=None):
             messages = []  # compiles all the failures
             error = False
             for Model in MODELS:
-                if not Model in modified:
+                if Model not in modified:
                     pre_test_count = pre_test_count_dict[Model]
-                    post_test_count = Model.all().count()
+
+                    model_query = Model.all()
+                    post_test_count = model_query.count()
+                    post_test_delete_count = model_query.filter('deleted =', True).count()
+
                     msg = 'Model %s had %s objects but now has %s' % \
                             (Model.__name__, pre_test_count, post_test_count)
 
                     if pre_test_count != post_test_count:
-                        messages.append(msg)
-                        error = True
+                        if (post_test_count - pre_test_count) != post_test_delete_count:
+                            messages.append(msg)
+                            error = True
 
             # raises an assertion error if any of the model tests failed
-            assert not error, ', '.join(messages)
+            ok_(not error, ', '.join(messages))
         return _wrapped_method
     return _outer
 
 
 def decorate_all_test_methods(decorator):
     """
-    Decorator that applies a decorator to all methods in a class 
+    Decorator that applies a decorator to all methods in a class
 
     NOTE: This will also wrap nested methods
 

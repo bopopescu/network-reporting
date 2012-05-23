@@ -135,7 +135,7 @@ def model_to_dict(model, exclude=[], reference_only=False):
         # we the value of this field as stored in the db
         # in particular, for reference properties this will
         # not dereference, but will only get the foreign key
-        if reference_only and not key.startswith('_')
+        if reference_only and not key.startswith('_'):
             key = '_' + key
         model_dict[key] = getattr(model, key)
 

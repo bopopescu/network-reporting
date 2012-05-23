@@ -7,7 +7,7 @@ import unittest
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-from nose.tools import ok_
+from nose.tools import ok_, eq_
 
 from google.appengine.ext import testbed
 
@@ -194,83 +194,72 @@ def _as_pacific_time(date):
 
 class TestGuaranteedLineItemForm(unittest.TestCase):
     def setUp(self):
-        self.data = GUARANTEED_LINE_ITEM_DATA
+        self.data = copy.deepcopy(GUARANTEED_LINE_ITEM_DATA)
 
-    def test_budget(self):
-        data = copy.deepcopy(self.data)
-        for test_data in data:
-            # CPC Daily
-            test_data['bid_strategy'] = 'cpc'
-            test_data['budget_type'] = 'daily'
-            form = LineItemForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            line_item = form.save()
-            self.assertEqual(line_item.daily_budget, test_data['budget'], "budget was %s, should have been %s" % (line_item.daily_budget, test_data['budget']))
-            self.assertEqual(line_item.full_budget, None, "full_budget was %s, should have been %s" % (line_item.full_budget, None))
+    def mptest_cpc_daily_budget(self):
+        for test_data in self.data:
+            _test_line_item_for_budget(test_data, 'cpc', 'daily', 
+                                       [test_data['budget'], None])
 
-            # CPC Full
-            test_data['budget_type'] = 'full_campaign'
-            form = LineItemForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            line_item = form.save()
-            self.assertEqual(line_item.daily_budget, None, "budget was %s, should have been %s" % (line_item.daily_budget, None))
-            self.assertEqual(line_item.full_budget, test_data['budget'], "full_budget was %s, should have been %s" % (line_item.full_budget, test_data['budget']))
+    def mptest_cpc_full_budget(self):
+        for test_data in self.data:
+            _test_line_item_for_budget(test_data, 'cpc', 'full_campaign', 
+                                       [None, test_data['budget']])
+    def mptest_cpm_daily_budget(self):
+        for test_data in self.data:
+            cpm_budget = test_data['budget'] * test_data['bid'] / 1000
+            _test_line_item_for_budget(test_data, 'cpm', 'daily', 
+                                       [cpm_budget, None])
+    def mptest_cpm_full_budget(self):
+        for test_data in self.data:
+            cpm_budget = test_data['budget'] * test_data['bid'] / 1000
+            _test_line_item_for_budget(t8est_data, 'cpc', 'full_campaign', 
+                                       [None, cpm_budget])
+    def mptest_unlimited_budget(self):
+        for test_data in self.data:
+            test_data['budget'] = ''
+            _test_line_item_for_budget(test_data, 'cpc', 'daily', 
+                                       [None, None])
 
-            # CPM Daily
-            test_data['bid_strategy'] = 'cpm'
-            test_data['budget_type'] = 'daily'
-            form = LineItemForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            line_item = form.save()
-            budget = test_data['budget'] * test_data['bid'] / 1000
-            self.assertEqual(line_item.daily_budget, budget, "budget was %s, should have been %s" % (line_item.daily_budget, budget))
-            self.assertEqual(line_item.full_budget, None, "full_budget was %s, should have been %s" % (line_item.full_budget, None))
-
-            # CPM Full
-            test_data['budget_type'] = 'full_campaign'
-            form = LineItemForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            line_item = form.save()
-            full_budget = test_data['budget'] * test_data['bid'] / 1000
-            self.assertEqual(line_item.daily_budget, None, "budget was %s, should have been %s" % (line_item.daily_budget, None))
-            self.assertEqual(line_item.full_budget, full_budget, "full_budget was %s, should have been %s" % (line_item.full_budget, full_budget))
-
-            # a line_item with no end_datetime and budget_type full_campaign
-            # cannot have budget_strategy evenly
+    def mptest_invalid_budget(self):
+        for test_data in self.data:
             test_data['budget_type'] = 'full_campaign'
             test_data['budget_strategy'] = 'evenly'
             form = LineItemForm(test_data)
-            self.assertFalse(form.is_valid(), "budget_strategy was evenly with no end_datetime and full_campaign budget_type but the form validated.")
+            ok_(not form.is_valid(), 
+                "Form should not validate with full_campaign \
+                spread evenly.")
 
-            test_data['end_datetime_0'] = (datetime.datetime.now().date() + datetime.timedelta(days=1)).strftime('%m/%d/%Y')
-            test_data['end_datetime_1'] = datetime.time().strftime('%I:%M %p')
+            test_data['end_datetime_0'] = _parse_datetime(datetime.datetime.now().date() + datetime.timedelta(days=1))
+            test_data['end_datetime_1'] = _parse_hour_time(datetime)
             form = LineItemForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
             line_item = form.save()
 
-            # Unlimited
-            test_data['budget'] = ''
-            form = LineItemForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            line_item = form.save()
-            self.assertEqual(line_item.daily_budget, None, "budget was %s, should have been %s" % (line_item.daily_budget, None))
-            self.assertEqual(line_item.full_budget, None, "full_budget was %s, should have been %s" % (line_item.full_budget, None))
+
+def _test_line_item_for_budget(data, bid_strategy=None, budget_type=None, expected):
+    if bid_strategy:
+        data['bid_strategy'] = bid_strategy
+    if budget_type:
+        data['budget_type'] = budget_type
+
+    form = LineItemForm(data)
+    ok_(form.is_valid(), form._errors.as_text())
+
+    eq_(line_item.daily_budget, expected[0])
+    eq_(line_item.full_budget, expected[1])
+
+    eq_(line_item.bid_strategy, data['bid_strategy'])
+    eq_(line_item.budget_type, data['budget_type'])
 
 
 class TestPromotionalLineItemForm(unittest.TestCase):
     def setUp(self):
-        self.data = PROMOTIONAL_LINE_ITEM_DATA
+        self.data = copy.deepcopy(PROMOTIONAL_LINE_ITEM_DATA)
 
-    def test_defaults(self):
-        data = copy.deepcopy(self.data)
-        for test_data in data:
-            form = LineItemForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            line_item = form.save()
-            self.assertEqual(line_item.daily_budget, None, "budget was %s, should have been %s" % (line_item.daily_budget, None))
-            self.assertEqual(line_item.full_budget, None, "full_budget was %s, should have been %s" % (line_item.full_budget, None))
-            self.assertEqual(line_item.budget_type, 'daily', "budget_type was %s, should have been %s" % (line_item.budget_type, 'daily'))
-            self.assertEqual(line_item.budget_strategy, 'allatonce', "budget_strategy was %s, should have been %s" % (line_item.budget_strategy, 'allatonce'))
+    def mptest_defaults(self):
+        for test_data in self.data:
+            line_item = _test_line_item_for_budget(test_data, expected=[None, None])
 
 
 class TestCreativeForm(unittest.TestCase):

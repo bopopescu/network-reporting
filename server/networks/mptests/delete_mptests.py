@@ -12,9 +12,11 @@ from django.core.urlresolvers import reverse
 
 from networks.mptests.network_test_case import NetworkTestCase
 
-from common.utils.test.test_utils import confirm_db
+from common.utils.test.test_utils import confirm_db, \
+        model_eq
 
-from advertiser.query_managers import AdvertiserQueryManager
+from advertiser.query_managers import AdvertiserQueryManager, \
+        CampaignQueryManager
 
 from advertiser.models import NetworkStates, \
         Campaign, \
@@ -37,10 +39,9 @@ class DeleteNetworkTestCase(NetworkTestCase):
         self.generate_ad_network_login(self.network_type, self.account)
         self.post_data = {'campaign_key': str(self.campaign.key())}
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative,
-        AdNetworkLoginCredentials])
+    @confirm_db()
     def mptest_response_code(self):
-        """When adding a network campaign, response code should be 200.
+        """Response code for GET should be 200.
 
         Author: Tiago Bandeira
         """
@@ -104,7 +105,12 @@ class DeleteNetworkTestCase(NetworkTestCase):
 
         Author: Tiago Bandeira
         """
+        expected_campaign = CampaignQueryManager.get(self.campaign.key())
+
         self.login_secondary_account()
         response = self.client.post(self.url, self.post_data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
+
+        # Verify that the campaign wasn't modified!
+        model_eq(CampaignQueryManager.get(self.campaign.key()), expected_campaign)

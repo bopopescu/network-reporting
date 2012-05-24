@@ -49,7 +49,8 @@ class MarketplaceIndexHandler(RequestHandler):
 
         try:
             mpx_stats = stats_fetcher.get_account_stats(self.days[0],
-                    self.days[-1], daily=True)
+                                                        self.days[-1],
+                                                        daily=True)
         except MPStatsAPIException, error:
             logging.warning("MPStatsAPIException: %s" % error)
             mpx_stats = {}
@@ -58,13 +59,31 @@ class MarketplaceIndexHandler(RequestHandler):
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = [str(domain) for domain in network_config.blocklist
-                    if not str(domain) in ("", "#")]
+            blocklist = [str(domain) for domain in network_config.blocklist \
+                         if not str(domain) in ("", "#")]
 
         # Get today and yesterday's stats for the graph
         today_stats = []
         yesterday_stats = []
         stats = {}
+        stats = {
+            'rev': {
+                'today': 0,
+                'yesterday': 0,
+                'total': 0.0
+            },
+            'imp': {
+                'today': 0,
+                'yesterday': 0,
+                'total': 0,
+            },
+            'cpm': {
+                'today': 0,
+                'yesterday': 0,
+                'total': 0,
+            },
+        }
+
         try:
             today_stats = mpx_stats["daily"][-1]
             yesterday_stats = mpx_stats["daily"][-2]
@@ -95,7 +114,7 @@ class MarketplaceIndexHandler(RequestHandler):
                 'cpm': {
                     'today': cpm(today_stats['rev'], today_stats['imp']),
                     'yesterday': cpm(yesterday_stats['rev'],
-                        yesterday_stats['imp']),
+                                     yesterday_stats['imp']),
                     'total': cpm(mpx_stats['rev'], mpx_stats['imp']),
                 },
             }
@@ -103,38 +122,39 @@ class MarketplaceIndexHandler(RequestHandler):
         except Exception, e:
             logging.warn(e)
 
+        logging.warn('\n\n\n\n\n\n\n')
+        logging.warn(stats)
+
         try:
             blind = self.account.network_config.blind
         except AttributeError:
             blind = False
 
-        return render_to_response(self.request,
-                                  "advertiser/marketplace_index.html",
-                                  {
-                                      'marketplace': marketplace_campaign,
-                                      'apps': alphabetically_sorted_apps,
-                                      'app_keys': app_keys_json,
-                                      'adunit_keys': adunit_keys,
-                                      'pub_key': self.account.key(),
-                                      'mpx_stats': simplejson.dumps(mpx_stats),
-                                      'stats_breakdown_includes': ['revenue',
-                                              'impressions', 'ecpm'],
-                                      'totals': mpx_stats,
-                                      'today_stats': today_stats,
-                                      'yesterday_stats': yesterday_stats,
-                                      'stats': stats,
-                                      'blocklist': blocklist,
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'blind': blind,
-                                      'network_config': network_config
-                                  })
+        return {
+            'marketplace': marketplace_campaign,
+            'apps': alphabetically_sorted_apps,
+            'app_keys': app_keys_json,
+            'adunit_keys': adunit_keys,
+            'pub_key': self.account.key(),
+            'mpx_stats': simplejson.dumps(mpx_stats),
+            'totals': mpx_stats,
+            'today_stats': today_stats,
+            'yesterday_stats': yesterday_stats,
+            'stats': stats,
+            'blocklist': blocklist,
+            'start_date': self.days[0],
+            'end_date': self.days[-1],
+            'date_range': self.date_range,
+            'blind': blind,
+            'network_config': network_config
+        }
 
 
 @login_required
 def marketplace_index(request, *args, **kwargs):
-    return MarketplaceIndexHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/marketplace_index.html"
+    return MarketplaceIndexHandler(template=t)(request, use_cache=False,
+                                               *args, **kwargs)
 
 
 class BlocklistHandler(RequestHandler):

@@ -882,6 +882,7 @@ if (window.console === undefined) {
         var data = mopub.dashboardStatsChartData;
         if (typeof data == 'undefined') {
             Chart.chartError();
+            console.log('error');
             return;
         }
 
@@ -891,6 +892,7 @@ if (window.console === undefined) {
         var activeData = data[activeMetric];
         if (typeof activeData == 'undefined') {
             Chart.chartError();
+            console.log('nope');
             return;
         }
 

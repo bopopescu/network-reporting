@@ -30,23 +30,7 @@
     </div>
   {% endifequal %}
 
-  {% if stats %}
-  <section class="offset nomargin" id="dashboard-stats">
-    
-    <h3 class="stats-chart-title">
-      Realtime Stats for {{start_date|format_date_compact}} to
-      {{end_date|format_date_compact}}
-    </h3>
-    
-    <div class="stats">      
-      {% stats_breakdown stats %}     
-      <div class="chart stats-chart" id="dashboard-stats-chart"></div>      
-    </div>
-    
-    <div class="clear"></div>
-    
-  </section>
-  {% endif %}
+  {% chart_placeholder %}
 
   <section id="dashboard-apps">
     <div class="buttonBank buttonBank-right">
@@ -58,7 +42,6 @@
     <h2>Apps and sites</h2>
 
     {% inventory_table apps %}
-
 
     <br />
     

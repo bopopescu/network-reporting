@@ -29,16 +29,11 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
 
 import logging
 
 
 flatten = lambda l: [item for sublist in l for item in sublist]
-
-ctr = lambda clicks, impressions: \
-      (clicks / float(impressions) if impressions else 0)
 
 
 class OrderIndexHandler(RequestHandler):
@@ -51,12 +46,10 @@ class OrderIndexHandler(RequestHandler):
     """
     def get(self):
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        adgroups = AdGroupQueryManager.get_adgroups(account=self.account)
-        line_items = [ag for ag in adgroups 
-                      if (orders.filter('__key__ = ', ag.campaign).count() == 1)]
-        for line_item in line_items:
-            logging.warn(line_item.budget_goal_display)
-
+        line_items = AdGroupQueryManager.get_line_items(account=self.account,
+                                                        orders=orders)
+        logging.warn('\n\n\n\n\n\n\n\n')
+        logging.warn(orders)
         return {
             'orders': orders,
             'line_items': line_items
@@ -66,7 +59,9 @@ class OrderIndexHandler(RequestHandler):
 @login_required
 def order_index(request, *args, **kwargs):
     t = "advertiser/order_index.html"
-    return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
+    return OrderIndexHandler(template=t)(request,
+                                         use_cache=False,
+                                         *args, **kwargs)
 
 
 class OrderDetailHandler(RequestHandler):
@@ -79,10 +74,6 @@ class OrderDetailHandler(RequestHandler):
         # Grab the campaign info
         order = CampaignQueryManager.get(order_key)
 
-        # Set up the stats
-        stats_q = StatsModelQueryManager(self.account, self.offline)
-        all_stats = stats_q.get_stats_for_days(advertiser=order, days=self.days)
-
         # Get the targeted adunits and group them by their app.
         targeted_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
                                     for line_item in order.adgroups]))
@@ -94,7 +85,6 @@ class OrderDetailHandler(RequestHandler):
         return {
             'order': order,
             'order_form': order_form,
-            'stats': format_stats(all_stats),
             'targeted_apps': targeted_apps.values(),
             'targeted_app_keys': targeted_apps.keys(),
             'targeted_adunits': targeted_adunits
@@ -103,9 +93,10 @@ class OrderDetailHandler(RequestHandler):
 
 @login_required
 def order_detail(request, *args, **kwargs):
-    handler = OrderDetailHandler(template="advertiser/order_detail.html",
-                                 id="order_key")
-    return handler(request, use_cache=False, *args, **kwargs)
+    t="advertiser/order_detail.html"
+    return OrderDetailHandler(template=t, id="order_key")(request,
+                                                          use_cache=False,
+                                                          *args, **kwargs)
 
 
 class LineItemDetailHandler(RequestHandler):
@@ -119,12 +110,6 @@ class LineItemDetailHandler(RequestHandler):
         # Create creative forms
         creative_form = NewCreativeForm()
 
-        # Get the stats for the date range
-        stats_q = StatsModelQueryManager(self.account, self.offline)
-        all_stats = stats_q.get_stats_for_days(advertiser=line_item,
-                                               days=self.days)
-        line_item.stats = reduce(lambda x, y: x + y, all_stats, StatsModel())
-
         # Get the targeted adunits and apps
         targeted_adunits = AdUnitQueryManager.get(line_item.site_keys)
         targeted_apps = get_targeted_apps(targeted_adunits)
@@ -133,7 +118,6 @@ class LineItemDetailHandler(RequestHandler):
             'order': line_item.campaign,
             'line_item': line_item,
             'creative_form': creative_form,
-            'stats': format_stats(all_stats),
             'targeted_apps': targeted_apps.values(),
             'targeted_app_keys': targeted_apps.keys(),
             'targeted_adunits': targeted_adunits
@@ -143,7 +127,9 @@ class LineItemDetailHandler(RequestHandler):
 @login_required
 def line_item_detail(request, *args, **kwargs):
     t = "advertiser/lineitem_detail.html"
-    return LineItemDetailHandler(template=t, id="line_item_key")(request, use_cache=False, *args, **kwargs)
+    return LineItemDetailHandler(template=t, id="line_item_key")(request,
+                                                                 use_cache=False,
+                                                                 *args, **kwargs)
 
 
 class AdSourceStatusChangeHandler(RequestHandler):
@@ -152,12 +138,18 @@ class AdSourceStatusChangeHandler(RequestHandler):
     Author: John Pena
     """
     def post(self):
-        # Pull out the params
+        # Pull out the params. `ad_sources` is a list of orders and/or
+        # line items and/or creatives that we want to change the
+        # status of. `status` is the status we want to change it to
+        # (one of 'run', 'pause', 'archive', 'delete).
         ad_sources = self.request.POST.getlist('ad_sources[]')
         status = self.request.POST.get('status', None)
 
-        if ad_sources and status:
+        # Both params are required.
+        if ad_sources and status:            
             for ad_source_key in ad_sources:
+                # Get the ad source and keep track of which query manager we
+                # used to fetch it. Keeping things DRY.
                 try:
                     ad_source = CreativeQueryManager.get(ad_source_key)
                     manager_used = CreativeQueryManager
@@ -168,6 +160,10 @@ class AdSourceStatusChangeHandler(RequestHandler):
                     except:
                         ad_source = CampaignQueryManager.get(ad_source_key)
                         manager_used = CampaignQueryManager
+                        
+                # Update the status of the ad source. We make sure the
+                # request user owns each source. Creatives don't get archived,
+                # so we have to check for that in each case.
                 updated = False
                 if ad_source.account.key() == self.account.key():
                     if status == 'run' or status == 'play':
@@ -181,6 +177,10 @@ class AdSourceStatusChangeHandler(RequestHandler):
                             ad_source.archived = False
                         updated = True
                     elif status == 'archive':
+                        # NOTE: archiving a creative can't happen (because
+                        # creatives don't archive), so if someone tries to archive
+                        # a creative, it gets paused instead. Maybe this isn't
+                        # the right thing to do.
                         ad_source.active = False
                         if manager_used != CreativeQueryManager:
                             ad_source.archived = True
@@ -192,6 +192,7 @@ class AdSourceStatusChangeHandler(RequestHandler):
 
                     if updated:
                         manager_used.put(ad_source)
+                        
             return JSONResponse({
                 'success': True,
             })
@@ -205,7 +206,8 @@ class AdSourceStatusChangeHandler(RequestHandler):
 
 @login_required
 def ad_source_status_change(request, *args, **kwargs):
-    return AdSourceStatusChangeHandler()(request, use_cache=False, *args, **kwargs)
+    return AdSourceStatusChangeHandler()(request, use_cache=False,
+                                         *args, **kwargs)
 
 
 class OrderFormHandler(RequestHandler):
@@ -213,11 +215,13 @@ class OrderFormHandler(RequestHandler):
     Edit order form handler which gets submitted from the order detail page.
     """
     def post(self, order_key):
+
         if not self.request.is_ajax():
             raise Http404
 
-        # TODO: make sure this is a gtee or promo order
         instance = CampaignQueryManager.get(order_key)
+        if not instance.is_order:
+            raise Http404
         order_form = OrderForm(self.request.POST, instance=instance)
 
         if order_form.is_valid():
@@ -252,6 +256,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
     New/Edit form page for Orders and LineItems.
     """
     def get(self, order_key=None, line_item_key=None):
+
         if line_item_key:
             line_item = AdGroupQueryManager.get(line_item_key)
             order = line_item.campaign
@@ -277,13 +282,14 @@ class OrderAndLineItemFormHandler(RequestHandler):
             'line_item': line_item,
             'line_item_form': line_item_form,
         }
-
+ 
 
     def post(self, order_key=None, line_item_key=None):
 
         if not self.request.is_ajax():
             raise Http404
 
+        # If there's no POST body, then it's an erroneous request. 
         if len(self.request.POST.keys()) == 0:
             raise Http404
 
@@ -504,47 +510,10 @@ def creative_image(request, *args, **kwargs):
 def creative_html(request, *args, **kwargs):
     return DisplayCreativeHandler()(request, *args, **kwargs)
 
+    
 ###########
 # Helpers #
 ###########
-
-def format_stats(all_stats):
-    summed = reduce(lambda x, y: x + y, all_stats, StatsModel())
-    stats = {
-        'requests': {
-            'today': all_stats[0].request_count,
-            'yesterday': all_stats[1].request_count,
-            'total': summed.request_count,
-            'series': [int(s.request_count) for s in all_stats]
-        },
-        'impressions': {
-            'today': all_stats[0].impression_count,
-            'yesterday': all_stats[1].impression_count,
-            'total': summed.impression_count,
-            'series': [int(s.impression_count) for s in all_stats]
-        },
-        'users': {
-            'today': all_stats[0].user_count,
-            'yesterday': all_stats[1].user_count,
-            'total': summed.user_count,
-            'series': [int(s.user_count) for s in all_stats]
-        },
-        'ctr': {
-            'today': ctr(all_stats[0].click_count,
-                         all_stats[0].impression_count),
-            'yesterday': ctr(all_stats[1].click_count,
-                             all_stats[1].impression_count),
-            'total': ctr(summed.click_count, summed.impression_count),
-        },
-        'clicks': {
-            'today': all_stats[0].click_count,
-            'yesterday': all_stats[1].click_count,
-            'total': summed.click_count,
-            'series': [int(s.click_count) for s in all_stats]
-        },
-    }
-    return stats
-
 
 def get_targeted_apps(adunits):
     # Database I/O could be made faster here by getting a list of

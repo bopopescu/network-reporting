@@ -49,81 +49,8 @@
       </form>
     </div>
   </section>
-  <section class="offset nomargin" id="dashboard-stats">
-    <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-    <div class="stats">
 
-      {% comment %}
-      {% stats_breakdown adunit.stats %}
-      {% endcomment %}
-
-       <div class="stats-breakdown">
-        <table>
-          <tbody>
-            <tr class="active" id="stats-breakdown-requests">
-              <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-              <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-              <td class="stats-breakdown-value all"><span class="inner">{{adunit.stats.request_count|withsep}}</span></td>
-              <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-            </tr>
-            <tr id="stats-breakdown-impressions">
-              <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
-              <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
-              <td class="stats-breakdown-value all"><span class="inner">{{adunit.stats.impression_count|withsep}}</span></td>
-              <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-            </tr>
-            <tr id="stats-breakdown-clicks">
-              <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
-              <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-              <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{adunit.stats.ctr|percentage}})</span> {{adunit.stats.click_count|withsep}}</span></td>
-              <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-            </tr>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="stats-breakdown-buttons">
-      <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-        <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-        <label for="stats-breakdown-dateOptions-option-0">Today</label>
-        <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-        <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-        <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-        <label for="stats-breakdown-dateOptions-option-2">All</label>
-      </span>
-    </div>
-
-
-      {% comment %}
-        End of stats breakdown
-      {% endcomment %}
-      <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-        <div class="chart-loading-text">Loading ...</div>
-        <div class="chart-error-text">Could not load chart</div>
-        <script type="text/javascript">
-          // chart data
-          mopub.dashboardStatsChartData = {
-              //pointStart: 1294963200000,
-              pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-              pointInterval: 86400000,
-              'requests': [
-                  { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-              ],
-              'impressions': [
-                  { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-              ],
-              'clicks': [
-                  { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }
-              ]
-          };
-        </script>
-      </div>
-    </div>
-    <div class="clear"></div>
-  </section>
-
-  <div class="clear"></div>
-
+  {% chart_placeholder %}
   
   <section id="dashboard-apps">
     <div class="right">
@@ -138,7 +65,7 @@
     <div id="adserverTest" style="display:none;">
       <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
       </iframe>
-      <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}?id={{adunit.key}}</div>
+
     </div>
 
     <h2>Ad sources for {{adunit.name}}</h2>

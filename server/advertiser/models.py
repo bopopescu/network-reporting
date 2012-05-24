@@ -88,6 +88,15 @@ class Campaign(db.Model):
         return self.budget and self.budget_type == 'daily'
 
     @property
+    def campaign_type(self):
+        """
+        HACK: This property is an alias for network_type to resolve conflicts
+        with Tiago's new networks app. The real fix is to change all references
+        to `campaign_type` with `network_type`.
+        """
+        return self.network_type
+
+    @property
     def has_full_budget(self):
         return self.full_budget and self.budget_type == 'full_campaign'
 

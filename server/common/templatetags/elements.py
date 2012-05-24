@@ -150,6 +150,13 @@ def status_icon(adgroup):
     """
     return {'adgroup': adgroup}
 
+@register.inclusion_tag("common/partials/chart_placeholder.html")
+def chart_placeholder():
+    """
+    Placeholder for a chart before it loads
+    """
+    return {}
+
 
 def isiterable(item):
     try:

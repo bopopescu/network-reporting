@@ -27,10 +27,10 @@
     </h3>
 
     <div class="stats">
-        {% stats_breakdown stats %}
-        <div class="chart stats-chart" id="dashboard-stats-chart">
-            <img class="preload" src="/images/report-preloader.gif" />
-        </div>
+      {#{% stats_breakdown stats %}#}
+      <div class="chart stats-chart" id="dashboard-stats-chart">
+        <img class="preload" src="/images/report-preloader.gif" />
+      </div>
     </div>
 </section>
 
@@ -221,12 +221,6 @@
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
             line_item_key: "{{ line_item.key }}",
-            daily_stats: {
-                requests: {{ stats.requests.series }},
-                impressions: {{ stats.impressions.series }},
-                clicks: {{ stats.clicks.series }},
-                users: {{ stats.users.series }},
-            },
             start_date:  Date.UTC({{ start_date.year }},
                                   {{ start_date.month|add:"-1" }},
                                   {{ start_date.day }}),

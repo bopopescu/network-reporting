@@ -16,73 +16,9 @@
 
 {% block content %}
 
-  
-  {# The stats breakdown and graph #}
-  <section class="offset" id="dashboard-stats">
-    <h3 class="stats-chart-title">
-      Realtime Stats for {{start_date|format_date_compact}} to
-      {{end_date|format_date_compact}}
-    </h3>
+  {% chart_placeholder %}
 
-    <div class="stats">
-      {% stats_breakdown stats %}
-      <div class="chart stats-chart" id="dashboard-stats-chart">
-        <img class="preload" src="/images/report-preloader.gif" />
-      </div>
-    </div>
-  </section>
-
-  {% comment %}
-  <div class="new-rollup">
-    <div class="active rollup-box">
-      <h3 class="rollup-title">Impressions</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-impressions">
-          --
-        </div>
-        <div class="positive delta-value">
-          + 2.05%
-        </div>
-      </div>
-    </div>
-    <div class="rollup-box">
-      <h3 class="rollup-title">Clicks</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-clicks">
-          --
-        </div>
-        <div class="negative delta-value">
-          - 9.25%
-        </div>
-      </div>
-    </div>
-    <div class="rollup-box">
-      <h3 class="rollup-title">CTR</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-ctr">
-          --
-        </div>
-        <div class="negative delta-value">
-          - 4.41%
-        </div>
-      </div>
-    </div>
-    <div class="rollup-box">
-      <h3 class="rollup-title">Conversions</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-conversions">
-          --
-        </div>
-        <div class="positive delta-value">
-          + 0.41%
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <br />
-    {% endcomment %}
-  
+  <br />  
 
   {# The order edit form, hidden by default #}
   <section class="offset hidden" id="order_form_container">
@@ -176,12 +112,7 @@
             order_key: "{{ order.key }}",
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
-            daily_stats: {
-                requests: {{ stats.requests.series }},
-                impressions: {{ stats.impressions.series }},
-                clicks: {{ stats.clicks.series }},
-                users: {{ stats.users.series }},
-            },
+
             start_date:  Date.UTC({{ start_date.year }},
                                   {{ start_date.month|add:"-1" }},
                                   {{ start_date.day }})

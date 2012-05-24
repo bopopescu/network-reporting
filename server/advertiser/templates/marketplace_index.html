@@ -28,7 +28,8 @@
   {% endif %}
 
   <div class="alert-message block-message hidden" id="first_time_toast">
-    The MoPub Marketplace is now active. Visit the settings tab if you'd like to change how the Marketplace works.
+    The MoPub Marketplace is now active. Visit the settings tab if
+    you'd like to change how the Marketplace works.
   </div>
 
   <div class="campaignData-rollup">
@@ -85,18 +86,13 @@
   </div>
 
   <div class="active tab-section" id="performance">
-    <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">
-        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-      </h3>
-      <div class="stats">
-        {% stats_breakdown stats %}
-        <div class="chart stats-chart" id="dashboard-stats-chart">
-        </div>
-      </div>
-      <div class="clear"></div>
-    </section>
-    <div class="muted right">* Your payment from Marketplace may be less than the estimate shown here. <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-" target="_blank">Learn why</a></div>
+
+    {% chart_placeholder %}
+    
+    <div class="muted right">* Your payment from Marketplace may be less than the estimate shown here.
+    <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-"
+    target="_blank">Learn why</a>.
+    </div>
 
     <section id="marketplace-apps">
     <div class="appData-columnHeaders">

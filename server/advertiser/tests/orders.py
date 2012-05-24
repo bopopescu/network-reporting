@@ -45,7 +45,6 @@ from advertiser.models import (Creative, TextAndTileCreative,
 from account.models import Account
 from advertiser.views.orders import get_targeted_apps
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from publisher.models import to_dict
 from account.query_managers import AccountQueryManager
 
 setup_test_environment()
@@ -190,6 +189,7 @@ class OrderIndexTestCase(OrderViewTestCase):
 
         Author: Haydn Dufrene
         """
+
         pass
 
     def mptest_all_orders_returned_are_orders(self):
@@ -653,6 +653,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
+        
         response = self.client.post(self.new_url,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
@@ -817,6 +818,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 #TODO: Change this if confirm_db actually checks the models, rather than count
 @decorate_all_test_methods(confirm_db())
 class AdSourceChangeTestCase(OrderViewTestCase):
+
     def setUp(self):
         super(AdSourceChangeTestCase, self).setUp()
         self.url = reverse('advertiser_ad_source_status_change')
@@ -1279,7 +1281,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 @decorate_all_test_methods(confirm_db())
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):
-    #qwer
+
     def setUp(self):
         super(DisplayCreativeHandlerTestCase, self).setUp()
         self.image_url = reverse('advertiser_creative_image', kwargs={
@@ -1288,11 +1290,6 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         self.html_url = reverse('advertiser_creative_html', kwargs={
             'creative_key' : unicode(self.creative.key())
         })
-
-    def _make_new_creative(self, ad_type):
-
-        CreativeQueryManager.put(new_creative)
-        return new_creative
 
     def mptest_http_response_code(self):
         """
@@ -1354,7 +1351,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
                                          ad_type='image')
         url = reverse('advertiser_creative_image', kwargs={
             'creative_key': unicode(new_creative.key())
-        })
+        })        
         response = self.client.get(url)
         eq_(response.content, '')
 
@@ -1366,6 +1363,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
+        
         new_creative = generate_creative(self.account,
                                          self.line_item,
                                          ad_type='text_icon')
@@ -1390,6 +1388,11 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         })
         response = self.client.get(url)
         ok_(response.content.find("<html><body style='margin:0px;'>") >= 0)
+
+        # clean up -- all tests in this class expect the database to be the
+        # same before and after the request/response, so we get rid of the
+        # creative we made
+        CreativeQueryManager.delete(new_creative)
 
 
 @decorate_all_test_methods(confirm_db())
@@ -1501,6 +1504,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
+        
         self.html_creative_post_body.pop('ajax')
 
         new_response = self.client.post(self.new_url, self.html_creative_post_body)

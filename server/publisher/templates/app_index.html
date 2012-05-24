@@ -7,11 +7,15 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-  <a href="{% url dashboard %}"> MoPub Explorer (Beta) </a>
+  
 {% endblock titleBarRight %}
   
 {% block content %}
 
+  <div class="alert-message block-message">
+    We just released a beta version of <a href="{% url dashboard %}"> MoPub Explorer</a>, a new tool that you can use for in-depth analysis of everything that happens on the platform.
+  </div>
+  
   {% ifequal account.status "step4" %}
     <div class="alert-message block-message">
       Start serving ads in your app by visiting the tabs at the top of
@@ -30,23 +34,7 @@
     </div>
   {% endifequal %}
 
-  {% if stats %}
-  <section class="offset nomargin" id="dashboard-stats">
-    
-    <h3 class="stats-chart-title">
-      Realtime Stats for {{start_date|format_date_compact}} to
-      {{end_date|format_date_compact}}
-    </h3>
-    
-    <div class="stats">      
-      {% stats_breakdown stats %}     
-      <div class="chart stats-chart" id="dashboard-stats-chart"></div>      
-    </div>
-    
-    <div class="clear"></div>
-    
-  </section>
-  {% endif %}
+  {% chart_placeholder %}
 
   <section id="dashboard-apps">
     <div class="buttonBank buttonBank-right">
@@ -58,7 +46,6 @@
     <h2>Apps and sites</h2>
 
     {% inventory_table apps %}
-
 
     <br />
     

@@ -1,12 +1,10 @@
 {% load filters %}
 <div class="offset" id="dashboard-stats">
   <h3 class="stats-chart-title">
-    Realtime Stats for {{start_date|format_date_compact}} to
-    {{end_date|format_date_compact}}
+    Realtime Stats for {{ start_date }} to {{ end_date }}
   </h3>
   
   <div class="stats">
-    {#{% stats_breakdown stats %}#}
     <div class="chart stats-chart" id="dashboard-stats-chart">
       <img class="preload" src="/images/report-preloader.gif" />
     </div>

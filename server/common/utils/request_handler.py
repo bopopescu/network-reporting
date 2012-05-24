@@ -129,10 +129,11 @@ class RequestHandler(object):
                     "account": self.account,
                     "True": True,
                     "False": False,
+                    "foo": "foo"
                 })
                 response = render_to_response(self.request,
-                                          self.template,
-                                          response)
+                                              self.template,
+                                              response)
                 if use_handshake:
                     self._add_handshake(response)
                 return response

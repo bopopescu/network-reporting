@@ -190,7 +190,7 @@ def format_date_compact(value):
         try:
             return "%d/%d" % (value.month, value.day)
         except Exception:
-            return ""
+            return "fu"
     else:
         return ""
 

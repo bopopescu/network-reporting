@@ -7,11 +7,15 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-  <a href="{% url dashboard %}"> MoPub Explorer (Beta) </a>
+  
 {% endblock titleBarRight %}
   
 {% block content %}
 
+  <div class="alert-message block-message">
+    We just released a beta version of <a href="{% url dashboard %}"> MoPub Explorer</a>, a new tool that you can use for in-depth analysis of everything that happens on the platform.
+  </div>
+  
   {% ifequal account.status "step4" %}
     <div class="alert-message block-message">
       Start serving ads in your app by visiting the tabs at the top of

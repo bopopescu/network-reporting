@@ -627,7 +627,7 @@ def get_pace(adgroup):
         elif pace[1] < .85:
             pace_status = 'pace-warning'
         else:
-            pace_status = 'pace-succes'
+            pace_status = 'pace-success'
 
         return (pace[1], pace_status)
 

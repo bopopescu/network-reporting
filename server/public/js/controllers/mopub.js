@@ -873,13 +873,11 @@ if (window.console === undefined) {
     Chart.setupDashboardStatsChart = function(seriesType) {
 
         // get active metric from breakdown
-        var metricElement = $('#dashboard-stats .stats-breakdown .active');
+        var metricElement = $('#stats .stats-breakdown .active');
         if (metricElement === null || metricElement.length === 0) return;
         var metricElementIdComponents = metricElement.attr('id').split('-');
         var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
 
-        console.log(activeMetric);
-        
         // get data
         var data = mopub.dashboardStatsChartData;
         if (typeof data == 'undefined') {
@@ -897,7 +895,7 @@ if (window.console === undefined) {
             console.log('nope');
             return;
         }
-
+        
         $.each(activeData, function(i, seriesObject) {
             var seriesName, seriesData, seriesLineWidth;
             var seriesColor = colors[i]
@@ -916,17 +914,22 @@ if (window.console === undefined) {
                 } else seriesLineWidth = 4;
             });
 
-            seriesAttributes = {name: seriesName,
-                                data: seriesData,
-                                color: seriesColor,
-                                lineWidth: seriesLineWidth}
+            seriesAttributes = {
+                name: seriesName,
+                data: seriesData,
+                color: seriesColor,
+                lineWidth: seriesLineWidth
+            }
+
             chartSeries.push(seriesAttributes);
         });
 
+        console.log(data);
+        
         // setup HighCharts chart
         this.trafficChart = new Highcharts.Chart({
             chart: {
-                renderTo: 'dashboard-stats-chart',
+                renderTo: 'stats-chart',
                 defaultSeriesType: seriesType,
                 marginTop: 0,
                 marginBottom: 55,

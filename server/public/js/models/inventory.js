@@ -18,7 +18,6 @@ var mopub = mopub || {};
 (function ($, Backbone, _) {
     "use strict";
 
-
     // Gets the url from a backbone model/collection.
     // Sometimes it's a string, sometimes its a function.
     // This is used as utility for localStorage caching,
@@ -108,12 +107,6 @@ var mopub = mopub || {};
     // use.
     function record_metric (name, args) {
         try {
-            _kmq.push(['record', name, args]);
-        } catch (x) {
-            console.log(x);
-        }
-
-        try {
             mixpanel.track(name, args);
         } catch (x) {
             console.log(x);
@@ -136,12 +129,30 @@ var mopub = mopub || {};
 
             return format_stat(stat, sum);
         },
-        get_formatted_stat_series: function(stat) {
-            var val=this.map(function(item){
-                return item.get_formatted_stat(stat);
+        get_formatted_stat_series: function(stat) {            
+            
+            var all_dailies = this.map(function(model) {
+                return model.get('daily_stats');
             });
-            console.log(val);
-            return val;
+
+            var daily_sums = _.reduce(all_dailies, function (memo, current) {
+                if (memo === null) {
+                    return current;
+                } else {
+                    var summed = [];
+                    _.each(current, function (day) {
+                        summed.push({
+                            rev: memo.rev + current.rev,
+                            req: memo.req + current.req,
+                            imp: memo.imp + current.imp,
+                            clk: memo.clk + current.clk
+                        });
+                    });
+                    return summed;
+                }
+            }, null);
+
+            return daily_sums;
         }
     };
 

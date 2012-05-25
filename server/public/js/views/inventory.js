@@ -64,9 +64,6 @@ var mopub = window.mopub || {};
                 mopub.dashboardStatsChartData[display_val] = formatted_series;
             });
 
-            console.log(template_values);
-            console.log(mopub.dashboardStatsChartData);
-
             // Render the template and the chart with the values we composed
             $(this_view.el).html(this_view.template(template_values));
             mopub.Chart.setupDashboardStatsChart('area');

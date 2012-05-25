@@ -18,7 +18,6 @@ from common.constants import REPORTING_NETWORKS
 from publisher.query_managers import AppQueryManager,\
      AdUnitQueryManager
 
-from common.templatetags.filters import currency, percentage
 from common.constants import MPX_DSP_IDS
 import logging
 
@@ -78,7 +77,7 @@ class AbstractStatsFetcher(object):
 
 class SummedStatsFetcher(AbstractStatsFetcher):
     def _get_publisher_stats(self, start, end, publisher=None,
-                             advertiser=None, daily=False,
+                             advertiser=None, daily=True,
                              *args, **kwargs):
         # mongo
         days = date_magic.gen_days(start, end)
@@ -93,7 +92,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
             return self.format_stats(stats)
 
     def _get_campaign_stats(self, start, end, campaign, publisher=None,
-            daily=False, *args, **kwargs):
+            daily=True, *args, **kwargs):
         # mongo
         query_manager = StatsModelQueryManager(AccountQueryManager.get(
             self.account_key))
@@ -168,13 +167,13 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         app_stats = self._get_publisher_stats(start, end, publisher=app)
         return app_stats
 
-    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+    def get_adunit_stats(self, adunit_key, start, end, daily=True):
         # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
         adunit_stats = self._get_publisher_stats(start, end, publisher=adunit)
         return adunit_stats
 
-    def get_adgroup_stats(self, adgroup, start, end, daily=False):
+    def get_adgroup_stats(self, adgroup, start, end, daily=True):
         if isinstance(adgroup, str):
             adgroup = AdGroupQueryManager.get(adgroup)
         adgroup_stats = self._get_advertiser_stats(adgroup, start, end)
@@ -261,13 +260,13 @@ class MarketplaceStatsFetcher(object):
 
         stats_dict = {}
         for id, stats in response_dict.iteritems():
-            counts = {"rev": currency(stats['pub_rev']),
+            counts = {"rev": float(stats['pub_rev']),
                       "imp": int(stats['imp']),
                       "clk": stats['clk'], }
             stats_dict[id] = counts
         return stats_dict
 
-    def _get_pub_inventory(self, pub, start, end, daily=False):
+    def _get_pub_inventory(self, pub, start, end, daily=True):
         """
         This is an alternative to _get_inventory. Here, pub is used in the broad
         sense to represent a pub/app/adunit. When stats for only a single
@@ -324,7 +323,7 @@ class MarketplaceStatsFetcher(object):
         stats_dict = {pub: counts}
         return stats_dict
 
-    def get_app_stats(self, app_key, start, end, daily=False):
+    def get_app_stats(self, app_key, start, end, daily=True):
         stats = self._get_pub_inventory(app_key,
                                         start=start.strftime("%m-%d-%Y"),
                                         end=end.strftime("%m-%d-%Y"),
@@ -332,14 +331,14 @@ class MarketplaceStatsFetcher(object):
         return stats.get(app_key, {})
 
 
-    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+    def get_adunit_stats(self, adunit_key, start, end, daily=True):
         stats = self._get_pub_inventory(adunit_key,
                                         start=start.strftime("%m-%d-%Y"),
                                         end=end.strftime("%m-%d-%Y"),
                                         daily=daily)
         return stats.get(adunit_key, {})
 
-    def get_account_stats(self, start, end, daily=False):
+    def get_account_stats(self, start, end, daily=True):
         stats = self._get_pub_inventory(self.pub_id,
                                         start=start.strftime("%m-%d-%Y"),
                                         end=end.strftime("%m-%d-%Y"),
@@ -503,9 +502,11 @@ class AdNetworkStatsFetcher(object):
 # Helper/Utility functions
 
 def _transform_stats(stats_dict):
-    return {"rev": stats_dict['rev'],
-            "imp": int(stats_dict['imp']),
-            "clk": stats_dict.get('clk', 0),} # no clk currently from /stats/pub
+    return {
+        "rev": stats_dict['rev'],
+        "imp": int(stats_dict['imp']),
+        "clk": stats_dict.get('clk', 0),
+    } # no clk currently from /stats/pub
 
 
 def _fetch_and_decode(url):

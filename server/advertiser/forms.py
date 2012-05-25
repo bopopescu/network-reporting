@@ -6,7 +6,6 @@ from django import forms
 from django.forms.util import ErrorList
 from django.utils.safestring import SafeString
 from google.appengine.api import images, files
-from google.appengine.ext import deferred
 from google.appengine.ext.db import Key
 
 from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
@@ -70,7 +69,7 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = ('name',
                   'advertiser',
-                  'description',)
+                  'description')
 
 
 class LineItemForm(forms.ModelForm):
@@ -627,7 +626,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
         if self.files.get('image_file', None):
             image_data = self.files.get('image_file').read()
-            img = images.Image(image_data)
+            #ig = images.Image(image_data)
             fname = files.blobstore.create(mime_type='image/png')
             with files.open(fname, 'a') as f:
                 f.write(image_data)

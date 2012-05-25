@@ -9,8 +9,6 @@ import common.utils.test.setup
 
 from nose.tools import ok_, eq_
 
-from google.appengine.ext import testbed
-
 from advertiser.models import Order, LineItem
 from advertiser.forms import (OrderForm, LineItemForm, ImageCreativeForm,
                               TextAndTileCreativeForm, HtmlCreativeForm)
@@ -28,14 +26,14 @@ class TestOrderForm(unittest.TestCase):
 
     def mptest_required(self):
         form = OrderForm(self.data)
-        ok_(form.is_valid(), 
+        ok_(form.is_valid(),
             "OrderForm(%s): %s" % (self.data, form._errors.as_text()))
 
         for key in self.data:
             incomplete_data = copy.deepcopy(self.data)
             del incomplete_data[key]
             form = OrderForm(incomplete_data)
-            ok_(not form.is_valid(), 
+            ok_(not form.is_valid(),
                 "OrderForm(%s): %s was missing but form validated." % \
                 (incomplete_data, key))
 
@@ -116,7 +114,7 @@ class TestLineItemForm(unittest.TestCase):
             incomplete_data = copy.deepcopy(data)
             del incomplete_data[key]
             form = LineItemForm(incomplete_data)
-            ok_(not form.is_valid(), 
+            ok_(not form.is_valid(),
                 "LineItemForm(%s): %s was missing but form validated." % \
                 (incomplete_data, key))
 
@@ -165,7 +163,7 @@ class TestLineItemForm(unittest.TestCase):
                 test_data['end_datetime_0'] = _parse_datetime(end_datetime)
                 test_data['end_datetime_1'] = _parse_hour_time(end_datetime)
                 form = LineItemForm(test_data)
-                ok_(not form.is_valid(), 
+                ok_(not form.is_valid(),
                     "Form validated with invalid datetimes: start_datetime=%s end_datetime=%s" % \
                     (start_datetime, end_datetime))
 
@@ -186,8 +184,8 @@ class TestLineItemForm(unittest.TestCase):
                 if output_start_datetime:
                     pac_start_datetime = _as_pacific_time(line_item.start_datetime)
                     time_almost_eq(pac_start_datetime, output_start_datetime,
-                                   message=should_have_been_message % ('start_datetime', 
-                                                                       output_start_datetime, pac_start_datetime, 
+                                   message=should_have_been_message % ('start_datetime',
+                                                                       output_start_datetime, pac_start_datetime,
                                                                        start_datetime, end_datetime))
                 else:
                     ok_(not line_item.start_datetime, datetime_none_message % \
@@ -196,14 +194,15 @@ class TestLineItemForm(unittest.TestCase):
                 if output_end_datetime:
                     pac_end_datetime = _as_pacific_time(line_item.end_datetime)
                     time_almost_eq(pac_end_datetime, output_end_datetime,
-                                   message=should_have_been_message % ('end_datetime', 
-                                                                       output_start_datetime, pac_end_datetime, 
+                                   message=should_have_been_message % ('end_datetime',
+                                                                       output_start_datetime, pac_end_datetime,
                                                                        start_datetime, end_datetime))
                 else:
                     ok_(not line_item.end_datetime, datetime_none_message % \
                         (start_datetime, end_datetime, 'end_datetime', line_item.end_datetime))
 
     # TODO: keywords > 500 characters causes exception
+
 
 def _parse_hour_time(date):
     return date.time().strftime('%I:%M %p') if date else ''
@@ -223,27 +222,30 @@ class TestGuaranteedLineItemForm(unittest.TestCase):
 
     def mptest_cpc_daily_budget(self):
         for test_data in self.data:
-            _test_line_item_for_budget(test_data, 'cpc', 'daily', 
+            _test_line_item_for_budget(test_data, 'cpc', 'daily',
                                        [test_data['budget'], None])
 
     def mptest_cpc_full_budget(self):
         for test_data in self.data:
-            _test_line_item_for_budget(test_data, 'cpc', 'full_campaign', 
+            _test_line_item_for_budget(test_data, 'cpc', 'full_campaign',
                                        [None, test_data['budget']])
+
     def mptest_cpm_daily_budget(self):
         for test_data in self.data:
             cpm_budget = test_data['budget'] * test_data['bid'] / 1000
-            _test_line_item_for_budget(test_data, 'cpm', 'daily', 
+            _test_line_item_for_budget(test_data, 'cpm', 'daily',
                                        [cpm_budget, None])
+
     def mptest_cpm_full_budget(self):
         for test_data in self.data:
             cpm_budget = test_data['budget'] * test_data['bid'] / 1000
-            _test_line_item_for_budget(test_data, 'cpm', 'full_campaign', 
+            _test_line_item_for_budget(test_data, 'cpm', 'full_campaign',
                                        [None, cpm_budget])
+
     def mptest_unlimited_budget(self):
         for test_data in self.data:
             test_data['budget'] = ''
-            _test_line_item_for_budget(test_data, 'cpc', 'daily', 
+            _test_line_item_for_budget(test_data, 'cpc', 'daily',
                                        [None, None])
 
     def mptest_invalid_budget(self):
@@ -251,15 +253,15 @@ class TestGuaranteedLineItemForm(unittest.TestCase):
             test_data['budget_type'] = 'full_campaign'
             test_data['budget_strategy'] = 'evenly'
             form = LineItemForm(test_data)
-            ok_(not form.is_valid(), 
+            ok_(not form.is_valid(),
                 "Form should not validate with full_campaign \
                 spread evenly.")
 
             test_data['end_datetime_0'] = _parse_datetime(datetime.datetime.now() + datetime.timedelta(days=1))
             test_data['end_datetime_1'] = _parse_hour_time(datetime.time())
             form = LineItemForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            line_item = form.save()
+            ok_(form.is_valid(), form._errors.as_text())
+            form.save()
 
 
 def _test_line_item_for_budget(data, bid_strategy=None, budget_type=None, expected=[None, None]):

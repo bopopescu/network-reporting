@@ -62,14 +62,15 @@ class OrderViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account)
         self.adunit = generate_adunit(self.app, self.account)
         self.order = generate_campaign(self.account)
-        self.line_item = generate_adgroup(self.order,[],self.account,'gtee')
+        self.line_item = generate_adgroup(self.order, [],
+                                          self.account, 'gtee')
         # HTML Creative
         self.creative = generate_creative(self.account, self.line_item)
 
         # A post body for an order form, used for testing
         # form submits that need an order.
         self.order_body = {
-            u'ajax': u'true', # common form parameter
+            u'ajax': u'true',  # common form parameter
             u'order-advertiser': u'Testingco',
             u'order-description': u'',
             u'order-name': u'Test Order'
@@ -78,7 +79,7 @@ class OrderViewTestCase(BaseViewTestCase):
         # A post body for a line item form, used for testing
         # form submits that need a line item
         self.line_item_body = {
-            u'ajax': u'true', # common form parameters
+            u'ajax': u'true',  # common form parameters
             u'adgroup_type': u'gtee',
             u'allocation_percentage': u'100.0',
             u'android_version_max': u'999',
@@ -121,7 +122,6 @@ class OrderViewTestCase(BaseViewTestCase):
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
 
-
         # Mock line item used for testing forms
         line_item_form = LineItemForm(self.post_body,
                                       instance=None,
@@ -131,7 +131,6 @@ class OrderViewTestCase(BaseViewTestCase):
         self.mock_line_item.campaign = self.mock_order
 
 
-@decorate_all_test_methods(confirm_db())
 class OrderIndexTestCase(OrderViewTestCase):
     """
     Tests the order index handler
@@ -158,15 +157,14 @@ class OrderIndexTestCase(OrderViewTestCase):
         Checks to see that all orders of a given account are returned
         """
         expected_orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        expected_orders = expected_orders.fetch(1000)
+        expected_orders = expected_orders
 
         response = self.client.get(self.url)
-        actual_orders = response.context['orders'].fetch(1000)
+        actual_orders = response.context['orders']
 
         eq_(len(actual_orders), len(expected_orders))
         for actual_order, expected_order in zip(actual_orders, expected_orders):
             model_key_eq(actual_order, expected_order)
-
 
     def mptest_gets_all_line_items(self):
         """
@@ -181,7 +179,6 @@ class OrderIndexTestCase(OrderViewTestCase):
         for actual_line_item, expected_line_items in zip(actual_line_items, expected_line_items):
             model_key_eq(actual_line_item, expected_line_items)
 
-
     def mptest_account_owns_all_items(self):
         """
         We query for items by account in the previous two tests
@@ -194,7 +191,7 @@ class OrderIndexTestCase(OrderViewTestCase):
 
     def mptest_all_orders_returned_are_orders(self):
         response = self.client.get(self.url)
-        orders = response.context['orders'].fetch(1000)
+        orders = response.context['orders']
         for order in orders:
             ok_(order.is_order)
 
@@ -205,15 +202,17 @@ class OrderIndexTestCase(OrderViewTestCase):
         line_items = response.context['line_items']
         for line_item in line_items:
             ok_(line_item.campaign.is_order)
-    
+
         CampaignQueryManager.delete(mpx_campaign)
         AdGroupQueryManager.delete(mpx_adgroup)
 
-@decorate_all_test_methods(confirm_db())
+OrderIndexTestCase = decorate_all_test_methods(confirm_db())(OrderIndexTestCase)
+
+
 class OrderDetailHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(OrderDetailHandlerTestCase, self).setUp()
-        self.url = reverse('advertiser_order_detail', 
+        self.url = reverse('advertiser_order_detail',
                            kwargs={
                                 'order_key': unicode(self.order.key())
                            })
@@ -273,7 +272,7 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
         response = self.client.get(self.url)
         actual_order_form = response.context['order_form']
 
-        model_key_eq(expected_order_form.instance, 
+        model_key_eq(expected_order_form.instance,
                      actual_order_form.instance)
 
     def mptest_returns_proper_order(self):
@@ -284,8 +283,9 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
 
         model_key_eq(expected_order, actual_order)
 
+OrderDetailHandlerTestCase = decorate_all_test_methods(confirm_db())(OrderDetailHandlerTestCase)
 
-@decorate_all_test_methods(confirm_db())
+
 class LineItemDetailHandler(OrderViewTestCase):
     def setUp(self):
         super(LineItemDetailHandler, self).setUp()
@@ -314,7 +314,6 @@ class LineItemDetailHandler(OrderViewTestCase):
         eq_(len(actual_adunits), len(expected_adunits))
         for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
             model_key_eq(actual_adunit, expected_adunit)
-
 
     def mptest_returns_all_targeted_apps_and_keys(self):
         expected_adunits = AdUnitQueryManager.get(self.line_item.site_keys)
@@ -355,8 +354,9 @@ class LineItemDetailHandler(OrderViewTestCase):
         model_key_eq(actual_line_item.campaign, actual_order)
         model_key_eq(actual_order, expected_order)
 
+LineItemDetailHandler = decorate_all_test_methods(confirm_db())(LineItemDetailHandler)
 
-@decorate_all_test_methods(confirm_db())
+
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
     """
     Tests for the order and line item create view's GET method.
@@ -476,13 +476,13 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         order = line_item.campaign
         time_almost_eq(order.created, datetime.utcnow())
 
-        model_eq(order, self.mock_order, exclude=['created', 't'], 
+        model_eq(order, self.mock_order, exclude=['created', 't'],
                  check_primary_key=False)
 
     def mptest_order_owns_line_item(self):
         """
-        Because we must retrieve the order by line item key in the 
-        redirect, this test is implicitly covered in 
+        Because we must retrieve the order by line item key in the
+        redirect, this test is implicitly covered in
         mptest_puts_new_valid_order_and_line_item.
 
         Author: Haydn Dufrene
@@ -491,16 +491,17 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
 
     def mptest_account_owns_order_and_line_item(self):
         """
-        The mock which the returned order and line items are 
-        compared against contain self.account, this test is 
+        The mock which the returned order and line items are
+        compared against contain self.account, this test is
         implicitly covered in mptest_puts_new_valid_order_and_line_item
 
         Author: Haydn Dufrene
         """
         pass
 
+OrderAndLineItemCreateGetTestCase = decorate_all_test_methods(confirm_db())(OrderAndLineItemCreateGetTestCase)
 
-@decorate_all_test_methods(confirm_db())
+
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
     """
     Tests for the new/edit line item GET method.
@@ -594,7 +595,6 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         response = self.client.get(self.new_url)
         eq_(response.status_code, 404)
 
-
     def mptest_fail_on_editing_unowned_line_item(self):
         """
         Trying to access and access an unowned line_item returns a 404
@@ -602,7 +602,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         Author: John Pena
         """
         self.login_secondary_account()
-        
+
         response = self.client.get(self.edit_url)
         eq_(response.status_code, 404)
 
@@ -627,6 +627,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
         AppQueryManager.delete(app1)
         AppQueryManager.delete(app2)
+
+NewOrEditLineItemGetTestCase = decorate_all_test_methods(confirm_db())(NewOrEditLineItemGetTestCase)
 
 
 class NewOrEditLineItemPostTestCase(OrderViewTestCase):
@@ -653,7 +655,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        
+
         response = self.client.post(self.new_url,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
@@ -684,16 +686,18 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         Author: John Pena
         """
         non_order_mpx = generate_marketplace_campaign(self.account, None)
-        url = reverse('advertiser_line_item_form_new', kwargs = {
-            'order_key': unicode(non_order_mpx.key())
-        })
+        url = reverse('advertiser_line_item_form_new',
+                      kwargs={
+                        'order_key': unicode(non_order_mpx.key())
+                      })
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
         non_order_network = generate_marketplace_campaign(self.account, None)
-        url = reverse('advertiser_line_item_form_new', kwargs = {
-            'order_key': unicode(non_order_network.key())
-        })
+        url = reverse('advertiser_line_item_form_new',
+                      kwargs={
+                        'order_key': unicode(non_order_network.key())
+                      })
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
@@ -745,7 +749,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         time_almost_eq(self.mock_line_item.t, line_item.t)
 
-        model_eq(self.mock_line_item, line_item, exclude=['name', 'campaign', 
+        model_eq(self.mock_line_item, line_item, exclude=['name', 'campaign',
                                                           'created', 't'],
                                                  check_primary_key=False)
 
@@ -754,7 +758,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         """
         Posting valid line item information should update the line item
         in the database.
-        
+
         Author: John Pena
         """
         # update the name for the post body
@@ -762,8 +766,8 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         post_body = self.post_body
         post_body['name'] = new_name
 
-        response = self.client.post(self.edit_url, post_body,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.client.post(self.edit_url, post_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
         line_item = AdGroupQueryManager.get(self.line_item.key())
 
@@ -789,8 +793,8 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     @confirm_db(modified=[Account, Campaign, AdGroup])
     def mptest_complete_onboarding_after_first_campaign(self):
         """
-        Sets the accounts status to Step 4. If a campaign is 
-        created while the account's 'status' == 'step4', 
+        Sets the accounts status to Step 4. If a campaign is
+        created while the account's 'status' == 'step4',
         the onboarding is complete and status becomes ''.
 
         Author: Haydn Dufrene
@@ -798,8 +802,8 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         self.account.status = 'step4'
         AccountQueryManager.put_accounts(self.account)
 
-        response = self.client.post(self.new_url, self.post_body,
-                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.client.post(self.new_url, self.post_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         acct = AccountQueryManager.get(self.account.key())
         eq_(acct.status, '')
 
@@ -808,17 +812,16 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
     def mptest_datetime_alias_for_jquery_on_fail(self):
         """
         There is a block at the end of the post (L:351-359)
-        that is a hack for JQuery validation. Unsure what 
+        that is a hack for JQuery validation. Unsure what
         it is doing and what to test for.
 
         Author: Haydn Dufrene
         """
         pass
 
-#TODO: Change this if confirm_db actually checks the models, rather than count
-@decorate_all_test_methods(confirm_db())
-class AdSourceChangeTestCase(OrderViewTestCase):
 
+#TODO: Change this if confirm_db actually checks the models, rather than count
+class AdSourceChangeTestCase(OrderViewTestCase):
     def setUp(self):
         super(AdSourceChangeTestCase, self).setUp()
         self.url = reverse('advertiser_ad_source_status_change')
@@ -837,8 +840,8 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         """
         The ad source status change handler should return success: false
         if required parameters (ad_sources, status) are missing.
-        
-        Author: John Pena        
+
+        Author: John Pena
         """
         # test without params
         response = self.client.post(self.url)
@@ -889,7 +892,6 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(self.creative.active)
 
-
     def mptest_creative_pause(self):
         """
         The ad source status change handler should set a creative as paused
@@ -908,12 +910,11 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(not self.creative.active)
 
-
     def mptest_creative_delete(self):
         """
         The ad source status change handler should set a creative as deleted
         when 'delete' is passed as the status.
-        
+
         Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
@@ -1019,7 +1020,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         The ad source status change handler should set an order as running
         when 'run' is passed as the status. The order's line items should
         not be affected.
-        
+
         Author: Haydn Dufrene
         """
         self.order.active = False
@@ -1044,7 +1045,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         The ad source status change handler should set an order as paused
         when 'pause' is passed as the status. The order's line items should
         not be affected.
-        
+
         Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
@@ -1066,7 +1067,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         The ad source status change handler should set an order as archived
         when 'archive' is passed as the status. The order's line items should
         not be affected.
-        
+
         Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
@@ -1088,7 +1089,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         The ad source status change handler should set an order as deleted
         when 'delete' is passed as the status. The order's line items should
         not be affected.
-        
+
         Author: Haydn Dufrene
         """
         response = self.client.post(self.url, data={
@@ -1111,7 +1112,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         """
         The ad source status change handler changes multiple objects
         statuses to running when 'run' is passed as the status.
-        
+
         Author: John Pena
         """
         # Set the line item as paused and put it in the db
@@ -1278,17 +1279,18 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_order.archived)
         ok_(actual_order.deleted)
 
+AdSourceChangeTestCase = decorate_all_test_methods(confirm_db())(AdSourceChangeTestCase)
 
-@decorate_all_test_methods(confirm_db())
+
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):
 
     def setUp(self):
         super(DisplayCreativeHandlerTestCase, self).setUp()
         self.image_url = reverse('advertiser_creative_image', kwargs={
-            'creative_key' : unicode(self.creative.key())
+            'creative_key': unicode(self.creative.key())
         })
         self.html_url = reverse('advertiser_creative_html', kwargs={
-            'creative_key' : unicode(self.creative.key())
+            'creative_key': unicode(self.creative.key())
         })
 
     def mptest_http_response_code(self):
@@ -1309,7 +1311,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         display handler raises a 404.
         """
         url = reverse('advertiser_creative_image', kwargs={
-            'creative_key' : 'sentinal134'
+            'creative_key': 'sentinal134'
         })
         response = self.client.get(url)
         eq_(response.status_code, 404)
@@ -1351,7 +1353,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
                                          ad_type='image')
         url = reverse('advertiser_creative_image', kwargs={
             'creative_key': unicode(new_creative.key())
-        })        
+        })
         response = self.client.get(url)
         eq_(response.content, '')
 
@@ -1363,7 +1365,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        
+
         new_creative = generate_creative(self.account,
                                          self.line_item,
                                          ad_type='text_icon')
@@ -1394,8 +1396,9 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         # creative we made
         CreativeQueryManager.delete(new_creative)
 
+DisplayCreativeHandlerTestCase = decorate_all_test_methods(confirm_db())(DisplayCreativeHandlerTestCase)
 
-@decorate_all_test_methods(confirm_db())
+
 class CreativeImageHandlerTestCase(OrderViewTestCase):
     def setUp(self):
         super(CreativeImageHandlerTestCase, self).setUp()
@@ -1415,6 +1418,8 @@ class CreativeImageHandlerTestCase(OrderViewTestCase):
 
     def mptest_raise_404_for_non_image_creatives(self):
         pass
+
+CreativeImageHandlerTestCase = decorate_all_test_methods(confirm_db())(CreativeImageHandlerTestCase)
 
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
@@ -1496,7 +1501,6 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(edit_response.status_code in [200, 302])
 
-
     @confirm_db()
     def mptest_graceful_fail_without_ajax(self):
         """
@@ -1504,7 +1508,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        
+
         self.html_creative_post_body.pop('ajax')
 
         new_response = self.client.post(self.new_url, self.html_creative_post_body)
@@ -1608,9 +1612,9 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
     def mptest_fails_with_unsupported_ad_type(self):
         self.html_creative_post_body.update({u'ad_type': u'fake_ad_type'})
         try:
-            response = self.client.post(self.new_url,
-                                        self.html_creative_post_body,
-                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.client.post(self.new_url,
+                             self.html_creative_post_body,
+                             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         except Exception, e:
             eq_(e.message, 'Unsupported creative type fake_ad_type.')
 
@@ -1679,9 +1683,9 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         response_json = json.loads(response.content)
         ok_(not response_json['success'])
         dict_eq(response_json['errors'],
-                {u'image_file': 
+                {u'image_file':
                  u'You must upload an image file for a creative of this type.'})
-    
+
     @confirm_db()
     def mptest_fails_when_creative_is_unowned(self):
         self.login_secondary_account()

@@ -48,9 +48,11 @@
             <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">
               {{ adunit.name }}
             </a>
+            {% comment %}
             <span class="appData-id muted unbold hidden">
               AdUnit ID: {{ adunit.key }}
             </span>
+            {% endcomment %}
           </td>
           {# these stats will be loaded over ajax #}
           <td class="req stat">--</td>

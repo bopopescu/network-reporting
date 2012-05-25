@@ -490,35 +490,17 @@ def export_file(request, *args, **kwargs):
 
 
 class AdUnitShowHandler(RequestHandler):
-    """
-    REFACTOR
-
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
 
     def get(self, adunit_key):
 
-        # load the site
+        # Load the adunit. 
         adunit = AdUnitQueryManager.get(adunit_key)
-        if adunit.account.key() != self.account.key():
-            raise Http404
-
+        
         # Get all of the ad groups for this site
         adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
         adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
-        for ag in adunit.adgroups:
 
+        for ag in adunit.adgroups:
             budget_object = ag.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
@@ -555,8 +537,8 @@ class AdUnitShowHandler(RequestHandler):
 def adunit_show(request, *args, **kwargs):
     t = 'publisher/adunit.html'    
     return AdUnitShowHandler(id='adunit_key',template=t)(request,
-                                              use_cache=False,
-                                              *args, **kwargs)
+                                                         use_cache=False,
+                                                         *args, **kwargs)
 
 
 class AppUpdateAJAXHandler(RequestHandler):

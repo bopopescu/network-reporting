@@ -87,7 +87,7 @@
 
   <div class="active tab-section" id="performance">
 
-    {% chart_placeholder %}
+    {% chart_placeholder start_date end_date%}
     
     <div class="muted right">* Your payment from Marketplace may be less than the estimate shown here.
     <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-"
@@ -315,11 +315,6 @@
          start_date: "{{start_date|date:"m-d-Y"}}",
          end_date: "{{end_date|date:"m-d-Y"}}"
       };
-
-      mopub.graphStartDate = Date.UTC({{start_date.year}},
-            {{start_date.month|add:"-1"}},
-            {{start_date.day}});
-      mopub.accountStats = {{mpx_stats|safe}};
 
       MarketplaceController.initializeIndex(bootstrapping_data);
     });

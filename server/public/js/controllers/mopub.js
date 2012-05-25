@@ -878,6 +878,8 @@ if (window.console === undefined) {
         var metricElementIdComponents = metricElement.attr('id').split('-');
         var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
 
+        console.log(activeMetric);
+        
         // get data
         var data = mopub.dashboardStatsChartData;
         if (typeof data == 'undefined') {

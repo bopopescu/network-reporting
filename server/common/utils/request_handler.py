@@ -76,7 +76,7 @@ class RequestHandler(object):
             # little hack to figure out if it's yesterday so we can
             # show the button pressed down in the date controls
             yesterday = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(1)        
-            self.yesterday = self.days[-1] == yesterday
+            self.yesterday = (self.days[-1] == yesterday and len(self.days) == 1)
 
             
             # Set self.account
@@ -131,6 +131,7 @@ class RequestHandler(object):
                     "False": False,
                     "foo": "foo"
                 })
+                logging.warn(response)
                 response = render_to_response(self.request,
                                               self.template,
                                               response)

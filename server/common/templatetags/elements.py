@@ -151,13 +151,16 @@ def status_icon(adgroup):
     return {'adgroup': adgroup}
 
 @register.inclusion_tag("common/partials/chart_placeholder.html")
-def chart_placeholder():
+def chart_placeholder(start_date, end_date):
     """
     Placeholder for a chart before it loads
     """
-    return {}
-
-
+    return {
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    
+    
 def isiterable(item):
     try:
         iter(item)

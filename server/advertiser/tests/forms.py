@@ -9,9 +9,7 @@ import common.utils.test.setup
 
 from nose.tools import ok_, eq_
 
-from advertiser.models import Order, LineItem
-from advertiser.forms import (OrderForm, LineItemForm, ImageCreativeForm,
-                              TextAndTileCreativeForm, HtmlCreativeForm)
+from advertiser.forms import OrderForm, LineItemForm
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import UTC
 from common.utils.test.test_utils import time_almost_eq
@@ -100,7 +98,7 @@ PROMOTIONAL_LINE_ITEM_DATA = [
 
 class TestLineItemForm(unittest.TestCase):
     def setUp(self):
-        self.data = GUARANTEED_LINE_ITEM_DATA + PROMOTIONAL_LINE_ITEM_DATA
+        self.data = copy.deepcopy(GUARANTEED_LINE_ITEM_DATA + PROMOTIONAL_LINE_ITEM_DATA)
 
     def mptest_valid_form(self):
         data = PROMOTIONAL_LINE_ITEM_DATA[0]
@@ -108,7 +106,7 @@ class TestLineItemForm(unittest.TestCase):
         ok_(form.is_valid(),
             "LineItemForm(%s): %s" % (data, form._errors.as_text()))
 
-    def mptest_invalid_form(self):
+    def mptest_required_fields(self):
         data = PROMOTIONAL_LINE_ITEM_DATA[0]
         for key in data:
             incomplete_data = copy.deepcopy(data)
@@ -117,6 +115,15 @@ class TestLineItemForm(unittest.TestCase):
             ok_(not form.is_valid(),
                 "LineItemForm(%s): %s was missing but form validated." % \
                 (incomplete_data, key))
+
+    def mptest_save_fails_on_invalid_form(self):
+        pass
+
+    def mptest_save_clears_adunit_cache(self):
+        pass
+
+    def mptest_save_returns_proper_line_items(self):
+        pass
 
     def mptest_new_line_item_datetimes(self):
         now = datetime.datetime.now(Pacific_tzinfo())
@@ -247,6 +254,7 @@ class TestGuaranteedLineItemForm(unittest.TestCase):
             test_data['budget'] = ''
             _test_line_item_for_budget(test_data, 'cpc', 'daily',
                                        [None, None])
+            assert False
 
     def mptest_invalid_budget(self):
         for test_data in self.data:
@@ -288,6 +296,34 @@ class TestPromotionalLineItemForm(unittest.TestCase):
     def mptest_defaults(self):
         for test_data in self.data:
             _test_line_item_for_budget(test_data, expected=[None, None])
+
+
+class LineItemCleanMethodsTestCase(unittest.TestCase):
+    def setUp(self):
+        self.data = PROMOTIONAL_LINE_ITEM_DATA
+
+    def mptest_clean_start_datetime(self):
+        pass
+
+    def mptest_clean_end_datetime(self):
+        pass
+
+    def mptest_clean_allocation_percentage(self):
+        pass
+
+    def mptest_clean_site_keys(self):
+        pass
+
+    def mptest_clean_geo_predicates(self):
+        pass
+
+    def mptest_clean_keywords(self):
+        pass
+
+
+class LineItemCleanTestCase(unittest.TestCase):
+    def setUp(self):
+        pass
 
 
 class TestCreativeForm(unittest.TestCase):

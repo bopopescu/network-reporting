@@ -19,34 +19,31 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 
 from advertiser.widgets import CustomizableSplitDateTimeWidget
 
+import logging
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
 
 
-def get_filetype_extension(filename):
-    if not type(filename) == str:
-        filename = str(filename)
-    if filename.find('.') >= 0:
-        return filename.split('.')[-1]
-    return None
-
-
 class OrderForm(forms.ModelForm):
-    name = forms.CharField(label='Name:',
-                           widget=forms.TextInput(attrs={'class': 'required',
-                                                         'placeholder': 'Order Name'}))
-    advertiser = forms.CharField(label='Advertiser:',
-                                 widget=forms.TextInput(attrs={'class': 'required',
-                                                               'placeholder': 'Order Advertiser'}))
+    name        = forms.CharField(label='Name:',
+                                  widget=forms.TextInput(attrs={
+                                                                 'placeholder': 'Order Name',
+                                                                  'class': 'required'
+                                                                }))
+    advertiser  = forms.CharField(label='Advertiser:',
+                                 widget=forms.TextInput(attrs={
+                                                                'placeholder': 'Order Advertiser',
+                                                                'class': 'required'
+                                                               }))
     description = forms.CharField(label='Description:', required=False,
-                                  widget=forms.Textarea(attrs={'cols': 50,
-                                                               'rows': 3,
-                                                               'placeholder': 'Order for My New App'}))
+                                  widget=forms.Textarea(attrs={
+                                                                'placeholder': 'Order for My New App',
+                                                                'cols': 50,
+                                                                'rows': 3
+                                                               }))
 
     def __init__(self, *args, **kwargs):
-
-        # instance
         # TODO: figure out if there is a less hacky way to get this
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
@@ -74,99 +71,123 @@ class OrderForm(forms.ModelForm):
 
 class LineItemForm(forms.ModelForm):
     # TODO: include campaign and confirm campaign.is_order
-
-    adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
-                                               ('promo', 'Promotional')),
-                                      label='Line Item Type:')
-    gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
-                                               ('normal', 'Normal'),
-                                               ('low', 'Low')),
-                                      initial='normal', label='Priority:',
-                                      required=False)
-    promo_priority = forms.ChoiceField(choices=(('normal', 'Normal'),
-                                                ('backfill', 'Backfill')),
-                                       initial='normal', label='Priority:',
-                                       required=False)
     name = forms.CharField(label='Name:',
-                           widget=forms.TextInput(attrs={'class': 'required',
-                                                         'placeholder': 'Line Item Name'}))
-    start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
-                                         label='Start Time:', required=False,
-                                         widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
-                                                                                            'placeholder': 'MM/DD/YYYY'},
-                                                                                time_attrs={'class': 'time',
-                                                                                            'placeholder': 'HH:MM'},
+                           widget=forms.TextInput(attrs={
+                                                          'class': 'required',
+                                                          'placeholder': 'Line Item Name'
+                                                         }))
+
+    adgroup_type   = forms.ChoiceField(label='Line Item Type:',
+                                       choices=(('gtee', 'Guaranteed'),
+                                                ('promo', 'Promotional')))
+    gtee_priority  = forms.ChoiceField(label='Priority:', initial='normal',
+                                       choices=(('high', 'High'),
+                                                ('normal', 'Normal'),
+                                                ('low', 'Low')),
+                                       required=False)
+    promo_priority = forms.ChoiceField(label='Priority:', initial='normal',
+                                       choices=(('normal', 'Normal'),
+                                                ('backfill', 'Backfill')),
+                                       required=False)
+
+    start_datetime = forms.DateTimeField(label='Start Time:', required=False,
+                                         input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
+                                         widget=CustomizableSplitDateTimeWidget(date_attrs={
+                                                                                             'class': 'date',
+                                                                                             'placeholder': 'MM/DD/YYYY'
+                                                                                            },
+                                                                                time_attrs={
+                                                                                             'class': 'time',
+                                                                                             'placeholder': 'HH:MM'
+                                                                                            },
                                                                                 date_format='%m/%d/%Y',
                                                                                 time_format='%I:%M %p'))
-    end_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
-                                       label='Stop Time:', required=False,
-                                       widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
+    end_datetime  = forms.DateTimeField(label='Stop Time:', required=False,
+                                        input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
+                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                           'placeholder': 'MM/DD/YYYY'},
                                                                               time_attrs={'class': 'time',
                                                                                           'placeholder': 'HH:MM'},
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
-    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpm')
-    bid = forms.FloatField(initial=0.05,
-                           widget=forms.TextInput(attrs={'class': 'float required'}))
-    daily_budget = forms.FloatField(required=False)
-    full_budget = forms.FloatField(required=False)
-    budget = forms.FloatField(required=False,
-                              widget=forms.TextInput(attrs={'class': 'float'}))
-    budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
-                                             ('full_campaign', 'total USD')),
-                                    initial='daily', required=False)
-    budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evenly'),
+
+
+    bid_strategy    = forms.ChoiceField(label='Rate:', initial='cpm',
+                                        choices=(('cpm', 'CPM'),
+                                                 ('cpc', 'CPC')))
+    bid             = forms.FloatField(initial=0.05,
+                                       widget=forms.TextInput(attrs={'class': 'float required'}))
+
+    daily_budget    = forms.FloatField(required=False)
+    full_budget     = forms.FloatField(required=False)
+    budget          = forms.FloatField(required=False,
+                                       widget=forms.TextInput(attrs={'class': 'float'}))
+
+    budget_type     = forms.ChoiceField(initial='daily',
+                                        choices=(('daily', 'USD/day'),
+                                        ('full_campaign', 'total USD')),
+                                        required=False)
+    budget_strategy = forms.ChoiceField(label='Delivery Speed:', initial='allatonce',
+                                        choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
-                                        label='Delivery Speed:',
-                                        initial='allatonce', required=False,
+                                        required=False,
                                         widget=forms.RadioSelect)
 
     # site_keys defined in __init__
-    allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
+
+    allocation_percentage = forms.FloatField(label='Allocation:', initial=100.0,
                                              required=False,
                                              widget=forms.TextInput(attrs={'class': 'float'}))
-    daily_frequency_cap = forms.IntegerField(initial=0, label='Frequency Caps:',
-                                             required=False,
-                                             widget=forms.TextInput(attrs={'class': 'float'}))
-    hourly_frequency_cap = forms.IntegerField(initial=0, required=False,
-                                              widget=forms.TextInput(attrs={'class': 'float'}))
-    device_targeting = forms.TypedChoiceField(choices=(('0', 'All'),
+    daily_frequency_cap   = forms.IntegerField(label='Frequency Caps:', initial=0,
+                                               required=False,
+                                               widget=forms.TextInput(attrs={'class': 'float'}))
+    hourly_frequency_cap  = forms.IntegerField(initial=0, required=False,
+                                               widget=forms.TextInput(attrs={'class': 'float'}))
+
+    device_targeting = forms.TypedChoiceField(label='Device Targeting:', initial=False,
+                                              choices=(('0', 'All'),
                                                        ('1', 'Filter by device and OS')),
                                               coerce=lambda x: bool(int(x)),
-                                              initial=False,
-                                              label='Device Targeting:',
                                               required=False,
                                               widget=forms.RadioSelect)
+
+
     active = forms.BooleanField(label='Active:', required=False)
-    target_iphone = forms.BooleanField(initial=True, label='iPhone',
-                                       required=False)
-    target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
-    target_ipad = forms.BooleanField(initial=True, label='iPad', required=False)
-    ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
-                                        label='Min:', required=False)
-    ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
-                                        label='Max:', required=False)
-    target_android = forms.BooleanField(initial=True, label='Android',
+
+
+    target_iphone   = forms.BooleanField(label='iPhone', initial=True,
+                                         required=False)
+    target_ipod     = forms.BooleanField(label='iPod', initial=True, required=False)
+    target_ipad     = forms.BooleanField(label='iPad', initial=True, required=False)
+    ios_version_min = forms.ChoiceField(label='Min:', choices=IOS_VERSION_CHOICES[1:],
                                         required=False)
-    android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
-                                            label='Min:', required=False)
-    android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
-                                            label='Max:', required=False)
-    target_other = forms.BooleanField(initial=True, label='Other',
-                                      required=False)
-    geo_predicates = forms.Field(required=False, widget=forms.SelectMultiple)
-    region_targeting = forms.ChoiceField(choices=(('all', 'Everywhere'),
+    ios_version_max = forms.ChoiceField(label='Max:', choices=IOS_VERSION_CHOICES,
+                                        required=False)
+
+    target_android      = forms.BooleanField(label='Android', initial=True,
+                                            required=False)
+    android_version_min = forms.ChoiceField(label='Min:', choices=ANDROID_VERSION_CHOICES[1:],
+                                            required=False)
+    android_version_max = forms.ChoiceField(label='Max:', choices=ANDROID_VERSION_CHOICES,
+                                            required=False)
+    target_other        = forms.BooleanField(label='Other', initial=True,
+                                             required=False)
+
+
+    geo_predicates   = forms.Field(required=False, widget=forms.SelectMultiple)
+    region_targeting = forms.ChoiceField(label='Region Targeting:', initial='all',
+                                         choices=(('all', 'Everywhere'),
                                                   ('city', 'City')),
-                                         initial='all',
-                                         label='Region Targeting:',
                                          required=False,
                                          widget=forms.RadioSelect)
-    cities = forms.Field(required=False, widget=forms.SelectMultiple)
+
+    cities   = forms.Field(required=False, widget=forms.SelectMultiple)
+
     keywords = forms.CharField(required=False,
-                               widget=forms.Textarea(attrs={'cols': 50,
-                                                            'rows': 3}))
+                               widget=forms.Textarea(attrs={
+                                                             'cols': 50,
+                                                             'rows': 3
+                                                            }))
 
     def __init__(self, *args, **kwargs):
         # initial
@@ -284,76 +305,81 @@ class LineItemForm(forms.ModelForm):
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
         return keywords
 
+    def _clean_start_and_end_datetime(self, data):
+        start = data.get('start_datetime') or datetime.now()
+        data['start_datetime'] = start
+        end = data.get('end_datetime')
+        if end and end <= start:
+            self._errors['end_datetime'] = ErrorList()
+            self._errors['end_datetime'].append("Stop time must \
+                                                be after start time")
+
+    def _clean_gtee_adgroup_type(self, data):
+        priority = data.get('gtee_priority')
+        if not priority:
+            self._errors['gtee_priority'] = ErrorList()
+            self._errors['gtee_priority'].append('This field is required')
+        elif priority in ['low', 'high']:
+            data['adgroup_type'] = 'gtee_%s' % priority
+
+    def _clean_gtee_budget(self, data):
+        budget = data.get('budget')
+        if not budget:
+            data['daily_budget'] = None
+            data['full_budget'] = None
+            return
+
+        for field in ['bid_strategy', 'bid', 'budget_type', 'budget_strategy']:
+            if not data.get(field):
+                self._errors[field] = ErrorList()
+                self._errors[field].append('This field is required')
+                return
+
+        if data['budget_type'] == 'daily':
+            data['daily_budget'] = self._calculate_budget(budget)
+            data['full_budget'] = None
+        else:
+            if not data['end_datetime'] and (data['budget_strategy'] != 'allatonce'):
+                self._errors['budget_strategy'] = ErrorList()
+                self._errors['budget_strategy'].append('Delivery speed \
+                                                       must be all at once \
+                                                       for total budget \
+                                                       with no stop time')
+            data['full_budget'] = self._calculate_budget(budget)
+            data['daily_budget'] = None
+
+    def _clean_promo_adgroup_type(self, data):
+        priority = data.get('promo_priority')
+        if not priority:
+            self._errors['promo_priority'] = ErrorList()
+            self._errors['promo_priority'].append('This field is required')
+        elif priority == 'backfill':
+            data['adgroup_type'] = 'backfill_promo'
+
+    def _clean_promo_budget(self, data):
+        data['daily_budget'] = None
+        data['full_budget'] = None
+        data['budget_type'] = None
+        data['budget_strategy'] = None
+
+    def _clean_targeted_cities(self, data):
+        if data.get('region_targeting') != 'city':
+            data['cities'] = []
+
     def clean(self):
         cleaned_data = super(LineItemForm, self).clean()
 
-        # start and end datetimes
-        # if start_datetime is None, use the current time
-        if not cleaned_data.get('start_datetime', None):
-            cleaned_data['start_datetime'] = datetime.now()
-        start_datetime = cleaned_data['start_datetime']
-        end_datetime = cleaned_data.get('end_datetime', None)
-        # end_datetime must be after start_datetime
-        if end_datetime and end_datetime <= start_datetime:
-            if 'end_datetime' not in self._errors:
-                self._errors['end_datetime'] = ErrorList()
-            self._errors['end_datetime'].append("Stop time must be after start time")
+        self._clean_start_and_end_datetime(cleaned_data)
 
-        # gtee
         if cleaned_data['adgroup_type'] == 'gtee':
-            # adgroup_type
-            if not cleaned_data.get('gtee_priority', None):
-                if 'gtee_priority' not in self._errors:
-                    self._errors['gtee_priority'] = ErrorList()
-                self._errors['gtee_priority'].append('This field is required')
-            elif cleaned_data['gtee_priority'] in ('low', 'high'):
-                cleaned_data['adgroup_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
+            self._clean_gtee_adgroup_type(cleaned_data)
+            self._clean_gtee_budget(cleaned_data)
 
-            # budget
-            if not cleaned_data.get('budget', None):
-                cleaned_data['daily_budget'] = None
-                cleaned_data['full_budget'] = None
-            else:
-                has_required = True
-                for field in ('bid_strategy', 'bid', 'budget_type', 'budget_strategy'):
-                    if not cleaned_data.get(field, None):
-                        if field not in self._errors:
-                            self._errors[field] = ErrorList()
-                        self._errors[field].append("This field is required")
-                        has_required = False
-                if has_required:
-                    # BEWARE HACKS
-                    # if the campaign is a cpm campaign, we need to calculate what the budget
-                    # will be, since budgets are stored in dollar amounts.
-                    if cleaned_data['budget_type'] == 'daily':
-                        cleaned_data['daily_budget'] = self._calculate_budget(cleaned_data['budget'])
-                        cleaned_data['full_budget'] = None
-                    else:
-                        if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
-                            if 'budget_strategy' not in self._errors:
-                                self._errors['budget_strategy'] = ErrorList()
-                            self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
-                        cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
-                        cleaned_data['daily_budget'] = None
-
-        # promo
         elif cleaned_data['adgroup_type'] == 'promo':
-            # priority
-            if not cleaned_data.get('promo_priority', None):
-                if 'promo_priority' not in self._errors:
-                    self._errors['promo_priority'] = ErrorList()
-                self._errors['promo_priority'].append('This field is required')
-            elif cleaned_data['promo_priority'] == 'backfill':
-                cleaned_data['adgroup_type'] = 'backfill_promo'
-            # promo campaigns have no budget
-            cleaned_data['daily_budget'] = None
-            cleaned_data['full_budget'] = None
-            cleaned_data['budget_type'] = None
-            cleaned_data['budget_strategy'] = None
+            self._clean_promo_adgroup_type(cleaned_data)
+            self._clean_promo_budget(cleaned_data)
 
-        # don't store targeted cities unless region targeting for cities is selected
-        if cleaned_data.get('region_targeting', None) != 'city':
-            cleaned_data['cities'] = []
+        self._clean_targeted_cities(cleaned_data)
 
         return cleaned_data
 
@@ -406,32 +432,36 @@ class LineItemForm(forms.ModelForm):
 
 
 class AbstractCreativeForm(forms.ModelForm):
-    format = forms.ChoiceField(choices=(('320x50', '320 x 50 (Banner)'),
-                                        ('300x250', '300 x 250 (MRect)'),
-                                        ('full', 'Phone Full Screen'),
-                                        ('728x90', '728 x 90 (Tablet Leaderboard)'),
-                                        ('160x600', '160 x 600 (Tablet Skyscraper)'),
-                                        ('full_tablet', 'Tablet Full Screen'),
-                                        ('custom', 'Custom')),
-                               initial='320x50', label='Format:')
-    custom_width = forms.IntegerField(label='Custom Size:', required=False,
-                                      widget=forms.TextInput(attrs={'class': 'number'}))
+    name          = forms.CharField(label='Creative Name:', initial='Creative',
+                                    widget=forms.TextInput(attrs={'class': 'required'}))
+
+    format        = forms.ChoiceField(label='Format:', initial='320x50',
+                                      choices=(('320x50', '320 x 50 (Banner)'),
+                                               ('300x250', '300 x 250 (MRect)'),
+                                               ('full', 'Phone Full Screen'),
+                                               ('728x90', '728 x 90 (Tablet Leaderboard)'),
+                                               ('160x600', '160 x 600 (Tablet Skyscraper)'),
+                                               ('full_tablet', 'Tablet Full Screen'),
+                                               ('custom', 'Custom')))
+    landscape     = forms.BooleanField(label='Landscape:', required=False)
+
+
+    custom_width  = forms.IntegerField(label='Custom Size:', required=False,
+                                       widget=forms.TextInput(attrs={'class': 'number'}))
     custom_height = forms.IntegerField(required=False,
                                        widget=forms.TextInput(attrs={'class': 'number'}))
-    landscape = forms.BooleanField(label='Landscape:', required=False)
-    ad_type = forms.ChoiceField(choices=(('image', 'Image'),
-                                       ('text_icon', 'Text and Tile'),
-                                       ('html', 'HTML')),
-                                initial='image', label='Creative Type:',
-                                widget=forms.RadioSelect)
-    name = forms.CharField(initial='Creative', label='Creative Name:',
-                           widget=forms.TextInput(attrs={'class': 'required'}))
-    url = forms.URLField(label='Click URL:', required=False)
-    launchpage = forms.URLField(label='Intercept URL:', required=False)
-    conv_appid = forms.CharField(label='Conversion Tracking ID:',
-                                 required=False)
-    tracking_url = forms.URLField(label='Impression Tracking URL:',
-                                  required=False)
+
+    ad_type       = forms.ChoiceField(label='Creative Type:', initial='image',
+                                      choices=(('image', 'Image'),
+                                               ('text_icon', 'Text and Tile'),
+                                               ('html', 'HTML')),
+                                      widget=forms.RadioSelect)
+
+    url           = forms.URLField(label='Click URL:', required=False)
+    launchpage    = forms.URLField(label='Intercept URL:', required=False)
+    tracking_url  = forms.URLField(label='Impression Tracking URL:', required=False)
+
+    conv_appid    = forms.CharField(label='Conversion Tracking ID:', required=False)
 
     def _get_appid(self, url):
         # extracts the itunes appid from the url
@@ -477,15 +507,13 @@ class AbstractCreativeForm(forms.ModelForm):
 
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)
-        import logging
-        logging.error(data)
 
         # Check the image file type. We only support png, jpg, jpeg, and gif.
         if data:
             img = self.files.get('image_file', None)
             is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
             if not (img and is_valid_image_type):
-                extension = get_filetype_extension(img)
+                extension = _get_filetype_extension(img)
                 if extension:
                     raise forms.ValidationError('Filetype (.%s) not supported.' % extension)
                 else:
@@ -505,25 +533,30 @@ class AbstractCreativeForm(forms.ModelForm):
 #       weird with ModelForm inheritance?
 class NewCreativeForm(AbstractCreativeForm):
     # text_icon
-    line1 = forms.CharField(label='Line 1:', required=False)
-    line2 = forms.CharField(label='Line 2:', required=False)
+    line1       = forms.CharField(label='Line 1:', required=False)
+    line2       = forms.CharField(label='Line 2:', required=False)
+
     # image text_icon
-    image_file = forms.FileField(label='Image File:', required=False)
+    image_file  = forms.FileField(label='Image File:', required=False)
+
     # text_icon
-    action_icon = forms.ChoiceField(choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
+    action_icon = forms.ChoiceField(label='Action Icon:', initial='download_arrow4',
+                                    choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
                                              ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
                                              ('none', 'None')),
-                                    initial='download_arrow4',
-                                    label='Action Icon:',
                                     widget=forms.RadioSelect)
-    color = forms.Field(initial='000000', label='Background Color:')
-    font_color = forms.Field(initial='FFFFFF', label='Font Color:')
-    gradient = forms.BooleanField(initial=True, label='Gradient:')
+
+    color       = forms.Field(label='Background Color:', initial='000000')
+    font_color  = forms.Field(label='Font Color:', initial='FFFFFF')
+    gradient    = forms.BooleanField(label='Gradient:', initial=True)
+
     # html
-    html_data = forms.CharField(label='HTML Body:', required=False,
-                                widget=forms.Textarea(attrs={'placeholder': 'HTML Body Content',
-                                                             'rows': 10}))
-    ormma_html = forms.BooleanField(label='MRAID Ad:', required=False)
+    html_data   = forms.CharField(label='HTML Body:', required=False,
+                                  widget=forms.Textarea(attrs={
+                                                                'placeholder': 'HTML Body Content',
+                                                                'rows': 10
+                                                               }))
+    ormma_html  = forms.BooleanField(label='MRAID Ad:', required=False)
 
     class Meta:
         model = Creative
@@ -593,16 +626,18 @@ class ImageCreativeForm(AbstractCreativeForm):
 class TextAndTileCreativeForm(AbstractCreativeForm):
     line1 = forms.CharField(label='Line 1:', required=False)
     line2 = forms.CharField(label='Line 2:', required=False)
-    image_file = forms.FileField(label='Image File:', required=False)
-    action_icon = forms.ChoiceField(choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
+
+    image_file  = forms.FileField(label='Image File:', required=False)
+
+    action_icon = forms.ChoiceField(label='Action Icon:', initial='download_arrow4',
+                                    choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
                                              ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
                                              ('none', 'None')),
-                                    initial='download_arrow4',
-                                    label='Action Icon:',
                                     widget=forms.RadioSelect)
-    color = forms.Field(initial='000000', label='Background Color:')
-    font_color = forms.Field(initial='FFFFFF', label='Font Color:')
-    gradient = forms.BooleanField(initial=True, label='Gradient:')
+
+    color       = forms.Field(label='Background Color:', initial='000000')
+    font_color  = forms.Field(label='Font Color:', initial='FFFFFF')
+    gradient    = forms.BooleanField(label='Gradient:', initial=True)
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
@@ -652,9 +687,11 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
 
 class HtmlCreativeForm(AbstractCreativeForm):
-    html_data = forms.CharField(label='HTML Body:', required=False,
-                                widget=forms.Textarea(attrs={'placeholder': 'HTML Body Content',
-                                                             'rows': 10}))
+    html_data  = forms.CharField(label='HTML Body:', required=False,
+                                widget=forms.Textarea(attrs={
+                                                              'placeholder': 'HTML Body Content',
+                                                              'rows': 10
+                                                             }))
     ormma_html = forms.BooleanField(label='MRAID Ad:', required=False)
 
     def save(self, commit=True):
@@ -687,3 +724,11 @@ LEVELS = (
 
 class ContentFilterForm(forms.Form):
     level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
+
+def _get_filetype_extension(filename):
+    if not type(filename) == str:
+        filename = str(filename)
+    if filename.find('.') >= 0:
+        return filename.split('.')[-1]
+    return None
+

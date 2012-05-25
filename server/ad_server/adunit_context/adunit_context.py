@@ -95,8 +95,9 @@ class AdUnitContext(object):
     def fetch_creatives(cls, adunit, adgroups, limit=MAX_OBJECTS):
         trace_logging.info("getting creatives from db")
         creatives = Creative.all().filter("account =", adunit.account.key()).\
-                    filter("active =", True).filter("deleted =", False).\
-                    run(config=CONFIG)
+                    run(config=CONFIG, batch_size=100)
+                    # filter("active =", True).filter("deleted =", False).\
+
         # creatives = Creative.all().filter("ad_group IN", adgroups).\
         #             filter("active =",True).filter("deleted =",False).\
         #             fetch(limit)

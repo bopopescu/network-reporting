@@ -134,12 +134,8 @@ def confirm_db(modified=None):
     Returns:
         wrapped method
 
-    NOTE: This only confirms that extra models are not created
-          but does not ensure that all of these models have
-          not be modified
-
     Author:
-        Nafis (5/21/2012)
+        Nafis (5/21/2012), Tiago Bandeira (5/25/2012)
     """
     modified = modified or []
 
@@ -152,30 +148,58 @@ def confirm_db(modified=None):
                 that the overall db state has not changed
                 except the purposefully modified models.
             """
+            static_models = [model for model in MODELS if model not in
+                    modified]
 
-            # creates dictionary: `Model` -> count for all db Models
-            pre_test_count_dict = {}
-            for Model in MODELS:
-                pre_test_count_dict[Model] = Model.all().count()
+            # creates dictionary of dictionaries: `Model` -> key -> instance
+            # for all db Models
+            pre_test_instances = {}
+            for Model in static_models:
+                instances_of_model_dict = {}
+                for instance in Model.all():
+                    instances_of_model_dict[instance.key()] = instance
+
+                pre_test_instances[Model] = instances_of_model_dict
+            print pre_test_instances
 
             # run the intended test
             method(self, *args, **kwargs)
 
             # confirm that db stats is as intended
             # raises assertion error if one or more models
-            # changed in number unexpectedly
+            # changed unexpectedly
             messages = []  # compiles all the failures
             error = False
-            for Model in MODELS:
-                if not Model in modified:
-                    pre_test_count = pre_test_count_dict[Model]
-                    post_test_count = Model.all().count()
-                    msg = 'Model %s had %s objects but now has %s' % \
-                            (Model.__name__, pre_test_count, post_test_count)
+            for Model in static_models:
+                post_test_instances = list(Model.all().run(batch_size=200))
 
-                    if pre_test_count != post_test_count:
-                        messages.append(msg)
-                        error = True
+                if len(pre_test_instances[Model]) != len(post_test_instances):
+                    msg = 'Model %s had %s objects but now has %s' % \
+                            (Model.__name__, len(pre_test_instances[Model]),
+                                    len(post_test_instances))
+                    messages.append(msg)
+                    error = True
+                else:
+                    for post_test_instance in post_test_instances:
+                        if post_test_instance.key() not in \
+                                pre_test_instances[Model]:
+                            msg = 'Model %s has new object with key %s ' \
+                                    'but same number of total objects' % \
+                                    (Model.__name__, post_test_instance.key())
+                            messages.append(msg)
+                            error = True
+                        else:
+                            try:
+                                model_eq(pre_test_instances[Model][ \
+                                        post_test_instance.key()],
+                                        post_test_instance)
+                            except AssertionError:
+                                msg = 'Model %s has object with key %s ' \
+                                        'that has been modified' % \
+                                        (Model.__name__,
+                                                post_test_instance.key())
+                                messages.append(msg)
+                                error = True
 
             # raises an assertion error if any of the model tests failed
             assert not error, ', '.join(messages)

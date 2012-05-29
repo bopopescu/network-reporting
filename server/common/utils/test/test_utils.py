@@ -3,7 +3,6 @@ import sys
 
 sys.path.append(os.environ['PWD'])
 
-import inspect
 from datetime import timedelta
 
 from google.appengine.ext import db

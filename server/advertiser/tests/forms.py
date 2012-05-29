@@ -11,7 +11,7 @@ from nose.tools import ok_, eq_
 
 from advertiser.forms import OrderForm, LineItemForm
 from common.utils.timezones import Pacific_tzinfo
-from common.utils.tzinfo import UTC
+from common.utils.date_magic import utc_to_pacific, pacific_to_utc
 from common.utils.test.test_utils import time_almost_eq
 
 
@@ -189,7 +189,7 @@ class TestLineItemForm(unittest.TestCase):
                 datetime_none_message = "Input: start_datetime=%s end_datetime=%s. %s was %s"
 
                 if output_start_datetime:
-                    pac_start_datetime = _as_pacific_time(line_item.start_datetime)
+                    pac_start_datetime = utc_to_pacific(line_item.start_datetime)
                     time_almost_eq(pac_start_datetime, output_start_datetime,
                                    message=should_have_been_message % ('start_datetime',
                                                                        output_start_datetime, pac_start_datetime,
@@ -199,7 +199,7 @@ class TestLineItemForm(unittest.TestCase):
                         (start_datetime, end_datetime, 'start_datetime', line_item.start_datetime))
 
                 if output_end_datetime:
-                    pac_end_datetime = _as_pacific_time(line_item.end_datetime)
+                    pac_end_datetime = utc_to_pacific(line_item.end_datetime)
                     time_almost_eq(pac_end_datetime, output_end_datetime,
                                    message=should_have_been_message % ('end_datetime',
                                                                        output_start_datetime, pac_end_datetime,
@@ -217,10 +217,6 @@ def _parse_hour_time(date):
 
 def _parse_datetime(date):
     return date.date().strftime('%m/%d/%Y') if date else ''
-
-
-def _as_pacific_time(date):
-    return date.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
 
 class TestGuaranteedLineItemForm(unittest.TestCase):
@@ -254,7 +250,6 @@ class TestGuaranteedLineItemForm(unittest.TestCase):
             test_data['budget'] = ''
             _test_line_item_for_budget(test_data, 'cpc', 'daily',
                                        [None, None])
-            assert False
 
     def mptest_invalid_budget(self):
         for test_data in self.data:

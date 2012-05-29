@@ -12,17 +12,13 @@ from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
                                ImageCreative, HtmlCreative)
 from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
+
 from common.utils import helpers
 from common.utils.timezones import Pacific_tzinfo
-from common.utils.tzinfo import UTC
+from common.utils.date_magic import utc_to_pacific, pacific_to_utc
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 from advertiser.widgets import CustomizableSplitDateTimeWidget
-
-import logging
-
-#THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
-GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
 
 
 class OrderForm(forms.ModelForm):
@@ -125,7 +121,7 @@ class LineItemForm(forms.ModelForm):
 
     budget_type     = forms.ChoiceField(initial='daily',
                                         choices=(('daily', 'USD/day'),
-                                        ('full_campaign', 'total USD')),
+                                                 ('full_campaign', 'total USD')),
                                         required=False)
     budget_strategy = forms.ChoiceField(label='Delivery Speed:', initial='allatonce',
                                         choices=(('evenly', 'Spread Evenly'),
@@ -205,29 +201,15 @@ class LineItemForm(forms.ModelForm):
             # TODO: make sure you cannot change adgroup_type except for priority
             # gtee
             if 'gtee' in instance.adgroup_type:
-                if 'high' in instance.adgroup_type:
-                    initial['gtee_priority'] = 'high'
-                elif 'low' in instance.adgroup_type:
-                    initial['gtee_priority'] = 'low'
-                initial['adgroup_type'] = 'gtee'
+                self._init_gtee_line_item(instance, initial)
 
-                if instance.budget_type == 'daily':
-                    initial['budget'] = instance.daily_budget
-                else:
-                    initial['budget'] = instance.full_budget
-
-                if initial['budget'] != None and instance.bid_strategy == 'cpm':
-                    initial['budget'] = int(1000.0 * initial['budget'] / instance.bid)
-            # promo
             elif instance.adgroup_type == 'backfill_promo':
                 initial['adgroup_type'] = 'promo'
                 initial['promo_priority'] = 'backfill'
 
-            # convert datetimes from offset-naive UTC to Pacific
             if instance.start_datetime:
-                initial['start_datetime'] = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
-            if instance.end_datetime:
-                initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+                initial['start_datetime'] = utc_to_pacific(instance.start_datetime)
+                initial['end_datetime'] = utc_to_pacific(instance.end_datetime)
 
             # TODO: can't change the start date after a campaign has started.
             # TODO: not change the end date after a campaign has completed
@@ -254,6 +236,21 @@ class LineItemForm(forms.ModelForm):
         # TODO: can we do this a nicer way so we can declare this field with the other fields?
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
+    def _init_gtee_line_item(self, instance, initial):
+        if 'high' in instance.adgroup_type:
+            initial['gtee_priority'] = 'high'
+        elif 'low' in instance.adgroup_type:
+            initial['gtee_priority'] = 'low'
+        initial['adgroup_type'] = 'gtee'
+
+        if instance.budget_type == 'daily':
+            initial['budget'] = instance.daily_budget
+        else:
+            initial['budget'] = instance.full_budget
+
+        if initial['budget'] != None and instance.bid_strategy == 'cpm':
+            initial['budget'] = int(1000.0 * initial['budget'] / instance.bid)
+
     def _calculate_budget(self, budget):
         if self.data.get('bid_strategy', 'cpm') == 'cpm':
             return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
@@ -269,7 +266,7 @@ class LineItemForm(forms.ModelForm):
             if not self.instance and start_datetime.date() < datetime.now(tz=Pacific_tzinfo()).date():
                 raise forms.ValidationError("Start time must be in the future")
             # start_datetime is entered in Pacific Time
-            start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
+            start_datetime = pacific_to_utc(start_datetime)
         return start_datetime
 
     def clean_end_datetime(self):
@@ -277,7 +274,7 @@ class LineItemForm(forms.ModelForm):
         end_datetime = self.cleaned_data.get('end_datetime', None)
         if end_datetime:
             # end_datetime is entered in Pacific Time
-            end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
+            end_datetime = pacific_to_utc(end_datetime)
         return end_datetime
 
     def clean_allocation_percentage(self):
@@ -294,8 +291,9 @@ class LineItemForm(forms.ModelForm):
         geo_predicates = []
         for geo_predicate in self.cleaned_data.get('geo_predicates', []) or []:
             geo_predicate = tuple(geo_predicate.split(','))
-            #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
-            geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
+            # the number of predicates indicates the granularity of targting
+            granularity = (COUNTRY_GEO, REGION_GEO, CITY_GEO)[len(geo_predicate) - 1]
+            geo_predicates.append(granularity % geo_predicate)
         return geo_predicates
 
     def clean_keywords(self):
@@ -464,35 +462,27 @@ class AbstractCreativeForm(forms.ModelForm):
     conv_appid    = forms.CharField(label='Conversion Tracking ID:', required=False)
 
     def _get_appid(self, url):
-        # extracts the itunes appid from the url
-        # http://itunes.apple.com/il/app/imosaic-project/id335853048?mt=8
-        # in this case: 335853048
-        itunes_pattern = re.compile("http://itunes\.apple\.com.*id(\d+)")
-        itunes_match = itunes_pattern.search(url)
-        if itunes_match:
-            itunes_id = itunes_match.group(1)
-            return itunes_id
+        pattern = ''
+        if 'itunes' in url:
+            # itunes url
+            # http://itunes.apple.com/il/app/imosaic-project/id335853048?mt=8
+            # in this case: 335853048
+            pattern = re.compile("http://itunes\.apple\.com.*id(\d+)")
+        elif 'phobos' in url:
+            # old phobos urls
+            # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=386584429&mt=8
+            pattern = re.compile("http://phobos\.apple\.com.*id=(\d+)")
+        else:
+            # market://details?id=com.example.admob.lunarlander
+            # in this case: com.example.admob.lunarlander
+            # NOTE: there can not be any other characters after the id
+            pattern = re.compile("market://.*id\=(.+)$")
 
-        # extracts the itunes appid from the url old phobos urls
-        # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=386584429&mt=8
-        # in this case: 386584429
-        itunes_pattern = re.compile("http://phobos\.apple\.com.*id=(\d+)")
-        itunes_match = itunes_pattern.search(url)
-        if itunes_match:
-            itunes_id = itunes_match.group(1)
-            return itunes_id
+        match = pattern.search(url)
+        if match:
+            store_id = match.group(1)
+            return store_id
 
-        # extracts the package from the url
-        # market://details?id=com.example.admob.lunarlander
-        # in this case: com.example.admob.lunarlander
-        # NOTE: there not be any other characters after the id
-        android_pattern = re.compile("market://.*id\=(.+)$")
-        android_match = android_pattern.search(url)
-        if android_match:
-            android_package_name = android_match.group(1)
-            return android_package_name
-
-        # return None if nothing was found
         return None
 
     def clean_name(self):
@@ -502,7 +492,8 @@ class AbstractCreativeForm(forms.ModelForm):
         url = self.cleaned_data.get('url', None)
         if url:
             if url.find("://") == -1:
-                raise forms.ValidationError("You need to specify a protocol (like http://) at the beginning of your url")
+                raise forms.ValidationError("You need to specify a protocol \
+                                            (like http://) at the beginning of your url")
         return url
 
     def clean_image_file(self):
@@ -511,7 +502,8 @@ class AbstractCreativeForm(forms.ModelForm):
         # Check the image file type. We only support png, jpg, jpeg, and gif.
         if data:
             img = self.files.get('image_file', None)
-            is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
+            is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg',
+                                                                              '.jpg', '.gif']])
             if not (img and is_valid_image_type):
                 extension = _get_filetype_extension(img)
                 if extension:
@@ -523,10 +515,26 @@ class AbstractCreativeForm(forms.ModelForm):
         # We only need to check this if it's a new form being submitted
 
         if not self.instance:
-            if not (self.cleaned_data.get('image_file', None) or self.cleaned_data.get('image_url', None)):
-                raise forms.ValidationError('You must upload an image file for a creative of this type.')
+            if not (self.cleaned_data.get('image_file', None) or \
+                    self.cleaned_data.get('image_url', None)):
+                raise forms.ValidationError('You must upload an image file \
+                                            for a creative of this type.')
 
         return data
+
+    def _save_image_file(self, obj):
+        image_data = self.files.get('image_file').read()
+        img = images.Image(image_data)
+        obj.image_width = img.width
+        obj.image_height = img.height
+
+        fname = files.blobstore.create(mime_type='image/png')
+        with files.open(fname, 'a') as f:
+            f.write(image_data)
+        files.finalize(fname)
+        blob_key = files.blobstore.get_blob_key(fname)
+        obj.image_blob = blob_key
+        obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
 
 
 # TODO: fix so there are no repeated definition of form fields.  Is something
@@ -592,19 +600,8 @@ class ImageCreativeForm(AbstractCreativeForm):
         # TODO: repeated code
         obj = super(ImageCreativeForm, self).save(commit=False)
 
-        if self.files.get('image_file', None):
-            image_data = self.files.get('image_file').read()
-            img = images.Image(image_data)
-            obj.image_width = img.width
-            obj.image_height = img.height
-
-            fname = files.blobstore.create(mime_type='image/png')
-            with files.open(fname, 'a') as f:
-                f.write(image_data)
-            files.finalize(fname)
-            blob_key = files.blobstore.get_blob_key(fname)
-            obj.image_blob = blob_key
-            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
+        if self.files.get('image_file'):
+            self._save_image_file(obj)
         else:
             commit = False
 
@@ -645,7 +642,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
         if instance:
             if instance.image_blob:
-                image_url = helpers.get_url_for_blob(instance.image_blob)  # reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+                image_url = helpers.get_url_for_blob(instance.image_blob)
             else:
                 image_url = ''
             if not initial:
@@ -659,16 +656,8 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         # TODO: repeated code
         obj = super(TextAndTileCreativeForm, self).save(commit=False)
 
-        if self.files.get('image_file', None):
-            image_data = self.files.get('image_file').read()
-            #ig = images.Image(image_data)
-            fname = files.blobstore.create(mime_type='image/png')
-            with files.open(fname, 'a') as f:
-                f.write(image_data)
-            files.finalize(fname)
-            blob_key = files.blobstore.get_blob_key(fname)
-            obj.image_blob = blob_key
-            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
+        if self.files.get('image_file'):
+            self._save_image_file(obj)
 
         if not obj.conv_appid and obj.url:
             obj.conv_appid = self._get_appid(obj.url)
@@ -715,15 +704,17 @@ class HtmlCreativeForm(AbstractCreativeForm):
 
 # Marketplace
 LEVELS = (
-    ('a', 'Strict - Only allow ads appropriate for family audiences'),
-    ('b', 'Moderate - Allow ads for general audiences'),
-    ('c', 'Low - Allow ads for mature audiences, including alcohol and dating ads'),
-    ('d', 'No filtering - Allow ads including those with provocative or suggestive imagery. MoPub always blocks illegal, pornographic and deceptive ads.'),
-    )
+          ('a', 'Strict - Only allow ads appropriate for family audiences'),
+          ('b', 'Moderate - Allow ads for general audiences'),
+          ('c', 'Low - Allow ads for mature audiences, including alcohol and dating ads'),
+          ('d', 'No filtering - Allow ads including those with provocative or suggestive imagery. \
+                 MoPub always blocks illegal, pornographic and deceptive ads.')
+          )
 
 
 class ContentFilterForm(forms.Form):
     level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
+
 
 def _get_filetype_extension(filename):
     if not type(filename) == str:
@@ -731,4 +722,3 @@ def _get_filetype_extension(filename):
     if filename.find('.') >= 0:
         return filename.split('.')[-1]
     return None
-

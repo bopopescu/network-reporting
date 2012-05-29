@@ -287,6 +287,7 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var network_type = bootstrapping_data.network_type,
                 pretty_name = bootstrapping_data.pretty_name,
+                adunits_for_app = bootstrapping_data.adunits_for_app,
                 account_key = bootstrapping_data.account_key,
                 priors = bootstrapping_data.priors,
                 city_priors = bootstrapping_data.city_priors,
@@ -854,6 +855,10 @@ $(function() {
                 });
             });
 
+            // Initialize active
+            $('input[name$="active"]').change();
+
+
             /* Initialize cpm, custom_html and custom_native */
             _.each(fields, function(field_props) {
                 var field = field_props[0];
@@ -905,18 +910,20 @@ $(function() {
                 }
             });
 
+            var MODAL_FIELDS = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
+                ['hourly_frequency_cap', '/h']]);
             /* Advanced Options Modal */
             function modal_ok(row, modal_div) {
+                var adunit_key = row.attr('id').replace('-row', '');
                 var app_div = $(modal_div).parent();
 
-                var fields = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
-                    ['hourly_frequency_cap', '/h']]);
                 var values = [];
                 var text = '';
-                _.each(fields, function(field) {
+                _.each(MODAL_FIELDS, function(field) {
                     var field_name = field[0];
                     var field_term = field[1];
-                    var value = $(modal_div).find('input[id$=' + field_name + ']').val();
+                    //var value = $(modal_div).find('input[id$=' + field_name + ']').val();
+                    var value = $('#' + adunit_key + '-' + field_name)
                     values.push(value);
                     if(value != undefined && value != '' &&
                             (field_name.indexOf("_frequency_cap") == -1 || value != '0') &&
@@ -1027,14 +1034,12 @@ $(function() {
             /* Initialize advanced options and active fields */
             // mimic an entry for each adunit to prepopulate settings
             // at app and global levels
-            $('tr.adunit-row').each(function() {
-                // prepopulate active
-                $('input[name$="active"]').change();
+            _.each(_.flatten(_.values(adunits_for_app)), function(adunit_key) {
+                adunit_row = $('#' + adunit_key + '-row')
 
                 // prepopulate advanced options modals
-                var key = $(this).attr('id').replace('-row', '');
-                var modal_div = $('#' + key +'-options');
-                modal_ok($(this), modal_div);
+                var modal_div = $('#' + adunit_key +'-options');
+                modal_ok(adunit_row, modal_div);
             });
 
             /* GEO TARGETING */

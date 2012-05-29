@@ -27,21 +27,11 @@ var mopub = mopub || {};
         Toast.error(message, "Error fetching app data.");
     };
 
-
-
-    /*
-     * Refactor/remove
-     */
-    function getCurrentChartSeriesType() {
-        var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-        if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
-        else return 'area';
-    }
-
     /*
      * Refactor/remove
      */
     function populateGraphWithAccountStats(stats, start_date) {
+
         if (!stats.hasOwnProperty("all_stats")) return;
         
         var dailyStats = stats["all_stats"]["||"]["daily_stats"];
@@ -55,39 +45,60 @@ var mopub = mopub || {};
             usr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "usr")}]
         };
 
-        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        mopub.Chart.setupDashboardStatsChart('area');
     }
 
     /*
-     * ## fetchAppStats
+     * ## fetchAppsFromKeys
      * Fetches all app stats using a list of app keys and renders
      * them into table rows that have already been created in the
-     * page. Useful for decreasing page load time along with `fetchAdunitStats`.
+     * page. Useful for decreasing page load time along with `fetchAdunitsFromKeys`.
      */
-    function fetchAppStats (app_keys) {
+    function fetchAppsFromKeys (app_keys) {
+        var apps = new AppCollection();
+        var fetched_apps = 0;
         _.each(app_keys, function(app_key) {
+            
+            // Create a new app. When the app is fetched, we'll immediately
+            // render it into its contents into a (pre-existing) table row.
             var app = new App({id: app_key, stats_endpoint: 'all'});
             app.bind('change', function(current_app) {
-                var appView = new AppView({ model: current_app, el: '#dashboard-apps' });
+                var appView = new AppView({
+                    model: current_app,
+                    el: '#dashboard-apps'
+                });
                 appView.renderInline();
             });
+
+            // Fetch the app. Try to fetch again on error (in case of
+            // a 503). If it fails again, the resource is probably
+            // f'ed, so pop up an error message.
             app.fetch({
                 error: function() {
                     app.fetch({
                         error: toast_error
                     });
+                },
+                success: function() {
+                    fetched_apps++;
+                    if (fetched_apps == app_keys.length) {
+                        apps.trigger('loaded');
+                    }
                 }
             });
+            apps.add(app);
         });
+
+        return apps;
     }
 
     /*
-     * ## fetchAdunitStats
+     * ## fetchAdunitsFromKeys
      * Fetches AdUnit stats for an app over ajax and renders them in already
      * existing table rows. This method is useful for decreasing page load time.
      * Uses a parent app's key to bootstrap the fetch.
      */
-    function fetchAdunitStats (app_key) {
+    function fetchAdunitsFromKeys (app_key) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
         adunits.stats_endpoint = 'all';
@@ -115,6 +126,8 @@ var mopub = mopub || {};
                 });
             }
         });
+
+        return adunits;
     }
 
     /*
@@ -727,7 +740,7 @@ var mopub = mopub || {};
         // Use breakdown to switch charts
         $('.stats-breakdown tr').click(function(e) {
             $('#dashboard-stats-chart').fadeOut(100, function() {
-                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+                mopub.Chart.setupDashboardStatsChart('area');
                 $(this).show();
             });
         });
@@ -760,28 +773,29 @@ var mopub = mopub || {};
      */
     var DashboardController = {
         initializeIndex: function (bootstrapping_data) {
-            console.log(bootstrapping_data);
-            
+                        
             // Adds click handlers for the top date buttons and stats breakdown
             // date buttons, and click handlers for the stats breakdown graph-
             // changing
             initializeCommon();
 
-            // Populate the graph
-            // REFACTOR: use CollectionGraphView
-            populateGraphWithAccountStats(bootstrapping_data.account_stats,
-                                          bootstrapping_data.start_date);
-
-            // Populate the app/adunit stats table
-            fetchAppStats(bootstrapping_data.app_keys);
-            _.each(bootstrapping_data.app_keys, function(app_key) {
-                fetchAdunitStats(app_key);
+            // Fetch all of the app stats from their keys. When all apps
+            // are finished loading, we render the chart.
+            var apps = fetchAppsFromKeys(bootstrapping_data.app_keys);
+            apps.bind('loaded', function() {
+                var chart_view = new CollectionChartView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['rev', 'req', 'imp', 'clk']                    
+                });
+                chart_view.render();
             });
 
-            // Add icon to the 'Add an app' button
-            // Remove later with new button treatment
-            $('#dashboard-apps-addAppButton')
-                .button({ icons: { primary: "ui-icon-circle-plus" } });
+            // Fetch all of the adunit stats for each app. After fetch,
+            // the table row for the adunit will be rendered
+            _.each(bootstrapping_data.app_keys, function(app_key) {
+                fetchAdunitsFromKeys(app_key);
+            });
 
             // Do Dashboard export
             $('#publisher-dashboard-exportSelect')
@@ -797,16 +811,6 @@ var mopub = mopub || {};
                     }
                     $(this).selectmenu('index', 0);
                 });
-
-
-            // Hide unneeded li entry
-            $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
-        },
-
-
-        initializeGeo: function (bootstrapping_data) {
-            initializeCommon();
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
         },
 
         initializeAppDetail: function (bootstrapping_data) {
@@ -816,7 +820,7 @@ var mopub = mopub || {};
             initializeDeleteForm();
             initializeiOSAppSearch();
             initializeDailyCounts();
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+            mopub.Chart.setupDashboardStatsChart('area');
 
             // Do Campaign Export Select stuff
             $('#publisher-app-exportSelect')
@@ -836,8 +840,8 @@ var mopub = mopub || {};
             // Hide unneeded li entry
             $('#publisher-app-exportSelect-menu').find('li').first().hide();
 
-            fetchAppStats([bootstrapping_data.app_key]);
-            fetchAdunitStats(bootstrapping_data.app_key);
+            fetchAppsFromKeys([bootstrapping_data.app_key]);
+            fetchAdunitsFromKeys(bootstrapping_data.app_key);
         },
 
         initializeAdunitDetail: function (bootstrapping_data) {
@@ -846,7 +850,7 @@ var mopub = mopub || {};
             initializeDailyCounts();
             initializeEditAdunitForm();
 
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+            mopub.Chart.setupDashboardStatsChart('area');
 
             $('#advertisers-testAdServer')
                 .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })

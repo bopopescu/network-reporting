@@ -31,29 +31,18 @@ class MarketplaceIndexHandler(RequestHandler):
         # Marketplace settings are kept as a single campaign.  Only
         # one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(
-                self.account, from_db=True)
+            self.account, from_db=True)
 
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(
-                self.account)
+            self.account)
         alphabetically_sorted_apps = sorted(apps_dict.values(), lambda x, y:
-                cmp(x.name, y.name))
+                                            cmp(x.name, y.name))
         app_keys_json = simplejson.dumps(apps_dict.keys())
-
+        
         adunit_keys = []
         for app_key, app in apps_dict.iteritems():
             if app.adunits is not None:
                 adunit_keys += [adunit.key() for adunit in app.adunits]
-
-        # Set up a MarketplaceStatsFetcher with this account
-        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-
-        try:
-            mpx_stats = stats_fetcher.get_account_stats(self.days[0],
-                                                        self.days[-1],
-                                                        daily=True)
-        except MPStatsAPIException, error:
-            logging.warning("MPStatsAPIException: %s" % error)
-            mpx_stats = {}
 
         # Set up the blocklist
         blocklist = []
@@ -61,69 +50,6 @@ class MarketplaceIndexHandler(RequestHandler):
         if network_config:
             blocklist = [str(domain) for domain in network_config.blocklist \
                          if not str(domain) in ("", "#")]
-
-        # Get today and yesterday's stats for the graph
-        today_stats = []
-        yesterday_stats = []
-        stats = {}
-        stats = {
-            'rev': {
-                'today': 0,
-                'yesterday': 0,
-                'total': 0.0
-            },
-            'imp': {
-                'today': 0,
-                'yesterday': 0,
-                'total': 0,
-            },
-            'cpm': {
-                'today': 0,
-                'yesterday': 0,
-                'total': 0,
-            },
-        }
-
-        try:
-            today_stats = mpx_stats["daily"][-1]
-            yesterday_stats = mpx_stats["daily"][-2]
-
-            # REFACTOR: load this data via ajax and use CollectionGraphView?
-            def cpm(rev, imp):
-                if imp:
-                    return rev / imp * 1000
-                else:
-                    return 0
-
-            mpx_stats['cpm'] = cpm(mpx_stats['rev'], mpx_stats['imp'])
-
-            for stats in mpx_stats['daily']:
-                stats['cpm'] = cpm(stats['rev'], stats['imp'])
-
-            stats = {
-                'rev': {
-                    'today': today_stats['rev'],
-                    'yesterday': yesterday_stats['rev'],
-                    'total': mpx_stats['rev']
-                },
-                'imp': {
-                    'today': today_stats['imp'],
-                    'yesterday': yesterday_stats['imp'],
-                    'total': mpx_stats['imp'],
-                },
-                'cpm': {
-                    'today': cpm(today_stats['rev'], today_stats['imp']),
-                    'yesterday': cpm(yesterday_stats['rev'],
-                                     yesterday_stats['imp']),
-                    'total': cpm(mpx_stats['rev'], mpx_stats['imp']),
-                },
-            }
-
-        except Exception, e:
-            logging.warn(e)
-
-        logging.warn('\n\n\n\n\n\n\n')
-        logging.warn(stats)
 
         try:
             blind = self.account.network_config.blind
@@ -136,15 +62,7 @@ class MarketplaceIndexHandler(RequestHandler):
             'app_keys': app_keys_json,
             'adunit_keys': adunit_keys,
             'pub_key': self.account.key(),
-            'mpx_stats': simplejson.dumps(mpx_stats),
-            'totals': mpx_stats,
-            'today_stats': today_stats,
-            'yesterday_stats': yesterday_stats,
-            'stats': stats,
             'blocklist': blocklist,
-            'start_date': self.days[0],
-            'end_date': self.days[-1],
-            'date_range': self.date_range,
             'blind': blind,
             'network_config': network_config
         }

@@ -5,15 +5,13 @@
 {% block pageTitle %}
   <h1>Dashboard</h1>
 {% endblock pageTitle %}
-
-{% block titleBarRight %}
-  
-{% endblock titleBarRight %}
   
 {% block content %}
 
   <div class="alert-message block-message">
-    We just released a beta version of <a href="{% url dashboard %}"> MoPub Explorer</a>, a new tool that you can use for in-depth analysis of everything that happens on the platform.
+    We just released a beta version of <a href="{% url dashboard %}">
+    MoPub Explorer</a>, a new tool that you can use for in-depth
+    analysis of everything that happens on the platform.
   </div>
   
   {% ifequal account.status "step4" %}
@@ -34,7 +32,7 @@
     </div>
   {% endifequal %}
 
-  {% chart_placeholder %}
+  {% chart_placeholder start_date end_date %}
 
   <section id="dashboard-apps">
     <div class="buttonBank buttonBank-right">
@@ -72,6 +70,9 @@
   </script>
   <script type="text/html" id="adunit-template">
     {% include "common/partials/adunit.html" %}
+  </script>
+    <script type="text/html" id="chart-template">
+    {% include "common/partials/chart.html" %}
   </script>
   {% include_script 'models/inventory' %}
   {% include_script 'views/inventory' %}

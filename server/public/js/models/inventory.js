@@ -127,32 +127,22 @@ var mopub = mopub || {};
     var StatsMixin = {
         get_formatted_stat: function (stat) {
             var value = this.get(stat);
-            if (value === null || value === undefined) {
-                return '--';
-            }
-            switch (stat) {
-              case 'clicks':
-              case 'conversions':
-              case 'goal':
-              case 'impressions':
-              case 'requests':
-                return mopub.Utils.formatNumberWithCommas(value);
-              case 'cpm':
-              case 'revenue':
-                return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
-              case 'conv_rate':
-              case 'ctr':
-              case 'fill_rate':
-                return mopub.Utils.formatNumberAsPercentage(value);
-              case 'status':
-                return value;
-              case 'pace':
-                return (value*100).toFixed() + '%';
-            default:
-                throw 'Unsupported stat "' + stat + '".';
-            }
-        }
+            return format_stat(stat, value);
+        },
+        get_formatted_stat_sum: function(stat) {
+            var sum = _.reduce(this, function(memo, num){
+                return memo + this.get(stat);
+            }, 0);
 
+            return format_stat(stat, sum);
+        },
+        get_formatted_stat_series: function(stat) {
+            var val=this.map(function(item){
+                return item.get_formatted_stat(stat);
+            });
+            console.log(val);
+            return val;
+        }
     };
 
     /*
@@ -734,6 +724,8 @@ var mopub = mopub || {};
         }
     });
 
+    _.extend(App.prototype, StatsMixin, LocalStorageMixin);
+
     /*
      * ## AppCollection
      */
@@ -757,6 +749,7 @@ var mopub = mopub || {};
         }
     });
 
+    _.extend(AppCollection.prototype, StatsMixin, LocalStorageMixin);
 
     /*
      *  LineItem

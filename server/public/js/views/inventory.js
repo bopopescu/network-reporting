@@ -22,6 +22,58 @@ var mopub = window.mopub || {};
      * Renders a collection as a graph
      */
 
+    var CollectionChartView = Backbone.View.extend({
+        el: "#stats",
+        initialize: function () {
+            try {
+                this.template = _.template($('#chart-template').html());
+            } catch (e) {}
+        },
+
+        render: function() {
+
+            // Setup the stats breakdown on the right side of the chart.
+            // The template displays all non-null values, so we update
+            // a map of null values to let the template know what we want.
+            var this_view = this;
+            var template_values = {
+                rev: null,
+                req: null,
+                imp: null,
+                clk: null,
+                att: null,
+                cpm: null,
+                fill_rate: null,
+                ctr: null
+            };
+
+            // Set up the chart. Still full of jank.
+            mopub.dashboardStatsChartData = {
+                pointStart: this_view.options.start_date,
+                pointInterval: 86400000
+            };
+
+            _.each(this_view.options.display_values, function(display_val) {
+                // Override the null template value with formatted
+                // value from the collection.
+                var formatted_sum = this_view.collection.get_formatted_stat_sum(display_val);
+                template_values[display_val] = formatted_sum;
+
+                // Set up the series that will go into the chart.
+                var formatted_series = [{ "Total": this_view.collection.get_formatted_stat_series(display_val)}];
+                mopub.dashboardStatsChartData[display_val] = formatted_series;
+            });
+
+            console.log(template_values);
+            console.log(mopub.dashboardStatsChartData);
+
+            // Render the template and the chart with the values we composed
+            $(this_view.el).html(this_view.template(template_values));
+            mopub.Chart.setupDashboardStatsChart('area');
+        }
+
+    });
+
     var CollectionGraphView = Backbone.View.extend({
         initialize: function () {
             this.collection.bind('change', this.render, this);
@@ -31,8 +83,7 @@ var mopub = window.mopub || {};
             var this_view = this;
             if(this.collection.isFullyLoaded()) {
                 var active_chart = $('#dashboard-stats .stats-breakdown .active');
-                var use_ctr = active_chart.attr('id') === 'stats-breakdown-ctr';
-                mopub.Chart.setupDashboardStatsChart((use_ctr || this_view.options.line_graph) ? 'line' : 'area');
+                mopub.Chart.setupDashboardStatsChart('area');
                 $('#dashboard-stats-chart').show();
             }
         },
@@ -49,11 +100,14 @@ var mopub = window.mopub || {};
                     $(selector).html(this_view.collection.get_formatted_stat(metric));
                 });
 
-                if (this_view.options.yesterday !== null && this_view.options.today !== null) {
+                if (this_view.options.yesterday !== null && 
+                    this_view.options.today !== null) {
 
                     // Render the stats breakdown for yesterday
                     $.each(metrics, function (iter, metric) {
-                        var selector = '#stats-breakdown-' + metric + ' .yesterday .inner';
+                        var selector = '#stats-breakdown-'
+                            + metric
+                            + ' .yesterday .inner';
                         $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
                                          this_view.options.yesterday));
                     });
@@ -126,10 +180,14 @@ var mopub = window.mopub || {};
                     mopub.dashboardStatsChartData = {
                         pointStart: this_view.options.start_date,
                         pointInterval: 86400000,
-                        imp: [{'From MoPub': mopub_campaigns.get_total_daily_stats('imp')}, {'From Networks': network_campaigns.get_total_daily_stats('imp')}],
-                        rev: [{'From Networks': {'data': network_campaigns.get_total_daily_stats('rev'), 'color': '#e57300'}}],
-                        clk: [{'From MoPub': mopub_campaigns.get_total_daily_stats('clk')}, {'From Networks': network_campaigns.get_total_daily_stats('clk')}],
-                        ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
+                        imp: [{'From MoPub': mopub_campaigns.get_total_daily_stats('imp')}, 
+                              {'From Networks': network_campaigns.get_total_daily_stats('imp')}],
+                        rev: [{'From Networks': {'data': network_campaigns.get_total_daily_stats('rev'), 
+                                                 'color': '#e57300'}}],
+                        clk: [{'From MoPub': mopub_campaigns.get_total_daily_stats('clk')}, 
+                              {'From Networks': network_campaigns.get_total_daily_stats('clk')}],
+                        ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, 
+                              {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
                         total: false
                     };
                 }
@@ -229,19 +287,29 @@ var mopub = window.mopub || {};
                     var selector = ' .mopub-data';
                 }
             } else {
-                var selector = ''
+                var selector = '';
             }
             var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
 
             /*jslint maxlen: 200 */
-            if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
+            if (!this_view.options.endpoint_specific 
+                || this_view.model.get('stats_endpoint') == 'networks') {
                 $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
             }
-            var metrics = ['cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            var metrics = ['cpm', 
+                           'imp', 
+                           'clk', 
+                           'ctr', 
+                           'fill_rate', 
+                           'req', 
+                           'att', 
+                           'conv', 
+                           'conv_rate'];
+
             _.each(metrics, function (metric) {
                 if (this_view.model.get('stats_endpoint') != 'networks'
-                        || this_view.options.network != 'mobfox' || (metric != 'att'
-                        && metric != 'fill_rate')) {
+                    || this_view.options.network != 'mobfox' 
+                    || (metric != 'att' && metric != 'fill_rate')) {
                     $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
                 }
             });
@@ -485,6 +553,7 @@ var mopub = window.mopub || {};
     window.AdGroupView = AdGroupView;
     window.CampaignView = CampaignView;
     window.CollectionGraphView = CollectionGraphView;
+    window.CollectionChartView = CollectionChartView;
     window.NetworkGraphView = NetworkGraphView;
 
 }(this.jQuery, this.Backbone, this._));

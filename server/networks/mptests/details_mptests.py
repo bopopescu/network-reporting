@@ -54,6 +54,8 @@ class NetworkDetailsTestCase(NetworkTestCase):
         response = self.client.get(self.url)
         context = response.context
 
+        # The network data dictionary should match expected values. Note: since dict_eq only
+        # compares the keys of db.Models, we exclude the 'apps' field from dict_eq.
         dict_eq(context['network'], {'name': self.network_type,
                                      'pretty_name': NETWORKS[self.network_type],
                                      'key': str(self.existing_campaign.key()),
@@ -67,9 +69,11 @@ class NetworkDetailsTestCase(NetworkTestCase):
 
         eq_(len(context['network']['apps']), len(self.existing_apps))
 
+        # The apps should have the right bids.
         for app, app_bid in context['network']['apps']:
             dict_eq(app_bid, {'min_cpm': DEFAULT_BID, 'max_cpm': DEFAULT_BID})
 
+        # TODO: This is essentially the same as context['network']['apps'] and should be refactored.
         eq_(len(context['apps']), len(self.existing_apps))
 
 

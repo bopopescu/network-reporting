@@ -244,7 +244,7 @@ class CampaignQueryManager(QueryManager):
             campaigns = campaigns.filter("deleted =",deleted)
         if account:
             campaigns = campaigns.filter("account =",account)
-        return campaigns.fetch(limit)
+        return campaigns.run(limit=limit, batch_size=limit)
 
     @classmethod
     @wraps_first_arg
@@ -375,7 +375,7 @@ class AdGroupQueryManager(QueryManager):
                     adgroups_dict[adgroup.key()] = adgroup
             return adgroups_dict.values()[:limit]
 
-        return adgroups.fetch(limit)
+        return adgroups.run(limit=limit, batch_size=limit)
 
     @classmethod
     def get_network_adgroup(cls, campaign, adunit_key, account_key,
@@ -515,7 +515,7 @@ class CreativeQueryManager(QueryManager):
             creatives = creatives.filter("ad_types IN", ad_types)
         if ad_type:
             creatives = creatives.filter("ad_type =", ad_type)
-        return creatives.fetch(limit)
+        return creatives.run(limit=limit, batch_size=limit)
 
     def put_creatives(self,creatives):
         return db.put(creatives)

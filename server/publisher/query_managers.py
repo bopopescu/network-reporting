@@ -211,7 +211,7 @@ class AppQueryManager(CachedQueryManager):
                 apps = apps.order("name")
         if offset:
             apps = apps.filter("__key__ >", offset)
-        return apps.fetch(limit)
+        return apps.run(limit=limit, batch_size=limit)
 
     @classmethod
     def get_app_keys(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False, offset=None):
@@ -411,7 +411,7 @@ class AdUnitQueryManager(QueryManager):
             adunits = adunits.filter("app_key =",app)
         if account:
             adunits = adunits.filter("account =",account)
-        return adunits.fetch(limit)
+        return adunits.run(limit=limit, batch_size=limit)
 
     @classmethod
     def reports_get_adunits(cls, account=None, publisher=None, advertiser=None, deleted=False):

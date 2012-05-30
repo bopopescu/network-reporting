@@ -118,10 +118,12 @@ var mopub = mopub || {};
      * Helpful utilities for fetching and formatting stats.
      */
     var StatsMixin = {
+
         get_formatted_stat: function (stat) {
             var value = this.get(stat);
             return format_stat(stat, value);
         },
+
         get_formatted_stat_sum: function(stat) {
             var sum = _.reduce(this, function(memo, num){
                 return memo + this.get(stat);
@@ -129,30 +131,17 @@ var mopub = mopub || {};
 
             return format_stat(stat, sum);
         },
+
         get_formatted_stat_series: function(stat) {            
-            
-            var all_dailies = this.map(function(model) {
-                return model.get('daily_stats');
-            });
 
-            var daily_sums = _.reduce(all_dailies, function (memo, current) {
-                if (memo === null) {
-                    return current;
-                } else {
-                    var summed = [];
-                    _.each(current, function (day) {
-                        summed.push({
-                            rev: memo.rev + current.rev,
-                            req: memo.req + current.req,
-                            imp: memo.imp + current.imp,
-                            clk: memo.clk + current.clk
-                        });
-                    });
-                    return summed;
-                }
-            }, null);
+            var stat_series = this.map(function(model) {
+                var daily_stats = model.get('daily_stats');
+                return _.map(daily_stats, function (day) {
+                    return day[stat];
+                });
+            })[0];
 
-            return daily_sums;
+            return stat_series;
         }
     };
 

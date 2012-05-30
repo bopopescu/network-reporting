@@ -870,7 +870,9 @@ if (window.console === undefined) {
         var metricElement = $(selector);
     };
 
-    Chart.setupDashboardStatsChart = function(seriesType) {
+    Chart.setupDashboardStatsChart = function() {
+        debugger;
+        var seriesType = 'area';
 
         // get active metric from breakdown
         var metricElement = $('#stats .stats-breakdown .active');
@@ -882,7 +884,6 @@ if (window.console === undefined) {
         var data = mopub.dashboardStatsChartData;
         if (typeof data == 'undefined') {
             Chart.chartError();
-            console.log('error');
             return;
         }
 
@@ -891,14 +892,16 @@ if (window.console === undefined) {
         var chartSeries = [];
         var activeData = data[activeMetric];
         if (typeof activeData == 'undefined') {
-            Chart.chartError();
-            console.log('nope');
+            Chart.chartError();            
             return;
         }
         
+        console.log('activedata');
+        console.log(activeData);
+
         $.each(activeData, function(i, seriesObject) {
             var seriesName, seriesData, seriesLineWidth;
-            var seriesColor = colors[i]
+            var seriesColor = colors[i];
 
             $.each(seriesObject, function(name, value) {
                 seriesName = name;
@@ -914,20 +917,19 @@ if (window.console === undefined) {
                 } else seriesLineWidth = 4;
             });
 
-            seriesAttributes = {
+            var seriesAttributes = {
                 name: seriesName,
                 data: seriesData,
                 color: seriesColor,
                 lineWidth: seriesLineWidth
-            }
+            };
 
             chartSeries.push(seriesAttributes);
         });
 
-        console.log(data);
-        
+
         // setup HighCharts chart
-        this.trafficChart = new Highcharts.Chart({
+        var chart_options = {
             chart: {
                 renderTo: 'stats-chart',
                 defaultSeriesType: seriesType,
@@ -974,7 +976,7 @@ if (window.console === undefined) {
             tooltip: {
                 formatter: function() {
                     var text = '', value = '', total = '';
-                    metric_translation = {
+                    var metric_translation = {
                         att: 'attempts',
                         clk: 'clicks',
                         conv: 'conversions',
@@ -994,7 +996,7 @@ if (window.console === undefined) {
 
                     if(activeMetric == 'rev' || activeMetric == 'cpm') {
                         value = '$' + Highcharts.numberFormat(this.y, 2);
-                        if(data.total) {
+                        if (data.total) {
                             total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
                         }
                     } else if (activeMetric == 'clk') {
@@ -1011,10 +1013,17 @@ if (window.console === undefined) {
                         }
                     }
 
-                    text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
-                    text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
+                    text += '<span style="font-size: 14px;">' + 
+                        Highcharts.dateFormat('%A, %B %e, %Y', this.x) + 
+                        '</span><br/>'+
+                        ' <span style="padding: 0; font-weight: 600; color: ' + 
+                        this.series.color + '">' + 
+                        this.series.name + '</span>' + 
+                        ': <strong style="font-weight: 600;">' + 
+                        value + 
+                        '</strong><br/>';
 
-                    if(chartSeries.length > 1) {
+                    if (chartSeries.length > 1) {
                         text += '<span style="font-size: 12px; color: #666;">';
                         if (this.total > 0 && total) {
                             text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
@@ -1027,7 +1036,9 @@ if (window.console === undefined) {
                 }
             },
             series: chartSeries
-        });
+        };
+        console.log(chart_options);
+        this.trafficChart = new Highcharts.Chart(chart_options);
 
         $('#dashboard-stats-chart').removeClass('chart-loading');
      };

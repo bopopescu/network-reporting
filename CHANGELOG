@@ -1,11 +1,19 @@
+# Deployed Wednesday, May 30, 2012 at 10:50PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-120
+### Bugs Fixed: []
+### Included Commits: 
+ * b9dba90 fixed bad test cleaned, commented out test failing on Jenkins due to missing package
+ * 396423b Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, May 30, 2012 at 10:06PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-119
 ### Bugs Fixed: []
-### Included Commits: 
- * 2c446a3 removed appstats
- * 188eeb8 [#1261 state:resolved]
- 
+### Included Commits:
+* 2c446a3 removed appstats
+* 188eeb8 [#1261 state:resolved]
+
 # Deployed Wednesday, May 30, 2012 at 09:50PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-118

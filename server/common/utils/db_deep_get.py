@@ -92,8 +92,11 @@ def deep_get_from_db(root_keys_or_models, other_models = (), prune = None):
     while keys_to_fetch:
         # Batch-get all the Model instances that we know we need
         models = db.get(list(keys_to_fetch), config=CONFIG)
-        for model in models:
-            add_model(model)
+        for key, model in zip(keys_to_fetch, models):
+            if model:
+                add_model(model)
+            else:
+                keys_to_fetch.discard(key)
 
     # Connect everything and return the result
     log_unfetched = set()

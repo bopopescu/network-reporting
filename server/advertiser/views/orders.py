@@ -30,9 +30,6 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        CreativeQueryManager)
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 
-import logging
-
-
 flatten = lambda l: [item for sublist in l for item in sublist]
 
 
@@ -48,8 +45,6 @@ class OrderIndexHandler(RequestHandler):
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
                                                         orders=orders)
-        logging.warn('\n\n\n\n\n\n\n\n')
-        logging.warn(orders)
         return {
             'orders': orders,
             'line_items': line_items

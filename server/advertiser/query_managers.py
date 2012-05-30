@@ -79,6 +79,9 @@ class AdvertiserQueryManager(CachedQueryManager):
             if campaign_key in campaigns_dict:
                 campaign_for_this_adgroup = campaigns_dict[campaign_key]
                 campaign_for_this_adgroup._adgroups.append(adgroup)
+            net_creative_key = str(AdGroup.net_creative.get_value_for_datastore(adgroup))
+            if net_creative_key in creatives_dict:
+                adgroup.net_creative = creatives_dict[net_creative_key]
 
         return campaigns_dict
 

@@ -113,7 +113,7 @@ class AppIndexViewTestCase(BaseViewTestCase):
         for day in range(14):
             expected_daily_stats.append({'req': 0, 'imp': 0, 'clk': 0, 'usr': 0})
 
-        start_date = datetime.datetime.utcnow() - datetime.timedelta(days=14)
+        start_date = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(days=13)
         start_datetime = datetime.datetime(start_date.year, start_date.month, start_date.day)
         expected_sum = StatsModel(account=self.account, date=start_datetime)
 

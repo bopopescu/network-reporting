@@ -1,4 +1,4 @@
-$(function() {
+(function($, _) {
     var toast_error = function () {
          var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
@@ -1211,5 +1211,5 @@ $(function() {
     window.NetworkDetailsController = NetworkDetailsController;
     window.NetworksController = NetworksController;
     window.EditNetworkController = EditNetworkController;
-});
+})(window.jQuery, window._);
 

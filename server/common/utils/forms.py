@@ -186,11 +186,11 @@ class MPModelForm(forms.ModelForm):
 
                     if errors_on_separate_row and bf_errors:
                         output.append(error_row % force_unicode(bf_errors))
-
                     if bf.label:
                         label = conditional_escape(force_unicode(bf.label))
                         # Only add the suffix if the label does not end in
                         # punctuation.
+                        logging.warn(label)
                         if self.label_suffix:
                             if label[-1] not in ':?.!':
                                 label += self.label_suffix

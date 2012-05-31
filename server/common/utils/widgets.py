@@ -31,7 +31,6 @@ class MPWidget(Widget):
         suffix_html = mark_safe(attrs.pop(u'suffix',''))
 
         flat_attrs = mark_safe(self.flatatt(attrs))
-
         context_dict = dict(widget = self, name = name, value = value,
                             flat_attrs = flat_attrs, suffix_html = suffix_html)
         c = Context(context_dict)

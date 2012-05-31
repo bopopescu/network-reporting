@@ -141,7 +141,7 @@ class AdSourceStatusChangeHandler(RequestHandler):
         status = self.request.POST.get('status', None)
 
         # Both params are required.
-        if ad_sources and status:            
+        if ad_sources and status:
             for ad_source_key in ad_sources:
                 # Get the ad source and keep track of which query manager we
                 # used to fetch it. Keeping things DRY.
@@ -155,7 +155,7 @@ class AdSourceStatusChangeHandler(RequestHandler):
                     except:
                         ad_source = CampaignQueryManager.get(ad_source_key)
                         manager_used = CampaignQueryManager
-                        
+
                 # Update the status of the ad source. We make sure the
                 # request user owns each source. Creatives don't get archived,
                 # so we have to check for that in each case.
@@ -187,7 +187,7 @@ class AdSourceStatusChangeHandler(RequestHandler):
 
                     if updated:
                         manager_used.put(ad_source)
-                        
+
             return JSONResponse({
                 'success': True,
             })
@@ -277,14 +277,14 @@ class OrderAndLineItemFormHandler(RequestHandler):
             'line_item': line_item,
             'line_item_form': line_item_form,
         }
- 
+
 
     def post(self, order_key=None, line_item_key=None):
 
         if not self.request.is_ajax():
             raise Http404
 
-        # If there's no POST body, then it's an erroneous request. 
+        # If there's no POST body, then it's an erroneous request.
         if len(self.request.POST.keys()) == 0:
             raise Http404
 
@@ -505,7 +505,7 @@ def creative_image(request, *args, **kwargs):
 def creative_html(request, *args, **kwargs):
     return DisplayCreativeHandler()(request, *args, **kwargs)
 
-    
+
 ###########
 # Helpers #
 ###########

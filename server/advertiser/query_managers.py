@@ -266,7 +266,7 @@ class CampaignQueryManager(QueryManager):
         # for camp in campaigns:
         #     budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
         #     camp.budget_obj = budg_obj
-    
+
 
         # Put campaigns so if they're new they have a key
         put_response = db.put(campaigns)
@@ -397,23 +397,19 @@ class AdGroupQueryManager(QueryManager):
     def get_line_items(cls, account=None, order=None, orders=None, limit=1000):
         adgroups = AdGroup.all()
 
-        logging.warn(order)
-        logging.warn(orders)
-        
         if account:
             adgroups = adgroups.filter("account =", account)
 
         if order:
             adgroups = adgroups.filter("campaign = ", order)
         elif orders:
-            logging.warn('yes')
             adgroups = adgroups.filter("campaign IN ", orders)
 
         # NOTE: we need a way of filtering out only line item adgroups
         # when no order or orders are passed.
         return adgroups.fetch(limit)
-                                      
-        
+
+
     @classmethod
     def get_network_adgroup(cls, campaign,
                             adunit_key, account_key,

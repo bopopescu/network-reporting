@@ -22,23 +22,6 @@ from advertiser.widgets import CustomizableSplitDateTimeWidget
 
 
 class OrderForm(forms.ModelForm):
-    name        = forms.CharField(label='Name:',
-                                  widget=forms.TextInput(attrs={
-                                                                 'placeholder': 'Order Name',
-                                                                  'class': 'required'
-                                                                }))
-    advertiser  = forms.CharField(label='Advertiser:',
-                                 widget=forms.TextInput(attrs={
-                                                                'placeholder': 'Order Advertiser',
-                                                                'class': 'required'
-                                                               }))
-    description = forms.CharField(label='Description:', required=False,
-                                  widget=forms.Textarea(attrs={
-                                                                'placeholder': 'Order for My New App',
-                                                                'cols': 50,
-                                                                'rows': 3
-                                                               }))
-
     def __init__(self, *args, **kwargs):
         # TODO: figure out if there is a less hacky way to get this
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
@@ -67,20 +50,16 @@ class OrderForm(forms.ModelForm):
 
 class LineItemForm(forms.ModelForm):
     # TODO: include campaign and confirm campaign.is_order
-    name = forms.CharField(label='Name:',
-                           widget=forms.TextInput(attrs={
-                                                          'class': 'required',
-                                                          'placeholder': 'Line Item Name'
-                                                         }))
-
     adgroup_type   = forms.ChoiceField(label='Line Item Type:',
                                        choices=(('gtee', 'Guaranteed'),
                                                 ('promo', 'Promotional')))
+
     gtee_priority  = forms.ChoiceField(label='Priority:', initial='normal',
                                        choices=(('high', 'High'),
                                                 ('normal', 'Normal'),
                                                 ('low', 'Low')),
                                        required=False)
+
     promo_priority = forms.ChoiceField(label='Priority:', initial='normal',
                                        choices=(('normal', 'Normal'),
                                                 ('backfill', 'Backfill')),
@@ -108,21 +87,18 @@ class LineItemForm(forms.ModelForm):
                                                                               time_format='%I:%M %p'))
 
 
-    bid_strategy    = forms.ChoiceField(label='Rate:', initial='cpm',
+    bid_strategy    = forms.ChoiceField(label='Rate:',
                                         choices=(('cpm', 'CPM'),
                                                  ('cpc', 'CPC')))
-    bid             = forms.FloatField(initial=0.05,
-                                       widget=forms.TextInput(attrs={'class': 'float required'}))
 
-    daily_budget    = forms.FloatField(required=False)
-    full_budget     = forms.FloatField(required=False)
-    budget          = forms.FloatField(required=False,
+    budget          = forms.FloatField(label='Budget:', required=False,
                                        widget=forms.TextInput(attrs={'class': 'float'}))
 
     budget_type     = forms.ChoiceField(initial='daily',
                                         choices=(('daily', 'USD/day'),
                                                  ('full_campaign', 'total USD')),
                                         required=False)
+
     budget_strategy = forms.ChoiceField(label='Delivery Speed:', initial='allatonce',
                                         choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
@@ -131,9 +107,6 @@ class LineItemForm(forms.ModelForm):
 
     # site_keys defined in __init__
 
-    allocation_percentage = forms.FloatField(label='Allocation:', initial=100.0,
-                                             required=False,
-                                             widget=forms.TextInput(attrs={'class': 'float'}))
     daily_frequency_cap   = forms.IntegerField(label='Frequency Caps:', initial=0,
                                                required=False,
                                                widget=forms.TextInput(attrs={'class': 'float'}))
@@ -147,43 +120,23 @@ class LineItemForm(forms.ModelForm):
                                               required=False,
                                               widget=forms.RadioSelect)
 
-
-    active = forms.BooleanField(label='Active:', required=False)
-
-
-    target_iphone   = forms.BooleanField(label='iPhone', initial=True,
-                                         required=False)
-    target_ipod     = forms.BooleanField(label='iPod', initial=True, required=False)
-    target_ipad     = forms.BooleanField(label='iPad', initial=True, required=False)
-    ios_version_min = forms.ChoiceField(label='Min:', choices=IOS_VERSION_CHOICES[1:],
+    ios_version_min = forms.ChoiceField(label='Min', choices=IOS_VERSION_CHOICES[1:],
                                         required=False)
-    ios_version_max = forms.ChoiceField(label='Max:', choices=IOS_VERSION_CHOICES,
+    ios_version_max = forms.ChoiceField(label='Max', choices=IOS_VERSION_CHOICES,
                                         required=False)
 
-    target_android      = forms.BooleanField(label='Android', initial=True,
+    android_version_min = forms.ChoiceField(label='Min', choices=ANDROID_VERSION_CHOICES[1:],
                                             required=False)
-    android_version_min = forms.ChoiceField(label='Min:', choices=ANDROID_VERSION_CHOICES[1:],
+    android_version_max = forms.ChoiceField(label='Max', choices=ANDROID_VERSION_CHOICES,
                                             required=False)
-    android_version_max = forms.ChoiceField(label='Max:', choices=ANDROID_VERSION_CHOICES,
-                                            required=False)
-    target_other        = forms.BooleanField(label='Other', initial=True,
-                                             required=False)
 
 
-    geo_predicates   = forms.Field(required=False, widget=forms.SelectMultiple)
     region_targeting = forms.ChoiceField(label='Region Targeting:', initial='all',
                                          choices=(('all', 'Everywhere'),
                                                   ('city', 'City')),
                                          required=False,
                                          widget=forms.RadioSelect)
 
-    cities   = forms.Field(required=False, widget=forms.SelectMultiple)
-
-    keywords = forms.CharField(required=False,
-                               widget=forms.Textarea(attrs={
-                                                             'cols': 50,
-                                                             'rows': 3
-                                                            }))
 
     def __init__(self, *args, **kwargs):
         # initial
@@ -209,6 +162,7 @@ class LineItemForm(forms.ModelForm):
 
             if instance.start_datetime:
                 initial['start_datetime'] = utc_to_pacific(instance.start_datetime)
+            if instance.end_datetime:
                 initial['end_datetime'] = utc_to_pacific(instance.end_datetime)
 
             # TODO: can't change the start date after a campaign has started.

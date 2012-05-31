@@ -425,7 +425,7 @@ def include_script(script_name,
     # make the script path
     path_prefix = "/js/"
     path_suffix = ".js"
-    
+
     if settings.DEBUG:
         version_number = "?=%s" % str(time.time()).split('.')[0]
     else:
@@ -469,7 +469,7 @@ def include_style(style_name):
 def js_date(date):
     return "new Date(%s, %s, %s)" % (date.year, date.month - 1, date.day)
 
-    
+
 @register.simple_tag
 def opacity(amt):
     return """opacity="%s" style="opacity: %s;\"""" % (amt, amt)

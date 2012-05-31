@@ -7,11 +7,13 @@ from google.appengine.ext.db import polymodel
 from google.appengine.api import images
 from account.models import Account
 
-from common.constants import MIN_IOS_VERSION, \
-        MAX_IOS_VERSION, \
-        MIN_ANDROID_VERSION, \
-        MAX_ANDROID_VERSION, \
-        NETWORKS
+from common.constants import (MIN_IOS_VERSION,
+                              MAX_IOS_VERSION,
+                              MIN_ANDROID_VERSION,
+                              MAX_ANDROID_VERSION,
+                              IOS_VERSION_CHOICES,
+                              ANDROID_VERSION_CHOICES,
+                              NETWORKS)
 import datetime
 import time
 
@@ -48,9 +50,14 @@ class Campaign(db.Model):
     They have a name, advertiser, and description, some basic state,
     and an account. All other information should be added to AdGroup.
     """
-    name = db.StringProperty(required=True)
-    advertiser = db.StringProperty()
-    description = db.TextProperty()
+    name = db.StringProperty(verbose_name='Name',
+                             default='Order Name',
+                             required=True)
+    advertiser = db.StringProperty(verbose_name='Advertiser:',
+                                   default='Advertiser Name',
+                                   required=True)
+    description = db.StringProperty(verbose_name='Description:',
+                                    multiline=True)
 
     # current state
     active = db.BooleanProperty(default=True)
@@ -147,7 +154,9 @@ class AdGroup(db.Model):
     # net_creative is not set for new network campaigns due to circular
     # reference redundancy, use the creatives collection instead
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
-    name = db.StringProperty()
+    name = db.StringProperty(verbose_name='Name',
+                             default='Line Item Name',
+                             required=True)
 
     created = db.DateTimeProperty(auto_now_add=True)
 
@@ -197,13 +206,15 @@ class AdGroup(db.Model):
     start_datetime = db.DateTimeProperty()
     end_datetime = db.DateTimeProperty()
 
-    adgroup_type = db.StringProperty(choices=['gtee',
+    adgroup_type = db.StringProperty(verbose_name='Line Item Type:',
+                                     choices=['gtee',
                                               'gtee_high',
                                               'gtee_low',
                                               'promo',
                                               'network',
                                               'backfill_promo',
-                                              'marketplace'])
+                                              'marketplace'],
+                                     required=True)
 
     ##################################
     # /end moved from campaign class #
@@ -216,7 +227,8 @@ class AdGroup(db.Model):
 
     # percent of users to be targetted
     percent_users = db.FloatProperty(default=100.0)
-    allocation_percentage = db.FloatProperty(default=100.0)
+    allocation_percentage = db.FloatProperty(verbose_name='Allocation',
+                                             default=100.0)
     allocation_type = db.StringProperty(choices=["users", "requests"])
 
     # frequency caps
@@ -269,17 +281,21 @@ class AdGroup(db.Model):
     # Device Targeting
     device_targeting = db.BooleanProperty(default=False)
 
-    target_iphone = db.BooleanProperty(default=True)
-    target_ipod = db.BooleanProperty(default=True)
-    target_ipad = db.BooleanProperty(default=True)
-    ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
-    ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
+    target_iphone = db.BooleanProperty(verbose_name='iPhone', default=True)
+    target_ipod = db.BooleanProperty(verbose_name='iPod', default=True)
+    target_ipad = db.BooleanProperty(verbose_name='iPad', default=True)
+    ios_version_min = db.StringProperty(verbose_name='Min:',
+                                        default=MIN_IOS_VERSION)
+    ios_version_max = db.StringProperty(verbose_name='Max:',
+                                        default=MAX_IOS_VERSION)
 
-    target_android = db.BooleanProperty(default=True)
-    android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
-    android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
+    target_android = db.BooleanProperty(verbose_name='Android', default=True)
+    android_version_min = db.StringProperty(verbose_name='Min:',
+                                            default=MIN_ANDROID_VERSION)
+    android_version_max = db.StringProperty(verbose_name='Max:',
+                                            default=MAX_ANDROID_VERSION)
 
-    target_other = db.BooleanProperty(default=True)  # MobileWeb on blackberry etc.
+    target_other = db.BooleanProperty(verbose_name='Other:',default=True)  # MobileWeb on blackberry etc.
 
     optimizable = db.BooleanProperty(default=False)
     default_cpm = db.FloatProperty()
@@ -364,7 +380,7 @@ class AdGroup(db.Model):
                 return ["Pacing", min(1, ((budget.total_spent / budget.total_budget) / percent_days))]
             else:
                 return ["Pacing", min(1, last_slice.actual_spending / last_slice.desired_spending)]
-        return None        
+        return None
 
     def adgroup_type_display(self):
         kinds = {
@@ -595,8 +611,8 @@ class AdGroup(db.Model):
     def cpm(self):
         if self.bid_strategy == 'cpm':
             return self.bid
-        return None            
-        
+        return None
+
     @property
     def budget_goal(self):
         try:
@@ -631,7 +647,7 @@ class AdGroup(db.Model):
                     return str(goal) + ' USD Total'
         else:
             return "Unlimited budget"
-                
+
     @property
     def individual_cost(self):
         """ The smallest atomic bid. """
@@ -682,7 +698,7 @@ class AdGroup(db.Model):
     def created_date(self):
         return self.created.date()
 
-        
+
     def toJSON(self):
         d = {
             'key': str(self.key()),
@@ -746,7 +762,9 @@ LineItem = AdGroup
 
 
 class Creative(polymodel.PolyModel):
-    name = db.StringProperty(default='Creative')
+    name = db.StringProperty(verbose_name='Creative Name',
+                             default='Creative',
+                             required=True)
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later

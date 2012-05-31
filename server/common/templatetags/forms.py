@@ -22,7 +22,6 @@ def field_value(field):
         val = ''
     return val
 
-
 @register.filter(name='display_value')
 def display_value(field):
     """

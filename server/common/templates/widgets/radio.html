@@ -1,7 +1,7 @@
 <span class="radios">
   {% for option in choices %}
   <input type="radio" name="{{name}}" id="{{name}}_{{ option.0 }}" class="input-radio" {% if forloop.first and not value %}checked="checked"{% endif %}{% ifequal option.0 value %}checked="checked"{% endifequal %} value="{{option.0}}">
-  <label for="{{name}}_{{ option.0 }}"> {{ option.1 }} </label>
+  <label for="{{name}}_{{ option.0 }}:"> {{ option.1 }} </label>
   {% endfor %}
 {{ suffix_html }}
 </span>

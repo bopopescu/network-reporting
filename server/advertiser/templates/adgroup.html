@@ -103,7 +103,6 @@
     </div>
   {% endif %}
 
-  {% if show_graph %}
   <div class="separated" id="chartWrapper">
     <section class="offset nomargin" id="dashboard-stats">
       <h3 class="stats-chart-title">
@@ -180,7 +179,6 @@
       <div class="clear"></div>
     </section>
   </div>
-  {% endif %}
 
   <section id="dashboard-campaign">
     {% if campaign.network %}
@@ -783,7 +781,7 @@
               mopub.dashboardStatsChartData = {
         pointStart: Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}}),
         pointInterval: 86400000,
-        'impressions': [{% for a in graph_adunits %}
+        'impressions': [{% with adgroup as a %}
                          { '{{a.name|safe|addslashes}}': [
                            {% for stat in a.all_stats %}
                            {{stat.impression_count}}
@@ -792,19 +790,15 @@
                           ]
                          }
                          {% if not forloop.last %},{% endif %}
-                         {% empty %}
-                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                         {% endfor %}
+                         {% endwith %}
                        ],
-        'clicks': [{% for a in graph_adunits %}
+        'clicks': [{% with adgroup as a %}
                     { '{{a.name|safe|addslashes}}': [
                        {% for stat in a.all_stats %}
                        {y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                    {% empty %}
-                    { 'Targeting no adunits': [{y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'} ] }
-                    {% endfor %}
+                    {% endwith %}
                   ],
-        'ctr': [{% for a in graph_adunits %}
+        'ctr': [{% with adgroup as a %}
                          { '{{a.name|safe|addslashes}}': [
                            {% for stat in a.all_stats %}
                            {{stat.ctr}}
@@ -813,36 +807,26 @@
                           ]
                          }
                          {% if not forloop.last %},{% endif %}
-                         {% empty %}
-                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                         {% endfor %}
+                         {% endwith %}
                   ],
-        'users': [{% for a in graph_adunits %}
+        'users': [{% with adgroup as a %}
                    { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                   {% empty %}
-                   { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                   {% endfor %}
+                   {% endwith %}
                  ],
         {% if campaign.gtee  %}
-        'revenue': [{% for a in graph_adunits %}
+        'revenue': [{% with adgroup as a %}
                      { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                     {% empty %}
-                     { 'Targeting no adunits': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ] }
-                     {% endfor %}
+                     {% endwith %}
                    ]
         {% endif %} {% if campaign.promo %}
-        'conversions': [{% for a in graph_adunits %}
+        'conversions': [{% with adgroup as a %}
                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                         {% empty %}
-                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                         {% endfor %}
+                         {% endwith %}
                        ]
         {% endif %} {% if campaign.network %}
-        'attempts': [{% for a in graph_adunits %}
+        'attempts': [{% with adgroup as a %}
                       { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                      {% empty %}
-                      { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                      {% endfor %}
+                      {% endwith %}
                     ]
         {% endif %}
       };

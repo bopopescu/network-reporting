@@ -1,10 +1,183 @@
+# Deployed Thursday, May 31, 2012 at 01:13AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-121
+### Bugs Fixed: []
+### Included Commits: 
+ * eb5003b query instead of using memcache for adgroups index
+ * 3dd252d Deployed without finding any bug fixes.
+ 
+# Deployed Wednesday, May 30, 2012 at 10:50PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-120
+### Bugs Fixed: []
+### Included Commits:
+* b9dba90 fixed bad test cleaned, commented out test failing on Jenkins due to missing package
+* 396423b Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 10:06PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-119
+### Bugs Fixed: []
+### Included Commits:
+* 2c446a3 removed appstats
+* 188eeb8 [#1261 state:resolved]
+
+# Deployed Wednesday, May 30, 2012 at 09:50PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-118
+### Bugs Fixed: ['1261']
+### Included Commits:
+* fdca86f Merge branch 'master' of github.com:mopub/mopub
+* 1335aab Merge branch 'master' of github.com:mopub/mopub
+* 05747f2 added multiple deploys (for production/staging/beta) to the deploy script
+* db77285 Merge branch 'master' of github.com:mopub/mopub
+* e032d0d checked out updated tests from publisher-refactor branch
+* 751da0f Added new frontend-1 backend with 20 instances to split the load w/ frontend-0
+* dbd6918 updated query managers return a list again, not a QueryIterator
+* d8c626d Merge branch 'master' of github.com:mopub/mopub
+* 092abd3 [#1261 state:fixed]
+* fc8aab8 DeleteNetworkHandler uses key names to get campaign adgroups instead of memcache
+* 3621b34 removed app/adunit stats fetching from adgroup detail page, replaced fetch with run in advertiser query managers
+* b5425a0 Deployed without finding any bug fixes.
+* 515bd8e changed fetch to run in publisher query managers
+
+# Deployed Wednesday, May 30, 2012 at 06:54PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-117
+### Bugs Fixed: []
+### Included Commits:
+* 99d0369 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 06:41PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-116
+### Bugs Fixed: []
+### Included Commits:
+* 3a9c2b0 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 06:39PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-115
+### Bugs Fixed: []
+### Included Commits:
+* 486d888 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 06:36PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-114
+### Bugs Fixed: []
+### Included Commits:
+* 3464613 (function($, _) { for networks controller
+* 9196a76 Fixed network api response when network is not definded
+* 82e2dd5 Merge branch 'master' into networks-page
+* ca8d473 Testing new modal js code
+* 1ea479b Working on using ids for modal setup
+* 38e9c29 working around GAE index issues by fetching all creatives then filtering out in memory
+* 125cd55 Merge branch 'master' into networks-page
+* eb2acd2 Merge branch 'master' of github.com:mopub/mopub
+* 63f50b2 Merge branch 'publisher-refactor' of github.com:mopub/mopub
+* 73e235e added confirm_db to all tests, fixed datetime issue
+* b21d041 Merge branch 'master' of github.com:mopub/mopub
+* c66840f Fixes to network migration script
+* 423b76c Remove erroneous import inspect
+* 69ad921 Merge branch 'publisher-refactor', remote-tracking branch 'origin'
+* d9348e4 merged
+* 12c42db updated account creation and login
+* 678d0ed cleaned up model_eq and fixed bug in model_to_dict prepending
+* 4cb750e modified confirm_db to check against deleted count if total_count is off
+* 53e92bd merged
+* 5468236 import inspect for test_utils
+* ae23ed7 fixed merge
+* 6ad2079 added dec_all
+* 6952ccb merge
+* e850959 did some shit
+* 1ab95df added decorate_all
+* 2adcb60 moved decorate_all
+* 874af32 Merge branch 'publisher-refactor' of github.com:mopub/mopub into publisher-refactor
+* 85398df some more tinkering, untested
+* d492233 Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* 57b0017 merged in updated test utils
+* dcd0b3e did some shit
+* 73a529f denoted that it was just for testing now
+* e09a770 took out unnecessary log
+* 31bb051 fixed decorate_all_methods
+* 1e63be2 added decorate_all
+* fbdc1be added more test utils and added a model equality check versus dictionary
+* 26371a3 did some shit
+* 354f6dc cleaned up tests, moved generation and default dict functions to common utils test fixtures
+* 7dbb0fc completed all tests except the exporter tests
+* cdccc2d some work on static views from yesterday
+* 6f91ee0 added some tests, deleted a dumb J3 view
+* e94a552 Merge branch 'master' of github.com:mopub/mopub
+* 60f71bc added yanc to requirements
+* 42d21a1 mobfox has reporting
+* 4ad0994 added more ignore
+* ff23cce Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* 0cab2cd removed 404 handler
+* 5b4b597 update pylint
+* 48e45b4 updated pylint
+* aa9b945 fixed views so they pass tests
+* 6c7f19e updated pylint run
+* d470592 add pylint script
+* 1ff98f8 updated unittest
+* 1d56fa3 added pylint
+* ea60739 only test coverage on server
+* 6521f62 deletion tests
+* 08120e2 merged
+* 39dff12 minor fixes
+* acc3fac got rid of back imoprt
+* 3dd018f documented tests
+* 06ac9f2 removed failing tests
+* 060abcc added some test utils
+* 807af4b added secondary login for view testing
+* e7ad0f9 added aunit update tests, seconday login for view testing, fixed authorization error in app update view
+* 6a42f76 admin/preps more regularly
+* 496819b updated tests, fixed view
+* 7859e01 push up some time_almost_eq
+* e44ec03 did some shit
+* ea4d246 Need to re-pair
+* dbc404e added some test utils, updated publisher view tests
+* 09dea9e added test helper functions, updated publisher view tests
+* a0008a1 Merge branch 'master' of github.com:mopub/mopub
+* 628f981 Merge branch 'master' of github.com:mopub/mopub
+* 3fc7fb4 added dict eq_ helper
+* e82058d Text change in UI for mpx blind settings
+* 1354b90 did some shit
+* 93f1733 Add a couple functions to BaseViewTestCase (still needs some imports)
+* eb9453d Merge branch 'master' of github.com:mopub/mopub
+* 66724d5 -- formatting
+* 7c2ce78 Merge branch 'master' of github.com:mopub/mopub
+* 678ede1 -- add 7d and 30d breakdowns -- add eCPM
+* 17ebcd0 Changed 9:00 PM to 12:00 PM [#1087 state:review-requested]
+* 3efdbe6 Merge branch 'master' of github.com:mopub/mopub
+* cfed638 slight refactor
+* 270305f added some tests, cleaned up a bit
+* 9cae7f9 Deployed without finding any bug fixes.
+* 488b525 added tests for app & adunit creation
+* 0509b78 Merge branch 'publisher-refactor' of github.com:mopub/mopub into publisher-refactor
+* 54280c5 Success test case for CreateAdUnit
+* 7a8d780 removed unused view
+* f5593a1 merged in master
+* c86d10d did even more different shit
+* 4010621 did some more different shit
+* 0ef20a7 removed some bullshit
+* d0df5a4 added view test class
+* fa8e890 refactor inventory page, added tests
+* 3cbaf2c Improvements to millennial scraping script
+* 920f627 Basic scraping working
+* 7b91915 Added script for scraping millennial, still needs work
+* f6e7dcc Merge branch 'better-simple-models'
+* 901ee8f Rawwwwrrrrrrr SimpleModels workin it.  With tests
+* a89913d Commit 2
+* 15ffa4a Initial commit
+
 # Deployed Friday, May 11, 2012 at 09:09PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-113
 ### Bugs Fixed: []
-### Included Commits: 
- * 8acb8aa Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 8acb8aa Deployed without finding any bug fixes.
+
 # Deployed Friday, May 11, 2012 at 07:47PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-112

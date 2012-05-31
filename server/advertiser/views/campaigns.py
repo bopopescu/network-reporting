@@ -68,12 +68,19 @@ class AdGroupIndexHandler(RequestHandler):
         days = date_magic.gen_days(today - datetime.timedelta(days=(num_days-1)), today)
 
         # Get all adgroups, filtering out those that are archived or deleted.
-        adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
-        adgroups = self._attach_targeted_app_keys_to_adgroups(adgroups_dict.values(), self.account)
+        adgroups = AdGroupQueryManager.get_adgroups(account=self.account,
+                network_type=None)
 
         # Divide adgroups into buckets based on priorities, and sort each bucket by bid.
         promo_adgroups, gtee_adgroups, backfill_promo_adgroups = _sort_adgroups(adgroups,
                                                                                 self.account)
+        promo_adgroups = self._attach_targeted_app_keys_to_adgroups(promo_adgroups,
+                self.account)
+        gtee_adgroups = self._attach_targeted_app_keys_to_adgroups(gtee_adgroups,
+                self.account)
+        backfill_promo_adgroups = self._attach_targeted_app_keys_to_adgroups(backfill_promo_adgroups,
+                self.account)
+
 
         apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
         apps = sorted(apps, lambda x, y: cmp(x.name, y.name))

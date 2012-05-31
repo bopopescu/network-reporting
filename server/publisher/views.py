@@ -358,16 +358,6 @@ class AppDetailHandler(RequestHandler):
         # 1 RunQuery
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
-        # organize impressions by days
-        # 1 GET per ad unit
-        if len(app.adunits) > 0:
-            for adunit in app.adunits:
-                adunit.all_stats = stats_q.get_stats_for_days(publisher=adunit,
-                                                                    days=self.days)
-                adunit.stats = reduce(lambda x, y: x+y,
-                                      adunit.all_stats,
-                                      StatsModel())
-
         app.adunits = sorted(app.adunits,
                              key=lambda adunit: adunit.name,
                              reverse=True)
@@ -377,29 +367,11 @@ class AppDetailHandler(RequestHandler):
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
 
-
-        # In the graph, only show the top 3 ad units and
-        # bundle the rest if there are more than 4
-        app.graph_adunits = app.adunits[0:4]
-        if len(app.adunits) > 4:
-            app.graph_adunits[3] = Site(name='Others')
-            bundled_adunits = zip(*[adunit.all_stats for adunit in app.adunits[3:]])
-            app.graph_adunits[3].all_stats = [reduce(lambda x, y: x+y,
-                                                     stats,
-                                                     StatsModel()) \
-                                              for stats in bundled_adunits]
-
         # Create edit form and new adunit forms
         # 1 memcache GET
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
         # 1 memcache GET
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
-
-        today = app.all_stats[-1]
-        try:
-            yesterday = app.all_stats[-2]
-        except IndexError:
-            yesterday = StatsModel()
 
         app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
 
@@ -422,6 +394,14 @@ class AppDetailHandler(RequestHandler):
             # Otherwiese the adgroup must be targeted
             else:
                 return set(adgroup.site_keys).intersection(app_adunits)
+
+        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account)
+
+        for adgroup in adgroups:
+            if str(adgroup._campaign) not in campaigns_dict:
+                logging.error("AdGroup %s was in Account %s but its Campaign %s was not in memcache for the account." % (adgroup.key(), self.account.key(), adgroup._campaign))
+                continue
+            adgroup.campaign = campaigns_dict[str(adgroup._campaign)]
 
         app.campaigns = dict([(adgroup._campaign, adgroup.campaign) for
             adgroup in adgroups if targeted(adgroup)]).values()
@@ -496,8 +476,6 @@ class AppDetailHandler(RequestHandler):
             'start_date': self.days[0],
             'end_date': self.days[-1],
             'date_range': self.date_range,
-            'today': today,
-            'yesterday': yesterday,
             'account': self.account,
             'helptext': help_text,
             'gtee': gtee_levels,

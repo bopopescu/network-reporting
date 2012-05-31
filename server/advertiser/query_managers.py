@@ -335,13 +335,18 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup
 
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS, archived=False):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None,
+            account=None, deleted=False, limit=MAX_OBJECTS, archived=False,
+            network_type=False):
         """ archived=True means we only show archived adgroups. """
         adgroups = AdGroup.all()
         if not (deleted == None):
             adgroups = adgroups.filter("deleted =", deleted)
         if account:
             adgroups = adgroups.filter("account =", account)
+
+        if network_type != False:
+            adgroups = adgroups.filter("network_type =", network_type)
 
         if not (archived == None):
             adgroups = adgroups.filter("archived =", archived)

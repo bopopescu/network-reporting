@@ -101,7 +101,8 @@ class AdUnitContext(object):
             creatives += Creative.all().filter('ad_group =', adgroup).\
                                 fetch(limit)
 
-        # Return only the creatives that reference one of our adgroups.
+        # Return only the creatives that are active (i.e. not paused)
+        # and not deleted
         return [c for c in creatives if c.active and not c.deleted]
 
     @classmethod

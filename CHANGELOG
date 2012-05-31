@@ -1,10 +1,53 @@
+# Deployed Thursday, May 31, 2012 at 01:13AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-121
+### Bugs Fixed: []
+### Included Commits: 
+ * eb5003b query instead of using memcache for adgroups index
+ * 3dd252d Deployed without finding any bug fixes.
+ 
+# Deployed Wednesday, May 30, 2012 at 10:50PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-120
+### Bugs Fixed: []
+### Included Commits:
+* b9dba90 fixed bad test cleaned, commented out test failing on Jenkins due to missing package
+* 396423b Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 10:06PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-119
+### Bugs Fixed: []
+### Included Commits:
+* 2c446a3 removed appstats
+* 188eeb8 [#1261 state:resolved]
+
+# Deployed Wednesday, May 30, 2012 at 09:50PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-118
+### Bugs Fixed: ['1261']
+### Included Commits:
+* fdca86f Merge branch 'master' of github.com:mopub/mopub
+* 1335aab Merge branch 'master' of github.com:mopub/mopub
+* 05747f2 added multiple deploys (for production/staging/beta) to the deploy script
+* db77285 Merge branch 'master' of github.com:mopub/mopub
+* e032d0d checked out updated tests from publisher-refactor branch
+* 751da0f Added new frontend-1 backend with 20 instances to split the load w/ frontend-0
+* dbd6918 updated query managers return a list again, not a QueryIterator
+* d8c626d Merge branch 'master' of github.com:mopub/mopub
+* 092abd3 [#1261 state:fixed]
+* fc8aab8 DeleteNetworkHandler uses key names to get campaign adgroups instead of memcache
+* 3621b34 removed app/adunit stats fetching from adgroup detail page, replaced fetch with run in advertiser query managers
+* b5425a0 Deployed without finding any bug fixes.
+* 515bd8e changed fetch to run in publisher query managers
+
 # Deployed Wednesday, May 30, 2012 at 06:54PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-117
 ### Bugs Fixed: []
-### Included Commits: 
- * 99d0369 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 99d0369 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, May 30, 2012 at 06:41PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-116

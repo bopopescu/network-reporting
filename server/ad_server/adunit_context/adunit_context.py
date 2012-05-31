@@ -94,21 +94,16 @@ class AdUnitContext(object):
     @classmethod
     def fetch_creatives(cls, adunit, adgroups, limit=MAX_OBJECTS):
         trace_logging.info("getting creatives from db")
-        creatives = Creative.all().filter("account =", adunit.account.key()).\
-                    run(config=CONFIG, batch_size=100)
-                    # filter("active =", True).filter("deleted =", False).\
 
-        # creatives = Creative.all().filter("ad_group IN", adgroups).\
-        #             filter("active =",True).filter("deleted =",False).\
-        #             fetch(limit)
-        adgroup_keys = set(adgroup.key() for adgroup in adgroups)
+        # accumulate the creatives one adgroup at a time
+        creatives = []
+        for adgroup in adgroups:
+            creatives += Creative.all().filter('ad_group =', adgroup).\
+                                fetch(limit)
 
-        def adgroup_key(creative):
-            # Returns the creative.ad_group.key() without fetching the ad_group
-            return Creative.ad_group.get_value_for_datastore(creative)
-
-        # Return only the creatives that reference one of our adgroups.
-        return [c for c in creatives if adgroup_key(c) in adgroup_keys and c.active and not c.deleted]
+        # Return only the creatives that are active (i.e. not paused)
+        # and not deleted
+        return [c for c in creatives if c.active and not c.deleted]
 
     @classmethod
     def collect_campaigns(cls, adgroups):

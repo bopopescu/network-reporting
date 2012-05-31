@@ -17,11 +17,109 @@ var mopub = window.mopub || {};
 (function ($, Backbone, _) {
     "use strict";
 
+    var ATTRIBUTE_LABELS = {
+        rev: "Revenue",
+        req: "Requests",
+        imp: "Impressions",
+        clk: "Clicks",
+        att: "Attempts",
+        cpm: "CPM",
+        fill_rate: "Fill Rate",
+        ctr: "CTR"
+    };
+    
+    function getDateLabels(start_date, ticks, interval_type) {
+        
+        if (ticks === undefined) {
+            ticks = 14;
+        }
+
+        if (interval_type === undefined) {
+            interval_type = 'days';
+        }
+
+        if (interval_type !== 'days' && interval_type !== 'hours') {
+            console.log(interval_type);
+            throw Error('getDateLabels only accepts "days" or "hours" as an interval_type');
+        }
+
+        var current_date = moment(new Date(start_date));
+        console.log(moment(new Date(start_date)));
+
+        var labels = [];
+
+        _.times(ticks, function (tick) {
+            var label = current_date.format("MM/DD");
+            labels.push(label);
+            current_date.add(interval_type, 1);
+        });
+
+        return labels;
+    }
+
+
+    function createDailyStatsChart(kind, datapoints, labels) {
+
+        $("#stats-chart").html("");
+
+        if (datapoints[kind].length === 1) {
+            datapoints[kind].push(datapoints[kind][0]);
+        }
+        
+        var graph = new Rickshaw.Graph({
+	        element: document.querySelector("#stats-chart"),
+	        width: 660,
+	        height: 160,
+	        renderer: 'area',
+	        stroke: true,
+	        series: [ {
+		        data: _.map(datapoints[kind], function (item, iter){
+                    return {
+                        x: iter,
+                        y: item
+                    };
+                }),
+                stroke: 'hsla(200,77%,55%,1)',
+                color: 'hsla(205,79%,61%,0.1)'
+                
+            }]
+        });
+
+        graph.renderer.unstack = true;
+        graph.render();
+        
+        // On the X-axis, display the date in MM/DD form.
+        var xAxis = new Rickshaw.Graph.Axis.X({
+            graph: graph,
+            labels: labels,
+            ticksTreatment: 'glow'
+        });
+        
+        xAxis.render();
+        
+        var yAxis = new Rickshaw.Graph.Axis.Y({
+            graph: graph,
+            tickFormat: Rickshaw.Fixtures.Number.formatKMBT
+        });
+        yAxis.render();
+        
+        var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail({
+            graph: graph,
+            xFormatter: function(x) {
+                return moment(labels[x]).format("dddd MMMM Do") + 
+                       "<br />" + 
+                       "Total: " + ModelHelpers.format_stat(kind, datapoints[kind][x]) + ' ' + 
+                       ATTRIBUTE_LABELS[kind];
+
+            }
+        });
+    }
+
+
     /*
      * # CollectionGraphView
      * Renders a collection as a graph
      */
-
     var CollectionChartView = Backbone.View.extend({
         el: "#stats",
         initialize: function () {
@@ -47,12 +145,10 @@ var mopub = window.mopub || {};
                 ctr: null
             };
 
-            // Set up the chart. Still full of jank.
-            mopub.dashboardStatsChartData = {
-                pointStart: this_view.options.start_date,
-                pointInterval: 86400000
-            };
+            var active_display_value = this_view.options.active_display_value || 'rev';
+            var series_list = {};
 
+            // For each display value (e.g. ['rev', 'req', 'imp' ... ]), 
             _.each(this_view.options.display_values, function(display_val) {
                 // Override the null template value with formatted
                 // value from the collection.
@@ -60,19 +156,41 @@ var mopub = window.mopub || {};
                 template_values[display_val] = formatted_sum;
 
                 // Set up the series that will go into the chart.
-                var formatted_series = [{ "Total": this_view.collection.get_formatted_stat_series(display_val)}];
-                mopub.dashboardStatsChartData[display_val] = formatted_series;
-            });
+                var current_series = this_view.collection.get_formatted_stat_series(display_val);
+                series_list[display_val] = current_series;
 
-            console.log(template_values);
-            console.log(mopub.dashboardStatsChartData);
+            });
 
             // Render the template and the chart with the values we composed
             $(this_view.el).html(this_view.template(template_values));
-            mopub.Chart.setupDashboardStatsChart('area');
-        }
 
+            var series_date_labels = getDateLabels(this_view.options.start_date, 
+                                                   series_list.length);
+            createDailyStatsChart(active_display_value,
+                                  series_list,
+                                  series_date_labels);
+
+
+            
+            $("#stats-breakdown-container tr", this_view.el).click(function() {
+
+                // Remove the active class from the previously active row
+                $("#stats-breakdown-container tr.active", this_view.el).removeClass('active');
+
+                // Add the active class to the new table row
+                var $this = $(this);
+                $this.addClass("active");
+
+                // Create the new chart from the row that was clicked on
+                var stats_type = $this.attr('id').replace('stats-breakdown-', '');
+                createDailyStatsChart(stats_type,
+                                     series_list,
+                                     series_date_labels);
+            });
+
+        }        
     });
+
 
     var CollectionGraphView = Backbone.View.extend({
         initialize: function () {

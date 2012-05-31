@@ -79,9 +79,9 @@
   <script>
     var mopub = mopub || {};
     $(function() {
-        var graphStartDate = Date.UTC({{ start_date.year }},
-              {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}
-              {{ start_date.day }});
+        var graphStartDate = new Date({{ start_date.year }},
+                                     {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}
+                                     {{ start_date.day }});
         var accountStats = {{ account_stats|safe }};
 
         var app_keys = {{ app_keys|safe }};

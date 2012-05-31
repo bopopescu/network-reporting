@@ -1,11 +1,19 @@
+# Deployed Thursday, May 31, 2012 at 01:13AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-121
+### Bugs Fixed: []
+### Included Commits: 
+ * eb5003b query instead of using memcache for adgroups index
+ * 3dd252d Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, May 30, 2012 at 10:50PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-120
 ### Bugs Fixed: []
-### Included Commits: 
- * b9dba90 fixed bad test cleaned, commented out test failing on Jenkins due to missing package
- * 396423b Deployed without finding any bug fixes.
- 
+### Included Commits:
+* b9dba90 fixed bad test cleaned, commented out test failing on Jenkins due to missing package
+* 396423b Deployed without finding any bug fixes.
+
 # Deployed Wednesday, May 30, 2012 at 10:06PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-119

@@ -69,6 +69,12 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Get all adgroups, filtering out those that are archived or deleted.
         adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
+
+
+        adgroups = AdGroupQueryManager.get_adgroups(account=self.account,
+                network_type='')
+
+        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account)
         adgroups = self._attach_targeted_app_keys_to_adgroups(adgroups_dict.values(), self.account)
 
         # Divide adgroups into buckets based on priorities, and sort each bucket by bid.
@@ -294,10 +300,10 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             instance = adgroup.campaign
             initial = {'bid': adgroup.bid, 'bid_strategy': adgroup.bid_strategy}
         return CampaignForm(instance=instance,
-                            initial=initial, 
+                            initial=initial,
                             is_staff=self.request.user.is_staff,
                             account=self.account)
-    
+
     def _adgroup_form(self, adgroup=None):
         """
         Returns a form that can create an adgroup. If an adgroup object is provided as an argument
@@ -336,7 +342,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
                 adunit_key = str(adunit.key())
                 adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit_network_config,
                                                                      prefix="adunit_%s" % adunit_key)
-        
+
         return apps
 
     ### END helpers for get()
@@ -355,7 +361,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
         apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
         adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
- 
+
         # Construct the campaign and adgroup objects from the form data. Return an error response
         # if anything goes wrong with the forms.
         try:
@@ -371,7 +377,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         except self.MPFormValidationException, ex:
             errors = ex[0] if len(ex.args) > 0 else {}
             return self._json_failure_response_with_errors(errors)
-        
+
         # Network campaigns require a few additional steps: generating a "network creative" and
         # updating all of the relevant network config objects.
         if campaign.campaign_type == 'network':
@@ -380,7 +386,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
             configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
             self._update_network_configs_using_adgroup(adgroup, configs_dict, apps, adunits, self.account)
-        
+
         # Miscellaneous tasks.
         self._flush_adunit_contexts_affected_by_adgroup(adgroup)
         self._mark_user_onboarding_complete_for_account(self.account)
@@ -416,7 +422,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             initial = {'bid': adgroup.bid, 'bid_strategy': adgroup.bid_strategy}
         form = CampaignForm(self.request.POST,
                             instance=instance,
-                            initial=initial, 
+                            initial=initial,
                             is_staff=self.request.user.is_staff,
                             account=self.account)
 
@@ -449,7 +455,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Arguments:
         campaign -- the campaign to which this adgroup should belong
         adunits  -- the list of adunits that are allowed to be targeted by this adgroup
-        
+
         Keyword arguments:
         instance -- an adgroup object (default None)
 
@@ -475,7 +481,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             adgroup.network_type = None
 
         return adgroup
-    
+
     def _json_failure_response_with_errors(self, errors):
         """
         Returns an HTTP response representing failure, along with a set of errors.
@@ -501,12 +507,12 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             html_data = self.request.POST.get('custom_html', '')
         elif adgroup.network_type == 'custom_native':
             html_data = self.request.POST.get('custom_method', '')
-        
+
         # We need to save the adgroup before we can call default_creative.
         AdGroupQueryManager.put(adgroup)
 
         return adgroup.default_creative(html_data)
-    
+
     def _assign_creative_to_adgroup_and_save(self, creative, adgroup):
         """
         Sets the given adgroup's net_creative property to be the given creative, and then saves
@@ -538,11 +544,11 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         # IMPORTANT: don't use self.account, since that can often belong to a superuser!
         new_creative.account = adgroup.account
         CreativeQueryManager.put(new_creative)
-        
+
         # Assign the new creative to the adgroup and save the adgroup.
         adgroup.net_creative = new_creative.key()
         AdGroupQueryManager.put(adgroup)
-    
+
     def _update_network_configs_using_adgroup(self, adgroup, all_configs, apps, adunits, account):
         """
         Updates all app-, adunit-, and account-level NetworkConfig objects related to the given
@@ -581,12 +587,12 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         for app in apps:
             app_network_config_key = str(App.network_config.get_value_for_datastore(app))
             network_config = all_configs.get(app_network_config_key) or app.network_config or NetworkConfig(account=self.account)
-            setattr(network_config, network_config_field, 
+            setattr(network_config, network_config_field,
                     self.request.POST.get("app_%s-%s" % (app.key(), network_config_field), ''))
             configs.append(network_config)
-        
+
         AppQueryManager.update_config_and_put_multi(apps, configs)
-    
+
     def _update_adunit_network_configs_using_adgroup(self, adgroup, all_configs, adunits):
         """
         Updates all adunit-level NetworkConfig objects related to the given adgroup.
@@ -599,7 +605,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         # Only certain networks have adunit-level IDs.
         if adgroup.network_type not in ('admob_native', 'jumptap', 'millennial_native'):
             return
-        
+
         # Get rid of _native in admob_native, millennial_native.
         network_config_field = "%s_pub_id" % adgroup.network_type.replace('_native', '')
 
@@ -610,9 +616,9 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             setattr(network_config, network_config_field,
                     self.request.POST.get("adunit_%s-%s" % (adunit.key(), network_config_field), ''))
             configs.append(network_config)
-        
+
         AdUnitQueryManager.update_config_and_put_multi(adunits, configs)
-                 
+
     def _update_account_network_configs_using_adgroup(self, adgroup, all_configs, account):
         """
         Updates the account-level NetworkConfig object for this adgroup.
@@ -625,13 +631,13 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         # Only Jumptap requires an account-level publisher alias.
         if adgroup.network_type != 'jumptap':
             return
-        
+
         network_config_field = "%s_pub_id" % adgroup.network_type
         account_network_config_key = str(Account.network_config.get_value_for_datastore(account))
         network_config = all_configs.get(account_network_config_key) or account.network_config or NetworkConfig(account=account)
         setattr(network_config, network_config_field, self.request.POST.get('jumptap_pub_id', ''))
         AccountQueryManager.update_config_and_put(account, network_config)
-    
+
     def _flush_adunit_contexts_affected_by_adgroup(self, adgroup):
         """
         Clears from memcache any adunit contexts that are affected by changes to this adgroup.
@@ -641,7 +647,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         """
         if not adgroup or not adgroup.site_keys:
             return
-        
+
         adunits = AdUnitQueryManager.get(adgroup.site_keys)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
@@ -655,7 +661,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         """
         if account.status != 'step4':
             return
-        
+
         account.status = ''
         AccountQueryManager.put_accounts(account)
 

@@ -39,7 +39,8 @@ class DeleteNetworkTestCase(NetworkTestCase):
         self.generate_ad_network_login(self.network_type, self.account)
         self.post_data = {'campaign_key': str(self.campaign.key())}
 
-    @confirm_db()
+    @confirm_db(modified=[Campaign, AdGroup, Creative,
+        AdNetworkLoginCredentials])
     def mptest_response_code(self):
         """Response code for GET should be 200.
 

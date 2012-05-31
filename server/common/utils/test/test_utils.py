@@ -64,7 +64,14 @@ def dict_eq(dict1, dict2, exclude=[]):
         if isinstance(dict1[key], db.Model):
             model_key_eq(dict1[key], dict2[key])
         else:
-            eq_(dict1[key], dict2[key])
+            try:
+                eq_(dict1[key], dict2[key])
+            except AssertionError:
+                print exclude
+                print 'key %s not eq' % key
+                print dict1[key]
+                print dict2[key]
+                raise
 
 
 def model_key_eq(model1, model2):
@@ -106,14 +113,14 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
 def model_to_dict(model, exclude=[], reference_only=False):
     model_dict = {}
 
-    for key, prop in model.properties().iteritems():
+    for key in model.properties().iterkeys():
         if key in exclude:
             continue
         # by prepending the attribute with '_'
         # we the value of this field as stored in the db
         # in particular, for reference properties this will
         # not dereference, but will only get the foreign key
-        if reference_only:
+        if reference_only and key != '_class':
             key = '_' + key
         model_dict[key] = getattr(model, key)
 
@@ -160,7 +167,6 @@ def confirm_db(modified=None):
                     instances_of_model_dict[instance.key()] = instance
 
                 pre_test_instances[Model] = instances_of_model_dict
-            print pre_test_instances
 
             # run the intended test
             method(self, *args, **kwargs)
@@ -171,6 +177,10 @@ def confirm_db(modified=None):
             messages = []  # compiles all the failures
             error = False
             for Model in static_models:
+                exclude = []
+                if Model == User:
+                    exclude = ['last_login']
+
                 post_test_instances = list(Model.all().run(batch_size=200))
 
                 if len(pre_test_instances[Model]) != len(post_test_instances):
@@ -192,7 +202,8 @@ def confirm_db(modified=None):
                             try:
                                 model_eq(pre_test_instances[Model][ \
                                         post_test_instance.key()],
-                                        post_test_instance)
+                                        post_test_instance,
+                                        exclude=exclude)
                             except AssertionError:
                                 msg = 'Model %s has object with key %s ' \
                                         'that has been modified' % \

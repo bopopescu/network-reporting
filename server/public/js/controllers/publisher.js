@@ -28,27 +28,6 @@ var mopub = mopub || {};
     };
 
     /*
-     * Refactor/remove
-     */
-    function populateGraphWithAccountStats(stats, start_date) {
-
-        if (!stats.hasOwnProperty("all_stats")) return;
-        
-        var dailyStats = stats["all_stats"]["||"]["daily_stats"];
-
-        mopub.dashboardStatsChartData = {
-            pointStart: start_date,
-            pointInterval: 86400000,
-            req: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "req")}],
-            imp: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}],
-            clk: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clk")}],
-            usr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "usr")}]
-        };
-
-        mopub.Chart.setupDashboardStatsChart('area');
-    }
-
-    /*
      * ## fetchAppsFromKeys
      * Fetches all app stats using a list of app keys and renders
      * them into table rows that have already been created in the
@@ -786,7 +765,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['rev', 'req', 'imp', 'clk']                    
+                    display_values: ['req', 'imp', 'clk'],
                 });
                 chart_view.render();
             });

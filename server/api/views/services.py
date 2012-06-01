@@ -103,6 +103,9 @@ class AppService(RequestHandler):
                                         self.end_date)
             app.update(s)
 
+            
+        logging.warn("\n\n\n\n\n\n\n?")
+        logging.warn(apps)
         return JSONResponse(apps)
 
 
@@ -165,8 +168,7 @@ class AdUnitService(RequestHandler):
                                                                        adgroup_key,
                                                                        self.start_date,
                                                                        self.end_date)
-                if str(adunit['id']) == "ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGEUM":
-                    logging.warn(adunit_stats)
+
                 # We update with the app and adgroup id/key because our
                 # backbone models often need it for reference
                 adunit_stats.update({'app_id': str(adunit['app_key'])})
@@ -192,9 +194,9 @@ class AdUnitService(RequestHandler):
             # Update each app with stats from the selected endpoint
             for adunit in response:
                 adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
-                                                                       campaign_key,
-                                                                       self.start_date,
-                                                                       self.end_date)
+                                                                        campaign_key,
+                                                                        self.start_date,
+                                                                        self.end_date)
 
                 
                 # We update with the app and adgroup id/key because our

@@ -552,11 +552,12 @@ var mopub = mopub || {};
             clk: 0,
             ctr: 0,
             cpm: 0,
+            conv: 0,
             fill_rate: 0,
             imp: 0,
             name: '',
             price_floor: 0,
-            requests: 0,
+            req: 0,
             rev: 0,
             stats_endpoint: 'all'
         },
@@ -589,6 +590,10 @@ var mopub = mopub || {};
                 + window.location.search.substring(1)
                 + '&endpoint='
                 + stats_endpoint;
+        },
+        parse: function(response) {
+            console.log(response);
+            return response;
         }
     });
 
@@ -625,9 +630,11 @@ var mopub = mopub || {};
             var collection = this;
             // REFACTOR attempts vs requests
             _.each(response, function(adunit) {
-                if(adunit.req === null || adunit.req === undefined) {
+                if ((adunit.req === null || adunit.req === undefined) &&
+                    (adunit.att !== null && adunit.att !== undefined)) {
                     adunit.req = adunit.att;
-                } else if (adunit.att === null || adunit.att === undefined) {
+                } else if ((adunit.att === null || adunit.att === undefined) &&
+                           (adunit.req !== null || adunit.req !== undefined)) {
                     adunit.att = adunit.req;
                 }
                 _.extend(adunit, { stats_endpoint: collection.stats_endpoint });
@@ -661,10 +668,11 @@ var mopub = mopub || {};
             clk: 0,
             ctr: 0,
             cpm: 0,
+            conv: 0,
             fill_rate: 0,
             imp: 0,
             price_floor: 0,
-            requests: 0,
+            req: 0,
             rev: 0,
             status: 'Running',
             stats_endpoint: 'all'
@@ -695,9 +703,11 @@ var mopub = mopub || {};
             var app = response[0];
 
             // REFACTOR attempts vs requests
-            if(app.req == null || app.req == undefined) {
+            if((app.req === null || app.req === undefined) &&
+               (app.att !== null && app.att !== undefined)) {
                 app.req = app.att;
-            } else if (app.att == null || app.att == undefined) {
+            } else if ((app.att == null || app.att == undefined) &&
+                       (app.rev !== null && app.rev !== undefined)) {
                 app.att = app.req;
             }
 
@@ -710,6 +720,7 @@ var mopub = mopub || {};
             if (app.app_type === 'mweb') {
                 app.app_type = 'Mobile Web';
             }
+
             return app;
         },
         get_summed: function (attr) {
@@ -724,7 +735,7 @@ var mopub = mopub || {};
         }
     });
 
-    _.extend(App.prototype, StatsMixin, LocalStorageMixin);
+    _.extend(App.prototype, StatsMixin);
 
     /*
      * ## AppCollection
@@ -749,13 +760,26 @@ var mopub = mopub || {};
         }
     });
 
-    _.extend(AppCollection.prototype, StatsMixin, LocalStorageMixin);
+    _.extend(AppCollection.prototype, StatsMixin);
+
 
     /*
      *  LineItem
      */
-
     var LineItem = Backbone.Model.extend({
+        defaults: {
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            conv: 0,
+            fill_rate: 0,
+            imp: 0,
+            name: '',
+            req: 0,
+            rev: 0,
+            stats_endpoint: 'all'
+        },
         url: function() {
             var stats_endpoint = this.stats_endpoint;
             return '/api/adgroup/'
@@ -767,7 +791,8 @@ var mopub = mopub || {};
         }
     });
 
-    _.extend(LineItem.prototype, StatsMixin, LocalStorageMixin);
+    _.extend(LineItem.prototype, StatsMixin);
+
 
     var LineItemCollection = Backbone.Collection.extend({
         model: LineItem,
@@ -784,9 +809,24 @@ var mopub = mopub || {};
             return response.adunits;
         }
     });
+    
+    _.extend(LineItemCollection.prototype, StatsMixin);
 
 
     var Order = Backbone.Model.extend({
+        defaults: {
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            conv: 0,
+            fill_rate: 0,
+            imp: 0,
+            name: '',
+            req: 0,
+            rev: 0,
+            stats_endpoint: 'all'
+        },
         url: function() {
             var stats_endpoint = this.get('stats_endpoint');
             return '/api/campaign/'
@@ -801,7 +841,8 @@ var mopub = mopub || {};
         }
     });
 
-    _.extend(Order.prototype, StatsMixin, LocalStorageMixin);
+    _.extend(Order.prototype, StatsMixin);
+
 
     var OrderCollection = Backbone.Collection.extend({
         model: Order,
@@ -815,7 +856,7 @@ var mopub = mopub || {};
         }
     });
 
-    _.extend(OrderCollection.prototype, LocalStorageMixin);
+    _.extend(OrderCollection.prototype, StatsMixin);
 
 
     /*

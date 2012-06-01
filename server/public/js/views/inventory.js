@@ -39,12 +39,10 @@ var mopub = window.mopub || {};
         }
 
         if (interval_type !== 'days' && interval_type !== 'hours') {
-            console.log(interval_type);
             throw Error('getDateLabels only accepts "days" or "hours" as an interval_type');
         }
 
         var current_date = moment(new Date(start_date));
-        console.log(moment(new Date(start_date)));
 
         var labels = [];
 
@@ -145,10 +143,15 @@ var mopub = window.mopub || {};
                 ctr: null
             };
 
-            var active_display_value = this_view.options.active_display_value || 'rev';
-            var series_list = {};
+            // Set the active display value so we know which graph and breakdown
+            // value to display first.
+            var active_display_value = this_view.options.active_display_value || 
+                this_view.options.display_values[0];
+            template_values['active'] = active_display_value;
 
-            // For each display value (e.g. ['rev', 'req', 'imp' ... ]), 
+            // Create a series list that will keep daily sums for each property.
+            // ie rev: [ day 1 total rev, day 2 total rev, etc]
+            var series_list = {};
             _.each(this_view.options.display_values, function(display_val) {
                 // Override the null template value with formatted
                 // value from the collection.
@@ -210,7 +213,12 @@ var mopub = window.mopub || {};
             var this_view = this;
             if (this_view.collection.isFullyLoaded()) {
 
-                var metrics = ['imp', 'rev', 'clk', 'ctr'];
+                var metrics = [
+                    'imp', 
+                    'rev', 
+                    'clk', 
+                    'ctr'
+                ];
 
                 // Render the stats breakdown for "all""
                 $.each(metrics, function (iter, metric) {
@@ -252,6 +260,7 @@ var mopub = window.mopub || {};
             }
         }
     });
+
 
     var NetworkGraphView = CollectionGraphView.extend({
         render: function () {
@@ -383,6 +392,7 @@ var mopub = window.mopub || {};
      * adunits over ajax and put them in the table.
      */
     var AppView = Backbone.View.extend({
+
         initialize: function () {
             if (this.options.endpoint_specific) {
                 this.model.bind('change', this.render, this);
@@ -395,6 +405,49 @@ var mopub = window.mopub || {};
             }
         },
 
+        render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // When we render an appview, we also attach a handler to fetch
+            // and render it's adunits when a link is clicked.
+            $('tbody', this.el).append(renderedContent);
+            return this;
+        },
+
+        renderInline: function () {
+            var this_view = this;
+
+            var app_row = $('#app-' + this_view.model.id, this_view.el);
+            var metrics = [
+                'cpm', 
+                'imp', 
+                'clk', 
+                'ctr', 
+                'fill_rate', 
+                'req', 
+                'att', 
+                'conv', 
+                'conv_rate',
+                'rev'
+            ];
+            
+            _.each(metrics, function (metric) {
+                var metric_text = this_view.model.get_formatted_stat(metric);
+                $('.' + metric, app_row).text(metric_text);
+            });
+            /*jslint maxlen: 110 */
+
+            $(".loading-img", app_row).hide();
+
+            return this;
+        }
+    });
+
+    var NetworkAppView = AppView.extend({
         renderInline: function () {
             var this_view = this;
             // Will there be multiple stats endpoints in this app row?
@@ -407,22 +460,24 @@ var mopub = window.mopub || {};
             } else {
                 var selector = '';
             }
-            var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
+            var app_row = $('#app-' + this_view.model.id, this_view.el);
 
             /*jslint maxlen: 200 */
             if (!this_view.options.endpoint_specific 
                 || this_view.model.get('stats_endpoint') == 'networks') {
                 $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
             }
-            var metrics = ['cpm', 
-                           'imp', 
-                           'clk', 
-                           'ctr', 
-                           'fill_rate', 
-                           'req', 
-                           'att', 
-                           'conv', 
-                           'conv_rate'];
+            var metrics = [
+                'cpm', 
+                'imp', 
+                'clk', 
+                'ctr', 
+                'fill_rate', 
+                'req', 
+                'att', 
+                'conv', 
+                'conv_rate'
+            ];
 
             _.each(metrics, function (metric) {
                 if (this_view.model.get('stats_endpoint') != 'networks'
@@ -436,20 +491,9 @@ var mopub = window.mopub || {};
             $(".loading-img", app_row).hide();
 
             return this;
-        },
-        render: function () {
-            if(!this.template) {
-                return this.renderInline();
-            }
-
-            var renderedContent = $(this.template(this.model.toJSON()));
-
-            // When we render an appview, we also attach a handler to fetch
-            // and render it's adunits when a link is clicked.
-            $('tbody', this.el).append(renderedContent);
-            return this;
         }
     });
+
 
     /*
      * ## AdUnitView
@@ -475,11 +519,25 @@ var mopub = window.mopub || {};
         renderInline: function () {
             /*jslint maxlen: 200 */
             var current_model = this.model;
-            var adunit_row = $('tr.adunit-row#adunit-' + this.model.id, this.el);
-            var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            var adunit_row = $('#adunit-' + this.model.id, this.el);
+            var metrics = [
+                'rev', 
+                'cpm', 
+                'imp', 
+                'clk', 
+                'ctr', 
+                'fill_rate', 
+                'req', 
+                'att', 
+                'conv', 
+                'conv_rate'
+            ];
 
             _.each(metrics, function (metric) {
-                $('.' + metric, adunit_row).text(current_model.get_formatted_stat(metric));
+                var metric_text = current_model.get_formatted_stat(metric);
+                console.log(metric);
+                console.log(metric_text);
+                $('.' + metric, adunit_row).text(metric_text);
             });
 
             $('.price_floor', adunit_row).html('<img class="loading-img hidden" ' +
@@ -537,61 +595,6 @@ var mopub = window.mopub || {};
                 }
             });
 
-
-            return this;
-        },
-
-        /*
-         * Render the adunit model in the template. This assumes that the table
-         * row for the app has already been rendered. This will render underneath
-         * it's app's row.
-         */
-        render: function () {
-            if(!this.template) {
-                return this.renderInline();
-            }
-
-            // render the adunit and attach it to the table after it's adunit's row
-            var current_model = this.model;
-            var renderedContent = $(this.template(this.model.toJSON()));
-
-            // Add the event handler to submit price floor changes over ajax.
-            $('.price_floor_change', renderedContent)
-                .change(function () {
-                    current_model.set({'price_floor': $(this).val()});
-                    // Save when they click the save button in the price floor cell
-                    var save_link = $('.save', $(this).parent());
-                    save_link.click(function (e) {
-                        e.preventDefault();
-                        save_link.addClass('disabled').text('Saving...');
-                        current_model.save({}, {
-                            success: function () {
-                                setTimeout(function () {
-                                    save_link.removeClass('disabled').text('Saved');
-                                    save_link.text('Save');
-                                }, 2000);
-                            }
-                        });
-                    });
-                });
-
-            // Add the event handler to submit targeting changes over ajax.
-            $('input.targeting-box', renderedContent).click(function () {
-                var targeting = $(this).attr('name');
-                var activation = $(this).is(':checked') ? 'On' : 'Off';
-                $('label[for="' + targeting + '"]', renderedContent).text(activation);
-
-                current_model.set({'active': $(this).is(':checked')});
-                current_model.save();
-            });
-
-            // Add the right background color based on where the app is in the table
-            var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
-            var zebra = app_row.hasClass('even') ? 'even' : 'odd';
-            renderedContent.addClass(zebra);
-
-            app_row.after(renderedContent);
-
             return this;
         }
     });
@@ -608,13 +611,15 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var order_row = $('tr.order-row#' + current_model.get('key'), this.el);
+            var order_row = $('#' + current_model.get('key'), this.el);
 
-            var display_fields = ['revenue',
-                                  'impressions',
-                                  'fill_rate',
-                                  'clicks',
-                                  'ctr'];
+            var display_fields = [
+                'revenue',
+                'impressions',
+                'fill_rate',
+                'clicks',
+                'ctr'
+            ];
             _.each(display_fields, function(field){
                 $("." + field, order_row).text(current_model.get_formatted_stat(field));
             });
@@ -645,8 +650,6 @@ var mopub = window.mopub || {};
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
             });
-
-//            var renderedContent = $(this.template(this.model.toJSON()));
 
             var popover_template = _.template(""
                                               + "<p>Ran from <%= start_datetime %> to <%= end_datetime %>. <br /> <br />"

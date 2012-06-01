@@ -133,10 +133,8 @@ class CampaignForm(forms.ModelForm):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
         # show deprecated networks if user is staff or hasn't migrated
-        if (is_staff or (account and not account.display_new_networks)) and \
-                ('network', 'Network') not in self.fields['campaign_type']. \
-                choices:
-            self.fields['campaign_type'].choices.append(('network', 'Network'))
+        if (is_staff or (account and not account.display_new_networks)):
+            self.fields['campaign_type'].choices = self.fields['campaign_type'].choices + [('network', 'Network')]
 
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to

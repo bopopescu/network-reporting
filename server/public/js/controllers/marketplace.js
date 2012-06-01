@@ -20,39 +20,14 @@ var mopub = mopub || {};
     };
 
     /*
-     * Fetches and renders all apps from a list of app_keys.
-     * Useful for bootstrapping table loads.
-     */
-    function fetchAllApps (app_keys) {
-        _.each(app_keys, function(app_key) {
-            var app = new App({ id: app_key, stats_endpoint: 'mpx' });
-            app.bind('change', function(current_app) {
-                var appView = new AppView({
-                    model: current_app,
-                    el: 'marketplace-apps'
-                });
-                appView.render();
-            });
-
-            app.fetch({
-                success: function(){
-                    $('table').trigger('update');
-                },
-                error: function () {
-                    app.fetch({
-                        error: toast_error
-                    });
-                }
-            });
-        });
-    }
-
-    /*
      * Fetches all app stats using a list of app keys and renders
      * them into table rows that have already been created in the
-     * page. Useful for decreasing page load time along with `fetchAdunitStats`.
+     * page. Useful for decreasing page load time along with `fetchAdunitsFromAppKey`.
      */
-    function fetchAppStats (app_keys) {
+    function fetchAppsFromKeys (app_keys) {
+        var apps = new AppCollection();
+        var fetched_apps = 0;
+        
         _.each(app_keys, function(app_key) {
             var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
@@ -62,14 +37,25 @@ var mopub = mopub || {};
                 });
                 appView.renderInline();
             });
+
             app.fetch({
                 error: function () {
                     app.fetch({
                         error: toast_error
                     });
+                },
+                success: function() {
+                    fetched_apps++;
+                    if (fetched_apps == app_keys.length) {
+                        apps.trigger('loaded');
+                    }
                 }
             });
+            
+            apps.add(app);
         });
+
+        return apps;
     }
 
     /*
@@ -77,7 +63,7 @@ var mopub = mopub || {};
      * existing table rows.  This method is useful for decreasing page
      * load time. Uses a parent app's key to bootstrap the fetch.
      */
-    function fetchAdunitStats (app_key, marketplace_active) {
+    function fetchAdunitsFromAppKey (app_key, marketplace_active) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
         adunits.stats_endpoint = 'mpx';
@@ -389,9 +375,19 @@ var mopub = mopub || {};
 
             // Fill in the stats data for each of the apps and
             // each of their adunits
-            fetchAppStats(bootstrapping_data.app_keys);
+            var apps = fetchAppsFromKeys(bootstrapping_data.app_keys);
             _.each(bootstrapping_data.app_keys, function(app_key) {
-                fetchAdunitStats(app_key, bootstrapping_data.marketplace_active);
+                fetchAdunitsFromAppKey(app_key, bootstrapping_data.marketplace_active);
+            });
+
+            // When the apps are finished loading, we render the chart.
+            apps.bind('loaded', function() {
+                var chart_view = new CollectionChartView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['rev', 'imp', 'cpm'],
+                });
+                chart_view.render();
             });
 
             var table = makeCreativePerformanceTable(bootstrapping_data.pub_key,

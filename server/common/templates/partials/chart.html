@@ -2,7 +2,7 @@
   <table>
     <tbody>
       <% if (rev !== null) { %>
-      <tr class="active" id="stats-breakdown-rev">
+      <tr <% if (active === 'rev') { %>class="active"<% } %> id="stats-breakdown-rev">
         <td class="stats-breakdown-value">
           <span class="inner"><%= rev %></span>
         </td>
@@ -13,7 +13,7 @@
       <% } %>
       
       <% if (req !== null) { %>
-      <tr id="stats-breakdown-req">
+      <tr <% if (active === 'req') { %>class="active"<% } %> id="stats-breakdown-req">
         <td class="stats-breakdown-value">
           <span class="inner"><%= req %></span>
           </td>
@@ -24,7 +24,7 @@
       <% } %>
       
       <% if (imp !== null) { %>
-      <tr id="stats-breakdown-imp">
+      <tr <% if (active === 'imp') { %>class="active"<% } %> id="stats-breakdown-imp">
         <td class="stats-breakdown-value">
             <span class="inner"><%= imp %></span>
         </td>
@@ -35,7 +35,7 @@
       <% } %>
       
       <% if (clk !== null) { %>
-        <tr id="stats-breakdown-clk">
+        <tr <% if (active === 'clk') { %>class="active"<% } %> id="stats-breakdown-clk">
           <td class="stats-breakdown-value">
             <span class="inner">
               <% if (ctr !== null) { %>
@@ -51,7 +51,7 @@
         <% } %>
         
         <% if (cpm !== null) { %>
-        <tr id="stats-breakdown-cpm">
+        <tr <% if (active === 'cpm') { %>class="active"<% } %> id="stats-breakdown-cpm">
           <td class="stats-breakdown-value">
             <span class="inner">
               <%= cpm %>

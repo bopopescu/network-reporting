@@ -289,8 +289,7 @@ class EditNetworkHandler(RequestHandler):
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
-                if app._network_config and str(app._network_config) in \
-                        network_configs_dict:
+                if str(app._network_config) in network_configs_dict:
                     app.network_config = network_configs_dict[
                             str(app._network_config)]
 
@@ -332,8 +331,7 @@ class EditNetworkHandler(RequestHandler):
                         ' bid'
 
                 if network in NETWORKS_WITH_PUB_IDS:
-                    if adunit._network_config and str(adunit. \
-                            _network_config) in network_configs_dict:
+                    if str(adunit._network_config) in network_configs_dict:
                         adunit.network_config = network_configs_dict[
                                 str(adunit._network_config)]
 

@@ -134,6 +134,10 @@ class CampaignForm(forms.ModelForm):
 
         # show deprecated networks if user is staff or hasn't migrated
         if (is_staff or (account and not account.display_new_networks)):
+            # Hack(nafis): we cannont use choices.append because by doing
+            # so we are modifying the global list defined earlier in this file
+            # Instead by adding the list togther we are creating a new object
+            # for this particular instance
             self.fields['campaign_type'].choices = self.fields['campaign_type'].choices + [('network', 'Network')]
 
         # hack to make the forms ordered correctly

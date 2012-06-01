@@ -298,7 +298,7 @@ class AppQueryManager(CachedQueryManager):
         """ Updates the network config and the associated app"""
         from account.query_managers import NetworkConfigQueryManager
 
-        network_config.account = App.network_config.get_value_for_datastore(app)
+        network_config.account = App.account.get_value_for_datastore(app)
         NetworkConfigQueryManager.put(network_config)
         app.network_config = network_config
         cls.put(app)

@@ -784,14 +784,14 @@ class Creative(polymodel.PolyModel):
                                 default="image")
 
     # tracking pixel
-    tracking_url = db.StringProperty()
+    tracking_url = db.StringProperty(verbose_name='Impression Tracking URL')
 
     # destination URLs
-    url = db.StringProperty()
+    url = db.StringProperty(verbose_name='Click URL')
     display_url = db.StringProperty()
 
     # conversion goals
-    conv_appid = db.StringProperty()
+    conv_appid = db.StringProperty(verbose_name='Conversion Tracking ID')
 
     # format predicates - the set of formats that this creative can match
     # e.g. format=320x50
@@ -801,7 +801,7 @@ class Creative(polymodel.PolyModel):
     # format_predicates: one creative per size
     format = db.StringProperty(default="320x50")
 
-    launchpage = db.StringProperty()
+    launchpage = db.StringProperty(verbose_name='Intercept URL')
 
     # time of creation
     account = db.ReferenceProperty(Account)
@@ -931,15 +931,18 @@ class Creative(polymodel.PolyModel):
 class TextAndTileCreative(Creative):
     SIMPLE = SimpleTextAndTileCreative
 
-    line1 = db.StringProperty()
-    line2 = db.StringProperty()
+    line1 = db.StringProperty(verbose_name='Line 1')
+    line2 = db.StringProperty(verbose_name='Line 2')
     # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
     image_serve_url = db.StringProperty()
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
-    color = db.StringProperty(default="000000")
-    font_color = db.StringProperty(default="FFFFFF")
-    gradient = db.BooleanProperty(default=True)
+    color = db.StringProperty(verbose_name='Background Color',
+                              default="000000")
+    font_color = db.StringProperty(verbose_name='Font Color',
+                                   default="FFFFFF")
+    gradient = db.BooleanProperty(verbose_name='Gradient',
+                                  default=True)
 
     def build_simplify_dict(self):
         try:
@@ -957,10 +960,6 @@ class TextAndTileCreative(Creative):
         spec_dict.update(super(TextAndTileCreative, self).build_simplify_dict())
         return spec_dict
 
-    #@property
-    #def Renderer(self):
-    #    return TextAndTileRenderer
-
 
 class HtmlCreative(Creative):
     """ This creative has pure html that has been added by the user.
@@ -969,7 +968,8 @@ class HtmlCreative(Creative):
 
     SIMPLE = SimpleHtmlCreative
     html_data = db.TextProperty()
-    ormma_html = db.BooleanProperty(default=False)
+    ormma_html = db.BooleanProperty(verbose_name='MRAID Ad',
+                                    default=False)
 
     def build_simplify_dict(self):
         spec_dict = dict(html_data = self.html_data,

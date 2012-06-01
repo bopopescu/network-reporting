@@ -7,6 +7,7 @@ import urllib
 import urllib2
 
 from google.appengine.ext import db
+from google.appengine.api import urlfetch
 
 from reporting.models import StatsModel
 import logging
@@ -27,7 +28,8 @@ def api_fetch(start_date, end_date,
                                 account_key, publisher_key,
                                 advertiser_key, hybrid)
         try:
-            response = urllib2.urlopen(url).read()
+            # response = urllib2.urlopen(url).read()
+            response = urlfetch.fetch(url, deadline=10).content
         except:
             logging.error(url)
             raise

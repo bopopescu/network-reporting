@@ -2,7 +2,8 @@ import logging
 
 from account.forms import AccountNetworkConfigForm, \
         AppNetworkConfigForm
-from account.query_managers import AccountQueryManager
+from account.query_managers import AccountQueryManager, \
+        NetworkConfigQueryManager
 from account.models import NetworkConfig
 
 from ad_network_reports.forms import LoginCredentialsForm
@@ -274,7 +275,12 @@ class EditNetworkHandler(RequestHandler):
                 login_form = LoginCredentialsForm(network=network,
                         prefix=network)
 
+        network_configs_dict = NetworkConfigQueryManager. \
+                get_network_configs_dict_for_account(self.account)
         if network == 'jumptap':
+            if str(self.account._network_config) in network_configs_dict:
+                self.account.network_config = network_configs_dict[str(
+                    self.account._network_config)]
             network_data['pub_id'] = getattr(self.account.network_config,
                     network + '_pub_id', '')
 
@@ -283,6 +289,11 @@ class EditNetworkHandler(RequestHandler):
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
+                if app._network_config and str(app._network_config) in \
+                        network_configs_dict:
+                    app.network_config = network_configs_dict[
+                            str(app._network_config)]
+
                 app.pub_id = getattr(app.network_config, network + '_pub_id',
                         '') or ''
 
@@ -321,6 +332,11 @@ class EditNetworkHandler(RequestHandler):
                         ' bid'
 
                 if network in NETWORKS_WITH_PUB_IDS:
+                    if adunit._network_config and str(adunit. \
+                            _network_config) in network_configs_dict:
+                        adunit.network_config = network_configs_dict[
+                                str(adunit._network_config)]
+
                     adunit_pub_id = getattr(adunit.network_config, network +
                             '_pub_id', False)
                     if adunit_pub_id != app.pub_id:

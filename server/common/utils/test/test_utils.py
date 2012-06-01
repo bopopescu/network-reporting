@@ -20,6 +20,11 @@ MODELS = [Account, User, NetworkConfig, App, AdUnit,
           Campaign, AdGroup, Creative, StatsModel,
           AdNetworkLoginCredentials, AdNetworkAppMapper]
 
+ADDED_1 = {'added': 1}
+DELETED_1 = {'deleted': 1}
+EDITED_1 = {'edited': 1}
+UNMODIFIED = {}
+
 
 def prepend_list(e, li):
     li.insert(0, e)
@@ -118,7 +123,9 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
         Nafis (5/21/2012)
     """
 
-    exclude = exclude or ['t']  # many models have unimportant 't' property
+    # many models have unimportant 't' property, also the last login is not
+    # particular useful
+    exclude = exclude or ['t', 'last_login']
     model1_dict = model_to_dict(model1, exclude, reference_only=True)
     model2_dict = model_to_dict(model2, exclude, reference_only=True)
 
@@ -151,7 +158,37 @@ def time_almost_eq(time1, time2, delta=None):
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
-def confirm_db(modified=None):
+# GOAL: check the entire db for every mptest,
+# we only want to pass in what's specifically been modified
+def confirm_db(added={},
+               deleted=[],
+               edited={}):
+    """
+    added: dict of dicts of what's been added (field value only needs to be
+    provided if it differs from the default), key -> field -> value
+
+    deleted: list of keys that have been removed from the db
+
+    edited: dict of dicts of what's been modified, key -> field -> value
+    """
+
+# maybe even:
+def confirm_db(added={},
+               deleted=[],
+               marked_as_deleted=[],
+               edited={}):
+
+def confirm_db(modified=None,
+               account=UNMODIFIED,
+               user=UNMODIFIED,
+               network_config=UNMODIFIED,
+               app=UNMODIFIED,
+               adunit=UNMODIFIED,
+               campaign=UNMODIFIED,
+               adgroup=UNMODIFIED,
+               creative=UNMODIFIED,
+               adnetwork_login_credentials=UNMODIFIED,
+               adnetwork_app_mapper=UNMODIFIED):
     """Decorator that confirms that the rest of the db is unchanged
 
     Args:
@@ -159,12 +196,12 @@ def confirm_db(modified=None):
                   this decorator is NOT responsible for verifying
 
     Returns:
-        wrapped method
+        decorator for a method
 
     Author:
-        Nafis (5/21/2012), Tiago Bandeira (5/25/2012)
+        Nafis Jamal (5/21/2012), (5/30/2012)
+        Tiago Bandeira (5/25/2012)
     """
-    modified = modified or []
 
     def _outer(method):
         # this `make_decorator` is necessary so that nose finds the test
@@ -172,70 +209,115 @@ def confirm_db(modified=None):
         @make_decorator(method)
         def _wrapped_method(self, *args, **kwargs):
             """Method that wraps a test method and ensures
-                that the overall db state has not changed
-                except the purposefully modified models.
+            that the overall db state has not changed
+            except the purposefully modified models.
             """
-            static_models = [model for model in MODELS if model not in
-                    modified]
-
             # creates dictionary of dictionaries: `Model` -> key -> instance
-            # for all db Models
-            pre_test_instances = {}
-            for Model in static_models:
-                instances_of_model_dict = {}
-                for instance in Model.all():
-                    instances_of_model_dict[instance.key()] = instance
-
-                pre_test_instances[Model] = instances_of_model_dict
+            # for all db Models before the test has been run
+            pre_test_instances_dict = _db_to_dict(MODELS)
 
             # run the intended test
             method(self, *args, **kwargs)
+
+            # grab db state after the test (similar to before)
+            post_test_instances_dict = _db_to_dict(MODELS)
 
             # confirm that db stats is as intended
             # raises assertion error if one or more models
             # changed unexpectedly
             messages = []  # compiles all the failures
             error = False
-            for Model in static_models:
-                exclude = []
-                if Model == User:
-                    exclude = ['last_login']
 
-                post_test_instances = list(Model.all().run(batch_size=200))
+            for (model_change_dict, Model) in [(account, Account),
+                                            (user, User),
+                                            (network_config, NetworkConfig),
+                                            (app, App),
+                                            (adunit, AdUnit),
+                                            (campaign, Campaign),
+                                            (adgroup, AdGroup),
+                                            (creative, Creative),
+                                            (adnetwork_login_credentials, AdNetworkLoginCredentials),
+                                            (adnetwork_app_mapper, AdNetworkAppMapper)]:
+                print Model.__name__
+                expected_additions = model_change_dict.get('added', 0)
+                expected_edits = model_change_dict.get('edited', 0)
+                expected_deletes = model_change_dict.get('deleted', 0)
 
-                if len(pre_test_instances[Model]) != len(post_test_instances):
-                    msg = 'Model %s had %s objects but now has %s' % \
-                            (Model.__name__, len(pre_test_instances[Model]),
-                                    len(post_test_instances))
-                    messages.append(msg)
+                expected_delta = expected_additions - expected_deletes
+
+                # makes sure that the number of objects in the db are as expected
+                # according to edits, creates and deletes
+                if len(post_test_instances_dict[Model]) != len(pre_test_instances_dict[Model]) + expected_delta:
+                    messages.append('%s has %s new models instead of the expected %s' %
+                                     (Model.__name__,
+                                     len(post_test_instances_dict[Model]) - len(pre_test_instances_dict[Model]),
+                                     expected_additions)
+                                    )
+                    print pre_test_instances_dict[Model], post_test_instances_dict[Model]
                     error = True
-                else:
-                    for post_test_instance in post_test_instances:
-                        if post_test_instance.key() not in \
-                                pre_test_instances[Model]:
-                            msg = 'Model %s has new object with key %s ' \
-                                    'but same number of total objects' % \
-                                    (Model.__name__, post_test_instance.key())
-                            messages.append(msg)
-                            error = True
-                        else:
-                            try:
-                                model_eq(pre_test_instances[Model][ \
-                                        post_test_instance.key()],
-                                        post_test_instance,
-                                        exclude=exclude)
-                            except AssertionError:
-                                msg = 'Model %s has object with key %s ' \
-                                        'that has been modified' % \
-                                        (Model.__name__,
-                                                post_test_instance.key())
-                                messages.append(msg)
-                                error = True
+
+                num_edited = 0
+                num_deleted = 0
+                for key, pre_obj in pre_test_instances_dict[Model].iteritems():
+                    if not key in post_test_instances_dict[Model]:
+                        num_deleted += 1
+                        continue
+
+                    post_obj = post_test_instances_dict[Model][key]
+                    try:
+                        model_eq(pre_obj, post_obj)
+                    except AssertionError:
+                        num_edited += 1
+
+                if num_edited != expected_edits:
+                    messages.append('Expected %s %ss to be modified, found %s' %
+                                     (expected_edits, Model.__name__, num_edited))
+                    error = True
+
+                if num_deleted != expected_deletes:
+                    messages.append('Expected %s %ss to be deleted, found %s' %
+                                     (expected_deletes, Model.__name__, num_deleted))
+                    error = True
 
             # raises an assertion error if any of the model tests failed
             ok_(not error, ', '.join(messages))
         return _wrapped_method
     return _outer
+
+
+def _db_to_dict(models):
+    """
+    Pulls the database contents into memory as a dictionary
+
+
+    Args:
+        modified: list of Models
+
+    Returns:
+        dictionary, e.g.
+        {
+         'App': {
+                 'key1': obj1,
+                 'key2': obj2,
+                 ...
+                }
+        ...
+         'Campaign': {
+                 'key1': obj1,
+                 'key2': obj2,
+                 ...
+                }
+        }
+    """
+    instances_dict = {}
+    for Model in models:
+        instances_of_model_dict = {}
+        for instance in Model.all().order('__key__'):
+            instances_of_model_dict[instance.key()] = instance
+
+        instances_dict[Model] = instances_of_model_dict
+    return instances_dict
+
 
 
 def decorate_all_test_methods(decorator):

@@ -253,7 +253,7 @@ class AdGroup(db.Model):
     t = db.DateTimeProperty(auto_now_add=True)
 
     # marketplace price floor
-    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
+    mktplace_price_floor = db.FloatProperty(default=0.05, required=False)
 
     DEVICE_CHOICES = (
         ('any', 'Any'),

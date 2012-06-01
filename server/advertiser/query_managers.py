@@ -251,7 +251,7 @@ class CampaignQueryManager(QueryManager):
             campaigns = campaigns.filter("deleted =",deleted)
         if account:
             campaigns = campaigns.filter("account =",account)
-        return campaigns.fetch(limit)
+        return list(campaigns.run(limit=limit, batch_size=limit))
 
     @classmethod
     @wraps_first_arg
@@ -359,6 +359,9 @@ class AdGroupQueryManager(QueryManager):
         if account:
             adgroups = adgroups.filter("account =", account)
 
+        if network_type != False:
+            adgroups = adgroups.filter("network_type =", network_type)
+
         if not (archived == None):
             adgroups = adgroups.filter("archived =", archived)
 
@@ -391,7 +394,7 @@ class AdGroupQueryManager(QueryManager):
                     adgroups_dict[adgroup.key()] = adgroup
             return adgroups_dict.values()[:limit]
 
-        return adgroups.fetch(limit)
+        return list(adgroups.run(limit=limit, batch_size=limit))
 
     @classmethod
     def get_line_items(cls, account=None, order=None, orders=None, limit=1000):
@@ -550,7 +553,7 @@ class CreativeQueryManager(QueryManager):
             creatives = creatives.filter("ad_types IN", ad_types)
         if ad_type:
             creatives = creatives.filter("ad_type =", ad_type)
-        return creatives.fetch(limit)
+        return list(creatives.run(limit=limit, batch_size=limit))
 
     def put_creatives(self, creatives):
         return db.put(creatives)

@@ -113,7 +113,7 @@ class AppIndexViewTestCase(BaseViewTestCase):
         for day in range(14):
             expected_daily_stats.append({'req': 0, 'imp': 0, 'clk': 0, 'usr': 0})
 
-        start_date = datetime.datetime.utcnow() - datetime.timedelta(days=14)
+        start_date = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(days=13)
         start_datetime = datetime.datetime(start_date.year, start_date.month, start_date.day)
         expected_sum = StatsModel(account=self.account, date=start_datetime)
 
@@ -231,10 +231,6 @@ class AppDetailViewTestCase(BaseViewTestCase):
 
         # This view attaches the all_stats property to the app.
         list_eq(get_response.context['app'].all_stats, empty_stats_models)
-
-        # This view defines these as the last two dates in the date range.
-        eq_(get_response.context['today'], empty_stats_models[-1])
-        eq_(get_response.context['yesterday'], empty_stats_models[-2])
 
         # We really shouldn't be passing up HTML fragments here, so here are
         # simple tests until we refactor.

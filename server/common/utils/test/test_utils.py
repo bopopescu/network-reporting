@@ -13,9 +13,17 @@ from account.models import Account, User, NetworkConfig
 from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import App, AdUnit
 from reporting.models import StatsModel
+from ad_network_reports.models import AdNetworkLoginCredentials, \
+        AdNetworkAppMapper
 
-MODELS = [Account, User, NetworkConfig, App, AdUnit, Campaign, AdGroup,
-          Creative, StatsModel]
+MODELS = [Account, User, NetworkConfig, App, AdUnit,
+          Campaign, AdGroup, Creative, StatsModel,
+          AdNetworkLoginCredentials, AdNetworkAppMapper]
+
+ADDED = {'added': 1}
+DELETED = {'deleted': 1}
+EDITED = {'edited': 1}
+UNMODIFIED = {}
 
 
 def prepend_list(e, li):
@@ -115,7 +123,9 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
         Nafis (5/21/2012)
     """
 
-    exclude = exclude or ['t']  # many models have unimportant 't' property
+    # many models have unimportant 't' property, also the last login is not
+    # particular useful
+    exclude = exclude or ['t', 'last_login']
     model1_dict = model_to_dict(model1, exclude, reference_only=True)
     model2_dict = model_to_dict(model2, exclude, reference_only=True)
 
@@ -149,7 +159,17 @@ def time_almost_eq(time1, time2, delta=None):
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
-def confirm_db(modified=None):
+def confirm_db(modified=None,
+               account=UNMODIFIED,
+               user=UNMODIFIED,
+               network_config=UNMODIFIED,
+               app=UNMODIFIED,
+               adunit=UNMODIFIED,
+               campaign=UNMODIFIED,
+               adgroup=UNMODIFIED,
+               creative=UNMODIFIED,
+               adnetwork_login_credentials=UNMODIFIED,
+               adnetwork_app_mapper=UNMODIFIED):
     """Decorator that confirms that the rest of the db is unchanged
 
     Args:
@@ -157,16 +177,12 @@ def confirm_db(modified=None):
                   this decorator is NOT responsible for verifying
 
     Returns:
-        wrapped method
-
-    NOTE: This only confirms that extra models are not created
-          but does not ensure that all of these models have
-          not be modified
+        decorator for a method
 
     Author:
-        Nafis (5/21/2012)
+        Nafis Jamal (5/21/2012), (5/30/2012)
+        Tiago Bandeira (5/25/2012)
     """
-    modified = modified or []
 
     def _outer(method):
         # this `make_decorator` is necessary so that nose finds the test
@@ -174,43 +190,115 @@ def confirm_db(modified=None):
         @make_decorator(method)
         def _wrapped_method(self, *args, **kwargs):
             """Method that wraps a test method and ensures
-                that the overall db state has not changed
-                except the purposefully modified models.
+            that the overall db state has not changed
+            except the purposefully modified models.
             """
-
-            # creates dictionary: `Model` -> count for all db Models
-            pre_test_count_dict = {}
-            for Model in MODELS:
-                pre_test_count_dict[Model] = Model.all().count()
+            # creates dictionary of dictionaries: `Model` -> key -> instance
+            # for all db Models before the test has been run
+            pre_test_instances_dict = _db_to_dict(MODELS)
 
             # run the intended test
             method(self, *args, **kwargs)
 
+            # grab db state after the test (similar to before)
+            post_test_instances_dict = _db_to_dict(MODELS)
+
             # confirm that db stats is as intended
             # raises assertion error if one or more models
-            # changed in number unexpectedly
+            # changed unexpectedly
             messages = []  # compiles all the failures
             error = False
-            for Model in MODELS:
-                if Model not in modified:
-                    pre_test_count = pre_test_count_dict[Model]
 
-                    model_query = Model.all()
-                    post_test_count = model_query.count()
-                    post_test_delete_count = model_query.filter('deleted =', True).count()
+            for (model_change_dict, Model) in [(account, Account),
+                                            (user, User),
+                                            (network_config, NetworkConfig),
+                                            (app, App),
+                                            (adunit, AdUnit),
+                                            (campaign, Campaign),
+                                            (adgroup, AdGroup),
+                                            (creative, Creative),
+                                            (adnetwork_login_credentials, AdNetworkLoginCredentials),
+                                            (adnetwork_app_mapper, AdNetworkAppMapper)]:
+                print Model.__name__
+                expected_additions = model_change_dict.get('added', 0)
+                expected_edits = model_change_dict.get('edited', 0)
+                expected_deletes = model_change_dict.get('deleted', 0)
 
-                    msg = 'Model %s had %s objects but now has %s' % \
-                            (Model.__name__, pre_test_count, post_test_count)
+                expected_delta = expected_additions - expected_deletes
 
-                    if pre_test_count != post_test_count:
-                        if (post_test_count - pre_test_count) != post_test_delete_count:
-                            messages.append(msg)
-                            error = True
+                # makes sure that the number of objects in the db are as expected
+                # according to edits, creates and deletes
+                if len(post_test_instances_dict[Model]) != len(pre_test_instances_dict[Model]) + expected_delta:
+                    messages.append('%s has %s new models instead of the expected %s' %
+                                     (Model.__name__,
+                                     len(post_test_instances_dict[Model]) - len(pre_test_instances_dict[Model]),
+                                     expected_additions)
+                                    )
+                    print pre_test_instances_dict[Model], post_test_instances_dict[Model]
+                    error = True
+
+                num_edited = 0
+                num_deleted = 0
+                for key, pre_obj in pre_test_instances_dict[Model].iteritems():
+                    if not key in post_test_instances_dict[Model]:
+                        num_deleted += 1
+                        continue
+
+                    post_obj = post_test_instances_dict[Model][key]
+                    try:
+                        model_eq(pre_obj, post_obj)
+                    except AssertionError:
+                        num_edited += 1
+
+                if num_edited != expected_edits:
+                    messages.append('Expected %s %ss to be modified, found %s' %
+                                     (expected_edits, Model.__name__, num_edited))
+                    error = True
+
+                if num_deleted != expected_deletes:
+                    messages.append('Expected %s %ss to be deleted, found %s' %
+                                     (expected_deletes, Model.__name__, num_deleted))
+                    error = True
 
             # raises an assertion error if any of the model tests failed
             ok_(not error, ', '.join(messages))
         return _wrapped_method
     return _outer
+
+
+def _db_to_dict(models):
+    """
+    Pulls the database contents into memory as a dictionary
+
+
+    Args:
+        modified: list of Models
+
+    Returns:
+        dictionary, e.g.
+        {
+         'App': {
+                 'key1': obj1,
+                 'key2': obj2,
+                 ...
+                }
+        ...
+         'Campaign': {
+                 'key1': obj1,
+                 'key2': obj2,
+                 ...
+                }
+        }
+    """
+    instances_dict = {}
+    for Model in models:
+        instances_of_model_dict = {}
+        for instance in Model.all().order('__key__'):
+            instances_of_model_dict[instance.key()] = instance
+
+        instances_dict[Model] = instances_of_model_dict
+    return instances_dict
+
 
 
 def decorate_all_test_methods(decorator):

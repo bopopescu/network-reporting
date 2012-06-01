@@ -1,19 +1,37 @@
+# Deployed Friday, June 01, 2012 at 04:58PM PST
+### Deployed by John Pena
+### Tagged deploy-123
+### Bugs Fixed: []
+### Included Commits: 
+ * 0aad496 Merge branch 'master' of github.com:mopub/mopub
+ * 98a83e5 mongostats deadline to 10 seconds
+ * 957cfeb removed superfluous check in NetworkEdit view
+ * ab23eaf Merge branch 'master' of github.com:mopub/mopub
+ * 004883a NetworkConfigs grabbed from memcache when possible in EditNetwork view
+ * cfc706d [#1268 state:resolved]
+ * ee5e8f8 added logging of URL on mongostats timeout
+ * 99d1e3f checkedout updated publisher view tests
+ * 284afdb Merge branch 'app_page_speedup' of github.com:mopub/mopub
+ * 20da58b Merge branch 'campaign_page_speedup' of github.com:mopub/mopub
+ * 2bc3009 sped up app page
+ * 06286a0 speed up campaign page
+ 
 # Deployed Friday, June 01, 2012 at 12:19AM PST
 ### Deployed by Andrew He
 ### Tagged deploy-122
 ### Bugs Fixed: ['1268']
-### Included Commits: 
- * 520d11a Fixed bug in AppQueryManager: NetworkConfigs having wrong account property
- * d8368dc frontend-staging from B8 to B2, like the others
- * 5234d10 Merge branch 'master' of github.com:mopub/mopub
- * 06e5106 [#1268 state:fixed]
- * 6a8696c Merge branch 'master' of github.com:mopub/mopub
- * 2ff38d9 changed the default marketplace price floor from $0.25 to $0.05 [#1258 state:review-requested]
- * 2b258a2 updated comment
- * dc5041f Merge branch 'master' of github.com:mopub/mopub
- * f888ff4 accumulating creatives one adgroup at a time
- * e4c1264 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 520d11a Fixed bug in AppQueryManager: NetworkConfigs having wrong account property
+* d8368dc frontend-staging from B8 to B2, like the others
+* 5234d10 Merge branch 'master' of github.com:mopub/mopub
+* 06e5106 [#1268 state:fixed]
+* 6a8696c Merge branch 'master' of github.com:mopub/mopub
+* 2ff38d9 changed the default marketplace price floor from $0.25 to $0.05 [#1258 state:review-requested]
+* 2b258a2 updated comment
+* dc5041f Merge branch 'master' of github.com:mopub/mopub
+* f888ff4 accumulating creatives one adgroup at a time
+* e4c1264 Deployed without finding any bug fixes.
+
 # Deployed Thursday, May 31, 2012 at 01:13AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-121

@@ -528,17 +528,17 @@ class AbstractCreativeForm(forms.ModelForm):
 
         return data
 
-    class Meta:
-        model = Creative
-        fields = ('format', 'custom_width', 'custom_height', 'landscape',
-                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
-                  'tracking_url')
+
+CREATIVE_FIELDS = ('format', 'custom_width', 'custom_height', 'landscape',
+                   'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                   'tracking_url')
 
 
 class NewCreativeForm(AbstractCreativeForm):
-    class Meta(AbstractCreativeForm.Meta):
+    class Meta:
         model = Creative
-        fields = ('line1', 'line2', 'image_file', 'action_icon',
+        fields = CREATIVE_FIELDS + \
+                 ('line1', 'line2', 'image_file', 'action_icon',
                   'color', 'font_color', 'gradient', 'html_data',
                   'ormma_html')
 
@@ -552,8 +552,9 @@ class ImageCreativeForm(AbstractCreativeForm):
         obj = super(ImageCreativeForm, self).save(commit=False)
         return self._save_form(obj, commit)
 
-    class Meta(AbstractCreativeForm.Meta):
-        fields = ('image_file')
+    class Meta:
+        model = ImageCreative
+        fields = CREATIVE_FIELDS + ('image_file', )
 
 
 class TextAndTileCreativeForm(AbstractCreativeForm):
@@ -565,18 +566,21 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         obj = super(TextAndTileCreativeForm, self).save(commit=False)
         return self._save_form(obj, commit)
 
-    class Meta(AbstractCreativeForm.Meta):
-        fields = ('line1', 'line2', 'image_file', 'action_icon',
-                  'color', 'font_color', 'gradient')
+    class Meta:
+        model = TextAndTileCreative
+        fields = CREATIVE_FIELDS + \
+                 ('line1', 'line2', 'image_file',
+                  'action_icon', 'color', 'font_color', 'gradient')
 
 
-class HtmlCreativeForm(forms.ModelForm):
+class HtmlCreativeForm(AbstractCreativeForm):
     def save(self, commit=True):
-        obj = super(HtmlCreativeForm, self).save(commit=False)
+        obj = super(NewCreativeForm, self).save(commit=False)
         return self._save_form(obj, commit, image=False)
 
-    class Meta(AbstractCreativeForm.Meta):
-        fields = ('html_data', 'ormma_html')
+    class Meta:
+        model = HtmlCreative
+        fields = CREATIVE_FIELDS + ('html_data', 'ormma_html')
 
 
 # Marketplace

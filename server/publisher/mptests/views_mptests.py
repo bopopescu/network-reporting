@@ -232,10 +232,6 @@ class AppDetailViewTestCase(BaseViewTestCase):
         # This view attaches the all_stats property to the app.
         list_eq(get_response.context['app'].all_stats, empty_stats_models)
 
-        # This view defines these as the last two dates in the date range.
-        eq_(get_response.context['today'], empty_stats_models[-1])
-        eq_(get_response.context['yesterday'], empty_stats_models[-2])
-
         # We really shouldn't be passing up HTML fragments here, so here are
         # simple tests until we refactor.
         ok_(isinstance(get_response.context['app_form_fragment'], basestring))

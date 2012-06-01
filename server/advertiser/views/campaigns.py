@@ -778,37 +778,36 @@ class AdGroupDetailHandler(RequestHandler):
         except Exception:
             pass
 
-
-
         # Load creatives and populate
         # 1 RunQuery
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
-        creatives = list(creatives)
-        for c in creatives:
-            c.all_stats = StatsModelQueryManager(self.account,
-                                                 offline=self.offline).get_stats_for_days(advertiser=c,
+        for creative in creatives:
+            creative.all_stats = StatsModelQueryManager(self.account,
+                                                 offline=self.offline).get_stats_for_days(advertiser=creative,
                                                                                           days=self.days)
-            c.stats = reduce(lambda x, y: x + y, c.all_stats, StatsModel())
+            creative.stats = reduce(lambda x, y: x + y, creative.all_stats, StatsModel())
             # TODO: Should fix DB so that format is always there
-            if not c.format:
-                c.format = "320x50"
-            c.size = c.format.partition('x')
+            if not creative.format:
+                creative.format = "320x50"
+            creative.size = creative.format.partition('x')
 
         # Load all adunits targeted by this adgroup/camaign
         # 1 GET
         adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
-
-        apps = {}
-        for au in adunits:
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(self.account)
+        for adunit in adunits:
             # 1 GET per adunit
-            app = apps.get(au.app_key.key())
+            app = apps_dict.get(str(adunit._app_key))
             if not app:
-                # 1 GET per adunit
-                app = AppQueryManager.get(au.app_key.key())
-                app.adunits = [au]
-                apps[au.app_key.key()] = app
-            else:
-                app.adunits.append(au)
+                logging.error("AdUnit %s was in account %s, but its App %s was not." % (adunit, self.account, adunit.app_key))
+                continue
+            if not hasattr(app, 'adunits'):
+                app.adunits = []
+            app.adunits.append(adunit)
+
+        for app in apps_dict.values():
+            if not hasattr(app, 'adunits'):
+                del apps_dict[str(app.key())]
 
         # Load creatives if we are supposed to
         if not (adgroup.campaign.campaign_type in ['network', 'marketplace', 'backfill_marketplace']):
@@ -822,34 +821,33 @@ class AdGroupDetailHandler(RequestHandler):
         else:
             creative_fragment = None
 
+        network_configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
+
         message = []
         if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type != 'iAd':
-            # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
-            if '_native' in adgroup.network_type:
-                adgroup_network_type = adgroup.network_type.replace('_native', '')
-            else:
-                adgroup_network_type = adgroup.network_type
+            # Get rid of _native in admob_native_pub_id and
+            # millennial_native_pub_id.
+            adgroup_network_type = adgroup.network_type.replace('_native', '')
 
-            if (self.account.network_config \
-                and not getattr(self.account.network_config, adgroup_network_type + '_pub_id')) \
-                or not self.account.network_config:
+            self.account.network_config = network_configs_dict.get(str(self.account._network_config))
+            if not (self.account.network_config and
+                    getattr(self.account.network_config, adgroup_network_type + '_pub_id')):
 
-                for app in apps.values():
+                for app in apps_dict.values():
+                    app.network_config = network_configs_dict.get(str(app._network_config))
                     if not (app.network_config and
                             getattr(app.network_config, adgroup_network_type + '_pub_id')):
 
-                        for adunit in app.all_adunits:
+                        for adunit in app.adunits:
+                            adunit.network_config = network_configs_dict.get(str(adunit._network_config))
                             if not (adunit.network_config and
                                     getattr(adunit.network_config, adgroup_network_type + '_pub_id')):
                                 message.append("The application " + app.name + " needs to have a <strong>" + adgroup_network_type.title() + " Network ID</strong> in order to serve. Specify a " + adgroup_network_type.title() + " Network ID on <a href=%s>your account's ad network settings</a> page." % reverse("ad_network_settings"))
                                 break
-        if message == []:
-            message = None
-        else:
-            message = "<br/>".join(message)
+        message = "<br/>".join(message)
 
         # Sort apps alphabetically
-        sorted_apps = sorted(apps.values(), key=lambda app: app.name)
+        sorted_apps = sorted(apps_dict.values(), key=lambda app: app.name)
 
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',

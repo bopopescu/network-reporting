@@ -733,13 +733,7 @@ class DeleteNetworkHandler(RequestHandler):
 
         campaign_key = self.request.POST.get('campaign_key')
 
-        campaigns = AdvertiserQueryManager.get_objects_dict_for_account(
-                self.account)
-
-        if campaign_key not in campaigns:
-            raise Http404
-
-        campaign = campaigns[campaign_key]
+        campaign = CampaignQueryManager.get(campaign_key)
 
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
@@ -766,10 +760,15 @@ class DeleteNetworkHandler(RequestHandler):
                     login.deleted = True
                     login.put()
 
+        adunits = PublisherQueryManager.get_adunits_dict_for_account(
+                self.account).values()
+        adgroups = AdGroupQueryManager.get([AdGroupQueryManager.
+            get_network_adgroup(campaign, adunit.key(),
+                self.account.key()).key() for adunit in adunits])
         # Mark all adgroups as deleted
-        for adgroup in campaign._adgroups:
+        for adgroup in adgroups:
             adgroup.deleted = True
-        AdGroupQueryManager.put(campaign._adgroups)
+        AdGroupQueryManager.put(adgroups)
 
         return TextResponse()
 

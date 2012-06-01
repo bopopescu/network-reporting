@@ -5,7 +5,6 @@ urlpatterns = patterns(
     'publisher.views',
     url(r'^$', 'app_index', name='app_index'),
     url(r'^dashboard/', 'dashboard', name='dashboard'),
-    url(r'^geo$', 'geo_performance', name='publisher_geo_performance'),
 
     url(r'^app/create/$', 'create_app', name='publisher_create_app'),
     url(r'^app/(?P<app_key>[-\w\.]+)/delete/$', 'delete_app', name='publisher_delete_app'),

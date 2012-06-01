@@ -345,6 +345,10 @@ def main():
     """
     puts(colored.blue("Starting deploy"))
 
+    PRODUCTION_SERVERS = ('--production', 'frontend-0', 'frontend-1')
+    STAGING_SERVERS = ('--staging', 'frontend-staging', 'frontend-slam', 'frontend-boom')
+    BETA_SERVERS = ('--beta', 'frontend-beta')
+    
     with indent(2, quote=colored.blue('+')):
         try:
 
@@ -353,14 +357,14 @@ def main():
             active_branch_name = git_branch_name()
             deploy_server = clint.args.get(0)
             deployer = git_get_user()
-
-            if active_branch_name != "master" and deploy_server == 'frontend-0':
+            
+            if active_branch_name != "master" and deploy_server in PRODUCTION_SERVERS:
                 puts(colored.yellow("Careful! You're deploying a non-master branch."))
                 y_or_n = raw_input('Are you sure you want to deploy ' + active_branch_name + '? (y/n) >> ')
                 if y_or_n == 'n':
                     sys.exit(1)
 
-            if deploy_server == 'frontend-0':
+            if deploy_server in PRODUCTION_SERVERS:
                 # Update the repo with tags that might have been made from other deploys
                 puts("Updating the tag list from origin")
                 git_fetch()
@@ -399,8 +403,8 @@ def main():
 
             else:
                 puts("Skipping ticket update process because you're not deploying to production")
-
-            # Deploy the branch to the server
+                
+            # Set the deploy server to frontend-staging if it hasn't been set.
             if deploy_server == None:
                 puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
                 deploy_server = 'frontend-staging'
@@ -412,9 +416,32 @@ def main():
             # Updating version numbers
             puts("Updating Version Numbers")
             update_static_version_numbers()
-                
-            puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
-            launch_deploy_process(server=deploy_server)
+
+            # Launch the deploy process. If --production, --staging or
+            # --beta was passed, go through each of the production/staging/beta
+            # servers and launch the deploy process for each.
+            if deploy_server == '--production':
+                puts("Deploying " + colored.green(active_branch_name) +
+                     " to " + colored.green("all active staging servers"))
+                for production_server in PRODUCTION_SERVERS[1:]:
+                    launch_deploy_process(server=production_server)
+                    
+            elif deploy_server == '--staging':
+                puts("Deploying " + colored.green(active_branch_name) +
+                     " to " + colored.green("all active staging servers"))
+                for staging_server in STAGING_SERVERS[1:]:
+                    launch_deploy_process(server=staging_server)
+                    
+            elif deploy_server == '--beta':
+                puts("Deploying " + colored.green(active_branch_name) +
+                     " to " + colored.green("all active beta servers"))
+                for beta_server in BETA_SERVERS[1:]:
+                    launch_deploy_process(server=beta_server)
+                    
+            else:
+                puts("Deploying " + colored.green(active_branch_name) +
+                     " to " + colored.green(deploy_server))
+                launch_deploy_process(server=deploy_server)
             
             # notify people of a successful deploy on hipichat
             puts("Notifying hipchat")
@@ -422,9 +449,10 @@ def main():
                                                                      deploy_server,
                                                                      deployer)
             # only post a message in hipchat if its in production
-            if deploy_server == 'frontend-0':
+            if deploy_server in PRODUCTION_SERVERS:
                 post_to_hipchat(message, room_id="21565") #mopub chat room
-            post_to_hipchat(message, room_id="47652") #frontend chat room
+            elif deploy_server in STAGING_SERVERS:
+                post_to_hipchat(message, room_id="47652") #frontend chat room
 
         except Exception, error:
             puts(colored.red("Deploy failed."))

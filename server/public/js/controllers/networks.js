@@ -1,4 +1,4 @@
-$(function() {
+(function($, _) {
     var toast_error = function () {
          var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
@@ -287,6 +287,8 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var network_type = bootstrapping_data.network_type,
                 pretty_name = bootstrapping_data.pretty_name,
+                adunits_for_app = bootstrapping_data.adunits_for_app,
+                app_for_adunit = bootstrapping_data.app_for_adunit,
                 account_key = bootstrapping_data.account_key,
                 priors = bootstrapping_data.priors,
                 city_priors = bootstrapping_data.city_priors,
@@ -854,6 +856,10 @@ $(function() {
                 });
             });
 
+            // Initialize active
+            $('input[name$="active"]').change();
+
+
             /* Initialize cpm, custom_html and custom_native */
             _.each(fields, function(field_props) {
                 var field = field_props[0];
@@ -905,18 +911,47 @@ $(function() {
                 }
             });
 
+            var MODAL_FIELDS = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
+                ['hourly_frequency_cap', '/h']]);
+            var ALL_KEYS = _.keys(app_for_adunit).concat(_.keys(adunits_for_app)).concat(['global']);
+            function check_global(text, global_values) {
+                // text and global_values are candidates for global values
+                var all_equal = true;
+                // check if all apps are the same
+                _.each(_.keys(adunits_for_app), function(app_key) {
+                    if(text != $('#' + app_key + '-options-edit').text()) {
+                        all_equal = false;
+                    }
+                });
+
+                var global_text = '';
+                if(!all_equal || text == 'Set app options') {
+                    global_text = 'Set global options';
+                    global_values = ['','',''];
+                } else {
+                    global_text = text;
+                }
+                
+                $('#global-options-edit').text(global_text);
+                // Clear global fields
+                _.each(_.zip(MODAL_FIELDS, global_values), function(field) {
+                    var field_name = field[0][0];
+                    var value = field[1];
+                    $('#id_global-' + field_name).val(value);
+                });
+            }
+
             /* Advanced Options Modal */
             function modal_ok(row, modal_div) {
+                var key = row.attr('id').replace('-row', '');
                 var app_div = $(modal_div).parent();
 
-                var fields = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
-                    ['hourly_frequency_cap', '/h']]);
                 var values = [];
                 var text = '';
-                _.each(fields, function(field) {
+                _.each(MODAL_FIELDS, function(field) {
                     var field_name = field[0];
                     var field_term = field[1];
-                    var value = $(modal_div).find('input[id$=' + field_name + ']').val();
+                    var value = $('#id_' + key + '-' + field_name).val();
                     values.push(value);
                     if(value != undefined && value != '' &&
                             (field_name.indexOf("_frequency_cap") == -1 || value != '0') &&
@@ -928,37 +963,14 @@ $(function() {
                     text = "None"
                 }
 
-                function check_global(global_text, global_values) {
-                    // global_text and global_values are candidates for global values
-                    var all_equal = true;
-                    // check if all apps are the same
-                    $('.app-row .options-edit').each(function() {
-                        if(text != $(this).text()) {
-                            all_equal = false;
-                        }
-                    });
-
-                    if(!all_equal) {
-                        global_text = 'Set global options';
-                        global_values = ['','',''];
-                    }
-                    
-                    $('.global-row .options-edit').text(global_text);
-                    // Clear global fields
-                    _.each(_.zip(fields, global_values), function(field) {
-                        var field_name = field[0][0];
-                        var value = field[1];
-                        $('div#global-options').find('input[id$=' + field_name + ']').val(value);
-                    });
-                }
-
                 if($(row).hasClass('adunit-row')) {
+                    app_key = app_for_adunit[key];
                     // adunit level
-                    $(row).find('.options-edit').text(text);
+                    $('#' + key + '-options-edit').text(text);
 
                     var all_equal = true;
-                    $(row).closest('tbody').find('.adunit-row .options-edit').each(function() {
-                        if(text != $(this).text()) {
+                    _.each(adunits_for_app[app_key], function(adunit_key) {
+                        if(text != $('#' + adunit_key + '-options-edit').text()) {
                             all_equal = false;
                         }
                     });
@@ -972,69 +984,77 @@ $(function() {
                     }
 
                     // perculate to app level
-                    $(row).closest('tbody').find('.app-row .options-edit').text(app_text);
+                    $('#' + app_key + '-options-edit').text(app_text);
                     // Clear app fields
-                    _.each(_.zip(fields, app_values), function(field) {
+                    _.each(_.zip(MODAL_FIELDS, app_values), function(field) {
                         var field_name = field[0][0];
                         var value = field[1];
-                        $(app_div).find('.app-options input[id$=' + field_name + ']').val(value);
+                        $(app_div).find('#id_' + app_key + '-' + field_name).val(value);
                     });
 
                     // perculate to global level
                     check_global(app_text, app_values);
+                } else if($(row).hasClass('app-row')) {
+                    // app level
+                    _.each(adunits_for_app[key].concat(key), function(key) {
+                        $('#' + key + '-options-edit').text(text);
+
+                        // update all adunit fields
+                        _.each(_.zip(MODAL_FIELDS, values), function(field) {
+                            var field_name = field[0][0];
+                            var value = field[1];
+                            $('#id_' + key + '-' + field_name).val(value);
+                        });
+                    });
+
+                    // perculate to global level
+                    check_global(text, values);
+
                 } else {
-                    if($(row).hasClass('global-row')) {
-                        // global level
-                        var selector = $(modal_div).parent().parent();
-                        $('.inventory_table').find('.options-edit').text(text);
-                    } else {
-                        // app level
-                        var selector = $(modal_div).parent();
-                        $(row).closest('tbody').find('.options-edit').text(text);
+                    // global level
+                    var selector = $(modal_div).parent().parent();
+                    _.each(ALL_KEYS, function(key) {
+                        $('#' + key + '-options-edit').text(text);
 
-                        // perculate to global level
-                        check_global(text, values);
-                    }
-
-                    // update all fields
-                    _.each(_.zip(fields, values), function(field) {
-                        var field_name = field[0][0];
-                        var value = field[1];
-                        $(selector).find('input[id$=' + field_name + ']').val(value);
+                        // update all fields
+                        _.each(_.zip(MODAL_FIELDS, values), function(field) {
+                            var field_name = field[0][0];
+                            var value = field[1];
+                            $('#id_' + key + '-' + field_name).val(value);
+                        });
                     });
                 }
             }
 
             // open advanced options modal for global app or adunit
-            $('.options-edit').click(function () {
-                var row = $(this).closest('tr');
-                var key = $(row).attr('id').replace('-row', '');
-                var modal_div = $('#' + key +'-options');
-                // open the correct modal
-                $(modal_div).show();
-                $(modal_div).modal('show');
+            _.each(ALL_KEYS, function(key) {
+                $('#' + key + '-options-edit').click(function() {
+                    var row = $('#' + key + '-row');
+                    var modal_div = $('#' + key + '-options');
+                    // open the correct modal
+                    $(modal_div).show();
+                    $(modal_div).modal('show');
 
-                $(modal_div).find('.save').click(function() { 
-                    modal_ok(row, modal_div);
-                    $(modal_div).modal('hide');
+                    $(modal_div).find('.save').click(function() { 
+                        modal_ok(row, modal_div);
+                        $(modal_div).modal('hide');
+                    });
+
+                    $(modal_div).find('.close').click(function() {
+                        $(modal_div).modal('hide');
+                    });
                 });
-
-                $(modal_div).find('.close').click(function() {
-                    $(modal_div).modal('hide');
-                } );
             });
 
             /* Initialize advanced options and active fields */
             // mimic an entry for each adunit to prepopulate settings
             // at app and global levels
-            $('tr.adunit-row').each(function() {
-                // prepopulate active
-                $('input[name$="active"]').change();
+            _.each(_.flatten(_.values(adunits_for_app)), function(adunit_key) {
+                adunit_row = $('#' + adunit_key + '-row')
 
                 // prepopulate advanced options modals
-                var key = $(this).attr('id').replace('-row', '');
-                var modal_div = $('#' + key +'-options');
-                modal_ok($(this), modal_div);
+                var modal_div = $('#' + adunit_key +'-options');
+                modal_ok(adunit_row, modal_div);
             });
 
             /* GEO TARGETING */
@@ -1191,5 +1211,5 @@ $(function() {
     window.NetworkDetailsController = NetworkDetailsController;
     window.NetworksController = NetworksController;
     window.EditNetworkController = EditNetworkController;
-});
+})(window.jQuery, window._);
 

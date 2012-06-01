@@ -18,5 +18,5 @@ appstats_FILTER_LIST = [{'PATH_INFO' : '!^(/api/|/fetch_api/)'}]
 def webapp_add_wsgi_middleware(app):
     from google.appengine.ext.appstats import recording
     # Uncomment this line to enable AppStats.
-    app = recording.appstats_wsgi_middleware(app)
+    #app = recording.appstats_wsgi_middleware(app)
     return app

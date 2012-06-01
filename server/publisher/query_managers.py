@@ -211,7 +211,7 @@ class AppQueryManager(CachedQueryManager):
                 apps = apps.order("name")
         if offset:
             apps = apps.filter("__key__ >", offset)
-        return apps.fetch(limit)
+        return list(apps.run(limit=limit, batch_size=limit))
 
     @classmethod
     def get_app_keys(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False, offset=None):
@@ -298,7 +298,7 @@ class AppQueryManager(CachedQueryManager):
         """ Updates the network config and the associated app"""
         from account.query_managers import NetworkConfigQueryManager
 
-        network_config.account = App.network_config.get_value_for_datastore(app)
+        network_config.account = App.account.get_value_for_datastore(app)
         NetworkConfigQueryManager.put(network_config)
         app.network_config = network_config
         cls.put(app)
@@ -411,7 +411,7 @@ class AdUnitQueryManager(QueryManager):
             adunits = adunits.filter("app_key =",app)
         if account:
             adunits = adunits.filter("account =",account)
-        return adunits.fetch(limit)
+        return list(adunits.run(limit=limit, batch_size=limit))
 
     @classmethod
     def reports_get_adunits(cls, account=None, publisher=None, advertiser=None, deleted=False):

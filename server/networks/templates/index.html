@@ -180,7 +180,7 @@ Make a table for ad networks that are active
                     {% for app, app_bids in network.apps %}
                     <tr class="app-row" id="app-{{ app.key }}">
                         <td class="dataTable-name">
-                            <a href="{{ app.url }}">{{ app.name }} ({{ app.type }})</a>
+                            <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }} ({{ app.type }})</a>
                         </td>
                         <td class="dataTable-data numeric rev" style="color:orange;">
                             {% if network.reporting %} - {% endif %}

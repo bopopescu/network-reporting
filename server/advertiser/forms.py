@@ -43,9 +43,7 @@ class OrderForm(forms.ModelForm):
 
     class Meta:
         model = Order
-        fields = ('name',
-                  'advertiser',
-                  'description')
+        fields = ('name', 'advertiser', 'description')
 
 
 class LineItemForm(forms.ModelForm):
@@ -130,12 +128,15 @@ class LineItemForm(forms.ModelForm):
     android_version_max = forms.ChoiceField(label='Max', choices=ANDROID_VERSION_CHOICES,
                                             required=False)
 
+    geo_predicates   = forms.Field(required=False, widget=forms.SelectMultiple)
 
     region_targeting = forms.ChoiceField(label='Region Targeting:', initial='all',
                                          choices=(('all', 'Everywhere'),
                                                   ('city', 'City')),
                                          required=False,
                                          widget=forms.RadioSelect)
+
+    cities   = forms.Field(required=False, widget=forms.SelectMultiple)
 
 
     def __init__(self, *args, **kwargs):

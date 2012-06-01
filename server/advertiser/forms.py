@@ -138,7 +138,6 @@ class LineItemForm(forms.ModelForm):
 
     cities   = forms.Field(required=False, widget=forms.SelectMultiple)
 
-
     def __init__(self, *args, **kwargs):
         # initial
         if len(args) > 5:
@@ -422,6 +421,7 @@ class AbstractCreativeForm(forms.ModelForm):
     def _init_image_form(self, *args, **kwargs):
         instance = kwargs.get('instance')
         initial = kwargs.get('initial')
+        text_tile = kwargs.get('text_tile')
 
         if instance:
             if instance.image_blob:
@@ -440,7 +440,7 @@ class AbstractCreativeForm(forms.ModelForm):
             initial.update(image_url=image_url)
             kwargs.update(initial=initial)
 
-    def _save_form(self, obj, image=True):
+    def _save_form(self, obj, commit, image=True):
         if image:
             if self.files.get('image_file'):
                 self._save_image_file(obj)
@@ -560,6 +560,7 @@ class ImageCreativeForm(AbstractCreativeForm):
 
 class TextAndTileCreativeForm(AbstractCreativeForm):
     def __init__(self, *args, **kwargs):
+        kwargs.update(text_tile=True)
         self._init_image_form(*args, **kwargs)
         super(TextAndTileCreativeForm, self).__init__(*args, **kwargs)
 
@@ -591,7 +592,7 @@ LEVELS = (
           ('c', 'Low - Allow ads for mature audiences, including alcohol and dating ads'),
           ('d', 'No filtering - Allow ads including those with provocative or suggestive imagery. \
                  MoPub always blocks illegal, pornographic and deceptive ads.')
-          )
+         )
 
 
 class ContentFilterForm(forms.Form):

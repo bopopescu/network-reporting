@@ -179,14 +179,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         adgroup_stats = self._get_advertiser_stats(adgroup, start, end)
         return adgroup_stats
 
-    def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
-                                        start, end, *args, **kwargs):
-        # mongo
-        app = AppQueryManager.get(app_key)
-        adgroup = AdGroupQueryManager.get(adgroup_key)
-        app_stats = self._get_publisher_stats(start, end, publisher=app,
-                                              advertiser=adgroup)
-        return app_stats
 
     def get_campaign_specific_app_stats(self, app_key, campaign_key,
                                         start, end, *args, **kwargs):
@@ -196,7 +188,24 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         app_stats = self._get_publisher_stats(app, start, end,
                                               advertiser=campaign)
         return app_stats
+        
+    def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
+                                        start, end, *args, **kwargs):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        app_stats = self._get_publisher_stats(start, end, publisher=app,
+                                              advertiser=adgroup)
+        return app_stats
 
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign_key,
+                                        start, end, *args, **kwargs):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end,
+                                              advertiser=campaign)
+        return adunit_stats
 
     def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
@@ -207,14 +216,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                                  advertiser=adgroup)
         return adunit_stats
 
-    def get_campaign_specific_adunit_stats(self, adunit_key, campaign_key,
-                                        start, end, *args, **kwargs):
-        # mongo
-        adunit = AdUnitQueryManager.get(adunit_key)
-        campaign = CampaignQueryManager.get(campaign_key)
-        adunit_stats = self._get_publisher_stats(adunit, start, end,
-                                              advertiser=campaign)
-        return adunit_stats
 
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):
@@ -318,7 +319,7 @@ class MarketplaceStatsFetcher(object):
                 daily_stats_transformed = _transform_stats(daily_stats)
                 daily_stats_transformed['date'] = daily_stats['date']
                 daily_stats_list_transformed.append(daily_stats_transformed)
-            counts['daily'] = daily_stats_list_transformed
+            counts['daily_stats'] = daily_stats_list_transformed
 
         stats_dict = {pub: counts}
         return stats_dict

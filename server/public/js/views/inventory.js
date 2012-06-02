@@ -63,7 +63,7 @@ var mopub = window.mopub || {};
         if (datapoints[kind].length === 1) {
             datapoints[kind].push(datapoints[kind][0]);
         }
-        
+
         var graph = new Rickshaw.Graph({
 	        element: document.querySelector("#stats-chart"),
 	        width: 660,
@@ -105,9 +105,10 @@ var mopub = window.mopub || {};
             graph: graph,
             xFormatter: function(x) {
                 return moment(labels[x]).format("dddd MMMM Do") + 
-                       "<br />" + 
-                       "Total: " + ModelHelpers.format_stat(kind, datapoints[kind][x]) + ' ' + 
-                       ATTRIBUTE_LABELS[kind];
+                    "<br />" + 
+                    "Total: " + 
+                    ModelHelpers.format_stat(kind, datapoints[kind][x]) + ' ' + 
+                    ATTRIBUTE_LABELS[kind];
 
             }
         });
@@ -161,7 +162,7 @@ var mopub = window.mopub || {};
                 // Set up the series that will go into the chart.
                 var current_series = this_view.collection.get_formatted_stat_series(display_val);
                 series_list[display_val] = current_series;
-
+                console.log(current_series);
             });
 
             // Render the template and the chart with the values we composed
@@ -169,6 +170,7 @@ var mopub = window.mopub || {};
 
             var series_date_labels = getDateLabels(this_view.options.start_date, 
                                                    series_list.length);
+
             createDailyStatsChart(active_display_value,
                                   series_list,
                                   series_date_labels);
@@ -535,8 +537,6 @@ var mopub = window.mopub || {};
 
             _.each(metrics, function (metric) {
                 var metric_text = current_model.get_formatted_stat(metric);
-                console.log(metric);
-                console.log(metric_text);
                 $('.' + metric, adunit_row).text(metric_text);
             });
 
@@ -599,7 +599,7 @@ var mopub = window.mopub || {};
         }
     });
 
-    var CampaignView = Backbone.View.extend({
+    var OrderView = Backbone.View.extend({
         initialize: function () {
             try {
                 this.template = _.template($('#campaign-template').html());
@@ -614,14 +614,15 @@ var mopub = window.mopub || {};
             var order_row = $('#' + current_model.get('key'), this.el);
 
             var display_fields = [
-                'revenue',
-                'impressions',
+                'rev',
+                'imp',
                 'fill_rate',
-                'clicks',
+                'clk',
                 'ctr'
             ];
             _.each(display_fields, function(field){
-                $("." + field, order_row).text(current_model.get_formatted_stat(field));
+                var field_text = current_model.get_formatted_stat(field);
+                $("." + field, order_row).text(field_text);
             });
             $(".lineitems", order_row).text(current_model.get('adgroups').length);
             $(".loading-img", order_row).hide();
@@ -629,7 +630,8 @@ var mopub = window.mopub || {};
 
     });
 
-    var AdGroupView = Backbone.View.extend({
+
+    var LineItemView = Backbone.View.extend({
         initialize: function () {
             try {
                 this.template = _.template($('#adgroup-template').html());
@@ -642,20 +644,25 @@ var mopub = window.mopub || {};
         renderInline: function () {
             var current_model = this.model;
             var row = $('tr.lineitem-row#' + current_model.get('key'), this.el);
-            var display_fields = ['revenue',
-                                  'impressions',
-                                  'fill_rate',
-                                  'clicks',
-                                  'ctr'];
+            var display_fields = [
+                'rev',
+                'imp',
+                'fill_rate',
+                'clk',
+                'ctr'
+            ];
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
             });
 
-            var popover_template = _.template(""
-                                              + "<p>Ran from <%= start_datetime %> to <%= end_datetime %>. <br /> <br />"
-                                              + "It <strong>did/did not</strong> meet it's goal of [goal]. <br /> <br />"
-                                              + "Targeting 3 Ad Units"
-                                              + "</p>");
+            var popover_template = ""
+                + "<p>Ran from <%= start_datetime %> to <%= end_datetime %>." 
+                + "<br /> <br />"
+                + "It <strong>did/did not</strong> meet it's goal of [goal]." 
+                + "<br /> <br />"
+                + "Targeting 3 Ad Units"
+                + "</p>";
+            popover_template = _.template(popover_template);
 
             var popover_content = popover_template(current_model.toJSON());
 
@@ -669,10 +676,11 @@ var mopub = window.mopub || {};
     });
 
     window.AdUnitView = AdUnitView;
-
     window.AppView = AppView;
-    window.AdGroupView = AdGroupView;
-    window.CampaignView = CampaignView;
+
+    window.LineItemView = LineItemView;
+    window.OrderView = OrderView;
+
     window.CollectionGraphView = CollectionGraphView;
     window.CollectionChartView = CollectionChartView;
     window.NetworkGraphView = NetworkGraphView;

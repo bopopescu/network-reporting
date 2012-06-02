@@ -5,26 +5,26 @@
      * # Utility functions for rendering models.
      * REFACTOR: move to views/inventory.js
      */
-    function renderCampaign(campaign) {
+    function renderOrder(order) {
 
-        var campaign_view = new CampaignView({
-            model: campaign,
+        var order_view = new OrderView({
+            model: order,
             el: 'inventory_table'
         });
-        campaign_view.renderInline();
+        order_view.renderInline();
 
-        var adgroups = new LineItemCollection(campaign.get('adgroups'));
-        adgroups.each(function(adgroup){
-            renderAdGroup(adgroup);
+        var line_items = new LineItemCollection(order.get('adgroups'));
+        line_items.each(function(line_item){
+            renderLineItem(line_item);
         });
     }
 
-    function renderAdGroup(adgroup)  {
-        var adgroup_view = new AdGroupView({
-            model: adgroup,
+    function renderLineItem(line_item)  {
+        var line_item_view = new LineItemView({
+            model: line_item,
             el: 'inventory_table'
         });
-        adgroup_view.renderInline();
+        line_item_view.renderInline();
     }
 
     function renderApp(app) {
@@ -33,11 +33,6 @@
             el: 'inventory_table'
         });
         app_view.renderInline();
-
-        // var adunits = new AdUnitCollection(app.get('adunits'));
-        // adunits.each(function(adunit){
-        //     renderAdUnit(adunit)
-        // });
     }
 
     function renderAdUnit(adunit) {
@@ -48,38 +43,6 @@
         adunit_view.renderInline();
     }
 
-    /*
-     * Sets up the page chart.
-     * REFACTOR: this should be moved somewhere common.
-     */
-    function renderChart(stats, start_date) {
-        mopub.dashboardStatsChartData = {
-            pointStart: start_date,
-            pointInterval: 86400000,
-            requests: [{ "Total": stats.requests }],
-            impressions: [{ "Total": stats.impressions }],
-            clicks: [{ "Total": stats.clicks }],
-            users: [{ "Total": stats.users }]
-        };
-
-        mopub.Chart.setupDashboardStatsChart('area');
-
-        $('.stats-breakdown tr').click(function(e) {
-            $('#dashboard-stats-chart').fadeOut(100, function() {
-                mopub.Chart.setupDashboardStatsChart('area');
-                $(this).show();
-            });
-        });
-
-        $('.stats-breakdown tr').click(function(e) {
-            var row = $(this);
-            if (!row.hasClass('active')) {
-                var table = row.parents('table');
-                $('tr.active', table).removeClass('active');
-                row.addClass('active');
-            }
-        });
-    }
 
     /*
      * Changes the status of an ad source (or list of ad sources) to
@@ -89,11 +52,13 @@
      * AdSourceStatusChangeHandler class in orders.py for more info.
      */
     function changeStatus(ad_sources, status) {
-
+        
+        // Show the spinner for the ad source
         _.each(ad_sources, function(ad_source) {
             $("#" + ad_source + "-img").removeClass('hidden');
         });
 
+        // Set up
         var promise = $.ajax({
             url: '/advertise/ad_source/status/',
             type: 'POST',
@@ -110,7 +75,7 @@
                         // Hide the loading image
                         $("#" + ad_source + "-img").toggleClass('hidden');
 
-                        // get the stuff we're going to edit
+                        // get the elements  we're going to edit
                         var status_img = $('#status-' + ad_source);
                         var status_change_controls = $('.status_change_control');
                         var ad_source_tds = $('#' +ad_source + ' td:not(.controls)');
@@ -151,6 +116,7 @@
                 _.each(ad_sources, function(ad_source) {
                     $("#" + ad_source + "-img").addClass('hidden');
                 });
+                // Pop up a toast?
             }
         });
     }
@@ -173,7 +139,6 @@
                 $(table_row).show(500);
             }
         });
-
     }
 
 
@@ -200,7 +165,7 @@
      * Unfinished.
      */
     function initializePopovers() {
-
+        //TODO make this selector faster
         $("tr.lineitem-row .moreinfo").popover({
             placement: 'bottom',
             title: "About this line item",
@@ -220,6 +185,8 @@
             $('.stats-breakdown-value.'+$(this).val()).show();
         });
     }
+
+
     /*
      * # OrdersController is the controller for everything
      *   under /advertise/orders/, including:
@@ -240,42 +207,16 @@
              * Create a campaign collection, fetch all of the
              * campaigns, and render all of them inline
              */
-            var campaigns = new OrderCollection();
-            campaigns.stats_endpoint = 'direct';
+            var orders = new OrderCollection();
 
-            campaigns.bind('reset', function(campaigns_collection) {
-
+            orders.bind('reset', function(order_collection) {
                 // render each of the rows
-                _.each(campaigns.models, function(campaign) {
-                    renderCampaign(campaign);
+                _.each(order_collection.models, function(order) {
+                    renderOrder(order);
                 });
-
-                $("#line_item_table").tablesorter();
-
-                // sum up the impressions/clicks/conversions/ctr from
-                // all of the campaigns
-                var impressions = campaigns_collection.reduce(function(total, n){
-                    return total + n.get('impressions');
-                }, 0);
-                var clicks = campaigns_collection.reduce(function(total, n){
-                    return total + n.get('clicks');
-                }, 0);
-                var conversions = campaigns_collection.reduce(function(total, n){
-                    return total + n.get('conversions');
-                }, 0);
-                var ctr = 0;
-                if (impressions > 0){
-                    ctr = clicks / impressions;
-                }
-
-                $("#rollup-impressions").text(mopub.Utils.formatNumberWithCommas(impressions));
-                $("#rollup-clicks").text(mopub.Utils.formatNumberWithCommas(clicks));
-                $("#rollup-ctr").text(mopub.Utils.formatNumberAsPercentage(ctr));
-                $("#rollup-conversions").text(mopub.Utils.formatNumberWithCommas(conversions));
             });
 
-            campaigns.fetch();
-
+            orders.fetch();
 
             /*
              * Clear the checked rows when you click a different tab.
@@ -310,7 +251,10 @@
             $("tr.lineitem-row .moreinfo").popover({
                 placement: 'bottom',
                 title: "About this line item",
-                content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt <strong>motherfucker</strong>.',
+                content: 'Lorem ipsum dolor sit amet, '
+                         + 'consectetur adipisicing elit, '
+                         + 'sed do eiusmod tempor incididunt '
+                         + '<strong>motherfucker</strong>.',
                 delay: { hide: 250 }
 
             });
@@ -364,17 +308,16 @@
              * Data Load
              */
 
-            // Fill in stats for the campaign/adgroup table
-            var campaign = new Campaign({
-                id: bootstrapping_data.order_key,
-                stats_endpoint: 'direct'
+            // Fill in stats for the order/adgroup table
+            var order = new Order({
+                id: bootstrapping_data.order_key
             });
 
-            campaign.bind('change', function(current_campaign) {
-                renderCampaign(campaign);
+            order.bind('change', function(current_order) {
+                renderOrder(order);
             });
 
-            campaign.fetch();
+            order.fetch();
 
             // Fill in stats for the targeting table
             _.each(bootstrapping_data.targeted_apps, function(app_key) {
@@ -384,15 +327,13 @@
                 });
 
                 app.url = function () {
-                    var stats_endpoint = this.get('stats_endpoint');
                     return '/api/campaign/'
                         + bootstrapping_data.order_key
                         + '/apps/'
                         + this.id
                         + "?"
                         + window.location.search.substring(1)
-                        + '&endpoint='
-                        + stats_endpoint;
+                        + '&endpoint=direct';
                 };
 
                 app.bind('change', function(current_app){
@@ -402,23 +343,20 @@
             });
 
 
-            console.log(bootstrapping_data.targeted_adunits);
             _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
                 var adunit = new AdUnit({
                     id: adunit_key,
                     stats_endpoint: 'direct'
                 });
 
-                adunit.url = function () {
-                    var stats_endpoint = this.get('stats_endpoint');
+                adunit.url = function () {                    
                     return '/api/campaign/'
                         + bootstrapping_data.order_key
                         + '/adunits/'
                         + this.id
                         + "?"
                         + window.location.search.substring(1)
-                        + '&endpoint='
-                        + stats_endpoint;
+                        + '&endpoint=direct';
                 };
 
                 adunit.bind('change', function(current_adunit){
@@ -429,8 +367,7 @@
             });
 
 
-            renderChart(bootstrapping_data.daily_stats,
-                        bootstrapping_data.start_date);
+            // RENDER THE CHART
 
 
             /*
@@ -438,21 +375,20 @@
              */
 
             // Sets up the click handler for the order form
-            $("a#order_form_edit").click(function(e){
+            $("#order_form_edit").click(function(e){
                 e.preventDefault();
                 $("#order_form_container").show();
             });
 
             // submit button
-            $('form#order_form #submit').click(function(e) {
+            $('#order_form #submit').click(function(e) {
                 e.preventDefault();
                 $('form#order_form').submit();
             });
         },
 
         initializeLineItemDetail: function(bootstrapping_data) {
-            renderChart(bootstrapping_data.daily_stats,
-                        bootstrapping_data.start_date);
+
             initializeDateButtons();
             initializeStatusControls();
 
@@ -476,7 +412,6 @@
                 };
 
                 app.bind('change', function(current_app){
-                    console.log(current_app)
                     renderApp(current_app);
                 });
                 app.fetch();
@@ -697,7 +632,7 @@
         },
 
         initializeOrderAndLineItemForm: function(bootstrapping_data) {
-            var validator = $('form#order_and_line_item_form').validate({
+            var validator = $('#order_and_line_item_form').validate({
                 errorPlacement: function(error, element) {
                     element.closest('div').append(error);
                 },
@@ -713,6 +648,7 @@
                                     disabled: true
                                 });
                             } else {
+                                console.log(jsonData.errors);
                                 validator.showErrors(jsonData.errors);
                                 $('form#order_and_line_item_form #submit').button({
                                     label: 'Try Again',

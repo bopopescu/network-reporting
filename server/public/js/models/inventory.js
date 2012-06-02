@@ -73,6 +73,14 @@ var mopub = mopub || {};
         return (imp === 0) ? 0 : rev / imp * 1000;
     }
 
+    function calculate_conv_rate(conv, clk) {
+        if (conv === null || clk === null || conv === undefined || clk === undefined) {
+            return null;
+        }
+
+        return (clk === 0) ? 0 : conv / clk;
+    }
+
     function format_stat(stat, value) {
         if (value === null || value === undefined) {
             return '--';
@@ -133,10 +141,11 @@ var mopub = mopub || {};
         },
 
         get_formatted_stat_series: function(stat) {            
-
+            console.log(this);
             var stat_series = this.map(function(model) {
                 var daily_stats = model.get('daily_stats');
                 return _.map(daily_stats, function (day) {
+                    //TODO: calculate derivative (ie fill_rate, cpm) here
                     return day[stat];
                 });
             })[0];
@@ -270,6 +279,7 @@ var mopub = mopub || {};
     var ModelHelpers = {
         calculate_ctr: calculate_ctr,
         calculate_fill_rate: calculate_fill_rate,
+        calculate_conv_rate: calculate_conv_rate,
         format_stat: format_stat
     };
 
@@ -286,6 +296,9 @@ var mopub = mopub || {};
                 case 'fill_rate':
                     return calculate_fill_rate(this.get('req'),
                                                this.get('imp'));
+                case 'conv_rate':
+                    return calculate_conv_rate(this.get('conv'),
+                                               this.get('clk'));
                 case 'cpm':
                     return this.get(stat) || calculate_cpm(this.get('imp'),
                                                            this.get('rev'));
@@ -297,7 +310,6 @@ var mopub = mopub || {};
                 case 'rev':
                 case 'goal':
                 case 'pace':
-                case 'conv_rate':
                     return this.get(stat);
                 default:
                     throw 'Unsupported stat "' + stat + '".';
@@ -846,13 +858,12 @@ var mopub = mopub || {};
 
     var OrderCollection = Backbone.Collection.extend({
         model: Order,
+        stats_endpoint: 'direct',
         url: function() {
-            var stats_endpoint = this.stats_endpoint;
             return '/api/campaign/'
                 + "?"
                 + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+                + '&endpoint=direct';
         }
     });
 

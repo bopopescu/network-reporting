@@ -385,7 +385,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['rev', 'imp', 'cpm'],
+                    display_values: ['rev', 'imp' ] //TODO include cpm
                 });
                 chart_view.render();
             });

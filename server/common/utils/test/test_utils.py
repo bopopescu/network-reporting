@@ -292,26 +292,35 @@ def confirm_all_models(added={},
             confirm_kwargs = defaultdict(Counter)
             for key in added.iterkeys():
                 class_name = db.get(key).__class__.__name__
-                arg_name = class_name_translation.get(class_name, class_name)
+                arg_name = class_name_translation.get(class_name,
+                        class_name.lower())
+                if 'creative' in arg_name:
+                    arg_name = 'creative'
                 confirm_kwargs[arg_name]['added'] += 1
 
             for key in deleted:
                 class_name = db.get(key).__class__.__name__
-                arg_name = class_name_translation.get(class_name, class_name)
+                arg_name = class_name_translation.get(class_name,
+                        class_name.lower())
+                if 'creative' in arg_name:
+                    arg_name = 'creative'
                 confirm_kwargs[arg_name]['deleted'] += 1
 
             for key in (marked_as_deleted + edited.keys()):
                 class_name = db.get(key).__class__.__name__
-                arg_name = class_name_translation.get(class_name, class_name)
+                arg_name = class_name_translation.get(class_name,
+                        class_name.lower())
+                if 'creative' in arg_name:
+                    arg_name = 'creative'
                 confirm_kwargs[arg_name]['edited'] += 1
 
             # run the intended test
-            @confirm_db(**confirm_kwargs)
-            @confirm_model_changes(added=added,
+            decorator_1 = confirm_db(**confirm_kwargs)
+            decorator_2 = confirm_model_changes(added=added,
                                    deleted=deleted,
                                    marked_as_deleted=marked_as_deleted,
                                    edited=edited)
-            method(self, *args, **kwargs)
+            decorator_1(decorator_2(method))(self, *args, **kwargs)
 
         return _wrapped_method
     return _outer

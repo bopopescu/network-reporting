@@ -13,7 +13,7 @@ from django.core.urlresolvers import reverse
 from networks.mptests.network_test_case import NetworkTestCase
 
 from common.utils.test.test_utils import confirm_db, \
-        model_eq, EDITED_1, DELETED_1
+        model_eq, EDITED_1, DELETED_1, confirm_all_models
 
 from advertiser.query_managers import AdvertiserQueryManager, \
         CampaignQueryManager
@@ -59,17 +59,13 @@ class DeleteNetworkTestCase(NetworkTestCase):
         """
 
         marked_as_deleted = [self.campaign.key()] + [adgroup.key() for adgroup
-                in adgroups] + [creative.key() for adgroup in
+                in self.campaign.adgroups] + [creative.key() for adgroup in
                         self.campaign.adgroups for creative in
                         adgroup.creatives]
 
-        @confirm_all_models(deleted=[self.login.key()],
-                marked_as_deleted=marked_as_deleted)
-        def post():
-            self.client.post(self.url, self.post_data,
-                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        post()
+        confirm_all_models(deleted=[self.login.key()],
+                marked_as_deleted=marked_as_deleted)(self.client.post)(self.url,
+                    self.post_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
     @confirm_db(campaign=EDITED_1, adgroup=EDITED_1, creative=EDITED_1)
     def mptest_new_default_campaign_chosen(self):

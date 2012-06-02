@@ -33,7 +33,7 @@ class OrderForm(forms.ModelForm):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        order = super(forms.ModelForm, self).save(*args, **kwargs)
+        order = super(OrderForm, self).save(*args, **kwargs)
 
         # TODO: this is dumb, do something else
         order.is_order = True
@@ -212,14 +212,11 @@ class LineItemForm(forms.ModelForm):
             return budget
 
     def clean_start_datetime(self):
-        # TODO: if it is an existing campaign, you shouldn't be able to move the start date to the past
-        # TODO: can't change the start date after a campaign has started.
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
             # if this is a new campaign, it must start in the future
             if not self.instance and start_datetime.date() < datetime.now(tz=Pacific_tzinfo()).date():
                 raise forms.ValidationError("Start time must be in the future")
-            # start_datetime is entered in Pacific Time
             start_datetime = pacific_to_utc(start_datetime)
         return start_datetime
 
@@ -340,7 +337,7 @@ class LineItemForm(forms.ModelForm):
             adunits = AdUnitQueryManager.get(self.instance.site_keys)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        line_item = super(forms.ModelForm, self).save(*args, **kwargs)
+        line_item = super(LineItemForm, self).save(*args, **kwargs)
 
         if line_item.site_keys:
             adunits = AdUnitQueryManager.get(line_item.site_keys)
@@ -507,7 +504,6 @@ class AbstractCreativeForm(forms.ModelForm):
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)
 
-        # Check the image file type. We only support png, jpg, jpeg, and gif.
         if data:
             img = self.files.get('image_file', None)
             is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg',

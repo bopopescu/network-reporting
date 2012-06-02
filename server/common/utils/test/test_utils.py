@@ -159,10 +159,10 @@ def time_almost_eq(time1, time2, delta=None):
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
-def confirm_model_changes(added={},
-               deleted=[],
-               marked_as_deleted=[],
-               edited={}):
+def confirm_model_changes(added=None,
+               deleted=None,
+               marked_as_deleted=None,
+               edited=None):
     """Verifies that the changes passed in have been made
 
     Args:
@@ -182,6 +182,11 @@ def confirm_model_changes(added={},
     Author:
         Tiago Bandeira (6/1/2012)
     """
+    added = added or {}
+    deleted = deleted or []
+    marked_as_deleted = marked_as_deleted or []
+    edited = edited or {}
+
     def _outer(method):
         # this `make_decorator` is necessary so that nose finds the test
         # and has the appropriate doc string
@@ -257,10 +262,10 @@ def confirm_model_changes(added={},
     return _outer
 
 
-def confirm_all_models(added={},
-               deleted=[],
-               marked_as_deleted=[],
-               edited={}):
+def confirm_all_models(added=None,
+               deleted=None,
+               marked_as_deleted=None,
+               edited=None):
     """Decorator that confirms the entire state of the db.
 
     Decorates method with confirm_db and confirm_model_changes.
@@ -279,6 +284,11 @@ def confirm_all_models(added={},
     Author:
         Tiago Bandeira (6/1/2012)
     """
+    added = added or {}
+    deleted = deleted or []
+    marked_as_deleted = marked_as_deleted or []
+    edited = edited or {}
+
     def _outer(method):
         # this `make_decorator` is necessary so that nose finds the test
         # and has the appropriate doc string

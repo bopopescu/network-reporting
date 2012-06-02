@@ -5,6 +5,7 @@ import inspect
 sys.path.append(os.environ['PWD'])
 
 from datetime import timedelta
+from collections import Counter, defaultdict
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
@@ -158,25 +159,163 @@ def time_almost_eq(time1, time2, delta=None):
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
-# GOAL: check the entire db for every mptest,
-# we only want to pass in what's specifically been modified
-def confirm_db(added={},
-               deleted=[],
-               edited={}):
-    """
-    added: dict of dicts of what's been added (field value only needs to be
-    provided if it differs from the default), key -> field -> value
-
-    deleted: list of keys that have been removed from the db
-
-    edited: dict of dicts of what's been modified, key -> field -> value
-    """
-
-# maybe even:
-def confirm_db(added={},
+def confirm_model_changes(added={},
                deleted=[],
                marked_as_deleted=[],
                edited={}):
+    """Verifies that the changes passed in have been made
+
+    Args:
+        added: dict of dicts of what's been added (field value only needs to
+            be provided if it differs from the default), key -> field -> value
+
+        deleted: list of keys that have been removed from the db
+
+        marked_as_deleted: list of keys where the only change to the instance is
+            that deleted has been set to True
+
+        edited: dict of dicts of what's been modified, key -> field -> value
+
+    Returns:
+        decorator for a method
+
+    Author:
+        Tiago Bandeira (6/1/2012)
+    """
+    def _outer(method):
+        # this `make_decorator` is necessary so that nose finds the test
+        # and has the appropriate doc string
+        @make_decorator(method)
+        def _wrapped_method(self, *args, **kwargs):
+            """Method that wraps a test method and ensures
+            that the changes passed in have occured
+            """
+            # creates dictionary: key -> instance
+            # for all models that have been edited
+            models = db.get([key for key in edited.iterkeys()] + [key for key
+                in marked_as_deleted])
+            pre_test_instances_dict = dict((model.key(), model) for model in
+                models)
+
+            # run the intended test
+            method(self, *args, **kwargs)
+
+            # confirm that every modification intended occured
+            messages = []  # compiles all the failures
+            error = False
+
+            # confirm added
+            for key, modified_fields in added.iteritems():
+                model = db.get(key)
+                model_class = model.__class__
+
+                default_fields = {}
+                for field, obj in model_class.properties().iteritems():
+                    default_fields[field] = obj.default_value()
+
+                # override the defaults for the fields that have been modified
+                model_fields = default_fields
+                for field, value in modified_fields.iteritmes():
+                    model_fields[field] = value
+
+                try:
+                    dict_eq(model_fields, model_to_dict(model))
+                except AssertionError as exception:
+                    messages.append(exception.message)
+                    error = True
+
+            # confirm deleted
+            models = [model for model in db.get([key for key in deleted]) if
+                    model != None]
+            if models:
+                error = True
+                for model in models:
+                    messages.append("%s with key: %s should have been deleted"
+                            "and wasn't" % (model.__class__.__name__,
+                                model.key()))
+
+
+            # add marked_as_deleted models to edited
+            edited = dict(list(edited) + [(key, {'deleted': True}) for key in
+                marked_as_deleted])
+
+            # confirm edited
+            for key, fields in edited.itervalues():
+                pre_test_model = pre_test_instances_dict[key]
+                for field, value in fields:
+                    setattr(pre_test_model, field, value)
+
+                try:
+                    model_eq(db.get(key), pre_test_model)
+                except AssertionError as eception:
+                    messages.append(exception.message)
+                    error = True
+
+            # raises an assertion error if any of the model tests failed
+            ok_(not error, ', '.join(messages))
+        return _wrapped_method
+    return _outer
+
+
+def confirm_all_models(added={},
+               deleted=[],
+               marked_as_deleted=[],
+               edited={}):
+    """Decorator that confirms the entire state of the db.
+
+    Decorates method with confirm_db and confirm_model_changes.
+
+    Args:
+        added: dict of dicts of what's been added (field value only needs to
+            be provided if it differs from the default), key -> field -> value
+
+        deleted: list of keys that have been removed from the db
+
+        marked_as_deleted: list of keys where the only change to the instance is
+            that deleted has been set to True
+
+        edited: dict of dicts of what's been modified, key -> field -> value
+
+    Author:
+        Tiago Bandeira (6/1/2012)
+    """
+    def _outer(method):
+        # this `make_decorator` is necessary so that nose finds the test
+        # and has the appropriate doc string
+        @make_decorator(method)
+        def _wrapped_method(self, *args, **kwargs):
+            class_name_translation = {'AdNetworkLoginCredentials':
+                                        'adnetwork_login_credentials',
+                                      'AdNetworkAppMapper':
+                                        'adnetwork_app_mapper'}
+
+            confirm_kwargs = defaultdict(Counter)
+            for key in added.iterkeys():
+                class_name = db.get(key).__class__.__name__
+                arg_name = class_name_translation.get(class_name, class_name)
+                confirm_kwargs[arg_name]['added'] += 1
+
+            for key in deleted:
+                class_name = db.get(key).__class__.__name__
+                arg_name = class_name_translation.get(class_name, class_name)
+                confirm_kwargs[arg_name]['deleted'] += 1
+
+            for key in (marked_as_deleted + edited.keys()):
+                class_name = db.get(key).__class__.__name__
+                arg_name = class_name_translation.get(class_name, class_name)
+                confirm_kwargs[arg_name]['edited'] += 1
+
+            # run the intended test
+            @confirm_db(**confirm_kwargs)
+            @confirm_model_changes(added=added,
+                                   deleted=deleted,
+                                   marked_as_deleted=marked_as_deleted,
+                                   edited=edited)
+            method(self, *args, **kwargs)
+
+        return _wrapped_method
+    return _outer
+
 
 def confirm_db(modified=None,
                account=UNMODIFIED,

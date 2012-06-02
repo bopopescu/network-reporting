@@ -36,7 +36,8 @@ class DeleteNetworkTestCase(NetworkTestCase):
         self.network_type = 'admob'
         self.campaign = self.generate_network_campaign(self.network_type,
                 self.account, self.existing_apps)
-        self.generate_ad_network_login(self.network_type, self.account)
+        self.login = self.generate_ad_network_login(self.network_type,
+                self.account)
         self.post_data = {'campaign_key': str(self.campaign.key())}
 
     @confirm_db(campaign=EDITED_1, adgroup=EDITED_1, creative=EDITED_1,
@@ -50,38 +51,6 @@ class DeleteNetworkTestCase(NetworkTestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 200)
 
-    @confirm_db(campaign=EDITED_1, adgroup=EDITED_1, creative=EDITED_1,
-        adnetwork_login_credentials=DELETED_1)
-    def mptest_delete_campaign(self):
-        """Delete a campaign and all associated adgroups, creatives and login
-        credentials.
-
-        Author: Tiago Bandeira
-        """
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        campaigns = CampaignQueryManager.get_network_campaigns(self.account)
-        ok_(self.campaign.key() not in set([campaign.key() for campaign in
-            campaigns]))
-
-        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
-                self.account).values()
-        deleted_adgroup_keys = set([adgroup.key() for adgroup in
-            self.campaign.adgroups])
-        ok_(not deleted_adgroup_keys.intersection(set([adgroup.key() for
-            adgroup in adgroups])))
-
-        creatives = AdvertiserQueryManager.get_creatives_dict_for_account(
-                self.account).values()
-        deleted_creative_keys = set([creative.key() for adgroup in
-            self.campaign.adgroups for creative in adgroup.creatives])
-        ok_(not deleted_creative_keys.intersect.set([creative.key() for
-            creative in creatives]))
-
-        logins = AdNetworkLoginCredentials.all().get()
-        ok_(not logins)
-
     def mptest_delete_campaign(self):
         """Delete a campaign and all associated adgroups, creatives and login
         credentials.
@@ -89,14 +58,13 @@ class DeleteNetworkTestCase(NetworkTestCase):
         Author: Tiago Bandeira
         """
 
-        deleted_keys = [self.campaign.key()] + [adgroup.key() for adgroup in
-                adgroups] + [creative.key() for adgroup in
+        marked_as_deleted = [self.campaign.key()] + [adgroup.key() for adgroup
+                in adgroups] + [creative.key() for adgroup in
                         self.campaign.adgroups for creative in
                         adgroup.creatives]
 
-        # note self.login must be set
-        @confirm_db(edited=dict((key, {'deleted': True}) for key in
-            deleted_keys), deleted=[self.login.key()])
+        @confirm_all_models(deleted=[self.login.key()],
+                marked_as_deleted=marked_as_deleted)
         def post():
             self.client.post(self.url, self.post_data,
                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')

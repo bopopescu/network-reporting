@@ -63,9 +63,10 @@ class DeleteNetworkTestCase(NetworkTestCase):
                         self.campaign.adgroups for creative in
                         adgroup.creatives] + [self.login.key()]
 
-        confirm_all_models(marked_as_deleted=marked_as_deleted)(
-                self.client.post)(self.url, self.post_data,
-                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        confirm_all_models(self.client.post, args=[self.url, self.post_data],
+                kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                marked_as_deleted=marked_as_deleted)
+
 
     @confirm_db(campaign=EDITED_1, adgroup=EDITED_1, creative=EDITED_1)
     def mptest_new_default_campaign_chosen(self):

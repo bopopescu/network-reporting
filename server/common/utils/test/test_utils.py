@@ -159,10 +159,13 @@ def time_almost_eq(time1, time2, delta=None):
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
-def confirm_model_changes(added=None,
-               deleted=None,
-               marked_as_deleted=None,
-               edited=None):
+def confirm_model_changes(method,
+                          args=None,
+                          kwargs=None,
+                          added=None,
+                          deleted=None,
+                          marked_as_deleted=None,
+                          edited=None):
     """Verifies that the changes passed in have been made
 
     Args:
@@ -176,96 +179,88 @@ def confirm_model_changes(added=None,
 
         edited: dict of dicts of what's been modified, key -> field -> value
 
-    Returns:
-        decorator for a method
-
     Author:
         Tiago Bandeira (6/1/2012)
     """
+    args = args or []
+    kwargs = kwargs or {}
     added = added or {}
     deleted = deleted or []
     marked_as_deleted = marked_as_deleted or []
     edited = edited or {}
 
-    def _outer(method):
-        # this `make_decorator` is necessary so that nose finds the test
-        # and has the appropriate doc string
-        @make_decorator(method)
-        def _wrapped_method(self, *args, **kwargs):
-            """Method that wraps a test method and ensures
-            that the changes passed in have occured
-            """
-            # creates dictionary: key -> instance
-            # for all models that have been edited
-            models = db.get([key for key in edited.iterkeys()] + [key for key
-                in marked_as_deleted])
-            pre_test_instances_dict = dict((model.key(), model) for model in
-                models)
+    # creates dictionary: key -> instance
+    # for all models that have been edited
+    models = db.get([key for key in edited.iterkeys()] + [key for key
+        in marked_as_deleted])
+    pre_test_instances_dict = dict((model.key(), model) for model in
+        models)
 
-            # run the intended test
-            method(self, *args, **kwargs)
+    # run the intended test
+    method(*args, **kwargs)
 
-            # confirm that every modification intended occured
-            messages = []  # compiles all the failures
-            error = False
+    # confirm that every modification intended occured
+    messages = []  # compiles all the failures
+    error = False
 
-            # confirm added
-            for key, modified_fields in added.iteritems():
-                model = db.get(key)
-                model_class = model.__class__
+    # confirm added
+    for key, modified_fields in added.iteritems():
+        model = db.get(key)
+        model_class = model.__class__
 
-                default_fields = {}
-                for field, obj in model_class.properties().iteritems():
-                    default_fields[field] = obj.default_value()
+        default_fields = {}
+        for field, obj in model_class.properties().iteritems():
+            default_fields[field] = obj.default_value()
 
-                # override the defaults for the fields that have been modified
-                model_fields = default_fields
-                for field, value in modified_fields.iteritmes():
-                    model_fields[field] = value
+        # override the defaults for the fields that have been modified
+        model_fields = default_fields
+        for field, value in modified_fields.iteritmes():
+            model_fields[field] = value
 
-                try:
-                    dict_eq(model_fields, model_to_dict(model))
-                except AssertionError as exception:
-                    messages.append(exception.message)
-                    error = True
+        try:
+            dict_eq(model_fields, model_to_dict(model))
+        except AssertionError as exception:
+            messages.append(exception.message)
+            error = True
 
-            # confirm deleted
-            models = [model for model in db.get([key for key in deleted]) if
-                    model != None]
-            if models:
-                error = True
-                for model in models:
-                    messages.append("%s with key: %s should have been deleted"
-                            " and wasn't" % (model.__class__.__name__,
-                                model.key()))
+    # confirm deleted
+    models = [model for model in db.get([key for key in deleted]) if
+            model != None]
+    if models:
+        error = True
+        for model in models:
+            messages.append("%s with key: %s should have been deleted"
+                    " and wasn't" % (model.__class__.__name__,
+                        model.key()))
 
 
-            # add marked_as_deleted models to edited
-            all_edited = dict(list(edited) + [(key, {'deleted': True}) for
-                key in marked_as_deleted])
+    # add marked_as_deleted models to edited
+    all_edited = dict(list(edited) + [(key, {'deleted': True}) for
+        key in marked_as_deleted])
 
-            # confirm edited
-            for key, fields in all_edited.iteritems():
-                pre_test_model = pre_test_instances_dict[key]
-                for field, value in fields.iteritems():
-                    setattr(pre_test_model, field, value)
+    # confirm edited
+    for key, fields in all_edited.iteritems():
+        pre_test_model = pre_test_instances_dict[key]
+        for field, value in fields.iteritems():
+            setattr(pre_test_model, field, value)
 
-                try:
-                    model_eq(db.get(key), pre_test_model)
-                except AssertionError as exception:
-                    messages.append(exception.message)
-                    error = True
+        try:
+            model_eq(db.get(key), pre_test_model)
+        except AssertionError as exception:
+            messages.append(exception.message)
+            error = True
 
-            # raises an assertion error if any of the model tests failed
-            ok_(not error, ', '.join(messages))
-        return _wrapped_method
-    return _outer
+    # raises an assertion error if any of the model tests failed
+    ok_(not error, ', '.join(messages))
 
 
-def confirm_all_models(added=None,
-               deleted=None,
-               marked_as_deleted=None,
-               edited=None):
+def confirm_all_models(method,
+                       args=None,
+                       kwargs=None,
+                       added=None,
+                       deleted=None,
+                       marked_as_deleted=None,
+                       edited=None):
     """Decorator that confirms the entire state of the db.
 
     Decorates method with confirm_db and confirm_model_changes.
@@ -284,56 +279,48 @@ def confirm_all_models(added=None,
     Author:
         Tiago Bandeira (6/1/2012)
     """
+    args = args or []
+    kwargs = kwargs or {}
     added = added or {}
     deleted = deleted or []
     marked_as_deleted = marked_as_deleted or []
     edited = edited or {}
 
-    def _outer(method):
-        # this `make_decorator` is necessary so that nose finds the test
-        # and has the appropriate doc string
-        @make_decorator(method)
-        def _wrapped_method(self, *args, **kwargs):
-            class_name_translation = {'AdNetworkLoginCredentials':
-                                        'adnetwork_login_credentials',
-                                      'AdNetworkAppMapper':
-                                        'adnetwork_app_mapper'}
+    class_name_translation = {'AdNetworkLoginCredentials':
+                                'adnetwork_login_credentials',
+                              'AdNetworkAppMapper':
+                                'adnetwork_app_mapper'}
 
-            confirm_kwargs = defaultdict(Counter)
-            for key in added.iterkeys():
-                class_name = db.get(key).__class__.__name__
-                arg_name = class_name_translation.get(class_name,
-                        class_name.lower())
-                if 'creative' in arg_name:
-                    arg_name = 'creative'
-                confirm_kwargs[arg_name]['added'] += 1
+    confirm_kwargs = defaultdict(Counter)
+    for key in added.iterkeys():
+        class_name = db.get(key).__class__.__name__
+        arg_name = class_name_translation.get(class_name,
+                class_name.lower())
+        if 'creative' in arg_name:
+            arg_name = 'creative'
+        confirm_kwargs[arg_name]['added'] += 1
 
-            for key in deleted:
-                class_name = db.get(key).__class__.__name__
-                arg_name = class_name_translation.get(class_name,
-                        class_name.lower())
-                if 'creative' in arg_name:
-                    arg_name = 'creative'
-                confirm_kwargs[arg_name]['deleted'] += 1
+    for key in deleted:
+        class_name = db.get(key).__class__.__name__
+        arg_name = class_name_translation.get(class_name,
+                class_name.lower())
+        if 'creative' in arg_name:
+            arg_name = 'creative'
+        confirm_kwargs[arg_name]['deleted'] += 1
 
-            for key in (marked_as_deleted + edited.keys()):
-                class_name = db.get(key).__class__.__name__
-                arg_name = class_name_translation.get(class_name,
-                        class_name.lower())
-                if 'creative' in arg_name:
-                    arg_name = 'creative'
-                confirm_kwargs[arg_name]['edited'] += 1
+    for key in (marked_as_deleted + edited.keys()):
+        class_name = db.get(key).__class__.__name__
+        arg_name = class_name_translation.get(class_name,
+                class_name.lower())
+        if 'creative' in arg_name:
+            arg_name = 'creative'
+        confirm_kwargs[arg_name]['edited'] += 1
 
-            # run the intended test
-            decorator_1 = confirm_db(**confirm_kwargs)
-            decorator_2 = confirm_model_changes(added=added,
-                                   deleted=deleted,
-                                   marked_as_deleted=marked_as_deleted,
-                                   edited=edited)
-            decorator_1(decorator_2(method))(self, *args, **kwargs)
-
-        return _wrapped_method
-    return _outer
+    # run the intended test
+    decorator = confirm_db(**confirm_kwargs)
+    decorator(confirm_model_changes)(method, args=args, kwargs=kwargs,
+            added=added, deleted=deleted, marked_as_deleted=marked_as_deleted,
+            edited=edited)
 
 
 def confirm_db(modified=None,

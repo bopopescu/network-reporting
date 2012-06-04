@@ -11,8 +11,8 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from common.utils.test.views import BaseViewTestCase
-from common.utils.test.test_utils import (dict_eq, time_almost_eq, 
-                                          model_eq, model_key_eq, 
+from common.utils.test.test_utils import (dict_eq, time_almost_eq,
+                                          model_eq, model_key_eq, model_to_dict,
                                           confirm_db, decorate_all_test_methods)
 
 from google.appengine.ext import db
@@ -40,7 +40,7 @@ from advertiser.query_managers import (CampaignQueryManager,
 
 from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
-from advertiser.models import (Creative, TextAndTileCreative, 
+from advertiser.models import (Creative, TextAndTileCreative,
                                HtmlCreative, ImageCreative, AdGroup, Campaign)
 from account.models import Account
 from advertiser.views.orders import get_targeted_apps
@@ -91,18 +91,17 @@ class OrderViewTestCase(BaseViewTestCase):
             u'budget_type': u'daily',
             u'daily_frequency_cap': u'0',
             u'device_targeting': u'0',
-            u'end_datetime_0': u'05/31/2012',
+            u'end_datetime_0': u'06/26/3030',
             u'end_datetime_1': u'11:59 PM',
             u'geo_predicates': [u'US'],
             u'gtee_priority': u'normal',
             u'hourly_frequency_cap': u'0',
             u'ios_version_max': u'999',
             u'ios_version_min': u'2.0',
-            u'keywords': u'',
             u'name': u'Test Line Item',
             u'promo_priority': u'normal',
             u'region_targeting': u'all',
-            u'start_datetime_0': u'05/30/2012',
+            u'start_datetime_0': u'05/30/2020',
             u'start_datetime_1': u'12:00 AM',
             u'target_android': u'on',
             u'target_ipad': u'on',
@@ -126,6 +125,7 @@ class OrderViewTestCase(BaseViewTestCase):
         line_item_form = LineItemForm(self.post_body,
                                       instance=None,
                                       site_keys=site_keys)
+        line_item_form.is_valid()
         self.mock_line_item = line_item_form.save()
         self.mock_line_item.account = self.account
         self.mock_line_item.campaign = self.mock_order
@@ -196,7 +196,7 @@ class OrderIndexTestCase(OrderViewTestCase):
             ok_(order.is_order)
 
     def mptest_all_line_items_are_for_orders(self):
-        mpx_campaign = generate_marketplace_campaign(self.account, None)
+        mpx_campaign = generate_marketplace_campaign(self.account)
         mpx_adgroup = generate_adgroup(mpx_campaign, [], self.account, 'marketplace')
         response = self.client.get(self.url)
         line_items = response.context['line_items']
@@ -685,7 +685,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        non_order_mpx = generate_marketplace_campaign(self.account, None)
+        non_order_mpx = generate_marketplace_campaign(self.account)
         url = reverse('advertiser_line_item_form_new',
                       kwargs={
                         'order_key': unicode(non_order_mpx.key())
@@ -693,7 +693,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
-        non_order_network = generate_marketplace_campaign(self.account, None)
+        non_order_network = generate_marketplace_campaign(self.account)
         url = reverse('advertiser_line_item_form_new',
                       kwargs={
                         'order_key': unicode(non_order_network.key())
@@ -1470,14 +1470,19 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         self.image_creative_post_body.update({
             u'ad_type': u'image',
             u'name': u'Image Creative',
-            u'image_file': open(self.test_banner_path, 'rb')
         })
+        test_banner = open('test_banner.gif')
+        image_file = SimpleUploadedImage(test_banner.name, test_banner.read())
+        self.image_creative_post_files = dict(image_file=image_file))
 
         test_tile_path = os.path.join(pwd, 'test_tile.png')
         self.text_tile_creative_post_body.update({
             u'ad_type': u'text_icon',
             u'image_file': open(test_tile_path, 'rb')
         })
+        test_tile = open('test_tile.gif')
+        image_file = SimpleUploadedImage(test_tile.name, test_tile.read())
+        self.text_tile_creative_post_files = dict(image_file=image_file))
 
         mock_creative_form = HtmlCreativeForm(self.html_creative_post_body,
                                               instance=None)

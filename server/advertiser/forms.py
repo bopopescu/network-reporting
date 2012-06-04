@@ -25,7 +25,6 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         # TODO: figure out if there is a less hacky way to get this
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
-
         if instance and not instance.is_order:
             # TODO: figure out what type of exception this should really be, ValueError?
             raise Exception("Campaign instance must be an order.")
@@ -138,6 +137,8 @@ class LineItemForm(forms.ModelForm):
 
     cities   = forms.Field(required=False, widget=forms.SelectMultiple)
 
+    keywords = forms.Field(required=False, widget=forms.SelectMultiple)
+
     def __init__(self, *args, **kwargs):
         # initial
         if len(args) > 5:
@@ -221,19 +222,17 @@ class LineItemForm(forms.ModelForm):
         return start_datetime
 
     def clean_end_datetime(self):
-        # TODO: not change the end date after a campaign has completed
         end_datetime = self.cleaned_data.get('end_datetime', None)
         if end_datetime:
-            # end_datetime is entered in Pacific Time
             end_datetime = pacific_to_utc(end_datetime)
         return end_datetime
 
-    def clean_allocation_percentage(self):
-        allocation_percentage = self.cleaned_data.get('allocation_percentage', None)
-        if (not isinstance(allocation_percentage, int) and
-            not isinstance(allocation_percentage, float)):
-            allocation_percentage = 100
-        return allocation_percentage
+    # def clean_allocation_percentage(self):
+    #     allocation_percentage = self.cleaned_data.get('allocation_percentage', None)
+    #     if (not isinstance(allocation_percentage, int) and
+    #         not isinstance(allocation_percentage, float)):
+    #         allocation_percentage = 100
+    #     return allocation_percentage
 
     def clean_site_keys(self):
         return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
@@ -251,20 +250,19 @@ class LineItemForm(forms.ModelForm):
         keywords = self.cleaned_data.get('keywords', None)
         if keywords:
             if len(keywords) > 500:
-                raise forms.ValidationError('Maximum 500 characters for keywords.')
+                raise forms.ValidationError('Maximum 500 characters for keywords')
         return keywords
 
     def _clean_start_and_end_datetime(self, data):
-        start = data.get('start_datetime') or datetime.now()
+        start = data.get('start_datetime', None) or datetime.now()
         data['start_datetime'] = start
         end = data.get('end_datetime')
         if end and end <= start:
             self._errors['end_datetime'] = ErrorList()
-            self._errors['end_datetime'].append("Stop time must \
-                                                be after start time")
+            self._errors['end_datetime'].append('End datetime must be after start datetime')
 
     def _clean_gtee_adgroup_type(self, data):
-        priority = data.get('gtee_priority')
+        priority = data.get('gtee_priority', None)
         if not priority:
             self._errors['gtee_priority'] = ErrorList()
             self._errors['gtee_priority'].append('This field is required')
@@ -272,7 +270,7 @@ class LineItemForm(forms.ModelForm):
             data['adgroup_type'] = 'gtee_%s' % priority
 
     def _clean_gtee_budget(self, data):
-        budget = data.get('budget')
+        budget = data.get('budget', None)
         if not budget:
             data['daily_budget'] = None
             data['full_budget'] = None
@@ -298,7 +296,7 @@ class LineItemForm(forms.ModelForm):
             data['daily_budget'] = None
 
     def _clean_promo_adgroup_type(self, data):
-        priority = data.get('promo_priority')
+        priority = data.get('promo_priority', None)
         if not priority:
             self._errors['promo_priority'] = ErrorList()
             self._errors['promo_priority'].append('This field is required')
@@ -312,7 +310,7 @@ class LineItemForm(forms.ModelForm):
         data['budget_strategy'] = None
 
     def _clean_targeted_cities(self, data):
-        if data.get('region_targeting') != 'city':
+        if data.get('region_targeting', None) != 'city':
             data['cities'] = []
 
     def clean(self):
@@ -407,7 +405,7 @@ class AbstractCreativeForm(forms.ModelForm):
                                     choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
                                              ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
                                              ('none', 'None')),
-                                    widget=forms.RadioSelect)
+                                    widget=forms.RadioSelect, required=False)
 
     html_data   = forms.CharField(label='HTML Body:', required=False,
                                   widget=forms.Textarea(attrs={
@@ -416,9 +414,9 @@ class AbstractCreativeForm(forms.ModelForm):
                                                                }))
 
     def _init_image_form(self, *args, **kwargs):
-        instance = kwargs.get('instance')
-        initial = kwargs.get('initial')
-        text_tile = kwargs.get('text_tile')
+        instance = kwargs.get('instance', None)
+        initial = kwargs.get('initial', None)
+        text_tile = kwargs.get('text_tile', False)
 
         if instance:
             if instance.image_blob:
@@ -453,7 +451,8 @@ class AbstractCreativeForm(forms.ModelForm):
         return obj
 
     def _save_image_file(self, obj):
-        image_data = self.files.get('image_file').read()
+        self.files['image_file'].open()
+        image_data = self.files['image_file'].read()
         img = images.Image(image_data)
         obj.image_width = img.width
         obj.image_height = img.height
@@ -493,13 +492,13 @@ class AbstractCreativeForm(forms.ModelForm):
     def clean_name(self):
         return self.cleaned_data.get('name', '').strip()
 
-    def clean_url(self):
-        url = self.cleaned_data.get('url', None)
-        if url:
-            if url.find("://") == -1:
-                raise forms.ValidationError("You need to specify a protocol \
-                                            (like http://) at the beginning of your url")
-        return url
+    # def clean_url(self):
+    #     url = self.cleaned_data.get('url', None)
+    #     if url:
+    #         if url.find("://") == -1:
+    #             raise forms.ValidationError("You need to specify a protocol \
+    #                                         (like http://) at the beginning of your url")
+    #     return url
 
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)
@@ -517,27 +516,26 @@ class AbstractCreativeForm(forms.ModelForm):
 
         # Check to make sure an image file or url was provided.
         # We only need to check this if it's a new form being submitted
-        if not self.instance:
+        if not self.instance and 'image_file' in self.Meta.fields:
             if not (self.cleaned_data.get('image_file', None) or \
                     self.cleaned_data.get('image_url', None)):
-                raise forms.ValidationError('You must upload an image file \
-                                            for a creative of this type.')
+                raise forms.ValidationError('You must upload an image file for a creative of this type.')
 
         return data
 
 
-CREATIVE_FIELDS = ('format', 'custom_width', 'custom_height', 'landscape',
-                   'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
-                   'tracking_url')
+SHARED_CREATIVE_FIELDS = ('format', 'custom_width', 'custom_height',
+                          'landscape', 'ad_type', 'name',
+                          'url', 'launchpage', 'conv_appid', 'tracking_url', )
 
 
 class NewCreativeForm(AbstractCreativeForm):
     class Meta:
         model = Creative
-        fields = CREATIVE_FIELDS + \
+        fields = SHARED_CREATIVE_FIELDS + \
                  ('line1', 'line2', 'image_file', 'action_icon',
                   'color', 'font_color', 'gradient', 'html_data',
-                  'ormma_html')
+                  'ormma_html', )
 
 
 class ImageCreativeForm(AbstractCreativeForm):
@@ -551,13 +549,14 @@ class ImageCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = ImageCreative
-        fields = CREATIVE_FIELDS + ('image_file', )
+        fields = SHARED_CREATIVE_FIELDS + ('image_file', )
 
 
 class TextAndTileCreativeForm(AbstractCreativeForm):
     def __init__(self, *args, **kwargs):
         kwargs.update(text_tile=True)
         self._init_image_form(*args, **kwargs)
+        del kwargs['text_tile']
         super(TextAndTileCreativeForm, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
@@ -566,23 +565,22 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = TextAndTileCreative
-        fields = CREATIVE_FIELDS + \
+        fields = SHARED_CREATIVE_FIELDS + \
                  ('line1', 'line2', 'image_file',
-                  'action_icon', 'color', 'font_color', 'gradient')
+                  'action_icon', 'color', 'font_color', 'gradient', )
 
 
 class HtmlCreativeForm(AbstractCreativeForm):
     def save(self, commit=True):
-        obj = super(NewCreativeForm, self).save(commit=False)
+        obj = super(HtmlCreativeForm, self).save(commit=False)
         return self._save_form(obj, commit, image=False)
 
     class Meta:
         model = HtmlCreative
-        fields = CREATIVE_FIELDS + ('html_data', 'ormma_html')
+        fields = SHARED_CREATIVE_FIELDS + ('html_data', 'ormma_html', )
 
 
-# Marketplace
-LEVELS = (
+MPX_FILTER_LEVELS = (
           ('a', 'Strict - Only allow ads appropriate for family audiences'),
           ('b', 'Moderate - Allow ads for general audiences'),
           ('c', 'Low - Allow ads for mature audiences, including alcohol and dating ads'),
@@ -592,7 +590,7 @@ LEVELS = (
 
 
 class ContentFilterForm(forms.Form):
-    level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
+    level = forms.ChoiceField(choices=MPX_FILTER_LEVELS, widget=forms.RadioSelect)
 
 
 def _get_filetype_extension(filename):

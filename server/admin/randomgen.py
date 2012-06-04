@@ -228,7 +228,7 @@ def generate_campaign(account, *args):
     return campaign
 
 
-def generate_marketplace_campaign(account, budget):
+def generate_marketplace_campaign(account):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
                         advertiser = "marketplace",
@@ -265,7 +265,7 @@ def generate_account(username=USERNAME,
                                       email=email)
     manager.create_profile(user)
 
-    
+
     account = AccountQueryManager().get_current_account(user=user)
     account.active = True
     account.marketplace_config = marketplace_config
@@ -340,8 +340,8 @@ def generate_creative(account, adgroup, *args, **kwargs):
 
     # see forms.py line 564 to see how to do this
     # if constructor_class in (TextAndTileCreative, ImageCreative):
-    #     creative.image_blob = 
-    
+    #     creative.image_blob =
+
     creative.put()
     return creative
 
@@ -364,11 +364,11 @@ def main():
 
         for i in xrange(NUM_CAMPAIGNS_PER_APP):
             budget = generate_budget()
-            
+
             campaign = generate_campaign(account, budget)
 
             campaigns_per_app[app].append(campaign)
-            
+
             for i in xrange(NUM_ADGROUPS_PER_CAMPAIGN):
                 adgroup_type = 'gtee' if i%2==0 else 'promo'
                 adgroup = generate_adgroup(campaign,
@@ -379,7 +379,7 @@ def main():
                 for i in xrange(NUM_CREATIVES_PER_ADGROUP):
                     creatives_per_adgroup[str(adgroup)].append(generate_creative(account, adgroup))
 
-                    
+
     print creatives_per_adgroup
     cur_date = APP_STATS_SINCE
     today = datetime.datetime.now()

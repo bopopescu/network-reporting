@@ -124,8 +124,7 @@ class CampaignQueryManager(QueryManager):
         app).
         """
         # get campaigns for the account from memcache
-        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
-                account)
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(account)
 
         def network_campaign_filter(campaign):
             if campaign.campaign_type == 'network':
@@ -351,7 +350,7 @@ class AdGroupQueryManager(QueryManager):
     @classmethod
     def get_adgroups(cls, campaign=None, campaigns=None, adunit=None,
                      app=None, account=None, deleted=False, limit=MAX_OBJECTS,
-                     archived=False):
+                     archived=False, network_type=False):
         """ archived=True means we only show archived adgroups. """
         adgroups = AdGroup.all()
         if not (deleted == None):

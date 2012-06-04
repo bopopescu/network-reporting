@@ -573,5 +573,5 @@ class TestCreativeForm(unittest.TestCase):
         # clean method is unecessary again
         pass
 
-    def sk(self):
+    def mptest(self):
         pass

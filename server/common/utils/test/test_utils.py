@@ -1,11 +1,9 @@
 import os
 import sys
-import inspect
 
 sys.path.append(os.environ['PWD'])
 
 from datetime import timedelta
-from collections import Counter, defaultdict
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
@@ -162,115 +160,6 @@ def time_almost_eq(time1, time2, delta=None):
     ok_(time1 < time2 + delta and time1 > time2 - delta)
 
 
-def confirm_model_changes(method,
-                          args=None,
-                          kwargs=None,
-                          added=None,
-                          deleted=None,
-                          marked_as_deleted=None,
-                          edited=None,
-                          response_code=200,
-                          return_values=None):
-    """Verifies that the changes passed in have been made
-
-    Args:
-        added: dict of list of dicts of what's been added (field value only
-            needs to be provided if it differs from the default),
-            class -> [field -> value, ...]
-
-            ex.
-            {Campaign: [{'name': 'Campaign 1', ...} ...], ...}
-
-            NOTE: for reference properties if the model exists prior to the
-                method call use the key as the value if it's being added use
-                the index into the list of that models instances as the value
-
-        deleted: list of keys that have been removed from the db
-
-        marked_as_deleted: list of keys where the only change to the instance is
-            that deleted has been set to True
-
-        edited: dict of dicts of what's been modified, key -> field -> value
-
-    Author:
-        Tiago Bandeira (6/1/2012)
-    """
-    args = args or []
-    kwargs = kwargs or {}
-    added = added or {}
-    deleted = deleted or []
-    marked_as_deleted = marked_as_deleted or []
-    edited = edited or {}
-
-    # run the intended test
-    response = method(*args, **kwargs)
-    eq_(response.status_code, response_code)
-    # HACK for returning values when called via decorator in confirm_all_models
-    return_values.append(response)
-
-    # confirm that every modification intended occured
-    messages = []  # compiles all the failures
-    error = False
-
-    # confirm added
-    added_messages, error = confirm_added(added)
-    messages += added_messages
-
-    # confirm deleted
-    deleted_messages, error = confirm_deleted(deleted)
-    messages += deleted_messages
-
-    # confirm deleted and marked as deleted
-    edited_and_marked_as_deleted, error = confirm_edited_and_marked_as_deleted(
-            edited, marked_as_deleted)
-    messages += edited_and_marked_as_deleted
-
-    # raises an assertion error if any of the model tests failed
-    ok_(not error, ', '.join(messages))
-
-
-def confirm_added(added):
-    """Helper function for confirm_model_changes that confirms it's added arg
-
-    Author:
-        Tiago Bandeira (6/4/2012)
-    """
-    messages = []  # compiles all the failures
-    error = False
-
-    instances_for_model_dict = defaultdict(lambda : defaultdict(list))
-    for class_, added_models in added.iteritems():
-        # create a dict of tuples of model fields -> [instance, ...]
-        # basically make object dict hashable
-        for instance in class_.all():
-            instances_for_model_dict[class_][generate_instance_key(
-                instance)].append(instance)
-
-    for class_, added_models in added.iteritems():
-        default_fields = {}
-        for field, obj in class_.properties().iteritems():
-            default_fields[field] = obj.default_value()
-
-        for index, instance_dict in enumerate(added_instances):
-            # override the defaults for the fields that have been modified
-            model_fields = copy(default_fields)
-            for field, value in instance_dict.iteritmes():
-                model_fields[field] = value
-
-            key = generate_instance_key(model_fields)
-            if key in instances_for_model_dict[class_]:
-
-                # confirm the reference properties are set correctly
-                confirm_reference_properties(instance_dict,
-                        instances_for_model_dict, class_, index)
-
-            else:
-                messages.append("%s at index %d wasn't created" %
-                        (class_.__name__, index))
-                error = True
-
-    return messages, error
-
 def generate_instance_key(instance):
     if not isinstance(instance, dict):
         instance_dict = model_to_dict(instance, include_references=False)
@@ -323,120 +212,6 @@ def confirm_reference_properties(instance_dict,
 
     return messages, error
 
-def confirm_deleted(deleted):
-    """Helper function for confirm_model_changes that confirms it's deleted arg
-
-    Author:
-        Tiago Bandeira (6/4/2012)
-    """
-    messages = []  # compiles all the failures
-    error = False
-
-    models = [model for model in db.get([key for key in deleted]) if
-            model != None]
-    if models:
-        error = True
-        for model in models:
-            messages.append("%s with key: %s should have been deleted"
-                    " and wasn't" % (model.__class__.__name__,
-                        model.key()))
-
-    return messages, error
-
-def confirm_edited_and_marked_as_deleted(edited,
-                                         marked_as_deleted):
-    """Helper function for confirm_model_changes that confirms it's edited and
-    marked_as_deleted args
-
-    Author:
-        Tiago Bandeira (6/4/2012)
-    """
-    messages = []  # compiles all the failures
-    error = False
-
-    # creates dictionary: key -> instance
-    # for all models that have been edited
-    models = db.get([key for key in edited.iterkeys()] + [key for key
-        in marked_as_deleted])
-    pre_test_instances_dict = dict((model.key(), model) for model in
-        models)
-
-    # add marked_as_deleted models to edited
-    all_edited = dict(edited.items() + [(key, {'deleted': True}) for
-        key in marked_as_deleted])
-
-    # confirm edited
-    for key, fields in all_edited.iteritems():
-        pre_test_model = pre_test_instances_dict[key]
-        for field, value in fields.iteritems():
-            setattr(pre_test_model, field, value)
-
-        try:
-            model_eq(db.get(key), pre_test_model)
-        except AssertionError as exception:
-            messages.append(exception.message)
-            error = True
-
-    return messages, error
-
-
-
-def confirm_all_models(method,
-                       args=None,
-                       kwargs=None,
-                       added=None,
-                       deleted=None,
-                       marked_as_deleted=None,
-                       edited=None,
-                       response_code=200):
-    """Decorator that confirms the entire state of the db.
-
-    Decorates method with confirm_db and confirm_model_changes.
-
-    Args:
-        added: dict of list of dicts of what's been added (field value only
-            needs to be provided if it differs from the default),
-            class -> [field -> value, ...]
-
-            ex.
-            {Campaign: [{'name': 'Campaign 1', ...} ...], ...}
-
-        deleted: list of keys that have been removed from the db
-
-        marked_as_deleted: list of keys where the only change to the instance is
-            that deleted has been set to True
-
-        edited: dict of dicts of what's been modified, key -> field -> value
-
-    Author:
-        Tiago Bandeira (6/1/2012)
-    """
-    args = args or []
-    kwargs = kwargs or {}
-    added = added or {}
-    deleted = deleted or []
-    marked_as_deleted = marked_as_deleted or []
-    edited = edited or {}
-
-    confirm_kwargs = defaultdict(Counter)
-    for key in added.iterkeys():
-        confirm_kwargs[get_arg_name(key)]['added'] += 1
-
-    for key in deleted:
-        confirm_kwargs[get_arg_name(key)]['deleted'] += 1
-
-    for key in (marked_as_deleted + edited.keys()):
-        confirm_kwargs[get_arg_name(key)]['edited'] += 1
-
-    # run the intended test
-    return_values = []
-    decorator = confirm_db(**confirm_kwargs)
-    decorator(confirm_model_changes)(method, args=args,
-            kwargs=kwargs, added=added, deleted=deleted,
-            marked_as_deleted=marked_as_deleted, edited=edited,
-            response_code=response_code, return_values=return_values)
-
-    return return_values[0]
 
 def get_arg_name(key):
     class_name_translation = {'AdNetworkLoginCredentials':
@@ -592,22 +367,3 @@ def _db_to_dict(models):
 
         instances_dict[Model] = instances_of_model_dict
     return instances_dict
-
-
-
-def decorate_all_test_methods(decorator):
-    """
-    Decorator that applies a decorator to all methods in a class
-
-    NOTE: This will also wrap nested methods
-
-    Author:
-        Haydn (5/21/2012)
-    """
-    def decorate(cls):
-        for method in inspect.getmembers(cls, inspect.ismethod):
-            method_name = method[1].__name__
-            if 'mptest' in method_name:
-                setattr(cls, method_name, decorator(getattr(cls, method_name)))
-        return cls
-    return decorate

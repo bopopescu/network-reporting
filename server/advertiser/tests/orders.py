@@ -16,6 +16,7 @@ from common.utils.test.test_utils import (dict_eq, time_almost_eq,
                                           confirm_db, decorate_all_test_methods)
 
 from google.appengine.ext import db
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 import logging
 import simplejson as json
@@ -1466,23 +1467,22 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
             u'name': u'HTML Creative',
         })
 
-        self.test_banner_path = os.path.join(pwd, 'test_banner.gif')
         self.image_creative_post_body.update({
             u'ad_type': u'image',
             u'name': u'Image Creative',
         })
-        test_banner = open('test_banner.gif')
-        image_file = SimpleUploadedImage(test_banner.name, test_banner.read())
-        self.image_creative_post_files = dict(image_file=image_file))
+        self.test_banner_path = os.path.join(pwd, 'test_banner.gif')
+        test_banner = open(self.test_banner_path)
+        image_file = SimpleUploadedFile(test_banner.name, test_banner.read())
+        self.image_creative_post_files = dict(image_file=image_file)
 
-        test_tile_path = os.path.join(pwd, 'test_tile.png')
         self.text_tile_creative_post_body.update({
             u'ad_type': u'text_icon',
-            u'image_file': open(test_tile_path, 'rb')
         })
-        test_tile = open('test_tile.gif')
-        image_file = SimpleUploadedImage(test_tile.name, test_tile.read())
-        self.text_tile_creative_post_files = dict(image_file=image_file))
+        test_tile_path = os.path.join(pwd, 'test_tile.png')
+        test_tile = open(test_tile_path, 'rb')
+        image_file = SimpleUploadedFile(test_tile.name, test_tile.read())
+        self.text_tile_creative_post_files = dict(image_file=image_file)
 
         mock_creative_form = HtmlCreativeForm(self.html_creative_post_body,
                                               instance=None)

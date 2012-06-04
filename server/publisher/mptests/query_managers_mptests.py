@@ -18,6 +18,7 @@ from advertiser.query_managers import (AdvertiserQueryManager,
                                        CampaignQueryManager,
                                        AdGroupQueryManager)
 from ad_server.adunit_context.adunit_context import AdUnitContext
+from common.constants import MAX_OBJECTS
 from common.utils.date_magic import gen_days
 from common.utils.test.fixtures import (generate_network_config, generate_app,
                                         generate_adunit, generate_campaign,
@@ -26,7 +27,8 @@ from common.utils.test.fixtures import (generate_network_config, generate_app,
                                         generate_html_creative)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
                                           model_key_eq, time_almost_eq,
-                                          model_eq)
+                                          model_eq, ADDED_1, DELETED_1,
+                                          EDITED_1)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
@@ -207,31 +209,125 @@ class AppQueryManagerTestCase(BaseViewTestCase):
         # TODO: Casting the query to a list for now. Fix QM and change this.
         list_eq(list(apps), expected_apps)
 
-    @confirm_db()
-    def mptest_put_apps(self):
-        new_app = generate_app(self.account, put=False)
+    @confirm_db(app=ADDED_1)
+    def mptest_put_new_apps(self):
+        expected_new_app = generate_app(self.account, put=False)
 
-        # Check db state before put
+        # TODO: put_apps will be changed to a class method.
+        AppQueryManager().put_apps([expected_new_app])
 
-        # Do put
+        apps = App.all().fetch(MAX_OBJECTS)
+        eq_(len(apps), 2)
 
-        # Check db state after put
+        # Obtain the created app/adunit.
+        new_apps = filter(lambda app: app.key() != self.app.key(), apps)
+        eq_(len(new_apps), 1)
+        new_app = new_apps[0]
 
-    @confirm_db()
-    def mptest_put(self):
-        pass
+        model_eq(new_app, expected_new_app)
 
-    @confirm_db()
+        old_app = App.get(self.app.key())
+        model_eq(old_app, self.app)
+
+    @confirm_db(app=EDITED_1)
+    def mptest_put_existing_apps(self):
+        self.app.name = 'Edited App'
+
+        # TODO: put_apps will be changed to a class method.
+        AppQueryManager().put_apps([self.app])
+
+        apps = App.all().fetch(MAX_OBJECTS)
+        eq_(len(apps), 1)
+
+        edited_app = apps[0]
+
+        model_eq(edited_app, self.app)
+
+    @confirm_db(app=ADDED_1)
+    def mptest_put_new_app(self):
+        expected_new_app = generate_app(self.account, put=False)
+
+        AppQueryManager.put(expected_new_app)
+
+        apps = App.all().fetch(MAX_OBJECTS)
+        eq_(len(apps), 2)
+
+        # Obtain the created app/adunit.
+        new_apps = filter(lambda app: app.key() != self.app.key(), apps)
+        eq_(len(new_apps), 1)
+        new_app = new_apps[0]
+
+        model_eq(new_app, expected_new_app)
+
+        old_app = App.get(self.app.key())
+        model_eq(old_app, self.app)
+
+    @confirm_db(app=EDITED_1)
+    def mptest_put_existing_app(self):
+        self.app.name = 'Edited App'
+
+        AppQueryManager.put(self.app)
+
+        apps = App.all().fetch(MAX_OBJECTS)
+        eq_(len(apps), 1)
+
+        edited_app = apps[0]
+
+        model_eq(edited_app, self.app)
+
+    @confirm_db(app=EDITED_1, network_config=ADDED_1)
     def mptest_update_config_and_put(self):
-        pass
+        network_config = generate_network_config(account=None, put=False)
+
+        AppQueryManager.update_config_and_put(self.app, network_config)
+
+        apps = App.all().fetch(MAX_OBJECTS)
+        eq_(len(apps), 1)
+        app = apps[0]
+        model_eq(app, self.app, exclude=['network_config'])
+
+        network_config = app.network_config
+        expected_network_config = generate_network_config(self.account,
+                                                          put=False)
+        model_eq(network_config, expected_network_config,
+                 check_primary_key=False)
 
     @confirm_db()
     def update_config_and_put_multi(self):
-        pass
+        network_config = generate_network_config(account=None, put=False)
+
+        AppQueryManager.update_config_and_put_multi([self.app], [network_config])
+
+        apps = App.all().fetch(MAX_OBJECTS)
+        eq_(len(apps), 1)
+        app = apps[0]
+        model_eq(app, self.app, exclude=['network_config'])
+
+        network_config = app.network_config
+        expected_network_config = generate_network_config(self.account,
+                                                          put=False)
+        model_eq(network_config, expected_network_config,
+                 check_primary_key=False)
 
     @confirm_db()
     def get_apps_with_network_configs(self):
-        pass
+        apps = AppQueryManager.get_apps_with_network_configs(self.account)
+        eq_(len(apps), 0)
+
+        network_config = generate_network_config(account=None, put=False)
+
+        AppQueryManager.update_config_and_put_multi([self.app], [network_config])
+
+        apps = AppQueryManager.get_apps_with_network_configs(self.account)
+        eq_(len(apps), 1)
+        app = apps[0]
+        model_eq(app, self.app, exclude=['network_config'])
+
+        network_config = app.network_config
+        expected_network_config = generate_network_config(self.account,
+                                                          put=False)
+        model_eq(network_config, expected_network_config,
+                 check_primary_key=False)
 
     @confirm_db()
     def get_apps_without_pub_ids(self):
@@ -288,32 +384,103 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
         # TODO: Casting the query to a list for now. Fix QM and change this.
         list_eq(list(adunits), expected_adunits)
 
-    @confirm_db()
-    def mptest_put_adunits(self):
-        pass
+    @confirm_db(adunit=ADDED_1)
+    def mptest_put_new_adunits(self):
+        expected_new_adunit = generate_adunit(self.account, self.app, put=False)
 
-    # TODO: These error out with the following:
-    # unbound method get_adunit() must be called with AdUnitQueryManager instance as first argument (got Key instance instead)
+        AdUnitQueryManager.put_adunits([expected_new_adunit])
 
-    # def mptest_get_by_key(self):
-    #     adunit = AdUnitQueryManager.get_by_key(self, self.adunit.key())
+        adunits = AdUnit.all().fetch(MAX_OBJECTS)
+        eq_(len(adunits), 2)
 
-    #     model_eq(adunit, self.adunit)
+        # Obtain the created adunit/adunit.
+        new_adunits = filter(lambda adunit: adunit.key() != self.adunit.key(), adunits)
+        eq_(len(new_adunits), 1)
+        new_adunit = new_adunits[0]
 
-    # def mptest_get_adunit(self):
-    #     # Is this essentially an alias of the above function?
-    #     adunit = AdUnitQueryManager.get_adunit(self, self.adunit.key())
+        model_eq(new_adunit, expected_new_adunit)
 
-    #     model_eq(adunit, self.adunit)
+        old_adunit = AdUnit.get(self.adunit.key())
+        model_eq(old_adunit, self.adunit)
 
-    @confirm_db()
-    def mptest_put(self):
-        pass
+    @confirm_db(adunit=EDITED_1)
+    def mptest_put_existing_adunits(self):
+        self.adunit.name = 'Edited AdUnit'
 
-    @confirm_db()
-    def mptest_update_config_and_put(self):
-        pass
+        AdUnitQueryManager.put_adunits([self.adunit])
+
+        adunits = AdUnit.all().fetch(MAX_OBJECTS)
+        eq_(len(adunits), 1)
+
+        edited_adunit = adunits[0]
+
+        model_eq(edited_adunit, self.adunit)
+
+    @confirm_db(adunit=ADDED_1)
+    def mptest_put_new_adunit(self):
+        expected_new_adunit = generate_adunit(self.account, self.app, put=False)
+
+        AdUnitQueryManager.put(expected_new_adunit)
+
+        adunits = AdUnit.all().fetch(MAX_OBJECTS)
+        eq_(len(adunits), 2)
+
+        # Obtain the created adunit/adunit.
+        new_adunits = filter(lambda adunit: adunit.key() != self.adunit.key(), adunits)
+        eq_(len(new_adunits), 1)
+        new_adunit = new_adunits[0]
+
+        model_eq(new_adunit, expected_new_adunit)
+
+        old_adunit = AdUnit.get(self.adunit.key())
+        model_eq(old_adunit, self.adunit)
+
+    @confirm_db(adunit=EDITED_1)
+    def mptest_put_existing_adunit(self):
+        self.adunit.name = 'Edited AdUnit'
+
+        AdUnitQueryManager.put(self.adunit)
+
+        adunits = AdUnit.all().fetch(MAX_OBJECTS)
+        eq_(len(adunits), 1)
+
+        edited_adunit = adunits[0]
+
+        model_eq(edited_adunit, self.adunit)
 
     @confirm_db()
     def update_config_and_put_multi(self):
-        pass
+        network_config = generate_network_config(account=None, put=False)
+
+        AdUnitQueryManager.update_config_and_put_multi([self.adunit], [network_config])
+
+        adunits = AdUnit.all().fetch(MAX_OBJECTS)
+        eq_(len(adunits), 1)
+        adunit = adunits[0]
+        model_eq(adunit, self.adunit, exclude=['network_config'])
+
+        network_config = adunit.network_config
+        expected_network_config = generate_network_config(self.account,
+                                                          put=False)
+        model_eq(network_config, expected_network_config,
+                 check_primary_key=False)
+
+    @confirm_db()
+    def get_adunits_with_network_configs(self):
+        adunits = AdUnitQueryManager.get_adunits_with_network_configs(self.account)
+        eq_(len(adunits), 0)
+
+        network_config = generate_network_config(account=None, put=False)
+
+        AdUnitQueryManager.update_config_and_put_multi([self.adunit], [network_config])
+
+        adunits = AdUnitQueryManager.get_adunits_with_network_configs(self.account)
+        eq_(len(adunits), 1)
+        adunit = adunits[0]
+        model_eq(adunit, self.adunit, exclude=['network_config'])
+
+        network_config = adunit.network_config
+        expected_network_config = generate_network_config(self.account,
+                                                          put=False)
+        model_eq(network_config, expected_network_config,
+                 check_primary_key=False)

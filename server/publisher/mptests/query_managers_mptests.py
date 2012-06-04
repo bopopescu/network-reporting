@@ -1,80 +1,29 @@
-import datetime
-import logging
 import os
-import simplejson as json
 import sys
 
 sys.path.append(os.environ['PWD'])
 
 import common.utils.test.setup
 
-from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
-from account.models import NetworkConfig
-from account.query_managers import NetworkConfigQueryManager
-from advertiser.models import Campaign, AdGroup, Creative
-from advertiser.query_managers import (AdvertiserQueryManager,
-                                       CampaignQueryManager,
-                                       AdGroupQueryManager)
 from ad_server.adunit_context.adunit_context import AdUnitContext
 from common.constants import MAX_OBJECTS
-from common.utils.date_magic import gen_days
 from common.utils.test.fixtures import (generate_network_config, generate_app,
-                                        generate_adunit, generate_campaign,
-                                        generate_adgroup,
-                                        generate_marketplace_creative,
-                                        generate_html_creative)
+                                        generate_adunit)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
-                                          model_key_eq, time_almost_eq,
-                                          model_eq, ADDED_1, DELETED_1,
+                                          model_eq, model_key_eq, ADDED_1,
                                           EDITED_1)
 from common.utils.test.views import BaseViewTestCase
-from common.utils.timezones import Pacific_tzinfo
-from publisher.forms import AppForm, AdUnitForm
 from publisher.models import App, AdUnit
-from publisher.query_managers import AdUnitContextQueryManager, PublisherQueryManager, AppQueryManager, AdUnitQueryManager
-from reporting.models import StatsModel
-
-# AdUnitContextQueryManager
-# # get_context
-# # cache_get_or_insert
-# # cache_delete_from_adunits
-
-# PublisherQueryManager
-# # get_objects_dict_for_account
-# # get_apps_dict_for_account
-# # get_adunits_dict_for_account
-
-# AppQueryManager
-# # get_app_by_key
-# # get_apps
-# # get_app_keys
-# # get_all_apps
-# # reports_get_apps
-# # put_apps
-# # put
-# # update_config_and_put
-# # update_config_and_put_multi
-# # get_apps_with_network_configs
-# # get_apps_without_pub_ids
-# # get_iad_pub_id
-# # get_iad_pub_ids
-
-# AdUnitContextQueryManager
-# # get_adunits
-# # reports_get_adunits
-# # put_adunits
-# # get_by_key
-# # get_adunit
-# # put
-# # update_config_and_put
-# # update_config_and_put_multi
+from publisher.query_managers import (AdUnitContextQueryManager,
+                                      PublisherQueryManager, AppQueryManager,
+                                      AdUnitQueryManager)
 
 
 class AdUnitContextQueryManagerTestCase(BaseViewTestCase):
     """
-    author: Ignatius
+    author: Ignatius, Peter
     """
 
     def setUp(self):
@@ -117,7 +66,7 @@ class AdUnitContextQueryManagerTestCase(BaseViewTestCase):
 
 class PublisherQueryManagerTestCase(BaseViewTestCase):
     """
-    author: Ignatius
+    author: Ignatius, Peter
     """
 
     def setUp(self):
@@ -165,7 +114,7 @@ class PublisherQueryManagerTestCase(BaseViewTestCase):
 
 class AppQueryManagerTestCase(BaseViewTestCase):
     """
-    author: Ignatius
+    author: Ignatius, Peter
     """
 
     def setUp(self):
@@ -331,20 +280,64 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def get_apps_without_pub_ids(self):
-        pass
+        # At first, the app does not have a pub id.
+        apps = AppQueryManager(self.account, networks=['mobfox'])
+        eq_(len(apps), 1)
+        app = apps[0]
+        model_eq(app, self.app)
+
+        network_config = generate_network_config(account=None, put=False)
+        AppQueryManager.update_config_and_put(self.app, network_config)
+
+        # We put a network config with no pub ids, and still expect the app to
+        # not have a pub id.
+        apps = AppQueryManager(self.account, networks=['mobfox'])
+        eq_(len(apps), 1)
+        app = apps[0]
+        model_eq(app, self.app)
+
+        self.app.network_config.mobfox_pub_id = 'MOBFOX ID'
+        AppQueryManager.update_config_and_put(self.app, self.app.network_config)
+
+        # Now that our app has an associated pub id, we no longer expect to get
+        # any apps back from this function.
+        apps = AppQueryManager(self.account, networks=['mobfox'])
+        eq_(len(apps), 0)
 
     @confirm_db()
     def get_iad_pub_id(self):
-        pass
+        pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
+        ok_(pub_id is None)
+
+        self.app.url = 'http://www.mopub.com'
+        self.app.put()
+        pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
+        ok_(pub_id is None)
+
+        self.app.url = 'http://itunes.apple.com/id/12345?'
+        self.app.put()
+        pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
+        eq_(pub_id, '12345')
 
     @confirm_db()
     def get_iad_pub_ids(self):
-        pass
+        pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
+        list_eq(pub_id, [])
+
+        self.app.url = 'http://www.mopub.com'
+        self.app.put()
+        pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
+        list_eq(pub_id, [])
+
+        self.app.url = 'http://itunes.apple.com/id/12345?'
+        self.app.put()
+        pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
+        list_eq(pub_id, ['12345'])
 
 
 class AdUnitQueryManagerTestCase(BaseViewTestCase):
     """
-    author: Ignatius
+    author: Ignatius, Peter
     """
 
     def setUp(self):

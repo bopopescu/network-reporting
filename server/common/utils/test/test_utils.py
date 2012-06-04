@@ -251,10 +251,10 @@ def confirm_added(added):
         for field, obj in class_.properties().iteritems():
             default_fields[field] = obj.default_value()
 
-        for index, instance_dict in enumerate(added_instances):
+        for index, instance_dict in enumerate(added_models):
             # override the defaults for the fields that have been modified
             model_fields = copy(default_fields)
-            for field, value in instance_dict.iteritmes():
+            for field, value in instance_dict.iteritems():
                 model_fields[field] = value
 
             key = generate_instance_key(model_fields)
@@ -544,7 +544,8 @@ def confirm_db(modified=None,
                     post_obj = post_test_instances_dict[Model][key]
                     try:
                         model_eq(pre_obj, post_obj)
-                    except AssertionError:
+                    except AssertionError as exception:
+                        print exception.message
                         num_edited += 1
 
                 if num_edited != expected_edits:

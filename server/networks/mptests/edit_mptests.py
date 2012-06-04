@@ -193,10 +193,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adunit = app.adunits[0]
 
         adgroup = AdGroupQueryManager.get_network_adgroup(
-                self.existing_campaign, adunit.key(), self.account.key(),
-                get_from_db=True)
-        adgroup.active = False
-        AdGroupQueryManager.put(adgroup)
+                self.existing_campaign, adunit.key(), self.account.key())
 
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_active_key] = True

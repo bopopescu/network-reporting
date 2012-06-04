@@ -7,7 +7,11 @@ import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
 from admin.randomgen import generate_app, generate_adunit
 
-from publisher.query_managers import PublisherQueryManager
+from account.models import NetworkConfig
+
+from publisher.query_managers import PublisherQueryManager, \
+        AppQueryManager, \
+        AdUnitQueryManager
 
 from advertiser.query_managers import CampaignQueryManager, \
         AdGroupQueryManager, \
@@ -68,7 +72,10 @@ class NetworkTestCase(BaseViewTestCase):
 
         # Generate one adgroup per adunit.
         for app in apps:
+            AppQueryManager.update_config_and_put(app, NetworkConfig())
             for adunit in app.adunits:
+                AdUnitQueryManager.update_config_and_put(app, NetworkConfig())
+
                 adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                         adunit.key(), account.key())
                 AdGroupQueryManager.put(adgroup)

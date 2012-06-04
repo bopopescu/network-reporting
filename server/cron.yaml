@@ -18,11 +18,11 @@ cron:
 #   timezone: America/Los_Angeles
 #   target: admin-prep
 
-- description: Periodic dashboard refresh (offline)
-  url: /admin/prep/?offline=1
-  schedule: every 1 hours
-  timezone: America/Los_Angeles
-  target: admin-prep
+# - description: Periodic dashboard refresh (offline)
+#   url: /admin/prep/?offline=1
+#   schedule: every 1 hours
+#   timezone: America/Los_Angeles
+#   target: admin-prep
 
 - description: Check how much each bidder has spent
   url: /admin/bidder_spent/

@@ -26,7 +26,7 @@ from common.utils.test.fixtures import (generate_network_config, generate_app,
                                         generate_html_creative)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
                                           model_key_eq, time_almost_eq,
-                                          model_eq, decorate_all_test_methods)
+                                          model_eq)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm

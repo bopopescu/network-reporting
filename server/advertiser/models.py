@@ -83,8 +83,7 @@ class Campaign(db.Model):
     #       millennial = millennial_native
     #       iad = iAd
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
-    network_state = db.IntegerProperty(default=NetworkStates. \
-                                       STANDARD_CAMPAIGN)
+    network_state = db.IntegerProperty(default=NetworkStates.STANDARD_CAMPAIGN)
     # needed so old stats can be mapped to the new campaign on migration
     # since we can't keep the same campaign key for optimization purposes
     old_campaign = db.SelfReferenceProperty()

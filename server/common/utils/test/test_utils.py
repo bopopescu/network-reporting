@@ -136,7 +136,8 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
     dict_eq(model1_dict, model2_dict)
 
 
-def model_to_dict(model, exclude=[], reference_only=False):
+def model_to_dict(model, exclude=[], reference_only=False,
+        include_references=True):
     model_dict = {}
 
     for key in model.properties().iterkeys():
@@ -148,7 +149,9 @@ def model_to_dict(model, exclude=[], reference_only=False):
         # not dereference, but will only get the foreign key
         if reference_only and not key.startswith('_'):
             key = '_' + key
-        model_dict[key] = getattr(model, key)
+        value = getattr(model, key)
+        if include_references or not isinstance(value, db.Model):
+            model_dict[key] = value
 
     return model_dict
 
@@ -169,8 +172,16 @@ def confirm_model_changes(method,
     """Verifies that the changes passed in have been made
 
     Args:
-        added: dict of dicts of what's been added (field value only needs to
-            be provided if it differs from the default), key -> field -> value
+        added: dict of list of dicts of what's been added (field value only
+            needs to be provided if it differs from the default),
+            class -> [field -> value, ...]
+
+            ex.
+            {Campaign: [{'name': 'Campaign 1', ...} ...], ...}
+
+            NOTE: for reference properties if the model exists prior to the
+                method call use the key as the value if it's being added use
+                the index into the list of that models instances as the value
 
         deleted: list of keys that have been removed from the db
 
@@ -189,13 +200,6 @@ def confirm_model_changes(method,
     marked_as_deleted = marked_as_deleted or []
     edited = edited or {}
 
-    # creates dictionary: key -> instance
-    # for all models that have been edited
-    models = db.get([key for key in edited.iterkeys()] + [key for key
-        in marked_as_deleted])
-    pre_test_instances_dict = dict((model.key(), model) for model in
-        models)
-
     # run the intended test
     method(*args, **kwargs)
 
@@ -204,26 +208,125 @@ def confirm_model_changes(method,
     error = False
 
     # confirm added
-    for key, modified_fields in added.iteritems():
-        model = db.get(key)
-        model_class = model.__class__
-
-        default_fields = {}
-        for field, obj in model_class.properties().iteritems():
-            default_fields[field] = obj.default_value()
-
-        # override the defaults for the fields that have been modified
-        model_fields = default_fields
-        for field, value in modified_fields.iteritmes():
-            model_fields[field] = value
-
-        try:
-            dict_eq(model_fields, model_to_dict(model))
-        except AssertionError as exception:
-            messages.append(exception.message)
-            error = True
+    added_messages, error = confirm_added(added)
+    messages += added_messages
 
     # confirm deleted
+    deleted_messages, error = confirm_deleted(deleted)
+    messages += deleted_messages
+
+    # confirm deleted and marked as deleted
+    edited_and_marked_as_deleted, error = confirm_edited_and_marked_as_deleted(
+            edited, marked_as_deleted)
+    messages += edited_and_marked_as_deleted
+
+    # raises an assertion error if any of the model tests failed
+    ok_(not error, ', '.join(messages))
+
+
+def confirm_added(added):
+    """Helper function for confirm_model_changes that confirms it's added arg
+
+    Author:
+        Tiago Bandeira (6/4/2012)
+    """
+    messages = []  # compiles all the failures
+    error = False
+
+    instances_for_model_dict = defaultdict(lambda : defaultdict(list))
+    for class_, added_models in added.iteritems():
+        # create a dict of tuples of model fields -> [instance, ...]
+        # basically make object dict hashable
+        for instance in class_.all():
+            instances_for_model_dict[class_][generate_instance_key(
+                instance)].append(instance)
+
+    for class_, added_models in added.iteritems():
+        default_fields = {}
+        for field, obj in class_.properties().iteritems():
+            default_fields[field] = obj.default_value()
+
+        for index, instance_dict in enumerate(added_instances):
+            # override the defaults for the fields that have been modified
+            model_fields = copy(default_fields)
+            for field, value in instance_dict.iteritmes():
+                model_fields[field] = value
+
+            key = generate_instance_key(model_fields)
+            if key in instances_for_model_dict[class_]:
+
+                # confirm the reference properties are set correctly
+                confirm_reference_properties(instance_dict,
+                        instances_for_model_dict, class_, index)
+
+            else:
+                messages.append("%s at index %d wasn't created" %
+                        (class_.__name__, index))
+                error = True
+
+    return messages, error
+
+def generate_instance_key(instance):
+    if not isinstance(instance, dict):
+        instance_dict = model_to_dict(instance, include_references=False)
+
+    return tuple([attr for atrr in key, value for key, value in
+        instance_dict.iteritems()])
+
+def reference_properties(instance_dict):
+    properties = class_.properties()
+
+    return [(value.__class__, value) for key, value in
+            instance_dict.iteritems() if isinstance(value, db.Model)]
+
+def confirm_reference_properties(instance_dict,
+                                 instances_for_model_dict,
+                                 class_,
+                                 index):
+    messages = []  # compiles all the failures
+    error = False
+
+    keys_set = set([instance.key() for instance in
+        instance_dict[key]])
+    filtered_instances = instance_dict[key]
+    for reference_class, value in reference_properties(
+            instance_dict):
+        if isinstance(value, str):
+            filtered_instances = [instance for instance in
+                    filtered_instances if str(instance.key()) ==
+                    value]
+            key_set = set([instance.key() for instance in
+                    filtered_instances])
+        else:
+            # reference property must be an int
+            reference_key = generate_instance_key(
+                    added[reference_class][value])
+            potential_instances = instances_for_model_dict[
+                    reference_class][reference_key]
+            key_set = set([instance.key() for instance in
+                potential_instances]).intersection(key_set)
+            filtered_instances = [instance for instance in
+                    filtered_instances if filtered_instances if
+                    instance.key() in key_set]
+    if not key_set or not filtered_instances:
+        messages.append("%s at index %d wasn't created" %
+                (class_.__name__, index))
+        error = True
+    elif len(key_set) != len(filtered_instances):
+        raise AssertionError("Confirming %s reference properties at %d "
+                "is fucked" % (class_.name, index))
+
+    return messages, error
+
+def confirm_deleted(deleted):
+    """Helper function for confirm_model_changes that confirms it's deleted arg
+
+    Author:
+        Tiago Bandeira (6/4/2012)
+    """
+    messages = []  # compiles all the failures
+    error = False
+
     models = [model for model in db.get([key for key in deleted]) if
             model != None]
     if models:
@@ -233,6 +336,25 @@ def confirm_model_changes(method,
                     " and wasn't" % (model.__class__.__name__,
                         model.key()))
 
+    return messages, error
+
+def confirm_edited_and_marked_as_deleted(edited,
+                                         marked_as_deleted):
+    """Helper function for confirm_model_changes that confirms it's edited and
+    marked_as_deleted args
+
+    Author:
+        Tiago Bandeira (6/4/2012)
+    """
+    messages = []  # compiles all the failures
+    error = False
+
+    # creates dictionary: key -> instance
+    # for all models that have been edited
+    models = db.get([key for key in edited.iterkeys()] + [key for key
+        in marked_as_deleted])
+    pre_test_instances_dict = dict((model.key(), model) for model in
+        models)
 
     # add marked_as_deleted models to edited
     all_edited = dict(list(edited) + [(key, {'deleted': True}) for
@@ -250,8 +372,8 @@ def confirm_model_changes(method,
             messages.append(exception.message)
             error = True
 
-    # raises an assertion error if any of the model tests failed
-    ok_(not error, ', '.join(messages))
+    return messages, error
+
 
 
 def confirm_all_models(method,
@@ -266,8 +388,12 @@ def confirm_all_models(method,
     Decorates method with confirm_db and confirm_model_changes.
 
     Args:
-        added: dict of dicts of what's been added (field value only needs to
-            be provided if it differs from the default), key -> field -> value
+        added: dict of list of dicts of what's been added (field value only
+            needs to be provided if it differs from the default),
+            class -> [field -> value, ...]
+
+            ex.
+            {Campaign: [{'name': 'Campaign 1', ...} ...], ...}
 
         deleted: list of keys that have been removed from the db
 

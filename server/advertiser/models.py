@@ -70,8 +70,10 @@ class Campaign(db.Model):
     # date of creation
     created = db.DateTimeProperty(auto_now_add=True)
 
+    # This should be subclassed
     is_order = db.BooleanProperty(default=False)
     is_network = db.BooleanProperty(default=False)
+    is_marketplace = db.BooleanProperty(default=False)
 
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank

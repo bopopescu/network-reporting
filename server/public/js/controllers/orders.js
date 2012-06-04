@@ -314,7 +314,19 @@
             });
 
             order.bind('change', function(current_order) {
+                // Render the order row
                 renderOrder(order);
+                
+                // Make the chart. The chart takes a collection as a parameter,
+                // so we add the single order to a collection.
+                var orders = new OrderCollection();
+                orders.add(order);
+                var chart_view = new CollectionChartView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['req', 'imp', 'clk']
+                });
+                chart_view.render();
             });
 
             order.fetch();
@@ -365,9 +377,6 @@
 
                 adunit.fetch();
             });
-
-
-            // RENDER THE CHART
 
 
             /*

@@ -25,7 +25,8 @@ from common.utils.test.fixtures import (generate_network_config, generate_app,
                                         generate_html_creative)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
                                           model_key_eq, time_almost_eq,
-                                          model_eq, decorate_all_test_methods)
+                                          model_eq, ADDED_1, DELETED_1,
+                                          EDITED_1)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
@@ -95,7 +96,7 @@ class AppIndexViewTestCase(BaseViewTestCase):
         redirect_url = self.test_client_reverse('publisher_create_app')
         eq_(get_response['Location'], redirect_url)
 
-    @confirm_db()
+    @confirm_db(app=ADDED_1)
     def mptest_get_with_app(self):
         """
         Confirm that app_index returns an appropriate response when the account
@@ -639,7 +640,9 @@ class CreateAppViewTestCase(BaseViewTestCase):
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
         ok_(not get_response.context['adunit_form'].is_bound)
 
-    @confirm_db(modified=[App, AdUnit, Campaign, AdGroup, Creative])
+    @confirm_db(app=ADDED_1, adunit=ADDED_1, campaign={'added': 1, 'edited': 1},
+                adgroup={'added': 2}, creative={'added': 2},
+                account={'edited': 1})
     def mptest_create_first_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -786,7 +789,9 @@ class CreateAppViewTestCase(BaseViewTestCase):
         model_eq(backfill_promo_creative, expected_backfill_promo_creative,
             check_primary_key=False, exclude=['t'])
 
-    @confirm_db(modified=[App, AdUnit, AdGroup, Creative])
+    @confirm_db(app={'added': 2}, adunit={'added': 2}, campaign=EDITED_1,
+                adgroup={'added': 1}, creative={'added': 1},
+                account={'edited': 1})
     def mptest_create_additional_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -846,7 +851,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
         eq_(len(objects), 1)
         return objects[0]
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_create_app_and_adunit_app_validation(self):
         """
         Confirm that create_app returns the appropriate validation errors when
@@ -878,7 +883,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(adunits_dict, {})
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_create_app_and_adunit_adunit_validation(self):
         """
         Confirm that create_app returns the appropriate validation errors when
@@ -949,7 +954,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         post_data.update(kwargs)
         return post_data
 
-    @confirm_db(modified=[App])
+    @confirm_db(app=EDITED_1)
     def mptest_update_app(self):
         """
         Confirm that app editing works by submitting known good parameters and
@@ -992,7 +997,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_update_app_validation(self):
         """
         Confirm that posting invalid parameters (i.e. empty app name) will
@@ -1032,7 +1037,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
         expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_update_app_authorization(self):
         """
         Attempt to update an app using an unauthorized account. Confirm that the
@@ -1112,7 +1117,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         post_data.update(kwargs)
         return post_data
 
-    @confirm_db(modified=[AdUnit, AdGroup, Creative])
+    @confirm_db(adunit=ADDED_1, adgroup=ADDED_1, creative=ADDED_1)
     def mptest_create_adunit(self):
         """
         Confirm that adunit creation works by submitting known good parameters,
@@ -1175,7 +1180,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         model_eq(marketplace_creative, expected_marketplace_creative,
             check_primary_key=False, exclude=['t'])
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_create_adunit_validation(self):
         """
         Confirm that create_adunit returns the appropriate validation errors
@@ -1201,7 +1206,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(len(adunits_dict), 1)
 
-    @confirm_db(modified=[AdUnit])
+    @confirm_db(adunit=EDITED_1)
     def mptest_update_adunit(self):
         """
         Confirm that adunit updating works by submitting known good parameters,
@@ -1239,7 +1244,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
                                 name=post_data['adunit-name'][0])
         model_eq(adunit, expected_adunit)
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_update_adunit_validation(self):
         """
         Confirm that editing an adunit returns the appropriate validation errors
@@ -1276,7 +1281,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
                                 key=self.adunit.key(),)
         model_eq(adunit, expected_adunit)
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_update_adunit_authorization(self):
         """
         Attempt to update an adunit using an unauthorized account. Confirm that
@@ -1323,7 +1328,7 @@ class DeleteAppViewTestCase(BaseViewTestCase):
 
         self.url = reverse('publisher_delete_app', args=[str(self.app.key())])
 
-    @confirm_db(modified=[App])
+    @confirm_db(app=EDITED_1, adunit=EDITED_1)
     def mptest_delete_app(self):
         """
         Delete an app and confirm that it and its child adunit are no longer
@@ -1347,7 +1352,7 @@ class DeleteAppViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(adunits_dict, {})
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_delete_app_authorization(self):
         """
         Confirm that an attempt to delete an app belonging to a different
@@ -1384,7 +1389,7 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
         self.url = reverse('publisher_delete_adunit',
                            args=[str(self.adunit.key())])
 
-    @confirm_db(modified=[AdUnit])
+    @confirm_db(adunit=EDITED_1)
     def mptest_delete_adunit(self):
         """
         Delete an adunit and confirm that it is no longer returned by the query
@@ -1409,7 +1414,7 @@ class DeleteAdUnitViewTestCase(BaseViewTestCase):
             account=self.account)
         eq_(adunits_dict, {})
 
-    @confirm_db(modified=[])
+    @confirm_db()
     def mptest_delete_adunit_authorization(self):
         """
         Confirm that an attempt to delete an adunit belonging to a different

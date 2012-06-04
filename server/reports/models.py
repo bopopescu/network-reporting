@@ -22,8 +22,8 @@ from common.utils import date_magic
 from common.utils.helpers import cust_sum
 from common.wurfl.query_managers import WurflQueryManager
 from publisher.models import AdUnit
-from mail.mails import (REPORT_FINISHED_SIMPLE, 
-                        REPORT_FAILED_SIMPLE, 
+from mail.mails import (REPORT_FINISHED_SIMPLE,
+                        REPORT_FAILED_SIMPLE,
                         REPORT_NO_DATA,
                         )
 
@@ -70,7 +70,10 @@ MRFAILURE = FAILURE % 1
 OTHER = FAILURE % 2
 
 def log(mesg):
-    my_log = open('/home/ubuntu/poller.log', 'a')
+    try:
+        my_log = open('/home/ubuntu/poller.log', 'a')
+    except IOError:
+        my_log = open('/tmp/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
     my_log.close()
 
@@ -158,7 +161,7 @@ class ScheduledReport(db.Model):
         else:
             return self.reports.order('-created_at').get()
         #get the most recent report created by this scheduler
-        
+
     @property
     def details(self):
         if self._details:
@@ -257,10 +260,10 @@ class Report(db.Model):
             pass
 
     def notify_failure(self, reason=OTHER):
-        mesg_dict = dict(dim1 = self.d1, 
-                         dim2 = self.d2, 
-                         dim3 = self.d3, 
-                         start = self.start.strftime('%m/%d/%y'), 
+        mesg_dict = dict(dim1 = self.d1,
+                         dim2 = self.d2,
+                         dim3 = self.d3,
+                         start = self.start.strftime('%m/%d/%y'),
                          end = self.end.strftime('%m/%d/%y'))
         if reason == NODAT:
             mesg = mail.EmailMessage(sender = 'olp@mopub.com',
@@ -472,6 +475,8 @@ class Report(db.Model):
         crtvs = Creative.get(batch[CRTV])
 
         for adunit in adunits:
+            if not adunit:
+                continue
             obj_key = str(adunit.key())
             for dim in key_dims[obj_key]:
                 key_tuple = (str(dim), obj_key)
@@ -481,6 +486,8 @@ class Report(db.Model):
                     dimkey_to_obj[key_tuple] = adunit.app_key
 
         for crtv in crtvs:
+            if not crtv:
+                continue
             obj_key = str(crtv.key())
             for dim in key_dims[obj_key]:
                 key_tuple = (str(dim), obj_key)
@@ -537,6 +544,32 @@ class Report(db.Model):
             temp = final
             keys, vals = line.split('\t')
             keys = keys.split(':')
+            keylen = len(keys)
+            if keylen == 1:
+                dim_list = (self.d1,)
+            elif keylen == 2:
+                dim_list = (self.d1, self.d2)
+            elif keylen == 3:
+                dim_list = (self.d1, self.d2, self.d3)
+            dims_keys = zip(keys, dim_list)
+            # Hack because people fucking broke shit and deleted things
+            # and other dumb shit
+            all_keys_in = [False] * len(keys)
+            for dimkey in dimkey_to_obj:
+                for i, (key, dim) in enumerate(dims_keys):
+                    if key in dimkey or dim not in ONLINE_DIMS:
+                        all_keys_in[i] = True
+
+            all_keys = True
+            for key_in in all_keys_in:
+                if not key_in:
+                    all_keys = False
+                    # can't continue here or it'd be the wrong
+                    # for loop
+                    break
+
+            if not all_keys:
+                continue
             vals = eval(vals)
             req, att = self.get_stats_info(keys, dimkey_to_obj, testing)
             #I'm using list comprehension for you Nafis
@@ -710,7 +743,6 @@ class Report(db.Model):
             return None, None
 
         key_tuple = (str(CRTV), str(key))
-
         if dim in [CAMP, CRTV]:
             crtv = dimkey_to_obj[key_tuple]
             adgroup = crtv.adgroup

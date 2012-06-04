@@ -61,11 +61,11 @@ class DeleteNetworkTestCase(NetworkTestCase):
         marked_as_deleted = [self.campaign.key()] + [adgroup.key() for adgroup
                 in self.campaign.adgroups] + [creative.key() for adgroup in
                         self.campaign.adgroups for creative in
-                        adgroup.creatives]
+                        adgroup.creatives] + [self.login.key()]
 
-        confirm_all_models(deleted=[self.login.key()],
-                marked_as_deleted=marked_as_deleted)(self.client.post)(self.url,
-                    self.post_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        confirm_all_models(marked_as_deleted=marked_as_deleted)(
+                self.client.post)(self.url, self.post_data,
+                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
     @confirm_db(campaign=EDITED_1, adgroup=EDITED_1, creative=EDITED_1)
     def mptest_new_default_campaign_chosen(self):
@@ -78,12 +78,14 @@ class DeleteNetworkTestCase(NetworkTestCase):
         for x in range(num_of_custom_campaigns):
             self.generate_network_campaign(self.network_type, self.account,
                     self.existing_apps)
-        campaigns = CampaignQueryManager.get_network_campaigns(self.account)
+        campaigns = CampaignQueryManager.get_network_campaigns(self.account,
+                is_new=True)
         print '# of network campaigns: %d' % len(campaigns)
         response = self.client.post(self.url, self.post_data,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        campaigns = CampaignQueryManager.get_network_campaigns(self.account)
+        campaigns = CampaignQueryManager.get_network_campaigns(self.account,
+                is_new=True)
         eq_(len(campaigns), num_of_custom_campaigns)
         ok_([campaign for campaign in campaigns if campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN])

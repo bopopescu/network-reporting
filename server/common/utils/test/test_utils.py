@@ -236,23 +236,23 @@ def confirm_model_changes(added=None,
                 error = True
                 for model in models:
                     messages.append("%s with key: %s should have been deleted"
-                            "and wasn't" % (model.__class__.__name__,
+                            " and wasn't" % (model.__class__.__name__,
                                 model.key()))
 
 
             # add marked_as_deleted models to edited
-            edited = dict(list(edited) + [(key, {'deleted': True}) for key in
-                marked_as_deleted])
+            all_edited = dict(list(edited) + [(key, {'deleted': True}) for
+                key in marked_as_deleted])
 
             # confirm edited
-            for key, fields in edited.itervalues():
+            for key, fields in all_edited.iteritems():
                 pre_test_model = pre_test_instances_dict[key]
-                for field, value in fields:
+                for field, value in fields.iteritems():
                     setattr(pre_test_model, field, value)
 
                 try:
                     model_eq(db.get(key), pre_test_model)
-                except AssertionError as eception:
+                except AssertionError as exception:
                     messages.append(exception.message)
                     error = True
 

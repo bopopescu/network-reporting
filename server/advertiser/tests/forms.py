@@ -280,6 +280,7 @@ class TestPromotionalLineItemForm(unittest.TestCase):
             ok_(not form.cleaned_data['budget_type'])
             ok_(not form.cleaned_data['budget_strategy'])
 
+
 class TestLineItemForm(unittest.TestCase):
     def setUp(self):
         self.data = copy.deepcopy(GUARANTEED_LINE_ITEM_DATA + PROMOTIONAL_LINE_ITEM_DATA)
@@ -481,12 +482,12 @@ class LineItemCleanMethodsTestCase(unittest.TestCase):
         eq_(form['keywords'].errors, ['Maximum 500 characters for keywords'])
 
     def mptest_clean_targeted_cities(self):
-        # we may want to keep this long
         self.data['region_targeting'] = 'all'
 
         form = LineItemForm(self.data)
         form.is_valid()
         eq_(form.cleaned_data['cities'], [])
+
 
 SHARED_CREATIVE_DATA = {
     'format': '320x50',
@@ -508,15 +509,11 @@ HTML_CREATIVE_DATA = {
     'ormma_html': False,
 }
 
+
 class TestCreativeForm(unittest.TestCase):
     def setUp(self):
         self.image_data = copy.deepcopy(dict(SHARED_CREATIVE_DATA,
                                              **IMAGE_CREATIVE_DATA))
-        pwd = os.path.dirname(os.path.abspath(__file__))
-        test_banner_path = os.path.join(pwd, 'test_banner.gif')
-        print test_banner_path
-        upload_file = file(test_banner_path, 'rb')
-        self.files = dict(image_file=SimpleUploadedFile(upload_file.name, upload_file.read()))
 
         self.text_tile_data = copy.deepcopy(dict(SHARED_CREATIVE_DATA,
                                                  **TEXT_TILE_CREATIVE_DATA))
@@ -552,10 +549,11 @@ class TestCreativeForm(unittest.TestCase):
         ok_(not creative.conv_appid)
 
     def mptest_save_image_file(self):
-        img_data = self.files['image_file'].read()
+        files = dict(image_file=_simple_uploaded_file('test_banner.gif'))
+        img_data = files['image_file'].read()
         img = images.Image(img_data)
 
-        form = ImageCreativeForm(self.image_data, self.files)
+        form = ImageCreativeForm(self.image_data, files)
         form.is_valid()
         creative = form.save()
         eq_(creative.image_width, img.width)
@@ -573,5 +571,20 @@ class TestCreativeForm(unittest.TestCase):
         # clean method is unecessary again
         pass
 
-    def mptest(self):
-        pass
+    def mptest_invalid_image_extension(self):
+        files = dict(image_file=_simple_uploaded_file('invalid_extension.tiff'))
+        form = ImageCreativeForm(self.image_data, files=files)
+        ok_(not form.is_valid())
+        eq_(form['image_file'].errors, ['Filetype (.tiff) not supported.'])
+
+    def mptest_invalid_non_image_extension(self):
+        files = dict(image_file=_simple_uploaded_file('invalid_without_extension'))
+        form = ImageCreativeForm(self.image_data, files=files)
+        ok_(not form.is_valid())
+        eq_(form['image_file'].errors, ['Filetype not supported.'])
+
+def _simple_uploaded_file(path):
+    pwd = os.path.dirname(os.path.abspath(__file__))
+    full_path = os.path.join(pwd, path)
+    upload_file = file(full_path, 'rb')
+    return SimpleUploadedFile(upload_file.name, upload_file.read())

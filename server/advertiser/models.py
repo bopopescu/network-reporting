@@ -207,15 +207,13 @@ class AdGroup(db.Model):
     start_datetime = db.DateTimeProperty()
     end_datetime = db.DateTimeProperty()
 
-    adgroup_type = db.StringProperty(verbose_name='Line Item Type:',
-                                     choices=['gtee',
+    adgroup_type = db.StringProperty(choices=['gtee',
                                               'gtee_high',
                                               'gtee_low',
                                               'promo',
                                               'network',
                                               'backfill_promo',
-                                              'marketplace'],
-                                     required=True)
+                                              'marketplace'])
 
     ##################################
     # /end moved from campaign class #

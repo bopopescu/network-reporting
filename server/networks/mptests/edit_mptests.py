@@ -20,8 +20,7 @@ from networks.mptests.network_test_case import NetworkTestCase, \
         DEFAULT_PUB_ID
 from common.utils.test.test_utils import dict_eq, \
         model_eq, \
-        decorate_all_test_methods, \
-        confirm_db
+        confirm_all_models
 from common.constants import NETWORKS
 
 from networks.views import NETWORKS_WITH_PUB_IDS
@@ -43,7 +42,6 @@ from networks.forms import NetworkCampaignForm, \
         AdUnitAdGroupForm
 
 
-@decorate_all_test_methods(confirm_db())
 class EditNetworkGetTestCase(NetworkTestCase):
     def setUp(self):
         super(EditNetworkGetTestCase, self).setUp()
@@ -78,14 +76,6 @@ class EditNetworkGetTestCase(NetworkTestCase):
     def network_type_to_test(self):
         return 'admob'
 
-    def mptest_response_code(self):
-        """When editing a network campaign, response code should be 200.
-
-        Author: Tiago Bandeira
-        """
-        response = self.client.get(self.url)
-        eq_(response.status_code, 200)
-
     def mptest_edit_campaign_for_other_account(self):
         """Attempting to edit a campaign from another account should result in
         an error.
@@ -93,15 +83,18 @@ class EditNetworkGetTestCase(NetworkTestCase):
         Author: Tiago Bandeira
         """
         self.login_secondary_account()
-        response = self.client.get(self.url)
-        eq_(response.status_code, 404)
+
+        confirm_all_models(self.client.get,
+                           args=[self.url],
+                           response_code=404)
 
     def mptest_context(self):
         """The context given to the template should be valid.
 
         Author: Tiago Bandeira
         """
-        response = self.client.get(self.url)
+        response = confirm_all_models(self.client.get,
+                                      args=[self.url])
         context = response.context
 
         adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
@@ -148,7 +141,6 @@ class EditNetworkGetTestCase(NetworkTestCase):
         ok_(not context['reporting'])
 
 
-@decorate_all_test_methods(confirm_db(modified=[NetworkConfig, AdNetworkAppMapper]))
 class EditNetworkPostTestCase(NetworkTestCase):
     def setUp(self):
         super(EditNetworkPostTestCase, self).setUp()
@@ -181,40 +173,45 @@ class EditNetworkPostTestCase(NetworkTestCase):
         return 'admob'
 
     def mptest_response_code(self):
-        """When editing a network campaign, response code should be 200.
+        """No change to network campaign
 
         Author: Andrew He
+                Tiago Bandeira (6/4/2012)
         """
-        response = self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        eq_(response.status_code, 200)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
 
     def mptest_activates_adgroup(self):
         """Setting adgroup.active to True should work.
 
         Author: Andrew He
+                Tiago Bandeira (6/4/2012)
         """
         # Prepare a request that marks one of the adunits as 'enabled'.
         app = self.existing_apps[0]
         adunit = app.adunits[0]
 
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                self.existing_campaign, adunit.key(), self.account.key(),
+                get_from_db=True)
+        adgroup.active = False
+        AdGroupQueryManager.put(adgroup)
+
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_active_key] = True
 
         # Send the request.
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        # Check that the adgroup for this adunit is marked active.
-        adgroup = AdGroupQueryManager.get_network_adgroup(
-                self.existing_campaign, adunit.key(), self.account.key(),
-                get_from_db=True)
-        eq_(adgroup.active, True)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={adgroup.key(): {'active': True}})
 
     def mptest_only_allows_activating_adgroups_with_pub_ids(self):
         """Setting adgroup.active to True should not work if there's no pub ID.
 
         Author: Andrew He
+                Tiago Bandeira (6/4/2012)
         """
         # Prepare a request that marks one of the adunits as 'enabled' without
         # giving it a pub ID.
@@ -228,8 +225,11 @@ class EditNetworkPostTestCase(NetworkTestCase):
         self.post_data[adunit_active_key] = True
 
         # Send the request.
-        response = self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH':
+                                          'XMLHttpRequest'})
+        print response
         response_json = json.loads(response.content)
 
         # Check that the request fails and returns a validation error for the
@@ -241,6 +241,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         """Setting adgroup.active to False should work.
 
         Author: Andrew He
+                Tiago Bandeira (6/4/2012)
         """
         app = self.existing_apps[0]
         adunit = app.adunits[0]
@@ -257,15 +258,11 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_active_key] = False
 
-        # Send the request.
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        # Check that the adgroup for this adunit is marked active.
-        adgroup = AdGroupQueryManager.get_network_adgroup(
-                self.existing_campaign, adunit.key(), self.account.key(),
-                get_from_db=True)
-        eq_(adgroup.active, False)
+        # Send the request and check db state.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={adgroup.key(): {'active': False}})
 
     def mptest_updates_network_configs(self):
         """All network config objects should be updated with correct pub IDs.

@@ -371,10 +371,13 @@ def confirm_edited_and_marked_as_deleted(edited,
         for field, value in fields.iteritems():
             setattr(pre_test_model, field, value)
 
+        instance = db.get(key)
         try:
-            model_eq(db.get(key), pre_test_model)
+            model_eq(instance, pre_test_model)
         except AssertionError as exception:
-            messages.append(exception.message)
+            messages.append(exception.message + " When checking %s instance "
+                    "with %s key" % (instance.__class__.__name__,
+                        instance.key()))
             error = True
 
     return messages, error

@@ -13,12 +13,10 @@ from django.core.urlresolvers import reverse
 from networks.mptests.network_test_case import NetworkTestCase
 
 from common.constants import NETWORKS
-from common.utils.test.test_utils import decorate_all_test_methods, \
-        confirm_db
+from common.utils.test.test_utils import confirm_all_models
 
 from account.query_managers import AccountQueryManager
 
-@decorate_all_test_methods(confirm_db())
 class NetworksTestCase(NetworkTestCase):
     def setUp(self):
         super(NetworksTestCase, self).setUp()
@@ -40,5 +38,5 @@ class NetworksTestCase(NetworkTestCase):
 
         Author: Tiago Bandeira
         """
-        response = self.client.get(self.url)
-        eq_(response.status_code, 200)
+        confirm_all_models(self.client.get, args=[self.url])
+

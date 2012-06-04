@@ -12,9 +12,7 @@ from django.core.urlresolvers import reverse
 from networks.mptests.network_test_case import NetworkTestCase
 
 from advertiser.query_managers import CampaignQueryManager
-from common.utils.test.test_utils import decorate_all_test_methods, \
-        confirm_db, \
-        model_eq
+from common.utils.test.test_utils import confirm_all_models
 
 
 #@decorate_all_test_methods(confirm_db())
@@ -36,43 +34,43 @@ class PauseNetworkTestCase(NetworkTestCase):
         self.post_data = {'campaign_key': self.campaign.key(),
                           'active': True}
 
-    def mptest_response_code(self):
-        """When adding a network campaign, response code should be 200.
+    def mptest_no_change_campaign(self):
+        """No change.
 
         Author: Tiago Bandeira
         """
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        eq_(response.status_code, 200)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
 
     def mptest_activate_campaign(self):
         """Activate campaign.
 
         Author: Tiago Bandeira
         """
-        expected_campaign = CampaignQueryManager.get(self.campaign.key())
-        expected_campaign.active = True
+        self.campaign.active = False
+        CampaignQueryManager.put(self.campaign)
 
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        edited = {self.campaign.key(): {'active': True}}
 
-        self.campaign = CampaignQueryManager.get(self.campaign.key())
-        model_eq(self.campaign, expected_campaign)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited)
 
     def mptest_pause_campaign(self):
         """Pause campaign.
 
         Author: Tiago Bandeira
         """
-        expected_campaign = CampaignQueryManager.get(self.campaign.key())
-        expected_campaign.active = False
-
         del(self.post_data['active'])
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        self.campaign = CampaignQueryManager.get(self.campaign.key())
-        model_eq(self.campaign, expected_campaign)
+        edited = {self.campaign.key(): {'active': False}}
+
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited)
 
     def mptest_activate_campaign_for_other_account(self):
         """Attempting to activate a campaign for another account should result
@@ -80,15 +78,9 @@ class PauseNetworkTestCase(NetworkTestCase):
 
         Author: Tiago Bandeira
         """
-        expected_campaign = CampaignQueryManager.get(self.campaign.key())
-
         self.login_secondary_account()
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        eq_(response.status_code, 404)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           response_code=404)
 
-        # Verify that the campaign wasn't modified!
-        model_eq(self.campaign, expected_campaign)
-
-# TODO: Use the traditional decorator syntax (Python 2.5 vs. 2.7 issue?)
-PauseNetworkTestCase = decorate_all_test_methods(confirm_db())(PauseNetworkTestCase)

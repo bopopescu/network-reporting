@@ -219,11 +219,15 @@ def generate_adgroup(campaign, site_keys, account, adgroup_type):
     return adgroup
 
 
-def generate_campaign(account, *args):
+def generate_campaign(account, *args, **kwargs):
+    is_order = kwargs.get('is_order', True)
+    is_order = kwargs.get('is_marketplace', False)
+    is_order = kwargs.get('is_network', False)
+    advertiser = kwargs.get('advertiser', "John's Hat Co, Inc.")
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
-                        advertiser = "John's Hat Co, Inc.",
-                        is_order=True)
+                        advertiser = advertiser,
+                        is_order=is_order)
     campaign.put()
     return campaign
 
@@ -232,7 +236,7 @@ def generate_marketplace_campaign(account, budget):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
                         advertiser = "marketplace",
-                        is_order=False)
+                        is_marketplace=True)
     campaign.put()
     return campaign
 

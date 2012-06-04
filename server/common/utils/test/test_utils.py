@@ -168,7 +168,8 @@ def confirm_model_changes(method,
                           added=None,
                           deleted=None,
                           marked_as_deleted=None,
-                          edited=None):
+                          edited=None,
+                          response_code=200):
     """Verifies that the changes passed in have been made
 
     Args:
@@ -201,7 +202,8 @@ def confirm_model_changes(method,
     edited = edited or {}
 
     # run the intended test
-    method(*args, **kwargs)
+    response = method(*args, **kwargs)
+    eq_(response.status_code, response_code)
 
     # confirm that every modification intended occured
     messages = []  # compiles all the failures
@@ -357,7 +359,7 @@ def confirm_edited_and_marked_as_deleted(edited,
         models)
 
     # add marked_as_deleted models to edited
-    all_edited = dict(list(edited) + [(key, {'deleted': True}) for
+    all_edited = dict(edited.items() + [(key, {'deleted': True}) for
         key in marked_as_deleted])
 
     # confirm edited
@@ -382,7 +384,8 @@ def confirm_all_models(method,
                        added=None,
                        deleted=None,
                        marked_as_deleted=None,
-                       edited=None):
+                       edited=None,
+                       response_code=200):
     """Decorator that confirms the entire state of the db.
 
     Decorates method with confirm_db and confirm_model_changes.
@@ -412,41 +415,35 @@ def confirm_all_models(method,
     marked_as_deleted = marked_as_deleted or []
     edited = edited or {}
 
-    class_name_translation = {'AdNetworkLoginCredentials':
-                                'adnetwork_login_credentials',
-                              'AdNetworkAppMapper':
-                                'adnetwork_app_mapper'}
-
     confirm_kwargs = defaultdict(Counter)
     for key in added.iterkeys():
-        class_name = db.get(key).__class__.__name__
-        arg_name = class_name_translation.get(class_name,
-                class_name.lower())
-        if 'creative' in arg_name:
-            arg_name = 'creative'
-        confirm_kwargs[arg_name]['added'] += 1
+        confirm_kwargs[get_arg_name(key)]['added'] += 1
 
     for key in deleted:
-        class_name = db.get(key).__class__.__name__
-        arg_name = class_name_translation.get(class_name,
-                class_name.lower())
-        if 'creative' in arg_name:
-            arg_name = 'creative'
-        confirm_kwargs[arg_name]['deleted'] += 1
+        confirm_kwargs[get_arg_name(key)]['deleted'] += 1
 
     for key in (marked_as_deleted + edited.keys()):
-        class_name = db.get(key).__class__.__name__
-        arg_name = class_name_translation.get(class_name,
-                class_name.lower())
-        if 'creative' in arg_name:
-            arg_name = 'creative'
-        confirm_kwargs[arg_name]['edited'] += 1
+        confirm_kwargs[get_arg_name(key)]['edited'] += 1
 
     # run the intended test
     decorator = confirm_db(**confirm_kwargs)
     decorator(confirm_model_changes)(method, args=args, kwargs=kwargs,
             added=added, deleted=deleted, marked_as_deleted=marked_as_deleted,
-            edited=edited)
+            edited=edited, response_code=response_code)
+
+def get_arg_name(key):
+    class_name_translation = {'AdNetworkLoginCredentials':
+                                'adnetwork_login_credentials',
+                              'AdNetworkAppMapper':
+                                'adnetwork_app_mapper'}
+
+    class_name = db.get(key).__class__.__name__
+    arg_name = class_name_translation.get(class_name,
+            class_name.lower())
+    if 'creative' in arg_name:
+        arg_name = 'creative'
+
+    return arg_name
 
 
 def confirm_db(modified=None,

@@ -40,16 +40,6 @@ class DeleteNetworkTestCase(NetworkTestCase):
                 self.account)
         self.post_data = {'campaign_key': str(self.campaign.key())}
 
-    @confirm_db(campaign=EDITED_1, adgroup=EDITED_1, creative=EDITED_1,
-        adnetwork_login_credentials=EDITED_1)
-    def mptest_response_code(self):
-        """Response code for GET should be 200.
-
-        Author: Tiago Bandeira
-        """
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        eq_(response.status_code, 200)
 
     def mptest_delete_campaign(self):
         """Delete a campaign and all associated adgroups, creatives and login
@@ -63,38 +53,39 @@ class DeleteNetworkTestCase(NetworkTestCase):
                         self.campaign.adgroups for creative in
                         adgroup.creatives] + [self.login.key()]
 
-        confirm_all_models(self.client.post, args=[self.url, self.post_data],
-                kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                marked_as_deleted=marked_as_deleted)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           marked_as_deleted=marked_as_deleted)
 
 
-    @confirm_db(campaign=EDITED_1, adgroup=EDITED_1, creative=EDITED_1)
     def mptest_new_default_campaign_chosen(self):
         """When a default campaign is deleted and other campaigns of this
         network_type exist a new default campaign is chosen.
 
         Author: Tiago Bandeira
         """
-        num_of_custom_campaigns = 2
+        num_of_custom_campaigns = 1
+        additional_campaigns = []
         for x in range(num_of_custom_campaigns):
-            self.generate_network_campaign(self.network_type, self.account,
-                    self.existing_apps)
-        campaigns = CampaignQueryManager.get_network_campaigns(self.account,
-                is_new=True)
-        print '# of network campaigns: %d' % len(campaigns)
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            additional_campaigns.append(self.generate_network_campaign(
+                self.network_type, self.account, self.existing_apps))
 
-        campaigns = CampaignQueryManager.get_network_campaigns(self.account,
-                is_new=True)
-        eq_(len(campaigns), num_of_custom_campaigns)
-        ok_([campaign for campaign in campaigns if campaign.network_state == \
-                NetworkStates.DEFAULT_NETWORK_CAMPAIGN])
+        marked_as_deleted = [self.campaign.key()] + [adgroup.key() for adgroup
+                in self.campaign.adgroups] + [creative.key() for adgroup in
+                        self.campaign.adgroups for creative in
+                        adgroup.creatives]
 
-        login = AdNetworkLoginCredentials.all().get()
-        ok_(login)
+        edited = {additional_campaigns[0].key(): {'network_state':
+            NetworkStates.DEFAULT_NETWORK_CAMPAIGN}}
 
-    @confirm_db()
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           marked_as_deleted=marked_as_deleted,
+                           edited=edited)
+
+
     def mptest_delete_campaign_for_other_account(self):
         """Attempting to delete a campaign for another account should result
         in an error.
@@ -104,10 +95,6 @@ class DeleteNetworkTestCase(NetworkTestCase):
         expected_campaign = CampaignQueryManager.get(self.campaign.key())
 
         self.login_secondary_account()
-        response = self.client.post(self.url, self.post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        eq_(response.status_code, 404)
-
-        # Verify that the campaign wasn't modified!
-        model_eq(CampaignQueryManager.get(self.campaign.key()),
-                expected_campaign)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           response_code=404)

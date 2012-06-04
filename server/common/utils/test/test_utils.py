@@ -169,7 +169,8 @@ def confirm_model_changes(method,
                           deleted=None,
                           marked_as_deleted=None,
                           edited=None,
-                          response_code=200):
+                          response_code=200,
+                          return_values=None):
     """Verifies that the changes passed in have been made
 
     Args:
@@ -204,6 +205,8 @@ def confirm_model_changes(method,
     # run the intended test
     response = method(*args, **kwargs)
     eq_(response.status_code, response_code)
+    # HACK for returning values when called via decorator in confirm_all_models
+    return_values.append(response)
 
     # confirm that every modification intended occured
     messages = []  # compiles all the failures
@@ -426,10 +429,14 @@ def confirm_all_models(method,
         confirm_kwargs[get_arg_name(key)]['edited'] += 1
 
     # run the intended test
+    return_values = []
     decorator = confirm_db(**confirm_kwargs)
-    decorator(confirm_model_changes)(method, args=args, kwargs=kwargs,
-            added=added, deleted=deleted, marked_as_deleted=marked_as_deleted,
-            edited=edited, response_code=response_code)
+    decorator(confirm_model_changes)(method, args=args,
+            kwargs=kwargs, added=added, deleted=deleted,
+            marked_as_deleted=marked_as_deleted, edited=edited,
+            response_code=response_code, return_values=return_values)
+
+    return return_values[0]
 
 def get_arg_name(key):
     class_name_translation = {'AdNetworkLoginCredentials':

@@ -11,8 +11,7 @@ from nose.tools import ok_, \
 from django.core.urlresolvers import reverse
 
 from common.utils.test.test_utils import dict_eq, \
-        decorate_all_test_methods, \
-        confirm_db
+        confirm_all_models
 from common.constants import NETWORKS
 from networks.mptests.network_test_case import NetworkTestCase, \
         DEFAULT_BID
@@ -20,7 +19,6 @@ from networks.mptests.network_test_case import NetworkTestCase, \
 from ad_network_reports.models import LoginStates
 
 
-@decorate_all_test_methods(confirm_db())
 class NetworkDetailsTestCase(NetworkTestCase):
     def setUp(self):
         super(NetworkDetailsTestCase, self).setUp()
@@ -38,20 +36,13 @@ class NetworkDetailsTestCase(NetworkTestCase):
     def network_type_to_test(self):
         return 'admob'
 
-    def mptest_response_code(self):
-        """Networks shall return a valid status code.
-
-        Author: Tiago Bandeira
-        """
-        response = self.client.get(self.url)
-        eq_(response.status_code, 200)
-
     def mptest_context(self):
         """NetworkDetails shall pass a reasonable context to the template.
 
         Author: Tiago Bandeira
         """
-        response = self.client.get(self.url)
+        response = confirm_all_models(self.client.get,
+                                      args=[self.url])
         context = response.context
 
         # The network data dictionary should match expected values. Note: since dict_eq only

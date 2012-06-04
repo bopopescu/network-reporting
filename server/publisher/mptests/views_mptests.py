@@ -1,5 +1,4 @@
 import datetime
-import logging
 import os
 import simplejson as json
 import sys
@@ -11,26 +10,21 @@ import common.utils.test.setup
 from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
-from account.models import NetworkConfig
-from account.query_managers import NetworkConfigQueryManager
-from advertiser.models import Campaign, AdGroup, Creative
 from advertiser.query_managers import (AdvertiserQueryManager,
                                        CampaignQueryManager,
                                        AdGroupQueryManager)
 from common.utils.date_magic import gen_days
-from common.utils.test.fixtures import (generate_network_config, generate_app,
-                                        generate_adunit, generate_campaign,
-                                        generate_adgroup,
+from common.utils.test.fixtures import (generate_app, generate_adunit,
+                                        generate_campaign, generate_adgroup,
                                         generate_marketplace_creative,
-                                        generate_html_creative)
+                                        generate_html_creative,
+                                        generate_network_campaign)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
                                           model_key_eq, time_almost_eq,
-                                          model_eq, ADDED_1, DELETED_1,
-                                          EDITED_1)
+                                          model_eq, ADDED_1, EDITED_1)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
-from publisher.models import App, AdUnit
 from publisher.query_managers import PublisherQueryManager, AppQueryManager
 from reporting.models import StatsModel
 
@@ -195,7 +189,9 @@ class AppDetailViewTestCase(BaseViewTestCase):
                 self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
-        # TODO: network campaigns
+        # Create network campaign and adgroups.
+        self.network_campaign = generate_network_campaign(
+                self.account, 'mobfox', put=True)
 
         self.url = reverse('publisher_app_show', args=[str(self.app.key())])
 
@@ -267,7 +263,7 @@ class AppDetailViewTestCase(BaseViewTestCase):
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
         list_eq(get_response.context['marketplace'],
                 [marketplace_campaign])
-        # TODO: list_eq(get_response.context['network'], [self.network_campaign])
+        list_eq(get_response.context['network'], [self.network_campaign])
         list_eq(get_response.context['backfill_promo'],
                 [self.backfill_promo_campaign])
 
@@ -340,7 +336,9 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
                 self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
-        # TODO: network campaigns
+        # Create network campaign and adgroups.
+        self.network_campaign = generate_network_campaign(
+                self.account, 'mobfox', put=True)
 
         self.url = reverse('publisher_adunit_show',
                            args=[str(self.adunit.key())])
@@ -418,7 +416,10 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         list_eq(get_response.context['promo'], [self.promo_adgroup])
         list_eq(get_response.context['marketplace'],
                 [self.marketplace_adgroup])
-        # TODO: list_eq(get_response.context['network'], [self.network_adgroup])
+
+        network_adgroup = AdGroupQueryManager.get_network_adgroup(
+            self.network_campaign, self.adunit.key(), self.account.key())
+        list_eq(get_response.context['network'], [network_adgroup])
         list_eq(get_response.context['backfill_promo'],
                 [self.backfill_promo_adgroup])
 

@@ -53,7 +53,8 @@ class DashboardViewTestCase(BaseViewTestCase):
 
         eq_(get_response.context['page_width'], 'wide')
 
-        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
 
         # Names is a dict mapping internal representation to readable names. It
         # includes source types and all model keys for an account.
@@ -106,10 +107,13 @@ class AppIndexViewTestCase(BaseViewTestCase):
 
         expected_daily_stats = []
         for day in range(14):
-            expected_daily_stats.append({'req': 0, 'imp': 0, 'clk': 0, 'usr': 0})
+            expected_daily_stats.append(
+                {'req': 0, 'imp': 0, 'clk': 0, 'usr': 0})
 
-        start_date = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(days=13)
-        start_datetime = datetime.datetime(start_date.year, start_date.month, start_date.day)
+        start_date = datetime.datetime.now(
+            Pacific_tzinfo()).date() - datetime.timedelta(days=13)
+        start_datetime = datetime.datetime(
+            start_date.year, start_date.month, start_date.day)
         expected_sum = StatsModel(account=self.account, date=start_datetime)
 
         expected_account_stats = {
@@ -159,29 +163,31 @@ class AppDetailViewTestCase(BaseViewTestCase):
         site_keys = [self.adunit.key()]
 
         self.gtee_high_campaign = generate_campaign(
-                self.account, put=True, campaign_type='gtee_high')
+            self.account, put=True, campaign_type='gtee_high')
         generate_adgroup(
-                self.account, self.gtee_high_campaign, put=True, site_keys=site_keys)
+            self.account, self.gtee_high_campaign, put=True,
+            site_keys=site_keys)
 
         self.gtee_campaign = generate_campaign(
-                self.account, put=True, campaign_type='gtee')
+            self.account, put=True, campaign_type='gtee')
         generate_adgroup(
-                self.account, self.gtee_campaign, put=True, site_keys=site_keys)
+            self.account, self.gtee_campaign, put=True, site_keys=site_keys)
 
         self.gtee_low_campaign = generate_campaign(
-                self.account, put=True, campaign_type='gtee_low')
+            self.account, put=True, campaign_type='gtee_low')
         generate_adgroup(
-                self.account, self.gtee_low_campaign, put=True, site_keys=site_keys)
+            self.account, self.gtee_low_campaign, put=True, site_keys=site_keys)
 
         self.promo_campaign = generate_campaign(
-                self.account, put=True, campaign_type='promo')
+            self.account, put=True, campaign_type='promo')
         generate_adgroup(
-                self.account, self.promo_campaign, put=True, site_keys=site_keys)
+            self.account, self.promo_campaign, put=True, site_keys=site_keys)
 
         self.backfill_promo_campaign = generate_campaign(
-                self.account, put=True, campaign_type='backfill_promo')
+            self.account, put=True, campaign_type='backfill_promo')
         generate_adgroup(
-                self.account, self.backfill_promo_campaign, put=True, site_keys=site_keys)
+            self.account, self.backfill_promo_campaign, put=True,
+            site_keys=site_keys)
 
         # Use the query manager methods to create marketplace adgroups and put
         # it to the db.
@@ -260,12 +266,13 @@ class AppDetailViewTestCase(BaseViewTestCase):
 
         list_eq(get_response.context['promo'], [self.promo_campaign])
 
-        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         list_eq(get_response.context['marketplace'],
-                [marketplace_campaign])
+            [marketplace_campaign])
         list_eq(get_response.context['network'], [self.network_campaign])
         list_eq(get_response.context['backfill_promo'],
-                [self.backfill_promo_campaign])
+            [self.backfill_promo_campaign])
 
         # Both of these are true because we have an active marketplace campaign
         # targetting an active adunit.
@@ -306,29 +313,31 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         site_keys = [self.adunit.key()]
 
         self.gtee_high_campaign = generate_campaign(
-                self.account, put=True, campaign_type='gtee_high')
+            self.account, put=True, campaign_type='gtee_high')
         self.gtee_high_adgroup = generate_adgroup(
-                self.account, self.gtee_high_campaign, put=True, site_keys=site_keys)
+            self.account, self.gtee_high_campaign, put=True,
+            site_keys=site_keys)
 
         self.gtee_campaign = generate_campaign(
-                self.account, put=True, campaign_type='gtee')
+            self.account, put=True, campaign_type='gtee')
         self.gtee_adgroup = generate_adgroup(
-                self.account, self.gtee_campaign, put=True, site_keys=site_keys)
+            self.account, self.gtee_campaign, put=True, site_keys=site_keys)
 
         self.gtee_low_campaign = generate_campaign(
-                self.account, put=True, campaign_type='gtee_low')
+            self.account, put=True, campaign_type='gtee_low')
         self.gtee_low_adgroup = generate_adgroup(
-                self.account, self.gtee_low_campaign, put=True, site_keys=site_keys)
+            self.account, self.gtee_low_campaign, put=True, site_keys=site_keys)
 
         self.promo_campaign = generate_campaign(
-                self.account, put=True, campaign_type='promo')
+            self.account, put=True, campaign_type='promo')
         self.promo_adgroup = generate_adgroup(
-                self.account, self.promo_campaign, put=True, site_keys=site_keys)
+            self.account, self.promo_campaign, put=True, site_keys=site_keys)
 
         self.backfill_promo_campaign = generate_campaign(
-                self.account, put=True, campaign_type='backfill_promo')
+            self.account, put=True, campaign_type='backfill_promo')
         self.backfill_promo_adgroup = generate_adgroup(
-                self.account, self.backfill_promo_campaign, put=True, site_keys=site_keys)
+            self.account, self.backfill_promo_campaign, put=True,
+            site_keys=site_keys)
 
         # Use the query manager methods to create marketplace adgroup and put
         # it to the db.
@@ -693,7 +702,8 @@ class CreateAppViewTestCase(BaseViewTestCase):
         # CAMPAIGNS
         # When you create your first app/adunit, marketplace and
         # backfill_promo campaigns/adgroups/creatives are created.
-        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account)
+        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(
+            self.account)
         eq_(len(campaigns_dict), 2)
 
         marketplace_campaign = self._get_object(
@@ -717,7 +727,8 @@ class CreateAppViewTestCase(BaseViewTestCase):
             check_primary_key=False)
 
         # ADGROUPS
-        adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
+        adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(
+            self.account)
         eq_(len(adgroups_dict), 2)
 
         marketplace_adgroup = self._get_object(
@@ -739,7 +750,8 @@ class CreateAppViewTestCase(BaseViewTestCase):
             check_primary_key=False, exclude=['created', 't'])
 
         # CREATIVES
-        creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(self.account)
+        creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(
+            self.account)
         eq_(len(creatives_dict), 2)
 
         marketplace_creative = self._get_object(
@@ -820,9 +832,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         eq_(len(adunits_dict), 2)
 
         # Obtain the created app/adunit.
-        new_apps = filter(lambda app: app.key() != filler_app.key(), apps_dict.values())
+        new_apps = filter(
+            lambda app: app.key() != filler_app.key(), apps_dict.values())
         app = new_apps[0]
-        new_adunits = filter(lambda adunit: adunit.key() != filler_adunit.key(), adunits_dict.values())
+        new_adunits = filter(
+            lambda adunit: adunit.key() != filler_adunit.key(),
+            adunits_dict.values())
         adunit = new_adunits[0]
 
         # This page should redirect to the integration help page.
@@ -995,7 +1010,8 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
                         primary_category=post_data['primary_category'][0])
         model_eq(app, expected_app)
 
-        expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
+        expected_adunit = generate_adunit(
+            self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
     @confirm_db()
@@ -1035,7 +1051,8 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
                         key=self.app.key())
         model_eq(app, expected_app)
 
-        expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
+        expected_adunit = generate_adunit(
+            self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
     @confirm_db()
@@ -1080,7 +1097,8 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
                         key=self.app.key())
         model_eq(app, expected_app)
 
-        expected_adunit = generate_adunit(self.account, app, key=self.adunit.key())
+        expected_adunit = generate_adunit(
+            self.account, app, key=self.adunit.key())
         model_eq(adunit, expected_adunit)
 
 
@@ -1171,7 +1189,8 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         model_eq(marketplace_adgroup, expected_marketplace_adgroup,
             check_primary_key=False, exclude=['created', 't'])
 
-        creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(self.account)
+        creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(
+            self.account)
         eq_(len(creatives_dict), 1)
 
         marketplace_creative = creatives_dict.values()[0]

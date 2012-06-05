@@ -1,5 +1,4 @@
 import datetime
-import logging
 import os
 import simplejson as json
 import sys
@@ -18,24 +17,14 @@ from account.models import (DEFAULT_CATEGORIES, LOW_CATEGORIES,
                             NetworkConfig)
 from account.query_managers import (NetworkConfigQueryManager,
                                     AccountQueryManager)
-from advertiser.query_managers import (AdvertiserQueryManager,
-                                       CampaignQueryManager,
-                                       AdGroupQueryManager)
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from common.utils.date_magic import gen_days
 from common.utils.test.fixtures import (generate_app, generate_adunit,
-                                        generate_campaign, generate_adgroup,
-                                        generate_marketplace_creative,
-                                        generate_html_creative,
-                                        generate_network_campaign,
                                         generate_network_config)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
-                                          model_key_eq, time_almost_eq,
-                                          model_eq, ADDED_1, EDITED_1)
+                                          model_eq, EDITED_1)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
-from publisher.forms import AppForm, AdUnitForm
-from publisher.query_managers import PublisherQueryManager, AppQueryManager
-from reporting.models import StatsModel
 
 
 class MarketplaceIndexViewTestCase(BaseViewTestCase):
@@ -49,11 +38,12 @@ class MarketplaceIndexViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-                self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
     @confirm_db()
@@ -66,10 +56,11 @@ class MarketplaceIndexViewTestCase(BaseViewTestCase):
 
         get_response = self.client.get(url)
         eq_(get_response.status_code, 200)
-\
+
         model_eq(get_response.context['marketplace'], self.marketplace_campaign)
         list_eq(get_response.context['apps'], [self.app])
-        list_eq(get_response.context['app_keys'], json.dumps([str(self.app.key())]))
+        list_eq(get_response.context['app_keys'],
+                json.dumps([str(self.app.key())]))
         list_eq(get_response.context['adunit_keys'], [self.adunit.key()])
         eq_(get_response.context['pub_key'], self.account.key())
 
@@ -95,7 +86,8 @@ class MarketplaceIndexViewTestCase(BaseViewTestCase):
             })
         dict_eq(json.loads(get_response.context['mpx_stats']), mpx_stats)
 
-        list_eq(get_response.context['stats_breakdown_includes'], ['revenue', 'impressions', 'ecpm'])
+        list_eq(get_response.context['stats_breakdown_includes'],
+                ['revenue', 'impressions', 'ecpm'])
         dict_eq(get_response.context['totals'], mpx_stats)
 
         today_stats = mpx_stats["daily"][-1]
@@ -149,11 +141,12 @@ class BlocklistViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-                self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
     @confirm_db(network_config=EDITED_1)
@@ -197,7 +190,8 @@ class BlocklistViewTestCase(BaseViewTestCase):
         # www.mopub.com is not initially on the blocklist, but is added here so
         # that we can check removal.
         self.account.network_config.blocklist = ['http://www.mopub.com']
-        AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
+        AccountQueryManager.update_config_and_put(
+            self.account, self.account.network_config)
 
         # Attempt to remove a URL from the blocklist.
         post_response = self.client.post(self.url, {
@@ -252,11 +246,12 @@ class ContentFilterViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-                self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
     @confirm_db(network_config=EDITED_1)
@@ -382,11 +377,12 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-                self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
     # Nothing changes with this test because active is the default.
@@ -420,7 +416,8 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
         dict_eq(json.loads(post_response.content), {'success': 'success'})
 
         # Check that the db has been updated to reflect marketplace activation.
-        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         ok_(marketplace_campaign.active)
 
 
@@ -437,11 +434,12 @@ class MarketplaceBlindnessViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-                self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
     # Nothing changes with this test because deactivated is the default.
@@ -459,7 +457,8 @@ class MarketplaceBlindnessViewTestCase(BaseViewTestCase):
 
         # We expect there to still be only one network_config associated with
         # this account.
-        network_configs = NetworkConfig.all().filter('account =', self.account.key()).fetch(100)
+        network_configs = NetworkConfig.all().filter(
+            'account =', self.account.key()).fetch(100)
         eq_(len(network_configs), 1)
 
         # We expect the value for blindness in the db to have been updated to
@@ -476,7 +475,8 @@ class MarketplaceBlindnessViewTestCase(BaseViewTestCase):
 
         # We expect there to still be only one network_config associated with
         # this account.
-        network_configs = NetworkConfig.all().filter('account =', self.account.key()).fetch(100)
+        network_configs = NetworkConfig.all().filter(
+            'account =', self.account.key()).fetch(100)
         eq_(len(network_configs), 1)
 
         # We expect the value for blindness in the db to have been updated to

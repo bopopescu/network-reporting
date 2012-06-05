@@ -135,7 +135,9 @@ class CreateAppFormTestCase(unittest.TestCase):
         data = copy.copy(DEFAULT_APP_DATA)
         expected_app = generate_app(None, **data)
 
-        model_eq(app, expected_app, exclude=['t', 'icon_blob', 'image_serve_url'], check_primary_key=False)
+        model_eq(app, expected_app,
+                 exclude=['t', 'icon_blob', 'image_serve_url'],
+                 check_primary_key=False)
 
         image_data = app.icon_blob.open().read()
         eq_(image_data, DEFAULT_IMG_URL_DATA)
@@ -243,7 +245,9 @@ class EditAppFormTestCase(unittest.TestCase):
         data = copy.copy(DEFAULT_APP_DATA)
         expected_app = generate_app(None, **data)
 
-        model_eq(app, expected_app, exclude=['t', 'icon_blob', 'image_serve_url'], check_primary_key=False)
+        model_eq(app, expected_app,
+                 exclude=['t', 'icon_blob', 'image_serve_url'],
+                 check_primary_key=False)
 
         image_data = app.icon_blob.open().read()
         eq_(image_data, DEFAULT_IMG_URL_DATA)

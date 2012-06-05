@@ -22,11 +22,12 @@ class CampaignQueryManagerTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-                self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
     @confirm_db()
@@ -63,11 +64,12 @@ class AdGroupQueryManagerTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
         self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-                self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
     @confirm_db()

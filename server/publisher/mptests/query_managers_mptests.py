@@ -61,7 +61,8 @@ class AdUnitContextQueryManagerTestCase(BaseViewTestCase):
         expected_adunit = AdUnit.get(adunit_key)
         expected_adunit_context = AdUnitContext.wrap(expected_adunit)
 
-        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
+        adunit_context = AdUnitContextQueryManager.cache_get_or_insert(
+            adunit_key)
 
         model_key_eq(adunit_context, expected_adunit_context)
 
@@ -97,7 +98,8 @@ class PublisherQueryManagerTestCase(BaseViewTestCase):
         properties are as expected.
         """
 
-        objects_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+        objects_dict = PublisherQueryManager.get_objects_dict_for_account(
+            self.account)
 
         eq_(len(objects_dict), 1)
         expected_app = objects_dict.values()[0]
@@ -116,7 +118,8 @@ class PublisherQueryManagerTestCase(BaseViewTestCase):
         expected.
         """
 
-        apps_dict = PublisherQueryManager.get_apps_dict_for_account(self.account)
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(
+            self.account)
 
         expected_apps_dict = {
             str(self.app.key()): self.app
@@ -131,7 +134,8 @@ class PublisherQueryManagerTestCase(BaseViewTestCase):
         expected.
         """
 
-        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(self.account)
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(
+            self.account)
 
         expected_adunits_dict = {
             str(self.adunit.key()): self.adunit
@@ -193,7 +197,8 @@ class AppQueryManagerTestCase(BaseViewTestCase):
         Pass in an account and get a query with all the apps in it.
         """
 
-        # TODO: Obviously there are a lot of combinations here. Flesh this out in the future.
+        # TODO: Obviously there are a lot of combinations here. Flesh this out
+        # in the future.
 
         apps = AppQueryManager.reports_get_apps(account=self.account)
 
@@ -321,7 +326,8 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
         network_config = generate_network_config(account=None, put=False)
 
-        AppQueryManager.update_config_and_put_multi([self.app], [network_config])
+        AppQueryManager.update_config_and_put_multi(
+            [self.app], [network_config])
 
         apps = App.all().fetch(MAX_OBJECTS)
         eq_(len(apps), 1)
@@ -346,7 +352,8 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
         # Add a network config to the app.
         network_config = generate_network_config(account=None, put=False)
-        AppQueryManager.update_config_and_put_multi([self.app], [network_config])
+        AppQueryManager.update_config_and_put_multi(
+            [self.app], [network_config])
 
         # One app now has a network config.
         apps = AppQueryManager.get_apps_with_network_configs(self.account)
@@ -502,7 +509,8 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
         eq_(len(adunits), 2)
 
         # Obtain the created adunit/adunit.
-        new_adunits = filter(lambda adunit: adunit.key() != self.adunit.key(), adunits)
+        new_adunits = filter(
+            lambda adunit: adunit.key() != self.adunit.key(), adunits)
         eq_(len(new_adunits), 1)
         new_adunit = new_adunits[0]
 
@@ -544,7 +552,8 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
         eq_(len(adunits), 2)
 
         # Obtain the created adunit/adunit.
-        new_adunits = filter(lambda adunit: adunit.key() != self.adunit.key(), adunits)
+        new_adunits = filter(
+            lambda adunit: adunit.key() != self.adunit.key(), adunits)
         eq_(len(new_adunits), 1)
         new_adunit = new_adunits[0]
 
@@ -580,7 +589,8 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
         network_config = generate_network_config(account=None, put=False)
 
-        AdUnitQueryManager.update_config_and_put_multi([self.adunit], [network_config])
+        AdUnitQueryManager.update_config_and_put_multi(
+            [self.adunit], [network_config])
 
         adunits = AdUnit.all().fetch(MAX_OBJECTS)
         eq_(len(adunits), 1)
@@ -599,14 +609,17 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
         Get all the adunits with a network config.
         """
 
-        adunits = AdUnitQueryManager.get_adunits_with_network_configs(self.account)
+        adunits = AdUnitQueryManager.get_adunits_with_network_configs(
+            self.account)
         eq_(len(adunits), 0)
 
         network_config = generate_network_config(account=None, put=False)
 
-        AdUnitQueryManager.update_config_and_put_multi([self.adunit], [network_config])
+        AdUnitQueryManager.update_config_and_put_multi(
+            [self.adunit], [network_config])
 
-        adunits = AdUnitQueryManager.get_adunits_with_network_configs(self.account)
+        adunits = AdUnitQueryManager.get_adunits_with_network_configs(
+            self.account)
         eq_(len(adunits), 1)
         adunit = adunits[0]
         model_eq(adunit, self.adunit, exclude=['network_config'])

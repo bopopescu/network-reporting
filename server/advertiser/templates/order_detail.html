@@ -18,7 +18,7 @@
 
   {% chart_placeholder start_date end_date %}
 
-  <br />  
+  <br />
 
   {# The order edit form, hidden by default #}
   <section class="offset hidden" id="order_form_container">
@@ -38,24 +38,24 @@
         Edit this order
       </a>
     </div>
-      
+
   {% order_table order %}
 
   <br />
 
   <h3 class="left"> Line Items in {{ order.name }} </h3>
   <div class="right">
-    <div class="btn-group">      
+    <div class="btn-group">
       <a class="btn" href='{% url advertiser_line_item_form_new order.key %}'>
         <i class="icon-plus"></i>
         New Line Item
       </a>
     </div>
-    
+
     <div class="btn-group">
       <a class="btn" href="#">
         <i class="icon-eye-open"></i>
-        Show All 
+        Show All
       </a>
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
         <span class="caret"></span>
@@ -71,7 +71,7 @@
   </div>
 
   {% line_item_table order.adgroups %}
-  
+
   <br />
   <div class="btn-group">
     <button class="btn status_change" data-toggle="pause">
@@ -92,10 +92,10 @@
     <div class="right">
     <a class="btn" href='#'>
       <i class="icon-random"></i>
-      Change 
+      Change
     </a>
   </div>
-    
+
     {% inventory_table targeted_apps %}
   </section>
 

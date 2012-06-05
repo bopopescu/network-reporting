@@ -52,7 +52,7 @@
      * AdSourceStatusChangeHandler class in orders.py for more info.
      */
     function changeStatus(ad_sources, status) {
-        
+
         // Show the spinner for the ad source
         _.each(ad_sources, function(ad_source) {
             $("#" + ad_source + "-img").removeClass('hidden');
@@ -157,6 +157,9 @@
             });
 
             changeStatus(keys, status);
+            $(".status_change_control").each(function(){
+                $(this).attr('checked', false);
+            });
         });
     }
 
@@ -316,7 +319,7 @@
             order.bind('change', function(current_order) {
                 // Render the order row
                 renderOrder(order);
-                
+
                 // Make the chart. The chart takes a collection as a parameter,
                 // so we add the single order to a collection.
                 var orders = new OrderCollection();
@@ -361,7 +364,7 @@
                     stats_endpoint: 'direct'
                 });
 
-                adunit.url = function () {                    
+                adunit.url = function () {
                     return '/api/campaign/'
                         + bootstrapping_data.order_key
                         + '/adunits/'

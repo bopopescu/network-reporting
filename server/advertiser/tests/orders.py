@@ -13,7 +13,8 @@ import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
 from common.utils.test.test_utils import (dict_eq, time_almost_eq,
                                           model_eq, model_key_eq, model_to_dict,
-                                          confirm_db, decorate_all_test_methods)
+                                          confirm_db, decorate_all_test_methods,
+                                          ADDED_1, EDITED_1, DELETED_1)
 
 from google.appengine.ext import db
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -187,7 +188,6 @@ class OrderIndexTestCase(OrderViewTestCase):
 
         Author: Haydn Dufrene
         """
-
         pass
 
     def mptest_all_orders_returned_are_orders(self):
@@ -196,6 +196,7 @@ class OrderIndexTestCase(OrderViewTestCase):
         for order in orders:
             ok_(order.is_order)
 
+    @confirm_db(campaign=ADDED_1, adgroup=ADDED_1)
     def mptest_all_line_items_are_for_orders(self):
         mpx_campaign = generate_marketplace_campaign(self.account)
         mpx_adgroup = generate_adgroup(mpx_campaign, [], self.account, 'marketplace')
@@ -204,10 +205,8 @@ class OrderIndexTestCase(OrderViewTestCase):
         for line_item in line_items:
             ok_(line_item.campaign.is_order)
 
-        CampaignQueryManager.delete(mpx_campaign)
-        AdGroupQueryManager.delete(mpx_adgroup)
-
-OrderIndexTestCase = decorate_all_test_methods(confirm_db())(OrderIndexTestCase)
+excluded = ['mptest_all_line_items_are_for_orders']
+OrderIndexTestCase = decorate_all_test_methods(confirm_db(), exclude=excluded)(OrderIndexTestCase)
 
 
 class OrderDetailHandlerTestCase(OrderViewTestCase):
@@ -438,7 +437,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         response = self.client.post(self.url)
         eq_(response.status_code, 404)
 
-    @confirm_db(modified=[AdGroup, Campaign])
+    @confirm_db(campaign=ADDED_1, adgroup=ADDED_1)
     def mptest_puts_new_valid_order_and_line_item(self):
         """
         A valid POST with valid order and line item data should
@@ -678,7 +677,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(self.edit_url)
         eq_(response.status_code, 404)
 
-    @confirm_db()
+    @confirm_db(campaign={'added': 2})
     def mptest_graceful_fail_for_non_order(self):
         """
         Posting to the edit form handler with a non-order campaign (marketplace
@@ -702,9 +701,6 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(url)
         eq_(response.status_code, 404)
 
-        CampaignQueryManager.delete(non_order_mpx)
-        CampaignQueryManager.delete(non_order_network)
-
     @confirm_db()
     def mptest_fail_when_line_item_not_owned(self):
         """
@@ -720,7 +716,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         eq_(response.status_code, 404)
 
-    @confirm_db(modified=[AdGroup])
+    @confirm_db(adgroup=ADDED_1)
     def mptest_puts_new_valid_line_item(self):
         """
         Posting valid line item data should result in a new line item being
@@ -754,7 +750,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
                                                           'created', 't'],
                                                  check_primary_key=False)
 
-    @confirm_db(modified=[AdGroup])
+    @confirm_db(adgroup=EDITED_1)
     def mptest_puts_changed_valid_line_item(self):
         """
         Posting valid line item information should update the line item
@@ -791,7 +787,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         ok_(not response_json['success'])
 
-    @confirm_db(modified=[Account, Campaign, AdGroup])
+    @confirm_db(account=EDITED_1, adgroup=ADDED_1)
     def mptest_complete_onboarding_after_first_campaign(self):
         """
         Sets the accounts status to Step 4. If a campaign is
@@ -893,6 +889,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(self.creative.active)
 
+    @confirm_db(creative=EDITED_1)
     def mptest_creative_pause(self):
         """
         The ad source status change handler should set a creative as paused
@@ -911,6 +908,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(not self.creative.active)
 
+    @confirm_db(creative=EDITED_1)
     def mptest_creative_delete(self):
         """
         The ad source status change handler should set a creative as deleted
@@ -956,6 +954,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_line_item.archived)
         ok_(not actual_line_item.deleted)
 
+    @confirm_db(adgroup=EDITED_1)
     def mptest_line_item_pause(self):
         """
         The ad source status change handler should set a line item as paused
@@ -976,6 +975,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_line_item.archived)
         ok_(not actual_line_item.deleted)
 
+    @confirm_db(adgroup=EDITED_1)
     def mptest_line_item_archive(self):
         """
         Author: John Pena
@@ -996,6 +996,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(actual_line_item.archived)
         ok_(not actual_line_item.deleted)
 
+    @confirm_db(adgroup=EDITED_1)
     def mptest_line_item_delete(self):
         """
         The ad source status change handler should set a line item as deleted
@@ -1016,6 +1017,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_line_item.archived)
         ok_(actual_line_item.deleted)
 
+    @confirm_db(campaign=EDITED_1)
     def mp_test_order_run(self):
         """
         The ad source status change handler should set an order as running
@@ -1041,6 +1043,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(self.line_item.active)
 
+    @confirm_db(campaign=EDITED_1)
     def mptest_order_pause(self):
         """
         The ad source status change handler should set an order as paused
@@ -1063,6 +1066,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(self.line_item.active)
 
+    @confirm_db(campaign=EDITED_1)
     def mptest_order_archive(self):
         """
         The ad source status change handler should set an order as archived
@@ -1085,6 +1089,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(not self.line_item.archived)
 
+    @confirm_db(campaign=EDITED_1)
     def mptest_order_delete(self):
         """
         The ad source status change handler should set an order as deleted
@@ -1279,8 +1284,6 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_order.active)
         ok_(not actual_order.archived)
         ok_(actual_order.deleted)
-
-AdSourceChangeTestCase = decorate_all_test_methods(confirm_db())(AdSourceChangeTestCase)
 
 
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):

@@ -14,9 +14,17 @@ from account.models import Account, User, NetworkConfig
 from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import App, AdUnit
 from reporting.models import StatsModel
+from ad_network_reports.models import AdNetworkLoginCredentials, \
+        AdNetworkAppMapper
 
-MODELS = [Account, User, NetworkConfig, App, AdUnit, Campaign, AdGroup,
-          Creative, StatsModel]
+MODELS = [Account, User, NetworkConfig, App, AdUnit,
+          Campaign, AdGroup, Creative, StatsModel,
+          AdNetworkLoginCredentials, AdNetworkAppMapper]
+
+ADDED_1 = {'added': 1}
+DELETED_1 = {'deleted': 1}
+EDITED_1 = {'edited': 1}
+UNMODIFIED = {}
 
 
 def prepend_list(e, li):
@@ -116,7 +124,9 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
         Nafis (5/21/2012)
     """
 
-    exclude = exclude or ['t']  # many models have unimportant 't' property
+    # many models have unimportant 't' property, also the last login is not
+    # particular useful
+    exclude = exclude or ['t', 'last_login']
     model1_dict = model_to_dict(model1, exclude, reference_only=True)
     model2_dict = model_to_dict(model2, exclude, reference_only=True)
 
@@ -126,10 +136,11 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
     dict_eq(model1_dict, model2_dict)
 
 
-def model_to_dict(model, exclude=[], reference_only=False):
+def model_to_dict(model, exclude=[], reference_only=False,
+        include_references=True):
     model_dict = {}
 
-    for key, prop in model.properties().iteritems():
+    for key in model.properties().iterkeys():
         if key in exclude:
             continue
         # by prepending the attribute with '_'
@@ -138,7 +149,9 @@ def model_to_dict(model, exclude=[], reference_only=False):
         # not dereference, but will only get the foreign key
         if reference_only and not key.startswith('_'):
             key = '_' + key
-        model_dict[key] = getattr(model, key)
+        value = getattr(model, key)
+        if include_references or not isinstance(value, db.Model):
+            model_dict[key] = value
 
     return model_dict
 
@@ -146,14 +159,88 @@ def model_to_dict(model, exclude=[], reference_only=False):
 def time_almost_eq(time1, time2, delta=None, message=None):
     if not delta:
         delta = timedelta(minutes=1)
-
-    print (delta)
-    time1 < time2 + delta
-    time1 > time2 - delta
-    ok_((time1 < time2 + delta) and (time1 > time2 - delta), message)
+    ok_(time1 < time2 + delta and time1 > time2 - delta, message)
 
 
-def confirm_db(modified=None):
+def generate_instance_key(instance):
+    if not isinstance(instance, dict):
+        instance_dict = model_to_dict(instance, include_references=False)
+
+    return tuple([attr for atrr in key, value for key, value in
+        instance_dict.iteritems()])
+
+def reference_properties(instance_dict):
+    properties = class_.properties()
+
+    return [(value.__class__, value) for key, value in
+            instance_dict.iteritems() if isinstance(value, db.Model)]
+
+def confirm_reference_properties(instance_dict,
+                                 instances_for_model_dict,
+                                 class_,
+                                 index):
+    messages = []  # compiles all the failures
+    error = False
+
+    keys_set = set([instance.key() for instance in
+        instance_dict[key]])
+    filtered_instances = instance_dict[key]
+    for reference_class, value in reference_properties(
+            instance_dict):
+        if isinstance(value, str):
+            filtered_instances = [instance for instance in
+                    filtered_instances if str(instance.key()) ==
+                    value]
+            key_set = set([instance.key() for instance in
+                    filtered_instances])
+        else:
+            # reference property must be an int
+            reference_key = generate_instance_key(
+                    added[reference_class][value])
+            potential_instances = instances_for_model_dict[
+                    reference_class][reference_key]
+            key_set = set([instance.key() for instance in
+                potential_instances]).intersection(key_set)
+            filtered_instances = [instance for instance in
+                    filtered_instances if filtered_instances if
+                    instance.key() in key_set]
+    if not key_set or not filtered_instances:
+        messages.append("%s at index %d wasn't created" %
+                (class_.__name__, index))
+        error = True
+    elif len(key_set) != len(filtered_instances):
+        raise AssertionError("Confirming %s reference properties at %d "
+                "is fucked" % (class_.name, index))
+
+    return messages, error
+
+
+def get_arg_name(key):
+    class_name_translation = {'AdNetworkLoginCredentials':
+                                'adnetwork_login_credentials',
+                              'AdNetworkAppMapper':
+                                'adnetwork_app_mapper'}
+
+    class_name = db.get(key).__class__.__name__
+    arg_name = class_name_translation.get(class_name,
+            class_name.lower())
+    if 'creative' in arg_name:
+        arg_name = 'creative'
+
+    return arg_name
+
+
+def confirm_db(modified=None,
+               account=UNMODIFIED,
+               user=UNMODIFIED,
+               network_config=UNMODIFIED,
+               app=UNMODIFIED,
+               adunit=UNMODIFIED,
+               campaign=UNMODIFIED,
+               adgroup=UNMODIFIED,
+               creative=UNMODIFIED,
+               adnetwork_login_credentials=UNMODIFIED,
+               adnetwork_app_mapper=UNMODIFIED):
     """Decorator that confirms that the rest of the db is unchanged
 
     Args:
@@ -161,16 +248,12 @@ def confirm_db(modified=None):
                   this decorator is NOT responsible for verifying
 
     Returns:
-        wrapped method
-
-    NOTE: This only confirms that extra models are not created
-          but does not ensure that all of these models have
-          not be modified
+        decorator for a method
 
     Author:
-        Nafis (5/21/2012)
+        Nafis Jamal (5/21/2012), (5/30/2012)
+        Tiago Bandeira (5/25/2012)
     """
-    modified = modified or []
 
     def _outer(method):
         # this `make_decorator` is necessary so that nose finds the test
@@ -178,38 +261,75 @@ def confirm_db(modified=None):
         @make_decorator(method)
         def _wrapped_method(self, *args, **kwargs):
             """Method that wraps a test method and ensures
-                that the overall db state has not changed
-                except the purposefully modified models.
+            that the overall db state has not changed
+            except the purposefully modified models.
             """
-
-            # creates dictionary: `Model` -> count for all db Models
-            pre_test_count_dict = {}
-            for Model in MODELS:
-                pre_test_count_dict[Model] = Model.all().count()
+            # creates dictionary of dictionaries: `Model` -> key -> instance
+            # for all db Models before the test has been run
+            pre_test_instances_dict = _db_to_dict(MODELS)
 
             # run the intended test
             method(self, *args, **kwargs)
 
+            # grab db state after the test (similar to before)
+            post_test_instances_dict = _db_to_dict(MODELS)
+
             # confirm that db stats is as intended
             # raises assertion error if one or more models
-            # changed in number unexpectedly
+            # changed unexpectedly
             messages = []  # compiles all the failures
             error = False
-            for Model in MODELS:
-                if Model not in modified:
-                    pre_test_count = pre_test_count_dict[Model]
 
-                    model_query = Model.all()
-                    post_test_count = model_query.count()
-                    post_test_delete_count = model_query.filter('deleted =', True).count()
+            for (model_change_dict, Model) in [(account, Account),
+                                            (user, User),
+                                            (network_config, NetworkConfig),
+                                            (app, App),
+                                            (adunit, AdUnit),
+                                            (campaign, Campaign),
+                                            (adgroup, AdGroup),
+                                            (creative, Creative),
+                                            (adnetwork_login_credentials, AdNetworkLoginCredentials),
+                                            (adnetwork_app_mapper, AdNetworkAppMapper)]:
+                print Model.__name__
+                expected_additions = model_change_dict.get('added', 0)
+                expected_edits = model_change_dict.get('edited', 0)
+                expected_deletes = model_change_dict.get('deleted', 0)
 
-                    msg = 'Model %s had %s objects but now has %s' % \
-                            (Model.__name__, pre_test_count, post_test_count)
+                expected_delta = expected_additions - expected_deletes
 
-                    if pre_test_count != post_test_count:
-                        if (post_test_count - pre_test_count) != post_test_delete_count:
-                            messages.append(msg)
-                            error = True
+                # makes sure that the number of objects in the db are as expected
+                # according to edits, creates and deletes
+                if len(post_test_instances_dict[Model]) != len(pre_test_instances_dict[Model]) + expected_delta:
+                    messages.append('%s has %s new models instead of the expected %s' %
+                                     (Model.__name__,
+                                     len(post_test_instances_dict[Model]) - len(pre_test_instances_dict[Model]),
+                                     expected_additions)
+                                    )
+                    print pre_test_instances_dict[Model], post_test_instances_dict[Model]
+                    error = True
+
+                num_edited = 0
+                num_deleted = 0
+                for key, pre_obj in pre_test_instances_dict[Model].iteritems():
+                    if not key in post_test_instances_dict[Model]:
+                        num_deleted += 1
+                        continue
+
+                    post_obj = post_test_instances_dict[Model][key]
+                    try:
+                        model_eq(pre_obj, post_obj)
+                    except AssertionError:
+                        num_edited += 1
+
+                if num_edited != expected_edits:
+                    messages.append('Expected %s %ss to be modified, found %s' %
+                                     (expected_edits, Model.__name__, num_edited))
+                    error = True
+
+                if num_deleted != expected_deletes:
+                    messages.append('Expected %s %ss to be deleted, found %s' %
+                                     (expected_deletes, Model.__name__, num_deleted))
+                    error = True
 
             # raises an assertion error if any of the model tests failed
             ok_(not error, ', '.join(messages))
@@ -217,7 +337,40 @@ def confirm_db(modified=None):
     return _outer
 
 
-def decorate_all_test_methods(decorator):
+def _db_to_dict(models):
+    """
+    Pulls the database contents into memory as a dictionary
+
+
+    Args:
+        modified: list of Models
+
+    Returns:
+        dictionary, e.g.
+        {
+         'App': {
+                 'key1': obj1,
+                 'key2': obj2,
+                 ...
+                }
+        ...
+         'Campaign': {
+                 'key1': obj1,
+                 'key2': obj2,
+                 ...
+                }
+        }
+    """
+    instances_dict = {}
+    for Model in models:
+        instances_of_model_dict = {}
+        for instance in Model.all().order('__key__'):
+            instances_of_model_dict[instance.key()] = instance
+
+        instances_dict[Model] = instances_of_model_dict
+    return instances_dict
+
+def decorate_all_test_methods(decorator, exclude=[]):
     """
     Decorator that applies a decorator to all methods in a class
 
@@ -229,7 +382,7 @@ def decorate_all_test_methods(decorator):
     def decorate(cls):
         for method in inspect.getmembers(cls, inspect.ismethod):
             method_name = method[1].__name__
-            if 'mptest' in method_name:
+            if 'mptest' in method_name and method_name not in exclude:
                 setattr(cls, method_name, decorator(getattr(cls, method_name)))
         return cls
     return decorate

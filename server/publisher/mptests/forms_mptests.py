@@ -40,10 +40,7 @@ DEFAULT_IMG_URL_DATA = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00x\x00\x00
 
 class CreateAppFormTestCase(unittest.TestCase):
     """
-    Test creating an app using the app form and test the app form's validation.
-
-    We are not testing the is_edit_form field, as it is not used and should be
-    removed on refactor.
+    author: Ignatius, Peter
     """
 
     def setUp(self):
@@ -58,6 +55,10 @@ class CreateAppFormTestCase(unittest.TestCase):
         self.testbed.deactivate()
 
     def mptest_create_with_required_fields(self):
+        """
+        Test creating an app using the app form and known good data.
+        """
+
         app_form = AppForm(DEFAULT_APP_DATA)
 
         ok_(app_form.is_valid(),
@@ -71,6 +72,12 @@ class CreateAppFormTestCase(unittest.TestCase):
         model_eq(app, expected_app, check_primary_key=False)
 
     def mptest_create_with_required_field_missing(self):
+        """
+        Test that each required field of the app form generates a validation
+        error when it is missing by removing each of them from known good data
+        and confirming that the correct validation error appears.
+        """
+
         for key in DEFAULT_APP_DATA.keys():
             incomplete_data = copy.copy(DEFAULT_APP_DATA)
             del incomplete_data[key]
@@ -108,6 +115,11 @@ class CreateAppFormTestCase(unittest.TestCase):
     #     ok_(app.image_serve_url, get_url_for_blob(app.icon_blob))
 
     def mptest_create_with_img_url(self):
+        """
+        Test app creation using the app form and sending the URL of a known
+        image as the img_url.
+        """
+
         data = copy.copy(DEFAULT_APP_DATA)
 
         data['img_url'] = DEFAULT_IMG_URL
@@ -123,7 +135,9 @@ class CreateAppFormTestCase(unittest.TestCase):
         data = copy.copy(DEFAULT_APP_DATA)
         expected_app = generate_app(None, **data)
 
-        model_eq(app, expected_app, exclude=['t', 'icon_blob', 'image_serve_url'], check_primary_key=False)
+        model_eq(app, expected_app,
+                 exclude=['t', 'icon_blob', 'image_serve_url'],
+                 check_primary_key=False)
 
         image_data = app.icon_blob.open().read()
         eq_(image_data, DEFAULT_IMG_URL_DATA)
@@ -132,6 +146,9 @@ class CreateAppFormTestCase(unittest.TestCase):
 
 
 class EditAppFormTestCase(unittest.TestCase):
+    """
+    author: Ignatius, Peter
+    """
 
     def setUp(self):
         # setup the test environment
@@ -147,6 +164,10 @@ class EditAppFormTestCase(unittest.TestCase):
         self.testbed.deactivate()
 
     def mptest_edit_with_required_fields(self):
+        """
+        Test editing an app using the app form and known good data.
+        """
+
         app_form = AppForm(DEFAULT_APP_DATA, instance=self.app)
 
         ok_(app_form.is_valid(),
@@ -160,6 +181,12 @@ class EditAppFormTestCase(unittest.TestCase):
         model_eq(app, expected_app, check_primary_key=False)
 
     def mptest_edit_with_required_field_missing(self):
+        """
+        Test that each required field of the app form generates a validation
+        error when it is missing by removing each of them from known good data
+        and confirming that the correct validation error appears.
+        """
+
         for key in DEFAULT_APP_DATA.keys():
             incomplete_data = copy.copy(DEFAULT_APP_DATA)
             del incomplete_data[key]
@@ -198,6 +225,11 @@ class EditAppFormTestCase(unittest.TestCase):
     #     ok_(app.image_serve_url, get_url_for_blob(app.icon_blob))
 
     def mptest_edit_with_img_url(self):
+        """
+        Test app editing using the app form and sending the URL of a known
+        image as the img_url.
+        """
+
         data = copy.copy(DEFAULT_APP_DATA)
 
         data['img_url'] = DEFAULT_IMG_URL
@@ -213,7 +245,9 @@ class EditAppFormTestCase(unittest.TestCase):
         data = copy.copy(DEFAULT_APP_DATA)
         expected_app = generate_app(None, **data)
 
-        model_eq(app, expected_app, exclude=['t', 'icon_blob', 'image_serve_url'], check_primary_key=False)
+        model_eq(app, expected_app,
+                 exclude=['t', 'icon_blob', 'image_serve_url'],
+                 check_primary_key=False)
 
         image_data = app.icon_blob.open().read()
         eq_(image_data, DEFAULT_IMG_URL_DATA)
@@ -232,6 +266,9 @@ DEFAULT_ADUNIT_DATA = {
 
 
 class CreateAdUnitFormTestCase(unittest.TestCase):
+    """
+    author: Ignatius, Peter
+    """
 
     def setUp(self):
         # setup the test environment
@@ -245,6 +282,10 @@ class CreateAdUnitFormTestCase(unittest.TestCase):
         self.testbed.deactivate()
 
     def mptest_create_with_required_fields(self):
+        """
+        Test creating an adunit using the adunit form and known good data.
+        """
+
         adunit_form = AdUnitForm(DEFAULT_ADUNIT_DATA)
 
         ok_(adunit_form.is_valid(),
@@ -258,6 +299,12 @@ class CreateAdUnitFormTestCase(unittest.TestCase):
         model_eq(adunit, expected_adunit, check_primary_key=False)
 
     def mptest_create_with_required_field_missing(self):
+        """
+        Test that each required field of the adunit form generates a validation
+        error when it is missing by removing each of them from known good data
+        and confirming that the correct validation error appears.
+        """
+
         for key in DEFAULT_ADUNIT_DATA.keys():
             incomplete_data = copy.copy(DEFAULT_ADUNIT_DATA)
             del incomplete_data[key]
@@ -270,6 +317,11 @@ class CreateAdUnitFormTestCase(unittest.TestCase):
             eq_(adunit_form._errors.keys(), [key])
 
     def mptest_create_with_refresh_interval(self):
+        """
+        Test refresh_interval validation by passing a bad value an confirming
+        the correct validation error appears.
+        """
+
         invalid_data = copy.copy(DEFAULT_ADUNIT_DATA)
         invalid_data['refresh_interval'] = -1
 
@@ -280,6 +332,9 @@ class CreateAdUnitFormTestCase(unittest.TestCase):
 
 
 class EditAdUnitFormTestCase(unittest.TestCase):
+    """
+    author: Ignatius, Peter
+    """
 
     def setUp(self):
         # setup the test environment
@@ -293,6 +348,10 @@ class EditAdUnitFormTestCase(unittest.TestCase):
         self.testbed.deactivate()
 
     def mptest_edit_with_required_fields(self):
+        """
+        Test editing an adunit using the adunit form and known good data.
+        """
+
         adunit_form = AdUnitForm(DEFAULT_ADUNIT_DATA)
 
         ok_(adunit_form.is_valid(),
@@ -306,6 +365,11 @@ class EditAdUnitFormTestCase(unittest.TestCase):
         model_eq(adunit, expected_adunit, check_primary_key=False)
 
     def mptest_edit_with_required_field_missing(self):
+        """
+        Test that each required field of the adunit form generates a validation
+        error when it is missing by removing each of them from known good data
+        and confirming that the correct validation error appears.
+        """
         for key in DEFAULT_ADUNIT_DATA.keys():
             incomplete_data = copy.copy(DEFAULT_ADUNIT_DATA)
             del incomplete_data[key]
@@ -318,6 +382,11 @@ class EditAdUnitFormTestCase(unittest.TestCase):
             eq_(adunit_form._errors.keys(), [key])
 
     def mptest_edit_with_refresh_interval(self):
+        """
+        Test refresh_interval validation by passing a bad value an confirming
+        the correct validation error appears.
+        """
+
         invalid_data = copy.copy(DEFAULT_ADUNIT_DATA)
         invalid_data['refresh_interval'] = -1
 

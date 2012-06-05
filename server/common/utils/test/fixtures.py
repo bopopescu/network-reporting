@@ -1,10 +1,17 @@
 from account.models import MarketPlaceConfig, NetworkConfig
 from account.query_managers import AccountQueryManager
 from advertiser.models import (Campaign, AdGroup, Creative, MarketplaceCreative,
-                               HtmlCreative)
-from advertiser.query_managers import CampaignQueryManager
+                               HtmlCreative, NetworkStates)
+from advertiser.query_managers import (CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
+from common.constants import NETWORKS
 from publisher.models import App, AdUnit
+from publisher.query_managers import AdUnitQueryManager
 from registration.models import RegistrationManager
+
+
+DEFAULT_HTML = 'html_data1'
 
 
 def _generate_model_instance(model, put, defaults, **kwargs):
@@ -89,6 +96,48 @@ def generate_campaign(account, put=False, **kwargs):
         'campaign_type': 'gtee',
     }
     return _generate_model_instance(Campaign, put, defaults, **kwargs)
+
+
+def generate_network_campaign(account, network_type, put=False, **kwargs):
+    """Creates a network campaign along with any necessary adgroups/creatives.
+
+    NOTE: argument apps needs adunits attached.
+
+    Author: Andrew He
+    """
+    campaigns = CampaignQueryManager.get_network_campaigns(account,
+        network_type=network_type)
+    # Generate the campaign object.
+    if network_type in ('custom', 'custom_native') or campaigns:
+        campaign = Campaign(name=NETWORKS[network_type],
+                            campaign_type='network',
+                            network_type=network_type,
+                            network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
+                            account=account)
+    else:
+        campaign = CampaignQueryManager.get_default_network_campaign(
+            account, network_type)
+
+    if not put:
+        return campaign
+
+    CampaignQueryManager.put(campaign)
+
+    # Generate one adgroup per adunit.
+    for adunit in AdUnitQueryManager.get_adunits(account=account):
+        adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                adunit.key(), account.key())
+        AdGroupQueryManager.put(adgroup)
+
+        # Generate the creative for this adgroup.
+        if network_type in ('custom', 'custom_native'):
+            creative = adgroup.default_creative(custom_html=DEFAULT_HTML)
+        else:
+            creative = adgroup.default_creative()
+        creative.account = account
+        CreativeQueryManager.put(creative)
+
+    return campaign
 
 
 def generate_adgroup(account, campaign, put=False, **kwargs):

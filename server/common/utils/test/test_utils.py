@@ -165,7 +165,6 @@ def time_almost_eq(time1, time2, delta=None):
 def confirm_model_changes(method,
                           args=None,
                           kwargs=None,
-                          added=None,
                           deleted=None,
                           marked_as_deleted=None,
                           edited=None,
@@ -174,17 +173,6 @@ def confirm_model_changes(method,
     """Verifies that the changes passed in have been made
 
     Args:
-        added: dict of list of dicts of what's been added (field value only
-            needs to be provided if it differs from the default),
-            class -> [field -> value, ...]
-
-            ex.
-            {Campaign: [{'name': 'Campaign 1', ...} ...], ...}
-
-            NOTE: for reference properties if the model exists prior to the
-                method call use the key as the value if it's being added use
-                the index into the list of that models instances as the value
-
         deleted: list of keys that have been removed from the db
 
         marked_as_deleted: list of keys where the only change to the instance is
@@ -197,7 +185,6 @@ def confirm_model_changes(method,
     """
     args = args or []
     kwargs = kwargs or {}
-    added = added or {}
     deleted = deleted or []
     marked_as_deleted = marked_as_deleted or []
     edited = edited or {}
@@ -212,10 +199,6 @@ def confirm_model_changes(method,
     messages = []  # compiles all the failures
     error = False
 
-    # confirm added
-    added_messages, error = confirm_added(added)
-    messages += added_messages
-
     # confirm deleted
     deleted_messages, error = confirm_deleted(deleted)
     messages += deleted_messages
@@ -227,101 +210,6 @@ def confirm_model_changes(method,
 
     # raises an assertion error if any of the model tests failed
     ok_(not error, ', '.join(messages))
-
-
-def confirm_added(added):
-    """Helper function for confirm_model_changes that confirms it's added arg
-
-    Author:
-        Tiago Bandeira (6/4/2012)
-    """
-    messages = []  # compiles all the failures
-    error = False
-
-    instances_for_model_dict = defaultdict(lambda : defaultdict(list))
-    for class_, added_models in added.iteritems():
-        # create a dict of tuples of model fields -> [instance, ...]
-        # basically make object dict hashable
-        for instance in class_.all():
-            instances_for_model_dict[class_][generate_instance_key(
-                instance)].append(instance)
-
-    for class_, added_models in added.iteritems():
-        default_fields = {}
-        for field, obj in class_.properties().iteritems():
-            default_fields[field] = obj.default_value()
-
-        for index, instance_dict in enumerate(added_models):
-            # override the defaults for the fields that have been modified
-            model_fields = copy(default_fields)
-            for field, value in instance_dict.iteritems():
-                model_fields[field] = value
-
-            key = generate_instance_key(model_fields)
-            if key in instances_for_model_dict[class_]:
-
-                # confirm the reference properties are set correctly
-                confirm_reference_properties(instance_dict,
-                        instances_for_model_dict, class_, index)
-
-            else:
-                messages.append("%s at index %d wasn't created" %
-                        (class_.__name__, index))
-                error = True
-
-    return messages, error
-
-def generate_instance_key(instance):
-    if not isinstance(instance, dict):
-        instance_dict = model_to_dict(instance, include_references=False)
-
-    return tuple([attr for atrr in key, value for key, value in
-        instance_dict.iteritems()])
-
-def reference_properties(instance_dict):
-    properties = class_.properties()
-
-    return [(value.__class__, value) for key, value in
-            instance_dict.iteritems() if isinstance(value, db.Model)]
-
-def confirm_reference_properties(instance_dict,
-                                 instances_for_model_dict,
-                                 class_,
-                                 index):
-    messages = []  # compiles all the failures
-    error = False
-
-    keys_set = set([instance.key() for instance in
-        instance_dict[key]])
-    filtered_instances = instance_dict[key]
-    for reference_class, value in reference_properties(
-            instance_dict):
-        if isinstance(value, str):
-            filtered_instances = [instance for instance in
-                    filtered_instances if str(instance.key()) ==
-                    value]
-            key_set = set([instance.key() for instance in
-                    filtered_instances])
-        else:
-            # reference property must be an int
-            reference_key = generate_instance_key(
-                    added[reference_class][value])
-            potential_instances = instances_for_model_dict[
-                    reference_class][reference_key]
-            key_set = set([instance.key() for instance in
-                potential_instances]).intersection(key_set)
-            filtered_instances = [instance for instance in
-                    filtered_instances if filtered_instances if
-                    instance.key() in key_set]
-    if not key_set or not filtered_instances:
-        messages.append("%s at index %d wasn't created" %
-                (class_.__name__, index))
-        error = True
-    elif len(key_set) != len(filtered_instances):
-        raise AssertionError("Confirming %s reference properties at %d "
-                "is fucked" % (class_.name, index))
-
-    return messages, error
 
 def confirm_deleted(deleted):
     """Helper function for confirm_model_changes that confirms it's deleted arg
@@ -351,6 +239,7 @@ def confirm_edited_and_marked_as_deleted(edited,
     Author:
         Tiago Bandeira (6/4/2012)
     """
+    EXCLUDE_STR = 'EXCLUDE'
     messages = []  # compiles all the failures
     error = False
 
@@ -368,12 +257,16 @@ def confirm_edited_and_marked_as_deleted(edited,
     # confirm edited
     for key, fields in all_edited.iteritems():
         pre_test_model = pre_test_instances_dict[key]
+        exclude = []
         for field, value in fields.iteritems():
-            setattr(pre_test_model, field, value)
+            if value == EXCLUDE_STR:
+                exclude.append(field)
+            else:
+                setattr(pre_test_model, field, value)
 
         instance = db.get(key)
         try:
-            model_eq(instance, pre_test_model)
+            model_eq(instance, pre_test_model, exclude=exclude)
         except AssertionError as exception:
             messages.append(exception.message + " When checking %s instance "
                     "with %s key" % (instance.__class__.__name__,
@@ -397,12 +290,7 @@ def confirm_all_models(method,
     Decorates method with confirm_db and confirm_model_changes.
 
     Args:
-        added: dict of list of dicts of what's been added (field value only
-            needs to be provided if it differs from the default),
-            class -> [field -> value, ...]
-
-            ex.
-            {Campaign: [{'name': 'Campaign 1', ...} ...], ...}
+        added: dict of Model -> number of new instances
 
         deleted: list of keys that have been removed from the db
 
@@ -422,8 +310,8 @@ def confirm_all_models(method,
     edited = edited or {}
 
     confirm_kwargs = defaultdict(Counter)
-    for key in added.iterkeys():
-        confirm_kwargs[get_arg_name(key)]['added'] += 1
+    for key, value in added.iteritems():
+        confirm_kwargs[get_arg_name(key)]['added'] += value
 
     for key in deleted:
         confirm_kwargs[get_arg_name(key)]['deleted'] += 1
@@ -435,7 +323,7 @@ def confirm_all_models(method,
     return_values = []
     decorator = confirm_db(**confirm_kwargs)
     decorator(confirm_model_changes)(method, args=args,
-            kwargs=kwargs, added=added, deleted=deleted,
+            kwargs=kwargs, deleted=deleted,
             marked_as_deleted=marked_as_deleted, edited=edited,
             response_code=response_code, return_values=return_values)
 

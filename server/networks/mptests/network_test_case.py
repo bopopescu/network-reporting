@@ -141,6 +141,7 @@ class NetworkTestCase(BaseViewTestCase):
                     adgroup_form_data['custom_method'] = DEFAULT_HTML
 
                 adgroup_form_data['hourly_frequency_cap'] = '0'
+                adgroup_form_data['daily_frequency_cap'] = '0'
                 adgroup_form = AdUnitAdGroupForm(adgroup_form_data)
 
                 for key, item in adgroup_form.data.items():

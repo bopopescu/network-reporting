@@ -5,7 +5,7 @@ import inspect
 sys.path.append(os.environ['PWD'])
 
 from datetime import timedelta
-from collections import Counter, defaultdict
+from collections import defaultdict
 
 from google.appengine.ext import db
 from nose.tools import eq_, ok_, make_decorator
@@ -267,7 +267,7 @@ def confirm_edited_and_marked_as_deleted(edited,
         instance = db.get(key)
         try:
             model_eq(instance, pre_test_model, exclude=exclude)
-        except AssertionError as exception:
+        except AssertionError, exception:
             messages.append(exception.message + " When checking %s instance "
                     "with %s key" % (instance.__class__.__name__,
                         instance.key()))
@@ -309,7 +309,7 @@ def confirm_all_models(method,
     marked_as_deleted = marked_as_deleted or []
     edited = edited or {}
 
-    confirm_kwargs = defaultdict(Counter)
+    confirm_kwargs = defaultdict(lambda: defaultdict(int))
     for key, value in added.iteritems():
         confirm_kwargs[get_arg_name(key)]['added'] += value
 
@@ -336,6 +336,7 @@ def get_arg_name(key):
                                 'adnetwork_app_mapper',
                               'NetworkConfig':
                                 'network_config'}
+
     if isinstance(key, db.Key):
         class_name = db.get(key).__class__.__name__
     else:
@@ -437,7 +438,7 @@ def confirm_db(modified=None,
                     post_obj = post_test_instances_dict[Model][key]
                     try:
                         model_eq(pre_obj, post_obj)
-                    except AssertionError as exception:
+                    except AssertionError, exception:
                         print exception.message
                         num_edited += 1
 

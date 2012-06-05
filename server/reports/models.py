@@ -560,15 +560,7 @@ class Report(db.Model):
                     if key in dimkey or dim not in ONLINE_DIMS:
                         all_keys_in[i] = True
 
-            all_keys = True
-            for key_in in all_keys_in:
-                if not key_in:
-                    all_keys = False
-                    # can't continue here or it'd be the wrong
-                    # for loop
-                    break
-
-            if not all_keys:
+            if not all(all_keys_in):
                 continue
             vals = eval(vals)
             req, att = self.get_stats_info(keys, dimkey_to_obj, testing)

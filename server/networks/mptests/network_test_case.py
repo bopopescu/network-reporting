@@ -1,3 +1,4 @@
+import pprint
 import os
 import sys
 
@@ -47,9 +48,9 @@ class NetworkTestCase(BaseViewTestCase):
         AdUnitQueryManager.update_config_and_put(adunit, NetworkConfig(account=self.account))
 
     def get_apps_with_adunits(self, account):
-            apps = PublisherQueryManager.get_objects_dict_for_account(
-                    account=account).values()
-            return sorted(apps, key=lambda a: a.name)
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                account=account).values()
+        return sorted(apps, key=lambda a: a.name)
 
     def generate_network_campaign(self, network_type, account, apps):
         """Creates a network campaign along with any necessary adgroups/creatives.
@@ -75,16 +76,16 @@ class NetworkTestCase(BaseViewTestCase):
 
         # Generate one adgroup per adunit.
         for app_idx, app in enumerate(apps):
-            config = app.network_config
-            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
-            setattr(config, '%s_pub_id' % network_type, pub_id)
-            AppQueryManager.update_config_and_put(app, config)
+            #config = app.network_config
+            #pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+            #setattr(config, '%s_pub_id' % network_type, pub_id)
+            #AppQueryManager.update_config_and_put(app, config)
 
             for adunit_idx, adunit in enumerate(app.adunits):
-                config = adunit.network_config
-                setattr(config, '%s_pub_id' % network_type, '%s_%s' % (pub_id,
-                    adunit_idx))
-                AdUnitQueryManager.update_config_and_put(adunit, config)
+                #config = adunit.network_config
+                #setattr(config, '%s_pub_id' % network_type, '%s_%s' % (pub_id,
+                #    adunit_idx))
+                #AdUnitQueryManager.update_config_and_put(adunit, config)
 
                 adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                         adunit.key(), account.key())
@@ -102,7 +103,6 @@ class NetworkTestCase(BaseViewTestCase):
 
     def setup_post_request_data(self, apps=[], network_type=None, app_pub_ids={},
             adunit_pub_ids={}):
-
         post_data = {}
 
         campaign_name = NETWORKS[network_type]
@@ -117,12 +117,19 @@ class NetworkTestCase(BaseViewTestCase):
 
         for app in apps:
             app_post_key = 'app_%s-%s_pub_id' % (app.key(), network_type)
-            post_data[app_post_key] = app_pub_ids[app.key()]
+
+            # If app_pub_ids doesn't have an entry for this app, don't put anything in
+            # the POST dictionary (the POST handler coerces everything to a string).
+            if app.key() in app_pub_ids:
+                post_data[app_post_key] = app_pub_ids[app.key()]
 
             for adunit in app.adunits:
                 adunit_post_key = 'adunit_%s-%s_pub_id' % \
                         (adunit.key(), network_type)
-                post_data[adunit_post_key] = adunit_pub_ids[adunit.key()]
+                
+                # Similar note as above.
+                if adunit.key() in adunit_pub_ids:
+                    post_data[adunit_post_key] = adunit_pub_ids[adunit.key()]
 
                 adgroup_form_data = {'bid': DEFAULT_BID}
                 if network_type == 'custom':
@@ -135,7 +142,11 @@ class NetworkTestCase(BaseViewTestCase):
                     prefixed_key = '%s-%s' % (adunit.key(), key)
                     post_data[prefixed_key] = item
 
-        print post_data
+        print '%s\n%s\n%s\n%s\n' % ('*' * 20,
+                                    'POST body:', 
+                                    pprint.pformat(post_data),
+                                    '*' * 20)
+
         return post_data
 
     def generate_ad_network_login(self, network_type, account):

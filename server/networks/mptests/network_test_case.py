@@ -114,12 +114,12 @@ class NetworkTestCase(BaseViewTestCase):
 
         for field, obj in AdGroup.properties().iteritems():
             if obj.default_value() and field not in ('geo_predicates',
-                    'active'):
+                    'active', 'network_type'):
                 post_data[field] = obj.default_value()
             elif field == 'geo_predicates':
                 post_data[field] = '*'
             elif not isinstance(obj.data_type, db.PropertiedClass) and field \
-                    != 'active':
+                    not in ('active', 'network_type'):
                 post_data[field] = ''
 
         if network_type == 'jumptap':

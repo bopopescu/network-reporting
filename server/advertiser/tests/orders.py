@@ -409,7 +409,7 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         super(OrderAndLineItemCreatePostTestCase, self).setUp()
         self.url = reverse('advertiser_order_and_line_item_form_new')
 
-    @confirm_db(modified=[AdGroup, Campaign])
+    @confirm_db(campaign=ADDED_1, adgroup=ADDED_1)
     def mptest_http_response_code(self):
         """
         A valid get should return a valid (200, 302) response (regardless
@@ -610,6 +610,7 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         response = self.client.get(self.edit_url)
         eq_(response.status_code, 404)
 
+    @confirm_db(app={'added': 2})
     def mptest_gets_correct_apps(self):
         """
         All apps for the given account should be returned.
@@ -629,10 +630,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         for actual_app, expected_app in zip(actual_apps, expected_apps):
             model_key_eq(actual_app, expected_app)
 
-        AppQueryManager.delete(app1)
-        AppQueryManager.delete(app2)
-
-decorate_all = decorate_all_test_methods(confirm_db())
+exclude = ['mptest_gets_correct_apps']
+decorate_all = decorate_all_test_methods(confirm_db(), exclude=exclude)
 NewOrEditLineItemGetTestCase = decorate_all(NewOrEditLineItemGetTestCase)
 
 

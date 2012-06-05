@@ -221,8 +221,9 @@ def generate_adgroup(campaign, site_keys, account, adgroup_type):
 
 def generate_campaign(account, *args, **kwargs):
     is_order = kwargs.get('is_order', True)
-    is_order = kwargs.get('is_marketplace', False)
-    is_order = kwargs.get('is_network', False)
+    is_order = not kwargs.get('is_marketplace')
+    is_order = not kwargs.get('is_network')
+
     advertiser = kwargs.get('advertiser', "John's Hat Co, Inc.")
     campaign = Campaign(name=get_campaign_name(),
                         account = account,

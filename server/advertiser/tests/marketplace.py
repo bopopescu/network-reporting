@@ -14,7 +14,8 @@ from nose.tools import ok_, eq_
 from account.models import (DEFAULT_CATEGORIES, LOW_CATEGORIES,
                             MODERATE_CATEGORIES, STRICT_CATEGORIES,
                             DEFAULT_ATTRIBUTES, LOW_ATTRIBUTES,
-                            MODERATE_ATTRIBUTES, STRICT_ATTRIBUTES)
+                            MODERATE_ATTRIBUTES, STRICT_ATTRIBUTES,
+                            NetworkConfig)
 from account.query_managers import (NetworkConfigQueryManager,
                                     AccountQueryManager)
 from advertiser.query_managers import (AdvertiserQueryManager,
@@ -154,6 +155,11 @@ class BlocklistViewTestCase(BaseViewTestCase):
 
     @confirm_db(network_config=EDITED_1)
     def mptest_add(self):
+        """
+        Add a new website to an empty blocklist and confirm the db state was
+        updated correctly.
+        """
+
         post_response = self.client.post(self.url, {
             'action': 'add',
             'blocklist': 'http://www.mopub.com',
@@ -176,6 +182,12 @@ class BlocklistViewTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_remove(self):
+        """
+        Remove a website from a blocklist and confirm the db state was updated
+        correctly. Note: at the beginning of this test we add this website to
+        the blocklist so we can remove it.
+        """
+
         self.account.network_config.blocklist = ['http://www.mopub.com']
 
         AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
@@ -200,6 +212,11 @@ class BlocklistViewTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_fail(self):
+        """
+        Attempt to modify the blocklist without supplying an action. We expect a
+        JSON error and no change to the db state.
+        """
+
         post_response = self.client.post(self.url, {
             'blocklist': 'http://www.mopub.com',
         })
@@ -230,7 +247,13 @@ class ContentFilterViewTestCase(BaseViewTestCase):
                 self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
+    @confirm_db(network_config=EDITED_1)
     def mptest_none(self):
+        """
+        Set the marketplace filtering level to none and confirm that the db
+        state was updated correctly.
+        """
+
         post_response = self.client.post(self.url, {
             'filter_level': 'none',
         })
@@ -248,7 +271,13 @@ class ContentFilterViewTestCase(BaseViewTestCase):
         model_eq(network_configs_dict.values()[0], expected_network_config,
                  check_primary_key=False)
 
+    @confirm_db(network_config=EDITED_1)
     def mptest_low(self):
+        """
+        Set the marketplace filtering level to low and confirm that the db
+        state was updated correctly.
+        """
+
         post_response = self.client.post(self.url, {
             'filter_level': 'low',
         })
@@ -266,7 +295,14 @@ class ContentFilterViewTestCase(BaseViewTestCase):
         model_eq(network_configs_dict.values()[0], expected_network_config,
                  check_primary_key=False)
 
+    # Nothing changes with this test because moderate is the default.
+    @confirm_db()
     def mptest_moderate(self):
+        """
+        Set the marketplace filtering level to moderate and confirm that the db
+        state was updated correctly.
+        """
+
         post_response = self.client.post(self.url, {
             'filter_level': 'moderate',
         })
@@ -284,7 +320,13 @@ class ContentFilterViewTestCase(BaseViewTestCase):
         model_eq(network_configs_dict.values()[0], expected_network_config,
                  check_primary_key=False)
 
+    @confirm_db(network_config=EDITED_1)
     def mptest_strict(self):
+        """
+        Set the marketplace filtering level to strict and confirm that the db
+        state was updated correctly.
+        """
+
         post_response = self.client.post(self.url, {
             'filter_level': 'strict',
         })
@@ -301,3 +343,136 @@ class ContentFilterViewTestCase(BaseViewTestCase):
 
         model_eq(network_configs_dict.values()[0], expected_network_config,
                  check_primary_key=False)
+
+
+class MarketplaceOnOffViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    def setUp(self):
+        super(MarketplaceOnOffViewTestCase, self).setUp()
+
+        self.url = reverse('marketplace_on_off')
+
+        self.app = generate_app(self.account, put=True)
+        self.adunit = generate_adunit(self.account, self.app, put=True)
+
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign.put()
+
+        self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
+                self.adunit.key(), self.account.key())
+        self.marketplace_adgroup.put()
+
+    # Nothing changes with this test because active is the default.
+    @confirm_db()
+    def mptest_activate_deactivate(self):
+        """
+        The marketplace starts out activated. Deactivate it and then
+        reactivate it, checking the db state each time.
+        """
+
+        post_response = self.client.post(self.url, {
+            'activate': 'false',
+        })
+        ok_(post_response.status_code, 200)
+
+        dict_eq(json.loads(post_response.content), {'success': 'success'})
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
+        ok_(not marketplace_campaign.active)
+
+        post_response = self.client.post(self.url, {
+            'activate': 'true',
+        })
+        ok_(post_response.status_code, 200)
+
+        dict_eq(json.loads(post_response.content), {'success': 'success'})
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        ok_(marketplace_campaign.active)
+
+
+class MarketplaceBlindnessViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    def setUp(self):
+        super(MarketplaceBlindnessViewTestCase, self).setUp()
+
+        self.url = reverse('marketplace_blindness_change')
+
+        self.app = generate_app(self.account, put=True)
+        self.adunit = generate_adunit(self.account, self.app, put=True)
+
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        self.marketplace_campaign.put()
+
+        self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
+                self.adunit.key(), self.account.key())
+        self.marketplace_adgroup.put()
+
+    # Nothing changes with this test because deactivated is the default.
+    @confirm_db()
+    def mptest_set_blindness(self):
+        """
+        The marketplace blindness is deactivated by default. Activate it and
+        then deactivate it, checking the db state each time.
+        """
+
+        post_response = self.client.post(self.url, {'activate': 'true'})
+        ok_(post_response.status_code, 200)
+        dict_eq(json.loads(post_response.content), {'success': 'activated'})
+
+        network_configs = NetworkConfig.all().filter('account =', self.account.key()).fetch(100)
+        eq_(len(network_configs), 1)
+
+        expected_network_config = generate_network_config(
+            self.account, blind=True)
+        model_eq(network_configs[0], expected_network_config,
+                 check_primary_key=False)
+
+        post_response = self.client.post(self.url, {'activate': 'false'})
+        ok_(post_response.status_code, 200)
+        dict_eq(json.loads(post_response.content), {'success': 'deactivated'})
+
+        network_configs = NetworkConfig.all().filter('account =', self.account.key()).fetch(100)
+        eq_(len(network_configs), 1)
+
+        expected_network_config = generate_network_config(
+            self.account, blind=False)
+        model_eq(network_configs[0], expected_network_config,
+                 check_primary_key=False)
+
+
+class MarketplaceCreativeProxyViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    @confirm_db()
+    def mptest_get(self):
+        """
+        Confirm that the URL sucessfully return a response.
+        """
+
+        get_response = self.client.get(reverse('marketplace_creatives'))
+        ok_(get_response.status_code, 200)
+
+
+class MarketplaceInfoViewTestCase(BaseViewTestCase):
+    """
+    author: Ignatius, Peter
+    """
+
+    @confirm_db()
+    def mptest_get(self):
+        """
+        Confirm that the URL sucessfully return a response.
+        """
+
+        get_response = self.client.get(reverse('mpx_info'))
+        ok_(get_response.status_code, 200)

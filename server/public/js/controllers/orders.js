@@ -871,11 +871,11 @@
                     if ($('fieldset#advanced').is(':hidden')) {
                         $('fieldset#advanced').slideDown('fast');
                         $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                        $('.ui-button-text', this).text('Hide Advanced Details');
+                        $(this).text('Hide Advanced Targeting');
                     } else {
                         $('fieldset#advanced').slideUp('fast');
                         $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                        $('.ui-button-text', this).text('Show Advanced Details');
+                        $(this).text('Show Advanced Targeting');
                     }
                 }); // TODO: need to update on document ready
 

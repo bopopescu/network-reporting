@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.environ['PWD'])
 
+from google.appengine.ext import db
 import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
 from admin.randomgen import generate_app, generate_adunit
@@ -18,6 +19,7 @@ from advertiser.query_managers import CampaignQueryManager, \
         CreativeQueryManager
 
 from advertiser.models import Campaign, \
+        AdGroup, \
         NetworkStates
 from ad_network_reports.models import AdNetworkLoginCredentials
 
@@ -88,6 +90,7 @@ class NetworkTestCase(BaseViewTestCase):
 
                 adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                         adunit.key(), account.key())
+                adgroup.active = False
                 AdGroupQueryManager.put(adgroup)
 
                 # Generate the creative for this adgroup.
@@ -109,8 +112,15 @@ class NetworkTestCase(BaseViewTestCase):
         campaign_form = NetworkCampaignForm({'name': campaign_name})
         post_data.update(campaign_form.data)
 
-        default_adgroup_form = NetworkAdGroupForm()
-        post_data.update(default_adgroup_form.data)
+        for field, obj in AdGroup.properties().iteritems():
+            if obj.default_value() and field not in ('geo_predicates',
+                    'active'):
+                post_data[field] = obj.default_value()
+            elif field == 'geo_predicates':
+                post_data[field] = '*'
+            elif not isinstance(obj.data_type, db.PropertiedClass) and field \
+                    != 'active':
+                post_data[field] = ''
 
         if network_type == 'jumptap':
             post_data['jumptap_pub_id'] = DEFAULT_PUB_ID
@@ -129,6 +139,8 @@ class NetworkTestCase(BaseViewTestCase):
                     adgroup_form_data['custom_html'] = DEFAULT_HTML
                 elif network_type == 'custom_native':
                     adgroup_form_data['custom_method'] = DEFAULT_HTML
+
+                adgroup_form_data['hourly_frequency_cap'] = '0'
                 adgroup_form = AdUnitAdGroupForm(adgroup_form_data)
 
                 for key, item in adgroup_form.data.items():

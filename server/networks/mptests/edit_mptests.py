@@ -179,9 +179,13 @@ class EditNetworkPostTestCase(NetworkTestCase):
         Author: Andrew He
                 Tiago Bandeira (6/4/2012)
         """
+        edited = {}
+        for adgroup in self.existing_campaign.adgroups:
+            edited[adgroup.key()] = {'created': 'EXCLUDE'}
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
-                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited)
 
     def mptest_activates_adgroup(self):
         """Setting adgroup.active to True should work.
@@ -289,6 +293,8 @@ class EditNetworkPostTestCase(NetworkTestCase):
                     self.network_type: new_app_pub_id},
                   adunit_to_modify.network_config.key(): {'%s_pub_id' %
                     self.network_type: new_adunit_pub_id}}
+        for adgroup in self.existing_campaign.adgroups:
+            edited[adgroup.key()] = {'created': 'EXCLUDE'}
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -314,11 +320,17 @@ class EditNetworkPostTestCase(NetworkTestCase):
         # Prepare a login
         login = self.generate_ad_network_login(self.network_type, self.account)
 
+        edited = {}
+        for adgroup in self.existing_campaign.adgroups:
+            edited[adgroup.key()] = {'created': 'EXCLUDE'}
+        edited[app.network_config.key()] = {'created': 'EXCLUDE'}
+
         # Send the request.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           added={AdNetworkAppMapper: 1})
+                           added={AdNetworkAppMapper: 1},
+                           edited=edited)
 
         # Fetch all mappers for our app and this network type.
         mappers = AdNetworkAppMapper.all(). \

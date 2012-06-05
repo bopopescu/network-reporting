@@ -322,7 +322,7 @@
                 var orders = new OrderCollection();
                 orders.add(order);
                 var chart_view = new CollectionChartView({
-                    collection: apps,
+                    collection: orders,
                     start_date: bootstrapping_data.start_date,
                     display_values: ['req', 'imp', 'clk']
                 });
@@ -401,7 +401,31 @@
             initializeDateButtons();
             initializeStatusControls();
 
-            // Fill in stats for the targeting table
+            // Load the stats for the line item
+            var line_item = new LineItem({
+                id: bootstrapping_data.line_item_key
+            });
+            
+            line_item.bind('change', function (current_line_item) {
+
+                renderLineItem(current_line_item);
+
+                var line_items = new LineItemCollection();
+                line_items.add(line_item);
+
+                var chart_view = new CollectionChartView({
+                    collection: line_items,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['req', 'imp', 'clk']
+                });
+
+                chart_view.render();
+            });
+
+            line_item.fetch();
+
+            // Get all of the apps that are targeted by this line item
+            // and fill in their stats in the targeted table.
             _.each(bootstrapping_data.targeted_apps, function(app_key) {
                 var app = new App({
                     id: app_key,
@@ -426,7 +450,9 @@
                 app.fetch();
             });
 
-            console.log(bootstrapping_data.targeted_adunits);
+            // Same deal with the adunits. Get all of the adunits that are
+            // targeted by this line item and fill in their stats in the
+            // targeted table.
             _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
                 var adunit = new AdUnit({
                     id: adunit_key,
@@ -452,6 +478,7 @@
                 adunit.fetch();
             });
 
+
             /* CREATIVE FORMS */
             // format
             $('[name="format"]').change(function() {
@@ -470,13 +497,12 @@
             }).filter(':checked').change();
 
             // text_icon advanced
-            $('button#advanced_fields_button').click(function() {
+            $('#advanced_fields_button').click(function() {
                 var list = $('ul#advanced_fields_list', $(this).closest('form'));
-                if(list.is(":visible")) {
+                if (list.is(":visible")) {
                     list.slideUp();
                     $(this).html('More Options');
-                }
-                else {
+                } else {
                     list.slideDown();
                     $(this).html('Less Options');
                 }

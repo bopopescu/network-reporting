@@ -102,6 +102,11 @@
 {% endblock content %}
 
 {% block extraScripts %}
+
+  <script type="text/html" id="chart-template">
+    {% include "common/partials/chart.html" %}
+  </script>
+  
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
 {% include_script "controllers/orders" %}

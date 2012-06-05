@@ -604,7 +604,6 @@ var mopub = mopub || {};
                 + stats_endpoint;
         },
         parse: function(response) {
-            console.log(response);
             return response;
         }
     });
@@ -779,6 +778,7 @@ var mopub = mopub || {};
      *  LineItem
      */
     var LineItem = Backbone.Model.extend({
+        stats_endpoint: 'direct',
         defaults: {
             att: 0,
             clk: 0,
@@ -808,6 +808,7 @@ var mopub = mopub || {};
 
     var LineItemCollection = Backbone.Collection.extend({
         model: LineItem,
+        stats_endpoint: 'direct',
         url: function() {
             var stats_endpoint = this.stats_endpoint;
             return '/api/campaign/'
@@ -849,7 +850,18 @@ var mopub = mopub || {};
                 + stats_endpoint;
         },
         parse: function(response) {
-            return response[0];
+
+            var order = response[0];
+
+            if((order.req === null || order.req === undefined) &&
+               (order.att !== null && order.att !== undefined)) {
+                order.req = order.att;
+            } else if ((order.att == null || order.att == undefined) &&
+                       (order.rev !== null && order.rev !== undefined)) {
+                order.att = order.req;
+            }
+
+            return order;
         }
     });
 

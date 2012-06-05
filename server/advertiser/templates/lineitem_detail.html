@@ -94,124 +94,15 @@
     </div>
 </section>
 
-{% comment %}
-<section>
-    <form id='campaignExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url campaign_export %}'>
-        <input name='line_item_key' type='text' value='{{line_item.key}}' />
-        <input name='file_type' id='campaignExportType' type='text' value='' />
-        <input name='start' value={{start_date|date:"mdy"}} />
-        <input name='end' value={{end_date|date:"mdy"}} />
-    </form>
 
-    <div class="buttonBank buttonBank-right">
-        <select name='exportSelect' id='advertiser-line_items-exportSelect' class='selectmenu'>
-            <option value='exp'>Export</option>
-            <option value='xls'>XLS</option>
-            <option value='csv'>CSV</option>
-        </select>
-    </div>
-
-    <h2>Daily Counts</h2>
-    <div class="appData-details noneg">
-        <table class="dataTable appData-main">
-            {% if campaign.gtee or campaign.marketplace %}
-                <thead>
-                    <tr>
-                        <th class="dataTable-name big">&nbsp;</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
-                        <th class="dataTable-data numeric special">Revenue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th class="dataTable-name big">Totals</th>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.impression_count|withsep}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.click_count|withsep}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.ctr|percentage}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.revenue|currency}}</b></td>
-                    </tr>
-                    {% for s in line_item.all_stats reversed %}
-                        <tr class="appData-details-inner show">
-                            <th class="dataTable-name">{{s.date|format_date}}</th>
-                            <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
-                            <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
-                            <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-                            <td class="dataTable-data numeric">{{s.revenue|currency}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            {% endif %}
-            {% if campaign.promo %}
-                <thead>
-                    <tr>
-                        <th class="dataTable-name big">&nbsp;</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
-                        <th class="dataTable-data numeric special">Conv</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th class="dataTable-name big">Totals</th>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.impression_count|withsep}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.click_count|withsep}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.ctr|percentage}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.conversion_count|withsep}} ({{line_item.stats.conv_rate|percentage}})</b></td>
-                    </tr>
-                    {% for s in line_item.all_stats reversed %}
-                        <tr class="appData-details-inner show">
-                            <th class="dataTable-name">{{s.date|format_date}}</th>
-                            <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
-                            <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
-                            <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-                            <td class="dataTable-data numeric">{{s.conversion_count|withsep}} ({{s.conv_rate|percentage}})</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            {% endif %}
-            {% if campaign.network %}
-                <thead>
-                    <tr>
-                        <th class="dataTable-name big">&nbsp;</th>
-                        <th class="dataTable-data numeric special">Attempts</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Fillrate</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th class="dataTable-name big">Totals</th>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.request_count|withsep}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.impression_count|withsep}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.fill_rate|percentage}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.click_count|withsep}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{line_item.stats.ctr|percentage}}</b></td>
-                    </tr>
-                    {% for s in line_item.all_stats reversed %}
-                        <tr class="appData-details-inner show">
-                            <th class="dataTable-name">{{s.date|format_date}}</th>
-                            <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
-                            <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
-                            <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>
-                            <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
-                            <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            {% endif %}
-        </table>
-        <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
-    </div>
-</section>
-{% endcomment %}
 {% endblock content %}
 
 {% block extraScripts %}
+
+  <script type="text/html" id="chart-template">
+    {% include "common/partials/chart.html" %}
+  </script>
+  
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
 {% include_script "controllers/orders" %}

@@ -41,7 +41,10 @@ class NetworkTestCase(BaseViewTestCase):
         Author: Andrew He
         """
         app = generate_app(self.account)
-        generate_adunit(app, self.account)
+        AppQueryManager.update_config_and_put(app, NetworkConfig(account=self.account))
+
+        adunit = generate_adunit(app, self.account)
+        AdUnitQueryManager.update_config_and_put(adunit, NetworkConfig(account=self.account))
 
     def get_apps_with_adunits(self, account):
             apps = PublisherQueryManager.get_objects_dict_for_account(
@@ -72,13 +75,13 @@ class NetworkTestCase(BaseViewTestCase):
 
         # Generate one adgroup per adunit.
         for app_idx, app in enumerate(apps):
-            config = NetworkConfig()
+            config = app.network_config
             pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
             setattr(config, '%s_pub_id' % network_type, pub_id)
             AppQueryManager.update_config_and_put(app, config)
 
             for adunit_idx, adunit in enumerate(app.adunits):
-                config = NetworkConfig()
+                config = adunit.network_config
                 setattr(config, '%s_pub_id' % network_type, '%s_%s' % (pub_id,
                     adunit_idx))
                 AdUnitQueryManager.update_config_and_put(adunit, config)

@@ -21,6 +21,7 @@ from admin.randomgen import generate_app, generate_adunit
 from common.utils.test.test_utils import dict_eq, \
         decorate_all_test_methods, \
         confirm_db, \
+        confirm_all_models, \
         model_eq
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION, \
@@ -64,7 +65,7 @@ def skip_if_no_mappers(test_method):
     return wrapper
 
 
-@decorate_all_test_methods(confirm_db())
+#@decorate_all_test_methods(confirm_db())
 class CreateNetworkGetTestCase(NetworkTestCase):
     def setUp(self):
         super(CreateNetworkGetTestCase, self).setUp()
@@ -79,16 +80,17 @@ class CreateNetworkGetTestCase(NetworkTestCase):
     def network_type_to_test(self):
         return 'admob'
 
+    @confirm_db()
     def mptest_response_code(self):
-        """When editing a network campaign, response code should be 200.
+        """Visiting the create network page should return a 200, and not modify any state.
 
         Author: Tiago Bandeira
         """
-        response = self.client.get(self.url)
-        eq_(response.status_code, 200)
+        confirm_all_models(self.client.get, args=[self.url])
 
+    @confirm_db()
     def mptest_context(self):
-        """The context given to the template should be valid.
+        """The context given to the create network template should be valid.
 
         Author: Tiago Bandeira
         """
@@ -262,8 +264,6 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 if self.network_type in ('custom', 'custom_native'):
                     eq_(creative.html_data, DEFAULT_HTML)
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
     def mptest_activates_adgroups_properly_on_creation(self):
         """Setting adgroup.active should work.
 
@@ -276,8 +276,14 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_active_key] = True
 
-        response = self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        expected_edits = {app.network_config.key(): {'admob_pub_id': self.app_pub_ids[app.key()]},
+                adunit.network_config.key(): {'admob_pub_id': self.adunit_pub_ids[adunit.key()]}}
+
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                                      added={Campaign: 1, AdGroup: 1, Creative: 1},
+                                      edited=expected_edits)
 
         campaign = self.get_campaigns()[0]
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
@@ -523,61 +529,61 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         return filtered_campaigns
 
 
-class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'jumptap'
+# class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'jumptap'
 
-class CreateIAdNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'iad'
-
-
-class CreateInmobiNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'inmobi'
+# class CreateIAdNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'iad'
 
 
-class CreateMobfoxNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'mobfox'
+# class CreateInmobiNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'inmobi'
 
 
-class CreateMillennialNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'millennial'
+# class CreateMobfoxNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'mobfox'
 
 
-class CreateAdsenseNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'adsense'
+# class CreateMillennialNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'millennial'
 
 
-class CreateEjamNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'ejam'
+# class CreateAdsenseNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'adsense'
 
 
-class CreateBrightrollNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'brightroll'
+# class CreateEjamNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'ejam'
 
 
-class CreateCustomNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'custom'
+# class CreateBrightrollNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'brightroll'
 
 
-class CreateCustomNativeNetworkTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'custom_native'
+# class CreateCustomNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'custom'
 
 
-NUM_APPS = 3
-NUM_ADUNITS = 3
-class ComplexEditNetworkTestCase(CreateNetworkPostTestCase):
-    def set_up_existing_apps_and_adunits(self):
-        """Overrides method in superclass."""
-        for app_index in range(NUM_APPS):
-            app = generate_app(self.account)
-            for adunit_index in range(NUM_ADUNITS):
-                generate_adunit(app, self.account)
+# class CreateCustomNativeNetworkTestCase(CreateNetworkPostTestCase):
+#     def network_type_to_test(self):
+#         return 'custom_native'
+
+
+# NUM_APPS = 3
+# NUM_ADUNITS = 3
+# class ComplexEditNetworkTestCase(CreateNetworkPostTestCase):
+#     def set_up_existing_apps_and_adunits(self):
+#         """Overrides method in superclass."""
+#         for app_index in range(NUM_APPS):
+#             app = generate_app(self.account)
+#             for adunit_index in range(NUM_ADUNITS):
+#                 generate_adunit(app, self.account)

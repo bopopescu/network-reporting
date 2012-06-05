@@ -170,6 +170,10 @@ class EditNetworkPostTestCase(NetworkTestCase):
                 network_type=self.network_type, app_pub_ids=app_pub_ids,
                 adunit_pub_ids=adunit_pub_ids)
 
+        self.edited = defaultdict(dict)
+        for adgroup in self.existing_campaign.adgroups:
+            self.edited[adgroup.key()] = {'created': 'EXCLUDE'}
+
     def network_type_to_test(self):
         return 'admob'
 
@@ -179,13 +183,10 @@ class EditNetworkPostTestCase(NetworkTestCase):
         Author: Andrew He
                 Tiago Bandeira (6/4/2012)
         """
-        edited = {}
-        for adgroup in self.existing_campaign.adgroups:
-            edited[adgroup.key()] = {'created': 'EXCLUDE'}
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited=edited)
+                           edited=self.edited)
 
     def mptest_activates_adgroup(self):
         """Setting adgroup.active to True should work.
@@ -203,11 +204,12 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_active_key] = True
 
+        self.edited[adgroup.key()]['active'] = True
         # Send the request.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited={adgroup.key(): {'active': True}})
+                           edited=self.edited)
 
     def mptest_only_allows_activating_adgroups_with_pub_ids(self):
         """Setting adgroup.active to True should not work if there's no pub ID.
@@ -260,11 +262,12 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_active_key] = False
 
+        self.edited[adgroup.key()]['active'] = False
         # Send the request and check db state.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited={adgroup.key(): {'active': False}})
+                           edited=self.edited)
 
     def mptest_updates_network_configs(self):
         """All network config objects should be updated with correct pub IDs.
@@ -289,18 +292,16 @@ class EditNetworkPostTestCase(NetworkTestCase):
                 self.network_type)
         self.post_data[adunit_pub_id_key] = new_adunit_pub_id
 
-        edited = {app_to_modify.network_config.key(): {'%s_pub_id' %
+        self.edited.update({app_to_modify.network_config.key(): {'%s_pub_id' %
                     self.network_type: new_app_pub_id},
                   adunit_to_modify.network_config.key(): {'%s_pub_id' %
-                    self.network_type: new_adunit_pub_id}}
-        for adgroup in self.existing_campaign.adgroups:
-            edited[adgroup.key()] = {'created': 'EXCLUDE'}
+                    self.network_type: new_adunit_pub_id}})
 
         # Send the request.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited=edited)
+                           edited=self.edited)
 
     def mptest_updates_mapper_when_updating_pub_id(self):
         """If an app is given a new pub ID, a new mapper should be created.
@@ -320,17 +321,15 @@ class EditNetworkPostTestCase(NetworkTestCase):
         # Prepare a login
         login = self.generate_ad_network_login(self.network_type, self.account)
 
-        edited = {}
-        for adgroup in self.existing_campaign.adgroups:
-            edited[adgroup.key()] = {'created': 'EXCLUDE'}
-        edited[app.network_config.key()] = {'created': 'EXCLUDE'}
+        self.edited[app.network_config.key()] = {'%s_pub_id' %
+                self.network_type: new_app_pub_id}
 
         # Send the request.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            added={AdNetworkAppMapper: 1},
-                           edited=edited)
+                           edited=self.edited)
 
         # Fetch all mappers for our app and this network type.
         mappers = AdNetworkAppMapper.all(). \
@@ -362,13 +361,13 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adgroup_key = AdGroupQueryManager.get_network_adgroup(
                 self.existing_campaign, adunit.key(), self.account.key()).key()
 
-        edited = {adgroup_key: {'bid': new_bid}}
+        self.edited[adgroup_key]['bid'] = new_bid
 
         # Send the request.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited=edited)
+                           edited=self.edited)
 
     def mptest_updates_advanced_targeting(self):
         """Updating advanced targeting for a campaign should work.
@@ -381,17 +380,16 @@ class EditNetworkPostTestCase(NetworkTestCase):
         self.post_data['ios_version_max'] = '4.0'
         self.post_data['geo_predicates'] = 'UG'
 
-        edited = defaultdict(dict)
         for adgroup in self.existing_campaign.adgroups:
-            edited[adgroup.key()]['device_targeting'] = True
-            edited[adgroup.key()]['ios_version_max'] = '4.0'
-            edited[adgroup.key()]['geo_predicates'] = [u'country_name=UG']
+            self.edited[adgroup.key()]['device_targeting'] = True
+            self.edited[adgroup.key()]['ios_version_max'] = '4.0'
+            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=UG']
 
         # Send the request.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited=edited)
+                           edited=self.edited)
 
     def mptest_updates_allocation_and_fcaps(self):
         """Updating allocation and frequency capping on an adgroup should work.
@@ -419,16 +417,18 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adgroup = AdGroupQueryManager.get_network_adgroup(
                 self.existing_campaign, adunit.key(), self.account.key())
 
-        edited = {adgroup.key():
-                    {'allocation_percentage': new_allocation_percentage,
-                     'daily_frequency_cap': new_daily_frequency_cap,
-                     'hourly_frequency_cap': new_hourly_frequency_cap}}
+        self.edited[adgroup.key()]['allocation_percentage'] = \
+                new_allocation_percentage
+        self.edited[adgroup.key()]['daily_frequency_cap'] = \
+                new_daily_frequency_cap
+        self.edited[adgroup.key()]['hourly_frequency_cap'] = \
+                new_hourly_frequency_cap
 
         # Send the request.
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited=edited)
+                           edited=self.edited)
 
     def mptest_edit_campaign_for_other_account(self):
         """Attempting to edit a campaign from another account should result in

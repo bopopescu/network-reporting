@@ -258,7 +258,7 @@ def confirm_edited_and_marked_as_deleted(edited,
     # confirm edited
     for key, fields in all_edited.iteritems():
         pre_test_model = pre_test_instances_dict[key]
-        exclude = []
+        exclude = ['t']
         for field, value in fields.iteritems():
             if value == EXCLUDE_STR:
                 exclude.append(field)

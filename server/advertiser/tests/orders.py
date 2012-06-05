@@ -205,8 +205,9 @@ class OrderIndexTestCase(OrderViewTestCase):
         for line_item in line_items:
             ok_(line_item.campaign.is_order)
 
-excluded = ['mptest_all_line_items_are_for_orders']
-OrderIndexTestCase = decorate_all_test_methods(confirm_db(), exclude=excluded)(OrderIndexTestCase)
+exclude = ['mptest_all_line_items_are_for_orders']
+decorate_all = decorate_all_test_methods(confirm_db(), exclude=exclude)
+OrderIndexTestCase = decorate_all(OrderIndexTestCase)
 
 
 class OrderDetailHandlerTestCase(OrderViewTestCase):
@@ -283,7 +284,8 @@ class OrderDetailHandlerTestCase(OrderViewTestCase):
 
         model_key_eq(expected_order, actual_order)
 
-OrderDetailHandlerTestCase = decorate_all_test_methods(confirm_db())(OrderDetailHandlerTestCase)
+decorate_all = decorate_all_test_methods(confirm_db())
+OrderDetailHandlerTestCase = decorate_all(OrderDetailHandlerTestCase)
 
 
 class LineItemDetailHandler(OrderViewTestCase):
@@ -354,7 +356,8 @@ class LineItemDetailHandler(OrderViewTestCase):
         model_key_eq(actual_line_item.campaign, actual_order)
         model_key_eq(actual_order, expected_order)
 
-LineItemDetailHandler = decorate_all_test_methods(confirm_db())(LineItemDetailHandler)
+decorate_all = decorate_all_test_methods(confirm_db())
+LineItemDetailHandler = decorate_all(LineItemDetailHandler)
 
 
 class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
@@ -499,7 +502,8 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         """
         pass
 
-OrderAndLineItemCreateGetTestCase = decorate_all_test_methods(confirm_db())(OrderAndLineItemCreateGetTestCase)
+decorate_all = decorate_all_test_methods(confirm_db())
+OrderAndLineItemCreateGetTestCase = decorate_all(OrderAndLineItemCreateGetTestCase)
 
 
 class NewOrEditLineItemGetTestCase(OrderViewTestCase):
@@ -628,7 +632,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
         AppQueryManager.delete(app1)
         AppQueryManager.delete(app2)
 
-NewOrEditLineItemGetTestCase = decorate_all_test_methods(confirm_db())(NewOrEditLineItemGetTestCase)
+decorate_all = decorate_all_test_methods(confirm_db())
+NewOrEditLineItemGetTestCase = decorate_all(NewOrEditLineItemGetTestCase)
 
 
 class NewOrEditLineItemPostTestCase(OrderViewTestCase):
@@ -1287,7 +1292,6 @@ class AdSourceChangeTestCase(OrderViewTestCase):
 
 
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):
-
     def setUp(self):
         super(DisplayCreativeHandlerTestCase, self).setUp()
         self.image_url = reverse('advertiser_creative_image', kwargs={
@@ -1344,6 +1348,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         response = self.client.get(url)
         eq_(response.content, '')
 
+    @confirm_db(creative=ADDED_1)
     def mptest_returns_html_for_image_creative(self):
         """
         When the key for an image creative is passed, the url for
@@ -1361,6 +1366,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         response = self.client.get(url)
         eq_(response.content, '')
 
+    @confirm_db(creative=ADDED_1)
     def mptest_returns_html_for_text_tile(self):
         """
         When the key for an html creative is passed, the url for the
@@ -1379,6 +1385,7 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         response = self.client.get(url)
         eq_(response.content, '')
 
+    @confirm_db(creative=ADDED_1)
     def mptest_returns_html_for_html(self):
         """
         When the key for an html creative is passed, the html for the
@@ -1400,7 +1407,11 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         # creative we made
         CreativeQueryManager.delete(new_creative)
 
-DisplayCreativeHandlerTestCase = decorate_all_test_methods(confirm_db())(DisplayCreativeHandlerTestCase)
+exclude = ['mptest_returns_html_for_image_creative',
+            'mptest_returns_html_for_text_tile',
+            'mptest_returns_html_for_html']
+decorate_all = decorate_all_test_methods(confirm_db(), exclude=exclude)
+DisplayCreativeHandlerTestCase = decorate_all(DisplayCreativeHandlerTestCase)
 
 
 class CreativeImageHandlerTestCase(OrderViewTestCase):
@@ -1423,7 +1434,8 @@ class CreativeImageHandlerTestCase(OrderViewTestCase):
     def mptest_raise_404_for_non_image_creatives(self):
         pass
 
-CreativeImageHandlerTestCase = decorate_all_test_methods(confirm_db())(CreativeImageHandlerTestCase)
+decorate_all = decorate_all_test_methods(confirm_db())
+CreativeImageHandlerTestCase = decorate_all(CreativeImageHandlerTestCase)
 
 
 class NewOrEditCreativeViewTestCase(OrderViewTestCase):
@@ -1493,7 +1505,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         self.mock_creative.account = self.account
         self.mock_creative.ad_group = self.line_item
 
-    @confirm_db(modified=[Creative])
+    @confirm_db(creative={'added': 1, 'edited': 1})
     def mptest_http_response_code(self):
         """
         A valid post should return a valid (200, 302) response (regardless
@@ -1525,7 +1537,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
         eq_(edit_response.status_code, 404)
 
-    @confirm_db(modified=[Creative])
+    @confirm_db(creative={'added': 1, 'edited':1})
     def mptest_ensure_proper_redirect(self):
         new_response = self.client.post(self.new_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1554,7 +1566,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         db.Key(new_redirect_split[3])
         db.Key(edit_redirect_split[3])
 
-    @confirm_db(modified=[Creative])
+    @confirm_db(creative=ADDED_1)
     def mptest_puts_valid_new_creative(self):
         response = self.client.post(self.new_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1572,7 +1584,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         creative = creatives.filter('name =', self.html_creative_post_body['name']).fetch(1)[0]
         model_eq(creative, self.mock_creative, check_primary_key=False)
 
-    @confirm_db(modified=[Creative])
+    @confirm_db(creative=EDITED_1)
     def mptest_puts_valid_edited_creative(self):
         response = self.client.post(self.edit_url, self.html_creative_post_body,
                                     HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1594,7 +1606,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         model_eq(creative, updated_creative, check_primary_key=False)
 
-    @confirm_db(modified=[Creative])
+    @confirm_db(creative={'addded': 3})
     def mptest_uses_correct_form_for_html(self):
         ad_type_dict = {
                         'html': self.html_creative_post_body,
@@ -1626,7 +1638,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         except Exception, e:
             eq_(e.message, 'Unsupported creative type fake_ad_type.')
 
-    @confirm_db(modified=[Creative])
+    @confirm_db(creative=ADDED_1)
     def mptest_line_item_owns_creative(self):
         """
         Check that when a new creative is made, it's owned by the line
@@ -1642,7 +1654,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         current_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
         eq_(len(current_creatives), (len(past_creatives) + 1))
 
-    @confirm_db(modified=[Creative])
+    @confirm_db(creative=ADDED_1)
     def mptest_account_owns_creative(self):
         """
         Check that when a new creative is made, it's owned by the
@@ -1662,7 +1674,6 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
         # find the new creative based on its super unique name.
         # make sure there's only one.
         new_creatives = Creative.all().filter("name = ", new_name).fetch(1000)
-        eq_(len(new_creatives), 1)
         new_creative = new_creatives[0]
 
         # make sure its owned by the current account

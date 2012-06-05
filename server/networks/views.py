@@ -536,19 +536,20 @@ class EditNetworkHandler(RequestHandler):
                             # already exists)
                             login = AdNetworkLoginManager.get_logins(
                                     self.account, network).get()
-                            mappers = AdNetworkMapperManager. \
-                                    get_mappers_for_app(login=login, app=app)
-                            # Delete the existing mappers if there are no scrape
-                            # stats for them.
-                            for mapper in mappers:
-                                if mapper:
-                                    stats = mapper.ad_network_stats
-                                    if not stats.count(1):
-                                        mapper.delete()
-                            if app_pub_id:
-                                AdNetworkMapperManager.create(network=network,
-                                        pub_id=app_pub_id, login=login,
-                                        app=app)
+                            if login:
+                                mappers = AdNetworkMapperManager. \
+                                        get_mappers_for_app(login=login, app=app)
+                                # Delete the existing mappers if there are no scrape
+                                # stats for them.
+                                for mapper in mappers:
+                                    if mapper:
+                                        stats = mapper.ad_network_stats
+                                        if not stats.count(1):
+                                            mapper.delete()
+                                if app_pub_id:
+                                    AdNetworkMapperManager.create(network=network,
+                                            pub_id=app_pub_id, login=login,
+                                            app=app)
 
                     # NetworkConfig for AdUnits
                     if network in NETWORKS_WITH_PUB_IDS:

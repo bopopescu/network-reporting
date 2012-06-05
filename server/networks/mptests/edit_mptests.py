@@ -172,7 +172,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
     def network_type_to_test(self):
         return 'admob'
 
-    def mptest_response_code(self):
+    def mptest_no_change(self):
         """No change to network campaign
 
         Author: Andrew He

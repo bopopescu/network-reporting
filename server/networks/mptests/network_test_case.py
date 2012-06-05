@@ -71,10 +71,17 @@ class NetworkTestCase(BaseViewTestCase):
         CampaignQueryManager.put(campaign)
 
         # Generate one adgroup per adunit.
-        for app in apps:
-            AppQueryManager.update_config_and_put(app, NetworkConfig())
-            for adunit in app.adunits:
-                AdUnitQueryManager.update_config_and_put(app, NetworkConfig())
+        for app_idx, app in enumerate(apps):
+            config = NetworkConfig()
+            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+            setattr(config, '%s_pub_id' % network_type, pub_id)
+            AppQueryManager.update_config_and_put(app, config)
+
+            for adunit_idx, adunit in enumerate(app.adunits):
+                config = NetworkConfig()
+                setattr(config, '%s_pub_id' % network_type, '%s_%s' % (pub_id,
+                    adunit_idx))
+                AdUnitQueryManager.update_config_and_put(adunit, config)
 
                 adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                         adunit.key(), account.key())

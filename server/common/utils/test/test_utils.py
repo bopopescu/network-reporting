@@ -333,9 +333,14 @@ def get_arg_name(key):
     class_name_translation = {'AdNetworkLoginCredentials':
                                 'adnetwork_login_credentials',
                               'AdNetworkAppMapper':
-                                'adnetwork_app_mapper'}
+                                'adnetwork_app_mapper',
+                              'NetworkConfig':
+                                'network_config'}
+    if isinstance(key, db.Key):
+        class_name = db.get(key).__class__.__name__
+    else:
+        class_name = key.__name__
 
-    class_name = db.get(key).__class__.__name__
     arg_name = class_name_translation.get(class_name,
             class_name.lower())
     if 'creative' in arg_name:

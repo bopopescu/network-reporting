@@ -155,12 +155,20 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_get_app_by_key(self):
+        """
+        Get app by its key.
+        """
+
         app = AppQueryManager.get_app_by_key(self.app.key())
 
         model_eq(self.app, app)
 
     @confirm_db()
     def mptest_get_apps(self):
+        """
+        Get a list of apps by a list of their keys.
+        """
+
         apps = AppQueryManager.get_apps(self.account)
 
         expected_apps = [self.app]
@@ -169,6 +177,10 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_get_app_keys(self):
+        """
+        Get all the app keys for the account.
+        """
+
         app_keys = AppQueryManager.get_app_keys(self.account)
 
         expected_app_keys = [self.app.key()]
@@ -177,6 +189,10 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_reports_get_apps(self):
+        """
+        Pass in an account and get a query with all the apps in it.
+        """
+
         # TODO: Obviously there are a lot of combinations here. Flesh this out in the future.
 
         apps = AppQueryManager.reports_get_apps(account=self.account)
@@ -190,6 +206,11 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(app=ADDED_1)
     def mptest_put_new_apps(self):
+        """
+        Put a list of new apps into the database and check that the db state
+        was changed correctly.
+        """
+
         expected_new_app = generate_app(self.account, put=False)
 
         # TODO: put_apps will be changed to a class method.
@@ -210,6 +231,11 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(app=EDITED_1)
     def mptest_put_existing_apps(self):
+        """
+        Change an app, put it to the database as a list, and confirm that the db
+        state was changed accordingly.
+        """
+
         self.app.name = 'Edited App'
 
         # TODO: put_apps will be changed to a class method.
@@ -224,6 +250,11 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(app=ADDED_1)
     def mptest_put_new_app(self):
+        """
+        Put a single new app to the database and confirm that the db state was
+        changed correctly.
+        """
+
         expected_new_app = generate_app(self.account, put=False)
 
         AppQueryManager.put(expected_new_app)
@@ -243,6 +274,11 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(app=EDITED_1)
     def mptest_put_existing_app(self):
+        """
+        Change an app, put it to the database, and confirm that the db state was
+        changed correctly.
+        """
+
         self.app.name = 'Edited App'
 
         AppQueryManager.put(self.app)
@@ -256,6 +292,11 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(app=EDITED_1, network_config=ADDED_1)
     def mptest_update_config_and_put(self):
+        """
+        Create a network config, attach it to an app and put them to the db and
+        confirm that the db state was updated correctly.
+        """
+
         network_config = generate_network_config(account=None, put=False)
 
         AppQueryManager.update_config_and_put(self.app, network_config)
@@ -273,6 +314,11 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def update_config_and_put_multi(self):
+        """
+        Create a network config, attach it to an app and put them as lists to
+        the db and confirm that the db state was updated correctly.
+        """
+
         network_config = generate_network_config(account=None, put=False)
 
         AppQueryManager.update_config_and_put_multi([self.app], [network_config])
@@ -290,18 +336,25 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def get_apps_with_network_configs(self):
+        """
+        Get all the apps with a network config.
+        """
+
+        # No apps have a network config initially.
         apps = AppQueryManager.get_apps_with_network_configs(self.account)
         eq_(len(apps), 0)
 
+        # Add a network config to the app.
         network_config = generate_network_config(account=None, put=False)
-
         AppQueryManager.update_config_and_put_multi([self.app], [network_config])
 
+        # One app now has a network config.
         apps = AppQueryManager.get_apps_with_network_configs(self.account)
         eq_(len(apps), 1)
         app = apps[0]
         model_eq(app, self.app, exclude=['network_config'])
 
+        # Confirm db state.
         network_config = app.network_config
         expected_network_config = generate_network_config(self.account,
                                                           put=False)
@@ -310,6 +363,10 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def get_apps_without_pub_ids(self):
+        """
+        Get all the apps with a pub ID for set in its network config.
+        """
+
         # At first, the app does not have a pub id.
         apps = AppQueryManager(self.account, networks=['mobfox'])
         eq_(len(apps), 1)
@@ -336,14 +393,22 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def get_iad_pub_id(self):
+        """
+        Get the iAd pub ID for a specific app.
+        """
+
+        # Initially, the app does not have an iAd pub ID.
         pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
         ok_(pub_id is None)
 
+        # Add a URL that is not a correct iTunes URL. We expect the app's iAd
+        # pub ID not to be updated.
         self.app.url = 'http://www.mopub.com'
         self.app.put()
         pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
         ok_(pub_id is None)
 
+        # Give the app a correct iTunes URL. It should now return an iAd pub ID.
         self.app.url = 'http://itunes.apple.com/id/12345?'
         self.app.put()
         pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
@@ -351,14 +416,22 @@ class AppQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def get_iad_pub_ids(self):
+        """
+        Get all the apps that have an iAd pub ID.
+        """
+
+        # Initially, the app does not have an iAd pub ID.
         pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
         list_eq(pub_id, [])
 
+        # Add a URL that is not a correct iTunes URL. We expect the app's iAd
+        # pub ID not to be updated.
         self.app.url = 'http://www.mopub.com'
         self.app.put()
         pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
         list_eq(pub_id, [])
 
+        # Give the app a correct iTunes URL. It should now return an iAd pub ID.
         self.app.url = 'http://itunes.apple.com/id/12345?'
         self.app.put()
         pub_id = AppQueryManager.get_iad_pub_id(self.account, self.app.name)
@@ -378,6 +451,10 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_get_adunits(self):
+        """
+        Get all adunits for different queries.
+        """
+
         # Filters are keys (if provided, returns), otherwise app and account
         # TODO: test combinations? test cases where it returns none?
         adunit_keys = [self.adunit.key()]
@@ -395,6 +472,9 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_reports_get_adunits(self):
+        """
+        Pass in an account and get a query with all the adunits in it.
+        """
         # Again this can either return a Query or a list.
         # TODO: Check more of the filtering options from the method signature.
 
@@ -409,6 +489,11 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(adunit=ADDED_1)
     def mptest_put_new_adunits(self):
+        """
+        Put a list of new adunits to the db and confirm that its state was
+        updated correctly.
+        """
+
         expected_new_adunit = generate_adunit(self.account, self.app, put=False)
 
         AdUnitQueryManager.put_adunits([expected_new_adunit])
@@ -428,6 +513,11 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(adunit=EDITED_1)
     def mptest_put_existing_adunits(self):
+        """
+        Edit an adunit and put it to the db as a list. Confirm the db state was
+        updated correctly.
+        """
+
         self.adunit.name = 'Edited AdUnit'
 
         AdUnitQueryManager.put_adunits([self.adunit])
@@ -441,6 +531,11 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(adunit=ADDED_1)
     def mptest_put_new_adunit(self):
+        """
+        Put a new adunit to the db and confirm that its state was updated
+        correctly.
+        """
+
         expected_new_adunit = generate_adunit(self.account, self.app, put=False)
 
         AdUnitQueryManager.put(expected_new_adunit)
@@ -460,6 +555,11 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db(adunit=EDITED_1)
     def mptest_put_existing_adunit(self):
+        """
+        Edit an adunit and put it to the db and confirm that its state was
+        updated correctly.
+        """
+
         self.adunit.name = 'Edited AdUnit'
 
         AdUnitQueryManager.put(self.adunit)
@@ -473,6 +573,11 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def update_config_and_put_multi(self):
+        """
+        Create a network config, attach it to an adunit and put them as lists to
+        the db and confirm that the db state was updated correctly.
+        """
+
         network_config = generate_network_config(account=None, put=False)
 
         AdUnitQueryManager.update_config_and_put_multi([self.adunit], [network_config])
@@ -490,6 +595,10 @@ class AdUnitQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def get_adunits_with_network_configs(self):
+        """
+        Get all the adunits with a network config.
+        """
+
         adunits = AdUnitQueryManager.get_adunits_with_network_configs(self.account)
         eq_(len(adunits), 0)
 

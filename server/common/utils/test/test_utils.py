@@ -189,6 +189,13 @@ def confirm_model_changes(method,
     marked_as_deleted = marked_as_deleted or []
     edited = edited or {}
 
+    # creates dictionary: key -> instance
+    # for all models that have been edited
+    models = db.get([key for key in edited.iterkeys()] + [key for key
+        in marked_as_deleted])
+    pre_test_instances_dict = dict((model.key(), model) for model in
+        models)
+
     # run the intended test
     response = method(*args, **kwargs)
     eq_(response.status_code, response_code)
@@ -205,7 +212,7 @@ def confirm_model_changes(method,
 
     # confirm deleted and marked as deleted
     edited_and_marked_as_deleted, error = confirm_edited_and_marked_as_deleted(
-            edited, marked_as_deleted)
+            edited, marked_as_deleted, pre_test_instances_dict)
     messages += edited_and_marked_as_deleted
 
     # raises an assertion error if any of the model tests failed
@@ -232,7 +239,8 @@ def confirm_deleted(deleted):
     return messages, error
 
 def confirm_edited_and_marked_as_deleted(edited,
-                                         marked_as_deleted):
+                                         marked_as_deleted,
+                                         pre_test_instances_dict):
     """Helper function for confirm_model_changes that confirms it's edited and
     marked_as_deleted args
 
@@ -242,13 +250,6 @@ def confirm_edited_and_marked_as_deleted(edited,
     EXCLUDE_STR = 'EXCLUDE'
     messages = []  # compiles all the failures
     error = False
-
-    # creates dictionary: key -> instance
-    # for all models that have been edited
-    models = db.get([key for key in edited.iterkeys()] + [key for key
-        in marked_as_deleted])
-    pre_test_instances_dict = dict((model.key(), model) for model in
-        models)
 
     # add marked_as_deleted models to edited
     all_edited = dict(edited.items() + [(key, {'deleted': True}) for

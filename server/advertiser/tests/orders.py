@@ -889,6 +889,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(self.creative.active)
 
+    @confirm_db(creative=EDITED_1)
     def mptest_creative_pause(self):
         """
         The ad source status change handler should set a creative as paused
@@ -907,6 +908,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.creative = CreativeQueryManager.get(self.creative.key())
         ok_(not self.creative.active)
 
+    @confirm_db(creative=EDITED_1)
     def mptest_creative_delete(self):
         """
         The ad source status change handler should set a creative as deleted
@@ -952,6 +954,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_line_item.archived)
         ok_(not actual_line_item.deleted)
 
+    @confirm_db(adgroup=EDITED_1)
     def mptest_line_item_pause(self):
         """
         The ad source status change handler should set a line item as paused
@@ -972,6 +975,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_line_item.archived)
         ok_(not actual_line_item.deleted)
 
+    @confirm_db(adgroup=EDITED_1)
     def mptest_line_item_archive(self):
         """
         Author: John Pena
@@ -992,6 +996,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(actual_line_item.archived)
         ok_(not actual_line_item.deleted)
 
+    @confirm_db(adgroup=EDITED_1)
     def mptest_line_item_delete(self):
         """
         The ad source status change handler should set a line item as deleted
@@ -1012,6 +1017,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_line_item.archived)
         ok_(actual_line_item.deleted)
 
+    @confirm_db(campaign=EDITED_1)
     def mp_test_order_run(self):
         """
         The ad source status change handler should set an order as running
@@ -1037,6 +1043,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(self.line_item.active)
 
+    @confirm_db(campaign=EDITED_1)
     def mptest_order_pause(self):
         """
         The ad source status change handler should set an order as paused
@@ -1059,6 +1066,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(self.line_item.active)
 
+    @confirm_db(campaign=EDITED_1)
     def mptest_order_archive(self):
         """
         The ad source status change handler should set an order as archived
@@ -1081,6 +1089,7 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         self.line_item = AdGroupQueryManager.get(self.line_item.key())
         ok_(not self.line_item.archived)
 
+    @confirm_db(campaign=EDITED_1)
     def mptest_order_delete(self):
         """
         The ad source status change handler should set an order as deleted
@@ -1275,8 +1284,6 @@ class AdSourceChangeTestCase(OrderViewTestCase):
         ok_(not actual_order.active)
         ok_(not actual_order.archived)
         ok_(actual_order.deleted)
-
-AdSourceChangeTestCase = decorate_all_test_methods(confirm_db())(AdSourceChangeTestCase)
 
 
 class DisplayCreativeHandlerTestCase(OrderViewTestCase):

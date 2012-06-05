@@ -34,6 +34,11 @@ class AdUnitContextQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_get_context(self):
+        """
+        Get the adunit context for our adunit and confirm that its
+        properties are as expected.
+        """
+
         adunit_key = self.adunit.key()
 
         expected_adunit = AdUnit.get(adunit_key)
@@ -45,6 +50,12 @@ class AdUnitContextQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_cache_get_or_insert(self):
+        """
+        Get the adunit context for our adunit from hypercache or memcache or
+        build it from the datastore and confirm that its properties are as
+        expected.
+        """
+
         adunit_key = self.adunit.key()
 
         expected_adunit = AdUnit.get(adunit_key)
@@ -59,6 +70,10 @@ class AdUnitContextQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_cache_delete_from_adunits(self):
+        """
+        Remove adunit context from cache.
+        """
+
         AdUnitContextQueryManager.cache_delete_from_adunits([self.adunit])
 
         # TODO: Somehow check that memcache is now devoid of adunit_contexts.
@@ -77,6 +92,11 @@ class PublisherQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_get_objects_dict_for_account(self):
+        """
+        Get all apps and adunits for the account and confirm that their
+        properties are as expected.
+        """
+
         objects_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
 
         eq_(len(objects_dict), 1)
@@ -91,6 +111,11 @@ class PublisherQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_get_apps_dict_for_account(self):
+        """
+        Get all apps for the account and confirm that their properties are as
+        expected.
+        """
+
         apps_dict = PublisherQueryManager.get_apps_dict_for_account(self.account)
 
         expected_apps_dict = {
@@ -101,6 +126,11 @@ class PublisherQueryManagerTestCase(BaseViewTestCase):
 
     @confirm_db()
     def mptest_get_adunits_dict_for_account(self):
+        """
+        Get all adunits for the account and confirm that their properties are as
+        expected.
+        """
+
         adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(self.account)
 
         expected_adunits_dict = {

@@ -61,15 +61,25 @@
            padding: 8px 10px 7px 0;
         }
     }
+    td {
+        height: 40px !important;
+    }
     td.stat, th.stat {
         text-align: right;
-        width: 65px;
-        &.advertiser {
-            width: 130px;
-            height: 40px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
+        width: 60px;
+    }
+    td.advertiser, th.advertiser {
+        text-align: right;
+        width: 130px;            
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+    td.type, th.type, td.goal, th.goal {
+        text-align: right;
+        width: 60px;
+    }
+    td.name, th.name {
+        width: 230px;
     }
     td.text {
         width: 65px;

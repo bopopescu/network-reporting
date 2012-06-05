@@ -56,7 +56,13 @@
 {# Table that shows all of the adunits being targeted #}
 <section>
     <h3 class="left"> Inventory targeted by {{ line_item.name }} </h3>
-    <a class="btn right" href="#"> Change targeting </a>
+
+    {% comment %}
+    <a class="btn right" href="#">
+      <i class="icon-random"></i>
+      Change targeting
+    </a>
+    {% endcomment %}
 
     {% inventory_table targeted_apps %}
 </section>

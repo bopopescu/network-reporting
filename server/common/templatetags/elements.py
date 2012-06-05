@@ -141,6 +141,10 @@ def creative_preview(creative):
 def stats_breakdown(stats):
     return {'stats': stats}
 
+@register.inclusion_tag("common/partials/filter_buttons.html")
+def filter_buttons():
+    return {}
+
 
 @register.inclusion_tag("common/partials/status_icon.html")
 def status_icon(adgroup):

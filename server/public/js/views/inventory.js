@@ -643,13 +643,14 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var row = $('tr.lineitem-row#' + current_model.get('key'), this.el);
+            var row = $('#' + current_model.get('key'), this.el);
             var display_fields = [
                 'rev',
                 'imp',
                 'fill_rate',
                 'clk',
-                'ctr'
+                'ctr',
+                'conv'
             ];
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
@@ -683,6 +684,7 @@ var mopub = window.mopub || {};
 
     window.CollectionGraphView = CollectionGraphView;
     window.CollectionChartView = CollectionChartView;
+
     window.NetworkGraphView = NetworkGraphView;
 
 }(this.jQuery, this.Backbone, this._));

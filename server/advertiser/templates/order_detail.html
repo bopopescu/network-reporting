@@ -52,22 +52,8 @@
       </a>
     </div>
     
-    <div class="btn-group">
-      <a class="btn" href="#">
-        <i class="icon-eye-open"></i>
-        Show All 
-      </a>
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        <span class="caret"></span>
-      </a>
-      <ul class="dropdown-menu">
-        <li> <a href="#" data-toggle="running"> Running </a> </li>
-        <li> <a href="#" data-toggle="running"> Scheduled </a> </li>
-        <li> <a href="#" data-toggle="running"> Paused </a> </li>
-        <li> <a href="#" data-toggle="running"> Completed </a> </li>
-        <li> <a href="#" data-toggle="running"> Archived </a> </li>
-      </ul>
-    </div>
+    {% filter_buttons %}
+      
   </div>
 
   {% line_item_table order.adgroups %}
@@ -89,12 +75,15 @@
   {# Table that shows all of the adunits being targeted #}
   <section>
     <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
+
+    {% comment %}
     <div class="right">
-    <a class="btn" href='#'>
-      <i class="icon-random"></i>
-      Change 
-    </a>
-  </div>
+      <a class="btn" href='#'>
+        <i class="icon-random"></i>
+        Change Targeting
+      </a>
+    </div>
+    {% endcomment %}
     
     {% inventory_table targeted_apps %}
   </section>

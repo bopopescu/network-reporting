@@ -51,29 +51,9 @@
         New Line Item
       </a>
     </div>
-<<<<<<< HEAD
     
     {% filter_buttons %}
       
-=======
-
-    <div class="btn-group">
-      <a class="btn" href="#">
-        <i class="icon-eye-open"></i>
-        Show All
-      </a>
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        <span class="caret"></span>
-      </a>
-      <ul class="dropdown-menu">
-        <li> <a href="#" data-toggle="running"> Running </a> </li>
-        <li> <a href="#" data-toggle="running"> Scheduled </a> </li>
-        <li> <a href="#" data-toggle="running"> Paused </a> </li>
-        <li> <a href="#" data-toggle="running"> Completed </a> </li>
-        <li> <a href="#" data-toggle="running"> Archived </a> </li>
-      </ul>
-    </div>
->>>>>>> 21cac8acbe000b9164390cf8bbd71b4480f64edf
   </div>
 
   {% line_item_table order.adgroups %}
@@ -128,9 +108,9 @@
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
 
-            start_date:  Date.UTC({{ start_date.year }},
-                                  {{ start_date.month|add:"-1" }},
-                                  {{ start_date.day }})
+            start_date:  Date({{ start_date.year }},
+                              {{ start_date.month|add:"-1" }},
+                              {{ start_date.day }})
         });
     });
 </script>

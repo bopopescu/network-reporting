@@ -58,19 +58,21 @@ var mopub = window.mopub || {};
 
     function createDailyStatsChart(kind, datapoints, labels) {
 
-        $("#stats-chart").html("");
+        var element = "#stats-chart";
+
+        $(element).html("");
 
         if (datapoints[kind].length === 1) {
             datapoints[kind].push(datapoints[kind][0]);
         }
 
         var graph = new Rickshaw.Graph({
-	        element: document.querySelector("#stats-chart"),
+	        element: document.querySelector(element),
 	        width: 660,
 	        height: 160,
 	        renderer: 'area',
 	        stroke: true,
-	        series: [ {
+	        series: [{
 		        data: _.map(datapoints[kind], function (item, iter){
                     return {
                         x: iter,
@@ -148,6 +150,7 @@ var mopub = window.mopub || {};
             // value to display first.
             var active_display_value = this_view.options.active_display_value || 
                 this_view.options.display_values[0];
+
             template_values['active'] = active_display_value;
 
             // Create a series list that will keep daily sums for each property.
@@ -162,7 +165,6 @@ var mopub = window.mopub || {};
                 // Set up the series that will go into the chart.
                 var current_series = this_view.collection.get_formatted_stat_series(display_val);
                 series_list[display_val] = current_series;
-                console.log(current_series);
             });
 
             // Render the template and the chart with the values we composed
@@ -170,11 +172,6 @@ var mopub = window.mopub || {};
 
             var series_date_labels = getDateLabels(this_view.options.start_date, 
                                                    series_list.length);
-
-            createDailyStatsChart(active_display_value,
-                                  series_list,
-                                  series_date_labels);
-
 
             
             $("#stats-breakdown-container tr", this_view.el).click(function() {
@@ -189,10 +186,14 @@ var mopub = window.mopub || {};
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
                 createDailyStatsChart(stats_type,
-                                     series_list,
-                                     series_date_labels);
+                                      series_list,
+                                      series_date_labels);
             });
 
+            createDailyStatsChart(active_display_value,
+                                  series_list,
+                                  series_date_labels);
+            
         }        
     });
 

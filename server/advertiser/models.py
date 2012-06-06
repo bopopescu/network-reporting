@@ -343,6 +343,17 @@ class AdGroup(db.Model):
         return self.bid
 
     @property
+    def line_item_priority(self):
+        ranks = {
+                 'gtee_high': 1,
+                 'gtee': 2,
+                 'gtee_low': 3,
+                 'promo': 4,
+                 'backfill_promo': 5
+                 }
+        return ranks[self.adgroup_type]
+
+    @property
     def status(self):
         if self.deleted:
             return "deleted"
@@ -358,7 +369,7 @@ class AdGroup(db.Model):
             else:
                 return "scheduled"
         else:
-            return "paused"            
+            return "paused"
         return "running"
 
 

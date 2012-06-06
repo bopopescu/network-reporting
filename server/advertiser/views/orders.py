@@ -47,10 +47,7 @@ class OrderIndexHandler(RequestHandler):
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
                                                         orders=orders)
-
-        for line_item in line_items:
-            logging.warn(line_item.status)
-            
+        line_items.sort(key=lambda x: x.line_item_priority )
         return {
             'orders': orders,
             'line_items': line_items

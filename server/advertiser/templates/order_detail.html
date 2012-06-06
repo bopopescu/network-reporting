@@ -51,29 +51,9 @@
         New Line Item
       </a>
     </div>
-<<<<<<< HEAD
-    
-    {% filter_buttons %}
-      
-=======
-
-    <div class="btn-group">
-      <a class="btn" href="#">
-        <i class="icon-eye-open"></i>
-        Show All
-      </a>
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        <span class="caret"></span>
-      </a>
-      <ul class="dropdown-menu">
-        <li> <a href="#" data-toggle="running"> Running </a> </li>
-        <li> <a href="#" data-toggle="running"> Scheduled </a> </li>
-        <li> <a href="#" data-toggle="running"> Paused </a> </li>
-        <li> <a href="#" data-toggle="running"> Completed </a> </li>
-        <li> <a href="#" data-toggle="running"> Archived </a> </li>
-      </ul>
-    </div>
->>>>>>> 21cac8acbe000b9164390cf8bbd71b4480f64edf
+    {% comment %}
+      {% filter_buttons %}
+    {% endcomment %}
   </div>
 
   {% line_item_table order.adgroups %}
@@ -104,7 +84,7 @@
       </a>
     </div>
     {% endcomment %}
-    
+
 
     {% inventory_table targeted_apps %}
   </section>
@@ -116,7 +96,7 @@
   <script type="text/html" id="chart-template">
     {% include "common/partials/chart.html" %}
   </script>
-  
+
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
 {% include_script "controllers/orders" %}

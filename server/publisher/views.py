@@ -24,7 +24,7 @@ from advertiser.models import Campaign, \
 
 from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
-from reporting.models import StatsModel, GEO_COUNTS
+from reporting.models import StatsModel
 from account.models import NetworkConfig
 
 ## Query Managers
@@ -43,9 +43,8 @@ from reporting.query_managers import StatsModelQueryManager
 from common.utils.request_handler import RequestHandler
 #REFACTOR: only import what we need here
 from common.constants import *
-from common.utils.stats_helpers import (MarketplaceStatsFetcher,
-                                        SummedStatsFetcher)
 
+from common.utils import tablib
 
 class DashboardHandler(RequestHandler):
     def get(self):
@@ -136,14 +135,7 @@ class CreateAppHandler(RequestHandler):
         }
 
     def post(self):
-        app = None
-        if self.request.POST.get("app_key"):
-            app = AppQueryManager.get(self.request.POST.get("app_key"))
-            app_form = AppForm(data=self.request.POST,
-                               files=self.request.FILES,
-                               instance=app)
-        else:
-            app_form = AppForm(data=self.request.POST, files=self.request.FILES)
+        app_form = AppForm(data=self.request.POST, files=self.request.FILES)
 
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
 
@@ -155,17 +147,11 @@ class CreateAppHandler(RequestHandler):
                 'adunit_form': adunit_form
             })
 
-        if not app_form.instance:  # ensure form posts do not change ownership
-            account = self.account  # attach account info
-        else:
-            account = app_form.instance.account
+        account = self.account  # attach account info
         app = app_form.save(commit=False)
         app.account = account
 
-        if not adunit_form.instance:  # ensure form posts do not change ownership
-            account = self.account
-        else:
-            account = adunit_form.instance.account
+        account = self.account
         adunit = adunit_form.save(commit=False)
         adunit.account = account
 
@@ -248,22 +234,6 @@ def app_detail(request, *args, **kwargs):
 
 
 class AdUnitShowHandler(RequestHandler):
-    """
-    REFACTOR
-
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
 
     def get(self, adunit_key):
         # load the site
@@ -510,24 +480,39 @@ class IntegrationHelpHandler(RequestHandler):
     def get(self, adunit_key):
         adunit = AdUnitQueryManager.get(adunit_key)
         status = self.params.get('status')
-        return render_to_response(self.request,
-                                  'publisher/integration_help.html',
-                                  {
-                                      'site': adunit,
-                                      'status': status,
-                                      'width': adunit.get_width(),
-                                      'height': adunit.get_height(),
-                                      'account': self.account
-                                  })
+        return {
+            'site': adunit,
+            'status': status,
+            'width': adunit.get_width(),
+            'height': adunit.get_height(),
+        }
 
 
 @login_required
 def integration_help(request, *args, **kwargs):
-    return IntegrationHelpHandler()(request, *args, **kwargs)
+    t = 'publisher/integration_help.html'
+    return IntegrationHelpHandler(template=t)(request, *args, **kwargs)
 
 
+class PublisherExporter(RequestHandler):
 
-# Helper methods
+    def get(self):
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+        
+        headers = ('adunit_name', 'adunit_key')
+        app_data = [(app.name, str(app.key())) for app in apps_dict.values()]
+        #data_to_export = tablib.Dataset(*app_data, headers=headers)
+
+        return HttpResponse(data_to_export.csv)
+
+            
+
+        
+    
+##################
+# Helper methods #
+##################
+    
 def enable_networks(adunit, account):
     """
     Create network adgroups for this adunit for all ad networks.
@@ -696,26 +681,3 @@ def filter_campaigns(campaigns, cfilter):
     filtered_campaigns = sorted(filtered_campaigns, lambda x,y: cmp(y.name,
         x.name))
     return filtered_campaigns
-
-
-def set_column_widths(ws, headers, body):
-    # xlwt defines the widtht of '0' character as 256, so let's give a bit
-    # of leeway
-    char_width = 275
-
-    body.insert(0, headers)
-
-    # maximum width of each column, in characters
-    def max_chars_in_column(column):
-        chars_in_column = [len(cell) for cell in column]
-        return max(chars_in_column)
-
-    # Andrew hated my nested list comprehension, so here's this
-    columns = zip(*body)
-    column_widths = [max_chars_in_column(col) for col in columns]
-
-    # traverse worksheet columns and set width appropriately
-    for i in range(len(body[0])):
-        ws.col(i).width = column_widths[i] * char_width
-
-    return ws

@@ -1,21 +1,32 @@
+# Deployed Tuesday, June 05, 2012 at 05:06PM PST
+### Deployed by John Pena
+### Tagged deploy-124
+### Bugs Fixed: ['1225']
+### Included Commits: 
+ * 0f3e5e1 turned off admin d cron
+ * d9d5ce0 [#1225 state:fixed]
+ * d150fe6 added comment
+ * bed28c3 Deployed without finding any bug fixes.
+ * e0d6d31 [#1225 state:review-requested assigned:andrew]
+ 
 # Deployed Friday, June 01, 2012 at 04:58PM PST
 ### Deployed by John Pena
 ### Tagged deploy-123
 ### Bugs Fixed: []
-### Included Commits: 
- * 0aad496 Merge branch 'master' of github.com:mopub/mopub
- * 98a83e5 mongostats deadline to 10 seconds
- * 957cfeb removed superfluous check in NetworkEdit view
- * ab23eaf Merge branch 'master' of github.com:mopub/mopub
- * 004883a NetworkConfigs grabbed from memcache when possible in EditNetwork view
- * cfc706d [#1268 state:resolved]
- * ee5e8f8 added logging of URL on mongostats timeout
- * 99d1e3f checkedout updated publisher view tests
- * 284afdb Merge branch 'app_page_speedup' of github.com:mopub/mopub
- * 20da58b Merge branch 'campaign_page_speedup' of github.com:mopub/mopub
- * 2bc3009 sped up app page
- * 06286a0 speed up campaign page
- 
+### Included Commits:
+* 0aad496 Merge branch 'master' of github.com:mopub/mopub
+* 98a83e5 mongostats deadline to 10 seconds
+* 957cfeb removed superfluous check in NetworkEdit view
+* ab23eaf Merge branch 'master' of github.com:mopub/mopub
+* 004883a NetworkConfigs grabbed from memcache when possible in EditNetwork view
+* cfc706d [#1268 state:resolved]
+* ee5e8f8 added logging of URL on mongostats timeout
+* 99d1e3f checkedout updated publisher view tests
+* 284afdb Merge branch 'app_page_speedup' of github.com:mopub/mopub
+* 20da58b Merge branch 'campaign_page_speedup' of github.com:mopub/mopub
+* 2bc3009 sped up app page
+* 06286a0 speed up campaign page
+
 # Deployed Friday, June 01, 2012 at 12:19AM PST
 ### Deployed by Andrew He
 ### Tagged deploy-122

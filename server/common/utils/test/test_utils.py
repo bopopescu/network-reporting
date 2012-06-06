@@ -1,6 +1,5 @@
 import os
 import sys
-import inspect
 
 sys.path.append(os.environ['PWD'])
 
@@ -371,14 +370,6 @@ def _db_to_dict(models):
     return instances_dict
 
 def decorate_all_test_methods(decorator, exclude=[]):
-    """
-    Decorator that applies a decorator to all methods in a class
-
-    NOTE: This will also wrap nested methods
-
-    Author:
-        Haydn (5/21/2012)
-    """
     def decorate(cls):
         for method in inspect.getmembers(cls, inspect.ismethod):
             method_name = method[1].__name__

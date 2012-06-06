@@ -236,7 +236,7 @@ def app_detail(request, *args, **kwargs):
     return handler(request, use_cache=False, *args, **kwargs)
 
 
-class AdUnitShowHandler(RequestHandler):
+class AdUnitDetailHandler(RequestHandler):
 
     def get(self, adunit_key):
         # load the site
@@ -257,9 +257,9 @@ class AdUnitShowHandler(RequestHandler):
 
 
 @login_required
-def adunit_show(request, *args, **kwargs):
+def adunit_detail(request, *args, **kwargs):
     template = 'publisher/adunit.html',
-    handler = AdUnitShowHandler(id='adunit_key', template=template)
+    handler = AdUnitDetailHandler(id='adunit_key', template=template)
     return handler(request, use_cache=False, *args, **kwargs)
 
 
@@ -422,30 +422,7 @@ def adunit_update_ajax(request, *args, **kwargs):
     return AdUnitUpdateAJAXHandler()(request, *args, **kwargs)
 
 
-class DeleteAdUnitHandler(RequestHandler):
-    """
-    Deletes an adunit and redirects to the adunit's app.
-    """
-    def post(self, adunit_key):
-        adunit = AdUnitQueryManager.get(adunit_key)
-
-        if adunit is None or adunit.account.key() != self.account.key():
-            raise Http404
-
-        adunit.deleted = True
-        AdUnitQueryManager.put(adunit)
-
-        return HttpResponseRedirect(reverse('publisher_app_show',
-                                            kwargs = {
-                                                'app_key': adunit.app.key()
-                                            }))
-
-
-@login_required
-def delete_adunit(request, *args, **kwargs):
-    return DeleteAdUnitHandler()(request, *args, **kwargs)
-
-
+    
 class DeleteAppHandler(RequestHandler):
     """
     Deletes an app and redirects to the app index.
@@ -472,7 +449,31 @@ class DeleteAppHandler(RequestHandler):
 @login_required
 def delete_app(request, *args, **kwargs):
     return DeleteAppHandler()(request, *args, **kwargs)
+    
 
+class DeleteAdUnitHandler(RequestHandler):
+    """
+    Deletes an adunit and redirects to the adunit's app.
+    """
+    def post(self, adunit_key):
+        adunit = AdUnitQueryManager.get(adunit_key)
+
+        if adunit is None or adunit.account.key() != self.account.key():
+            raise Http404
+
+        adunit.deleted = True
+        AdUnitQueryManager.put(adunit)
+
+        return HttpResponseRedirect(reverse('publisher_app_show',
+                                            kwargs = {
+                                                'app_key': adunit.app.key()
+                                            }))
+
+
+@login_required
+def delete_adunit(request, *args, **kwargs):
+    return DeleteAdUnitHandler()(request, *args, **kwargs)
+    
 
 class IntegrationHelpHandler(RequestHandler):
     """
@@ -563,8 +564,6 @@ class AdunitExporter(RequestHandler):
 @login_required
 def adunit_exporter(request, *args, **kwargs):
     return AdunitExporter()(request, *args, **kwargs)
-
-
         
     
 ##################

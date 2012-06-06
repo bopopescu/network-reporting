@@ -35,7 +35,7 @@ urlpatterns = patterns(
         name='publisher_adunit_update_ajax'),
     
     url(r'^adunit/(?P<adunit_key>[-\w\.]+)/$',
-        'adunit_show',
+        'adunit_detail',
         name='publisher_adunit_show'),
 
     # Exporting

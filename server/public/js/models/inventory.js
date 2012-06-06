@@ -140,7 +140,7 @@ var mopub = mopub || {};
             return format_stat(stat, sum);
         },
 
-        get_formatted_stat_series: function(stat) {            
+        get_formatted_stat_series: function(stat) {
             console.log(this);
             var stat_series = this.map(function(model) {
                 var daily_stats = model.get('daily_stats');
@@ -579,6 +579,8 @@ var mopub = mopub || {};
                 var valid_number = Number(attributes.price_floor);
                 if (isNaN(valid_number)) {
                     return "Please enter a valid number for the price floor";
+                } else if (valid_number < 0) {
+                    return "Please enter a non-negative number for the price floor";
                 } else {
                     if (current_price_floor !== valid_number) {
                         record_metric('MPX Price Floor Changed', {
@@ -822,7 +824,7 @@ var mopub = mopub || {};
             return response.adunits;
         }
     });
-    
+
     _.extend(LineItemCollection.prototype, StatsMixin);
 
 

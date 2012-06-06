@@ -18,7 +18,7 @@
 
   {% chart_placeholder start_date end_date %}
 
-  <br />  
+  <br />
 
   {# The order edit form, hidden by default #}
   <section class="offset hidden" id="order_form_container">
@@ -38,26 +38,46 @@
         Edit this order
       </a>
     </div>
-      
+
   {% order_table order %}
 
   <br />
 
   <h3 class="left"> Line Items in {{ order.name }} </h3>
   <div class="right">
-    <div class="btn-group">      
+    <div class="btn-group">
       <a class="btn" href='{% url advertiser_line_item_form_new order.key %}'>
         <i class="icon-plus"></i>
         New Line Item
       </a>
     </div>
+<<<<<<< HEAD
     
     {% filter_buttons %}
       
+=======
+
+    <div class="btn-group">
+      <a class="btn" href="#">
+        <i class="icon-eye-open"></i>
+        Show All
+      </a>
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="#" data-toggle="running"> Running </a> </li>
+        <li> <a href="#" data-toggle="running"> Scheduled </a> </li>
+        <li> <a href="#" data-toggle="running"> Paused </a> </li>
+        <li> <a href="#" data-toggle="running"> Completed </a> </li>
+        <li> <a href="#" data-toggle="running"> Archived </a> </li>
+      </ul>
+    </div>
+>>>>>>> 21cac8acbe000b9164390cf8bbd71b4480f64edf
   </div>
 
   {% line_item_table order.adgroups %}
-  
+
   <br />
   <div class="btn-group">
     <button class="btn status_change" data-toggle="pause">
@@ -85,6 +105,7 @@
     </div>
     {% endcomment %}
     
+
     {% inventory_table targeted_apps %}
   </section>
 

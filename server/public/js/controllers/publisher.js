@@ -37,7 +37,7 @@ var mopub = mopub || {};
         var apps = new AppCollection();
         var fetched_apps = 0;
         _.each(app_keys, function(app_key) {
-            
+
             // Create a new app. When the app is fetched, we'll immediately
             // render it into its contents into a (pre-existing) table row.
             var app = new App({id: app_key, stats_endpoint: 'all'});
@@ -752,7 +752,7 @@ var mopub = mopub || {};
      */
     var DashboardController = {
         initializeIndex: function (bootstrapping_data) {
-                        
+
             // Adds click handlers for the top date buttons and stats breakdown
             // date buttons, and click handlers for the stats breakdown graph-
             // changing
@@ -854,7 +854,7 @@ var mopub = mopub || {};
     };
 
     window.DashboardController = DashboardController;
-    
+
 })(this.jQuery, this.Backbone, this._);
 
 /* REFACTOR */

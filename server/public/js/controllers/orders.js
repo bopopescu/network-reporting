@@ -52,7 +52,7 @@
      * AdSourceStatusChangeHandler class in orders.py for more info.
      */
     function changeStatus(ad_sources, status) {
-        
+
         // Show the spinner for the ad source
         _.each(ad_sources, function(ad_source) {
             $("#" + ad_source + "-img").removeClass('hidden');
@@ -156,6 +156,9 @@
             });
 
             changeStatus(keys, status);
+            $(".status_change_control").each(function(){
+                $(this).attr('checked', false);
+            });
         });
     }
 
@@ -296,7 +299,7 @@
             order.bind('change', function(current_order) {
                 // Render the order row
                 renderOrder(order);
-                
+
                 // Make the chart. The chart takes a collection as a parameter,
                 // so we add the single order to a collection.
                 var orders = new OrderCollection();
@@ -346,7 +349,7 @@
                     stats_endpoint: 'direct'
                 });
 
-                adunit.url = function () {                    
+                adunit.url = function () {
                     return '/api/campaign/'
                         + bootstrapping_data.order_key
                         + '/adunits/'
@@ -890,11 +893,11 @@
                     if ($('fieldset#advanced').is(':hidden')) {
                         $('fieldset#advanced').slideDown('fast');
                         $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                        $('.ui-button-text', this).text('Hide Advanced Details');
+                        $(this).text('Hide Advanced Targeting');
                     } else {
                         $('fieldset#advanced').slideUp('fast');
                         $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                        $('.ui-button-text', this).text('Show Advanced Details');
+                        $(this).text('Show Advanced Targeting');
                     }
                 }); // TODO: need to update on document ready
 

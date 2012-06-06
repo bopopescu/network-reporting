@@ -796,8 +796,6 @@ var mopub = mopub || {};
             initializeDailyCounts();
             initializeEditAdunitForm();
 
-            mopub.Chart.setupDashboardStatsChart('area');
-
             $('#advertisers-testAdServer')
                 .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
                 .click(function(e) {

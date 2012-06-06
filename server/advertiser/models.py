@@ -342,6 +342,7 @@ class AdGroup(db.Model):
                     float(self.stats.impression_count))
         return self.bid
 
+    @property
     def status(self):
         if self.deleted:
             return "deleted"
@@ -357,7 +358,7 @@ class AdGroup(db.Model):
             else:
                 return "scheduled"
         else:
-            return "paused"
+            return "paused"            
         return "running"
 
 
@@ -667,31 +668,6 @@ class AdGroup(db.Model):
 
         return False
 
-    @property
-    def status(self):
-        """ Returns a string: Paused, Running, Eligible, Scheduled """
-        campaign = self.campaign
-        now = datetime.datetime.now()
-        if campaign.start_datetime and now < campaign.start_datetime:
-            return "Scheduled"
-        if campaign.end_datetime and now > campaign.end_datetime:
-            return "Completed"
-        if not self.active:
-            return "Paused"
-
-        # At this point, all campaigns are within active date range and not paused
-        if campaign.budget and hasattr(self, 'percent_delivered'):
-            if self.percent_delivered and self.percent_delivered < 100.0:
-                return "Running"
-            elif self.percent_delivered and self.percent_delivered >= 100.0:
-                return "Completed"
-            else:
-                # Eligible campaigns have 0% delivery.
-                # In production, they should only last a couple seconds
-                # before becoming running campaigns
-                return "Eligible"
-        else:
-            return "Running"
 
     @property
     def created_date(self):

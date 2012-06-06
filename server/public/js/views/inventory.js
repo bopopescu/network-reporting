@@ -116,7 +116,7 @@ var mopub = window.mopub || {};
 
 
     /*
-     * # CollectionGraphView
+     * # CollectionChartView
      * Renders a collection as a graph
      */
     var CollectionChartView = Backbone.View.extend({
@@ -643,13 +643,15 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var row = $('tr.lineitem-row#' + current_model.get('key'), this.el);
+            var row = $('#' + current_model.get('key'), this.el);
             var display_fields = [
                 'rev',
                 'imp',
                 'fill_rate',
                 'clk',
-                'ctr'
+                'ctr',
+                'conv',
+                'conv_rate'
             ];
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
@@ -662,8 +664,8 @@ var mopub = window.mopub || {};
                 + "<br /> <br />"
                 + "Targeting 3 Ad Units"
                 + "</p>";
-            popover_template = _.template(popover_template);
 
+            popover_template = _.template(popover_template);
             var popover_content = popover_template(current_model.toJSON());
 
             $(".moreinfo", row).popover({
@@ -683,6 +685,7 @@ var mopub = window.mopub || {};
 
     window.CollectionGraphView = CollectionGraphView;
     window.CollectionChartView = CollectionChartView;
+
     window.NetworkGraphView = NetworkGraphView;
 
 }(this.jQuery, this.Backbone, this._));

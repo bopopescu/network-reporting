@@ -4537,12 +4537,17 @@ form#order_and_line_item_form input.token-input-field.focused, form#order_form i
     padding: 8px 10px 7px 0; }
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
-    width: 65px; }
-    .inventory_table td.stat.advertiser, .inventory_table th.stat.advertiser {
-      width: 130px;
-      height: 40px;
-      text-overflow: ellipsis;
-      overflow: hidden; }
+    width: 60px; }
+  .inventory_table td.advertiser, .inventory_table th.advertiser {
+    text-align: right;
+    width: 130px;
+    text-overflow: ellipsis;
+    overflow: hidden; }
+  .inventory_table td.type, .inventory_table th.type, .inventory_table td.goal, .inventory_table th.goal {
+    text-align: right;
+    width: 60px; }
+  .inventory_table td.name, .inventory_table th.name {
+    width: 230px; }
   .inventory_table td.text {
     width: 65px; }
     .inventory_table td.text.pub-id-data {

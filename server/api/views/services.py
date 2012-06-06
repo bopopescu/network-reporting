@@ -6,30 +6,19 @@ from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager, \
         CreativeQueryManager
-from ad_network_reports.query_managers import AdNetworkLoginManager, \
-        AdNetworkMapperManager
 
-from publisher.query_managers import AdUnitQueryManager, \
-     AppQueryManager, \
-     PublisherQueryManager
-from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
+from publisher.query_managers import (AdUnitQueryManager, 
+                                      AppQueryManager)
 
-from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
-from ad_network_reports.query_managers import AdNetworkStatsManager
-
-from ad_server.optimizer.optimizer import DEFAULT_CTR
 from adserver_constants import ADSERVER_HOSTNAME
-
 from budget import budget_service
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse
-from common.utils.stats_helpers import MarketplaceStatsFetcher, \
-     SummedStatsFetcher, \
-     DirectSoldStatsFetcher, \
-     NetworkStatsFetcher, \
-     MPStatsAPIException
+from common.utils.stats_helpers import (MarketplaceStatsFetcher, 
+                                        SummedStatsFetcher,
+                                        DirectSoldStatsFetcher,
+                                        NetworkStatsFetcher)
 
 from common.constants import REPORTING_NETWORKS
 
@@ -193,6 +182,9 @@ class AdUnitService(RequestHandler):
 
             # Update each app with stats from the selected endpoint
             for adunit in response:
+                logging.warn('\n\n\n\n\n\n\n\n')
+                logging.warn(adunit['id'])
+                logging.warn(campaign_key)
                 adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
                                                                         campaign_key,
                                                                         self.start_date,
@@ -260,56 +252,56 @@ class AdUnitService(RequestHandler):
         # then we'll only get stats data from that adgroup. AdUnit
         # stats will only reflect how adunits performed in that
         # adgroup.
-        elif adgroup_key:
-            adgroup = AdGroupQueryManager.get(adgroup_key)
+        # elif adgroup_key:
+        #     adgroup = AdGroupQueryManager.get(adgroup_key)
 
-            # REFACTOR
-            # ensure the owner of this adgroup is the request's
-            # current user
-            if adgroup.account.key() != self.account.key():
-                raise Http404
+        #     # REFACTOR
+        #     # ensure the owner of this adgroup is the request's
+        #     # current user
+        #     if adgroup.account.key() != self.account.key():
+        #         raise Http404
 
-            adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
-            response = [adunit.toJSON() for adunit in adunits]
+        #     adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
+        #     response = [adunit.toJSON() for adunit in adunits]
 
-            # Update each app with stats from the selected endpoint
-            for adunit in response:
-                adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
-                                                                       adgroup_key,
-                                                                       self.start_date,
-                                                                       self.end_date)
+        #     # Update each app with stats from the selected endpoint
+        #     for adunit in response:
+        #         adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
+        #                                                                adgroup_key,
+        #                                                                self.start_date,
+        #                                                                self.end_date)
 
-                # We update with the app and adgroup id/key because our
-                # backbone models often need it for reference
-                adunit_stats.update({'app_id': str(adunit['app_key'])})
-                adunit.update(adunit_stats)
+        #         # We update with the app and adgroup id/key because our
+        #         # backbone models often need it for reference
+        #         adunit_stats.update({'app_id': str(adunit['app_key'])})
+        #         adunit.update(adunit_stats)
 
-            return JSONResponse(response)
+        #     return JSONResponse(response)
 
-        elif campaign_key:
-            campaign = CampaignQueryManager.get(campaign_key)
+        # elif campaign_key:
+        #     campaign = CampaignQueryManager.get(campaign_key)
 
-            # REFACTOR
-            # ensure the owner of this campaign is the request's
-            # current user
-            if campaign.account.key() != self.account.key():
-                raise Http404
+        #     # REFACTOR
+        #     # ensure the owner of this campaign is the request's
+        #     # current user
+        #     if campaign.account.key() != self.account.key():
+        #         raise Http404
 
-            adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
+        #     adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
 
-            response = [adunit.toJSON() for adunit in adunits]
+        #     response = [adunit.toJSON() for adunit in adunits]
 
-            # Update each app with stats from the selected endpoint
-            for adunit in response:
-                adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
-                                                                       campaign,
-                                                                       self.start_date,
-                                                                       self.end_date)
+        #     # Update each app with stats from the selected endpoint
+        #     for adunit in response:
+        #         adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
+        #                                                                campaign,
+        #                                                                self.start_date,
+        #                                                                self.end_date)
 
-                # We update with the app and adgroup id/key because our
-                # backbone models often need it for reference
-                adunit_stats.update({'app_id': str(adunit['app_key'])})
-                adunit.update(adunit_stats)
+        #         # We update with the app and adgroup id/key because our
+        #         # backbone models often need it for reference
+        #         adunit_stats.update({'app_id': str(adunit['app_key'])})
+        #         adunit.update(adunit_stats)
 
             return JSONResponse(response)
 
@@ -490,7 +482,7 @@ class CampaignServiceHandler(RequestHandler):
                 stats = stats_fetcher.get_adgroup_stats(adgroup,
                                                         self.start_date,
                                                         self.end_date,
-                                                        daily=True)
+                                                        daily=False)
                 adgroup_jsonified = adgroup.toJSON()
                 adgroup_jsonified.update(stats)
                 # pacing
@@ -540,7 +532,8 @@ class CampaignService(RequestHandler):
         stats_endpoint = self.request.GET.get('endpoint', 'all')
         stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
         campaign_stats = stats_fetcher.get_campaign_stats(campaign_key,
-                self.start_date, self.end_date)
+                                                          self.start_date,
+                                                          self.end_date)
 
         return JSONResponse(campaign_stats)
     #except Exception, exception:
@@ -608,8 +601,7 @@ def get_stats_fetcher(account_key, stats_endpoint):
     if stats_endpoint == 'mpx':
         stats = MarketplaceStatsFetcher(account_key)
     elif stats_endpoint == 'direct':
-        #REFACTOR: this should be DirecSoldStatsFetcher
-        stats = SummedStatsFetcher(account_key)
+        stats = DirectSoldStatsFetcher(account_key)
     elif stats_endpoint == 'networks':
         stats = NetworkStatsFetcher(account_key)
     elif stats_endpoint == 'all':

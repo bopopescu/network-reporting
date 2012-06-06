@@ -3,20 +3,21 @@
 
 <table class="inventory_table" id="line_item_table">
   <thead>
-    <tr>
+    <tr style="width: 230px;">
       {% if show_status %}
-        <th style="width: 24px;"> {# Status icon and checkbox #}</th>
+        <th style="width: 10px;"> {# Status icon and checkbox #}</th>
       {% endif %}
-      <th class="name">Line Item Name</th>
-      <th class="stat" style="width: 150px;">Advertiser</th>
-      <th class="stat">Type</th>
-      <th class="stat">Goal</th>
-      <th class="stat">Revenue</th>
-      <th class="stat">Impressions</th>
-      <th class="stat">Clicks</th>
-      <th class="stat">CTR</th>
-      <th class="stat">Progress</th>
-      <th class="stat" style="width:10px">{# More info #}</th>
+      <th class="name" style="width: 230px;">Line Item Name</th>
+      <th class="advertiser" style="width: 150px;">Advertiser</th>
+      <th class="type" style="width: 90px;">Type</th>
+      <th class="goal" style="width: 90px;">Goal</th>
+      <th class="stat" style="width: 60px;">Revenue</th>
+      <th class="stat" style="width: 60px;">Impressions</th>
+      <th class="stat" style="width: 60px;">Clicks</th>
+      <th class="stat" style="width: 60px;">CTR</th>
+      <th class="stat" style="width: 60px;">Conv.</th>
+      <th class="stat" style="width: 60px;">Progress</th>
+      <th class="stat popdown" style="width: 10px">{# More info #}</th>
     </tr>
   </thead>
 

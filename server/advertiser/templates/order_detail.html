@@ -51,6 +51,11 @@
         New Line Item
       </a>
     </div>
+<<<<<<< HEAD
+    
+    {% filter_buttons %}
+      
+=======
 
     <div class="btn-group">
       <a class="btn" href="#">
@@ -68,6 +73,7 @@
         <li> <a href="#" data-toggle="running"> Archived </a> </li>
       </ul>
     </div>
+>>>>>>> 21cac8acbe000b9164390cf8bbd71b4480f64edf
   </div>
 
   {% line_item_table order.adgroups %}
@@ -89,12 +95,16 @@
   {# Table that shows all of the adunits being targeted #}
   <section>
     <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
+
+    {% comment %}
     <div class="right">
-    <a class="btn" href='#'>
-      <i class="icon-random"></i>
-      Change
-    </a>
-  </div>
+      <a class="btn" href='#'>
+        <i class="icon-random"></i>
+        Change Targeting
+      </a>
+    </div>
+    {% endcomment %}
+    
 
     {% inventory_table targeted_apps %}
   </section>
@@ -102,6 +112,11 @@
 {% endblock content %}
 
 {% block extraScripts %}
+
+  <script type="text/html" id="chart-template">
+    {% include "common/partials/chart.html" %}
+  </script>
+  
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
 {% include_script "controllers/orders" %}

@@ -141,11 +141,10 @@
         });
     }
 
-
     /*
      * Sets up the click handler for the status control button. This
-     * is the button that filters the table based on status
-     * (running/paused/scheduled/completed/archived).
+     * is the button group that pauses, resumes, and archives 
+     * orders/line items/creatives.
      */
     function initializeStatusControls() {
         $(".status_change.btn").click(function(e){
@@ -164,19 +163,30 @@
     }
 
     /*
-     * Creates the popovers on the line item table rows.
-     * Unfinished.
+     * Initializes the hiding/showing of line items in a table
+     * based on their status (running/scheduled/completed/etc).
      */
-    function initializePopovers() {
-        //TODO make this selector faster
-        $("tr.lineitem-row .moreinfo").popover({
-            placement: 'bottom',
-            title: "About this line item",
-            content: 'Lorem ipsum dolor sit amet, consectetur' +
-                ' adipisicing elit, sed do eiusmod tempor incididunt',
-            delay: { hide: 250 }
+    function initializeLineItemFilters() {
+        $(".filter-toggle").click(function(e) {
+            e.preventDefault();
+            var toggled = $('i.toggle-check', $(this));
+            if (!toggled.hasClass('invisible')){
+                toggled.addClass('invisible');
+                filterLineItems("lineitem-row", "#line_item_table");
+            } else {
+                $('.toggle-check').addClass('invisible');
+                filterLineItems($(this).attr('data-toggle'), "#line_item_table");
+                $('i.toggle-check', $(this)).removeClass('invisible');
+            }
         });
+        
+        $("#filter-button").click(function(e) {
+            e.preventDefault();
+            filterLineItems("lineitem-row", "#line_item_table");
+        });
+        
     }
+
 
     /*
      * This definitely should be moved to something common.
@@ -204,8 +214,7 @@
          */
         initializeIndex: function(bootstrapping_data) {
             initializeStatusControls();
-            initializePopovers();
-
+            initializeLineItemFilters();
             /*
              * Create a campaign collection, fetch all of the
              * campaigns, and render all of them inline
@@ -229,45 +238,16 @@
                     $(this).attr('checked', false);
                 });
             });
-
-            /*
-             * Set up the filters and the filter button
-             */
-            $(".filter-toggle").click(function(e) {
-                e.preventDefault();
-                var toggled = $('i.toggle-check', $(this));
-                if (!toggled.hasClass('invisible')){
-                    toggled.addClass('invisible');
-                    filterLineItems("lineitem-row", "#line_item_table");
-                } else {
-                    $('.toggle-check').addClass('invisible');
-                    filterLineItems($(this).attr('data-toggle'), "#line_item_table");
-                    $('i.toggle-check', $(this)).removeClass('invisible');
-                }
-            });
-
-            $("#filter-button").click(function(e) {
-                e.preventDefault();
-                filterLineItems("lineitem-row", "#line_item_table");
-            });
-
-            $("tr.lineitem-row .moreinfo").popover({
-                placement: 'bottom',
-                title: "About this line item",
-                content: 'Lorem ipsum dolor sit amet, '
-                         + 'consectetur adipisicing elit, '
-                         + 'sed do eiusmod tempor incididunt '
-                         + '<strong>motherfucker</strong>.',
-                delay: { hide: 250 }
-
-            });
-
         },
 
         initializeOrderDetail: function(bootstrapping_data) {
             initializeStatusControls();
+            initializeLineItemFilters();
             initializeDateButtons();
 
+            /*
+             * Set up the order form validator
+             */
             var validator = $('form#order_form').validate({
                 errorPlacement: function(error, element) {
                     element.closest('div').append(error);
@@ -308,10 +288,10 @@
             });
 
             /*
-             * Data Load
+             * Load all of the order and line item stats
              */
 
-            // Fill in stats for the order/adgroup table
+            // Fill in stats for the order/line item table
             var order = new Order({
                 id: bootstrapping_data.order_key
             });
@@ -325,7 +305,7 @@
                 var orders = new OrderCollection();
                 orders.add(order);
                 var chart_view = new CollectionChartView({
-                    collection: apps,
+                    collection: orders,
                     start_date: bootstrapping_data.start_date,
                     display_values: ['req', 'imp', 'clk']
                 });
@@ -334,7 +314,12 @@
 
             order.fetch();
 
-            // Fill in stats for the targeting table
+
+            /*
+             * Load the data in the targetting table
+             */
+
+            // Fill in stats for the targeted apps
             _.each(bootstrapping_data.targeted_apps, function(app_key) {
                 var app = new App({
                     id: app_key,
@@ -357,7 +342,7 @@
                 app.fetch();
             });
 
-
+            // Fill in the stats for the targeted adunits
             _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
                 var adunit = new AdUnit({
                     id: adunit_key,
@@ -404,7 +389,39 @@
             initializeDateButtons();
             initializeStatusControls();
 
-            // Fill in stats for the targeting table
+            /*
+             * Load the stats for the line item
+             */
+
+            var line_item = new LineItem({
+                id: bootstrapping_data.line_item_key
+            });
+            
+            line_item.bind('change', function (current_line_item) {
+
+                renderLineItem(current_line_item);
+
+                var line_items = new LineItemCollection();
+                line_items.add(line_item);
+
+                var chart_view = new CollectionChartView({                    
+                    collection: line_items,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['req', 'imp', 'clk']
+                });
+
+                chart_view.render();
+            });
+
+            line_item.fetch();
+
+
+            /*
+             * Load the data in the targetting table
+             */
+
+            // Get all of the apps that are targeted by this line item
+            // and fill in their stats in the targeted table.
             _.each(bootstrapping_data.targeted_apps, function(app_key) {
                 var app = new App({
                     id: app_key,
@@ -429,7 +446,9 @@
                 app.fetch();
             });
 
-            console.log(bootstrapping_data.targeted_adunits);
+            // Same deal with the adunits. Get all of the adunits that are
+            // targeted by this line item and fill in their stats in the
+            // targeted table.
             _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
                 var adunit = new AdUnit({
                     id: adunit_key,
@@ -455,7 +474,11 @@
                 adunit.fetch();
             });
 
-            /* CREATIVE FORMS */
+
+            /*
+             * Click handlers for the creative form. These could be refactored.
+             */
+
             // format
             $('[name="format"]').change(function() {
                 var format = $(this).val();
@@ -473,13 +496,12 @@
             }).filter(':checked').change();
 
             // text_icon advanced
-            $('button#advanced_fields_button').click(function() {
+            $('#advanced_fields_button').click(function() {
                 var list = $('ul#advanced_fields_list', $(this).closest('form'));
-                if(list.is(":visible")) {
+                if (list.is(":visible")) {
                     list.slideUp();
                     $(this).html('More Options');
-                }
-                else {
+                } else {
                     list.slideDown();
                     $(this).html('Less Options');
                 }
@@ -938,20 +960,7 @@
                 minChars: 3,
                 method: 'get'
             });
-            //Verify that all cities in city_pre are in the SINGLE country that is pre
 
-            /* Not doing states atm
-               $('#state_ta').tokenInput(geo_s, {
-               country: 'US',
-               doImmediate: false,
-               queryParam: 'name_startsWith',
-               featureCode: 'ADM1',
-               contentType: 'json',
-               prePopulate: state_pre,
-               type: 'state',
-               minChars: 5,
-               method: 'get'
-               }); */
 
             // Show location-dependent fields when location targeting is turned on
             $('input[name="region_targeting"]').click(function(e) {

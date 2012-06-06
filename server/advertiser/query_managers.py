@@ -35,7 +35,7 @@ def chunks(l, n):
         yield l[i:i+n]
 
 class AdvertiserQueryManager(CachedQueryManager):
-    
+
     @classmethod
     def get_objects_dict_for_account(cls, account, include_deleted=False):
         """
@@ -116,6 +116,7 @@ class CampaignQueryManager(QueryManager):
         campaigns = cls.Model.all().filter('account =', account)\
                                    .filter('deleted =', False)\
                                    .filter('is_order =', True)\
+                                   .order('name')\
                                    .fetch(1000)
         return campaigns
 
@@ -239,17 +240,17 @@ class CampaignQueryManager(QueryManager):
                             campaign_type = 'marketplace',
                             account = acct)
             camp.put()
-            
+
             ag = AdGroup(campaign = camp,
                          account = acct,
                          name = 'Marketplace adgroup',
                          site_keys = [adunit.key()],)
             ag.put()
-            
+
             creative = ag.default_creative()
             creative.account = acct
             creative.put()
-            
+
             return camp
 
     @classmethod
@@ -364,7 +365,7 @@ class AdGroupQueryManager(QueryManager):
         """
         archived=True means we only show archived adgroups.
         """
-        
+
         adgroups = AdGroup.all()
         if not (deleted == None):
             adgroups = adgroups.filter("deleted =", deleted)
@@ -410,7 +411,7 @@ class AdGroupQueryManager(QueryManager):
 
         return list(adgroups.run(limit=limit, batch_size=limit))
 
-        
+
     @classmethod
     def get_line_items(cls, account=None, order=None,
                        orders=None, limit=1000):

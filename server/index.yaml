@@ -167,6 +167,13 @@ indexes:
 
 - kind: Campaign
   properties:
+  - name: account
+  - name: deleted
+  - name: is_order
+  - name: name
+
+- kind: Campaign
+  properties:
   - name: active
   - name: budget
 

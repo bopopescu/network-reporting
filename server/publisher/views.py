@@ -12,9 +12,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
-from common.ragendja.template import render_to_response, \
-     render_to_string, \
-     JSONResponse
+from common.ragendja.template import (
+    render_to_response,
+    render_to_string, 
+    HttpResponse,
+    JSONResponse
+)
 
 ## Models
 from advertiser.models import Campaign, \
@@ -494,18 +497,73 @@ def integration_help(request, *args, **kwargs):
     return IntegrationHelpHandler(template=t)(request, *args, **kwargs)
 
 
-class PublisherExporter(RequestHandler):
+#############
+# Exporting #
+#############
+    
+class InventoryExporter(RequestHandler):
 
     def get(self):
-        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+
+        export_type = self.request.GET.get('type', 'csv')
         
-        headers = ('adunit_name', 'adunit_key')
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+        logging.warn(apps_dict)
         app_data = [(app.name, str(app.key())) for app in apps_dict.values()]
-        #data_to_export = tablib.Dataset(*app_data, headers=headers)
 
-        return HttpResponse(data_to_export.csv)
+        headers = ('adunit_name', 'adunit_key')        
+        data_to_export = tablib.Dataset(headers=headers)        
+        data_to_export.extend(app_data)
 
-            
+        return HttpResponse(getattr(data_to_export, export_type))
+
+@login_required
+def inventory_exporter(request, *args, **kwargs):
+    return InventoryExporter()(request, *args, **kwargs)
+
+
+class AppExporter(RequestHandler):
+
+    def get(self):
+        
+        export_type = self.request.GET.get('type', 'csv')
+        
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(self.account)
+        app_data = [(app.name, str(app.key())) \
+                    for app in apps_dict.values()]
+
+        headers = ('app_name', 'app_key')        
+        data_to_export = tablib.Dataset(headers=headers)        
+        data_to_export.extend(app_data)
+
+        return HttpResponse(getattr(data_to_export, export_type))
+
+        
+@login_required
+def app_exporter(request, *args, **kwargs):
+    return AppExporter()(request, *args, **kwargs)
+
+
+class AdunitExporter(RequestHandler):
+
+    def get(self):
+        
+        export_type = self.request.GET.get('type', 'csv')
+        
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(self.account)
+        adunit_data = [(adunit.name, str(adunit.key())) \
+                    for adunit in adunits_dict.values()]
+
+        headers = ('adunit_name', 'adunit_key')        
+        data_to_export = tablib.Dataset(headers=headers)        
+        data_to_export.extend(adunit_data)
+
+        return HttpResponse(getattr(data_to_export, export_type))
+
+@login_required
+def adunit_exporter(request, *args, **kwargs):
+    return AdunitExporter()(request, *args, **kwargs)
+
 
         
     

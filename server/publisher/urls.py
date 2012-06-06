@@ -40,7 +40,15 @@ urlpatterns = patterns(
 
     # Exporting
 
-    url(r'^export/full/$',
-        'publisher_export',
-        name='publisher_export'),
+    url(r'^export/inventory/$',
+        'inventory_exporter',
+        name='publisher_inventory_exporter'),
+    
+    url(r'^export/apps/$',
+        'app_exporter',
+        name='publisher_app_exporter'),
+
+    url(r'^export/adunits/$',
+        'adunit_exporter',
+        name='publisher_adunit_exporter'),
 )

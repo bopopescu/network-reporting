@@ -272,6 +272,8 @@ class AppQueryManager(CachedQueryManager):
             apps = apps.filter('account =', account)
         return apps
 
+    # TODO: make this consistent with AdUnit.put_adunits by making this a
+    # class method.
     def put_apps(self,apps):
         return db.put(apps)
 
@@ -472,6 +474,7 @@ class AdUnitQueryManager(QueryManager):
     def put_adunits(cls,adunits):
         db.put(adunits)
 
+    # TODO: this is horrible and should be removed.
     def get_by_key(self,key,none=False,cache=False):
         if not cache:
           return super(AdUnitQueryManager, self).get_by_key(key)
@@ -492,6 +495,7 @@ class AdUnitQueryManager(QueryManager):
               self.adunit = "Does not exist"
         return self.adunit
 
+    # TODO: this is horrible and should be removed.
     def get_adunit(self):
         if not self.adunit:
             self.get_by_key(self.key,cache=True)

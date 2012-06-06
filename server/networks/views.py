@@ -780,9 +780,16 @@ class DeleteNetworkHandler(RequestHandler):
             get_network_adgroup(campaign, adunit.key(),
                 self.account.key()).key() for adunit in adunits])
         # Mark all adgroups as deleted
+        all_creatives = []
         for adgroup in adgroups:
             adgroup.deleted = True
+
+            creatives = list(adgroup.creatives)
+            for creative in creatives:
+                creative.deleted = True
+            all_creatives += creatives
         AdGroupQueryManager.put(adgroups)
+        CreativeQueryManager.put(all_creatives)
 
         return TextResponse()
 

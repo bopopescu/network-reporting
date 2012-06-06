@@ -212,6 +212,7 @@ class CampaignQueryManager(QueryManager):
         """
         return 'mkt:%s' % account_key
 
+    # TODO: this is broken and not used anywhere.
     @classmethod
     def get_marketplace_campaign(cls, adunit=None):
         """ Returns a marketplace campaign for this adunit,
@@ -231,6 +232,7 @@ class CampaignQueryManager(QueryManager):
         else:
             return cls.add_marketplace_campaign(cls, adunit=adunit)
 
+    # TODO: this is not used anywhere.
     @classmethod
     def add_marketplace_campaign(cls, adunit=None):
             """ Adds a marketplace campagin for this adunit

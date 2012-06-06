@@ -4535,8 +4535,6 @@ form#order_and_line_item_form input.token-input-field.focused, form#order_form i
       border-top: 1px solid #EEE; }
   .inventory_table tbody tr.thick td {
     padding: 8px 10px 7px 0; }
-  .inventory_table td {
-    height: 40px !important; }
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 60px; }

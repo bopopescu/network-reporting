@@ -401,7 +401,7 @@
                 var line_items = new LineItemCollection();
                 line_items.add(line_item);
 
-                var chart_view = new CollectionChartView({
+                var chart_view = new CollectionChartView({                    
                     collection: line_items,
                     start_date: bootstrapping_data.start_date,
                     display_values: ['req', 'imp', 'clk']

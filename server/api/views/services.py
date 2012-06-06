@@ -6,30 +6,19 @@ from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager, \
         CreativeQueryManager
-from ad_network_reports.query_managers import AdNetworkLoginManager, \
-        AdNetworkMapperManager
 
-from publisher.query_managers import AdUnitQueryManager, \
-     AppQueryManager, \
-     PublisherQueryManager
-from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
+from publisher.query_managers import (AdUnitQueryManager, 
+                                      AppQueryManager)
 
-from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
-from ad_network_reports.query_managers import AdNetworkStatsManager
-
-from ad_server.optimizer.optimizer import DEFAULT_CTR
 from adserver_constants import ADSERVER_HOSTNAME
-
 from budget import budget_service
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse
-from common.utils.stats_helpers import MarketplaceStatsFetcher, \
-     SummedStatsFetcher, \
-     DirectSoldStatsFetcher, \
-     NetworkStatsFetcher, \
-     MPStatsAPIException
+from common.utils.stats_helpers import (MarketplaceStatsFetcher, 
+                                        SummedStatsFetcher,
+                                        DirectSoldStatsFetcher,
+                                        NetworkStatsFetcher)
 
 from common.constants import REPORTING_NETWORKS
 
@@ -493,7 +482,7 @@ class CampaignServiceHandler(RequestHandler):
                 stats = stats_fetcher.get_adgroup_stats(adgroup,
                                                         self.start_date,
                                                         self.end_date,
-                                                        daily=True)
+                                                        daily=False)
                 adgroup_jsonified = adgroup.toJSON()
                 adgroup_jsonified.update(stats)
                 # pacing
@@ -612,8 +601,7 @@ def get_stats_fetcher(account_key, stats_endpoint):
     if stats_endpoint == 'mpx':
         stats = MarketplaceStatsFetcher(account_key)
     elif stats_endpoint == 'direct':
-        #REFACTOR: this should be DirecSoldStatsFetcher
-        stats = SummedStatsFetcher(account_key)
+        stats = DirectSoldStatsFetcher(account_key)
     elif stats_endpoint == 'networks':
         stats = NetworkStatsFetcher(account_key)
     elif stats_endpoint == 'all':

@@ -57,9 +57,14 @@
       {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
     {{ line_item.stats.ctr|default:"--" }}
   </td>
-  <td class="conv stat"
+  <td class="stat"
       {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
-    {{ line_item.stats.ctr|default:"--" }}
+    <div class="conv">
+      {{ line_item.stats.conv|default:"--" }}
+    </div>
+    <div class="muted conv_rate">
+      ({{ line_item.stats.conv_rate|default:"--" }})
+    </div>
   </td>
   <td class="delivery stat"
       {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>

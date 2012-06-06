@@ -116,7 +116,7 @@ var mopub = window.mopub || {};
 
 
     /*
-     * # CollectionGraphView
+     * # CollectionChartView
      * Renders a collection as a graph
      */
     var CollectionChartView = Backbone.View.extend({
@@ -650,7 +650,8 @@ var mopub = window.mopub || {};
                 'fill_rate',
                 'clk',
                 'ctr',
-                'conv'
+                'conv',
+                'conv_rate'
             ];
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
@@ -663,8 +664,8 @@ var mopub = window.mopub || {};
                 + "<br /> <br />"
                 + "Targeting 3 Ad Units"
                 + "</p>";
-            popover_template = _.template(popover_template);
 
+            popover_template = _.template(popover_template);
             var popover_content = popover_template(current_model.toJSON());
 
             $(".moreinfo", row).popover({

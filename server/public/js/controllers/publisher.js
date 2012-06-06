@@ -205,6 +205,8 @@ var mopub = mopub || {};
                 .removeClass('mweb')
                 .addClass($(this).val());
         }).filter(':checked').click(); // make sure we're in sync when the page Loads
+
+        $('.radio .btn').radio()
     }
 
     function initializeEditAppForm() {
@@ -776,20 +778,6 @@ var mopub = mopub || {};
                 fetchAdunitsFromKeys(app_key);
             });
 
-            // Do Dashboard export
-            $('#publisher-dashboard-exportSelect')
-                .change(function(e) {
-                    e.preventDefault();
-                    var val = $(this).val();
-                    if (val != 'exp') {
-                        $('#dashboardExportForm')
-                .find('#appExportType')
-                            .val(val)
-                            .end()
-                            .submit();
-                    }
-                    $(this).selectmenu('index', 0);
-                });
         },
 
         initializeAppDetail: function (bootstrapping_data) {
@@ -799,25 +787,6 @@ var mopub = mopub || {};
             initializeDeleteForm();
             initializeiOSAppSearch();
             initializeDailyCounts();
-            mopub.Chart.setupDashboardStatsChart('area');
-
-            // Do Campaign Export Select stuff
-            $('#publisher-app-exportSelect')
-                .change(function(e) {
-                    e.preventDefault();
-                    var val = $(this).val();
-                    if (val != 'exp') {
-                    $('#appExportForm')
-                            .find('#appExportType')
-                            .val(val)
-                            .end()
-                            .submit();
-                    }
-                    $(this).selectmenu('index', 0);
-                });
-
-            // Hide unneeded li entry
-            $('#publisher-app-exportSelect-menu').find('li').first().hide();
 
             fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdunitsFromKeys(bootstrapping_data.app_key);
@@ -828,8 +797,6 @@ var mopub = mopub || {};
             initializeDeleteForm();
             initializeDailyCounts();
             initializeEditAdunitForm();
-
-            mopub.Chart.setupDashboardStatsChart('area');
 
             $('#advertisers-testAdServer')
                 .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })

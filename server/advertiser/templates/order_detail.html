@@ -51,9 +51,7 @@
         New Line Item
       </a>
     </div>
-    {% comment %}
-      {% filter_buttons %}
-    {% endcomment %}
+    {% filter_buttons %}
   </div>
 
   {% line_item_table order.adgroups %}
@@ -108,9 +106,9 @@
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
 
-            start_date:  Date.UTC({{ start_date.year }},
-                                  {{ start_date.month|add:"-1" }},
-                                  {{ start_date.day }})
+            start_date:  Date({{ start_date.year }},
+                              {{ start_date.month|add:"-1" }},
+                              {{ start_date.day }})
         });
     });
 </script>

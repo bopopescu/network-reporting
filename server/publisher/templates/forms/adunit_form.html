@@ -4,7 +4,15 @@
 
   {{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}
   {{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
-  {{ form.device_format }}
+<dt>
+  Device format:
+</dt>
+<dd>
+  <div class="btn-group radio">
+    <a class="btn" href="#" name="adunit-device_format" id="adunit-device_format_phone" value="phone">Phone</a>
+    <a class="btn" href="#" name="adunit-device_format" id="adunit-device_format_tablet" value="tablet">Tablet</a>
+  </div>
+</dd>
   {{ form.format|raw }}
 
   <dt class="full_only">

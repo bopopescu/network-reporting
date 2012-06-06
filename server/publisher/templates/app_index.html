@@ -54,8 +54,14 @@
           <span class="caret"></span>
         </a>
         <ul class="dropdown-menu">
-          <li> <a href="#" data-toggle="running"> XLS </a> </li>
-          <li> <a href="#" data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=xls"
+                  data-toggle="running"> XLS </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
         </ul>
       </div>
     </div>
@@ -82,13 +88,11 @@
         var graphStartDate = new Date({{ start_date.year }},
                                      {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}
                                      {{ start_date.day }});
-        var accountStats = {{ account_stats|safe }};
 
         var app_keys = {{ app_keys|safe }};
 
         DashboardController.initializeIndex({
             start_date: graphStartDate,
-            account_stats: accountStats,
             app_keys: app_keys
         });
     });

@@ -372,7 +372,7 @@ class AdGroup(db.Model):
             return "paused"
         return "running"
 
-
+        
     @property
     def pace(self):
         budget = self.budget_obj

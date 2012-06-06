@@ -775,7 +775,6 @@ var mopub = mopub || {};
 
     _.extend(AppCollection.prototype, StatsMixin);
 
-
     /*
      *  LineItem
      */

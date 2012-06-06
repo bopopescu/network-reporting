@@ -20,19 +20,10 @@
 
 {% block content %}
 {# The stats breakdown and graph #}
-<section class="offset" id="dashboard-stats">
-    <h3 class="stats-chart-title">
-        Realtime Stats for {{start_date|format_date_compact}} to
-        {{end_date|format_date_compact}}
-    </h3>
 
-    <div class="stats">
-      {#{% stats_breakdown stats %}#}
-      <div class="chart stats-chart" id="dashboard-stats-chart">
-        <img class="preload" src="/images/report-preloader.gif" />
-      </div>
-    </div>
-</section>
+  {% chart_placeholder start_date end_date %}
+  
+<br />
 
 <section>
     <h3 class="left">
@@ -118,9 +109,9 @@
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
             line_item_key: "{{ line_item.key }}",
-            start_date:  Date.UTC({{ start_date.year }},
-                                  {{ start_date.month|add:"-1" }},
-                                  {{ start_date.day }}),
+            start_date:  Date({{ start_date.year }},
+                              {{ start_date.month|add:"-1" }},
+                              {{ start_date.day }}),
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
         });

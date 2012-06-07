@@ -317,7 +317,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             if order_form.is_valid():
                 order = order_form.save()
                 order.account = self.account
-                order.is_order = True
+                order.campaign_type = 'order'
                 order.save()
                 CampaignQueryManager.put(order)
 

@@ -1,23 +1,54 @@
-
 import re
 import time
 from datetime import datetime
-from django import template
 import binascii
-from django.utils import simplejson as json
 import logging
 import string
-from common.utils.tzinfo import Pacific, utc
 
+
+from django import template
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import date as date_filter
+from django.forms import ChoiceField, FileField
+from django.utils import simplejson as json
 
 from country_codes import COUNTRY_CODE_DICT
+from common.utils.tzinfo import Pacific, utc
 
 register = template.Library()
-
 numeric_test = re.compile("^\d+$")
+
+
+@register.filter(name='field_value')
+def field_value(field):
+    """
+    Returns the value for this BoundField, as rendered in widgets.
+    """
+    if field.form.is_bound:
+        if isinstance(field.field, FileField) and field.data is None:
+            val = field.form.initial.get(field.name, field.field.initial)
+        else:
+            val = field.data
+    else:
+        val = field.form.initial.get(field.name, field.field.initial)
+        if callable(val):
+            val = val()
+    if val is None:
+        val = ''
+    return val
+
+@register.filter(name='display_value')
+def display_value(field):
+    """
+    Returns the displayed value for this BoundField, as rendered in widgets.
+    """
+    value = field_value(field)
+    if isinstance(field.field, ChoiceField):
+        for (val, desc) in field.field.choices:
+            if val == value:
+                return desc
+    return value
 
 @register.filter
 def getattribute(value, arg):

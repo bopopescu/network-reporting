@@ -27,10 +27,11 @@
             all_campaigns.push(network_campaign);
         }
 
-        // Create CampaignView and fetch mopub campaign and network
+        // Create NetworkView and fetch mopub campaign and network
         // campaign if campaign has reporting
         _.each(all_campaigns, function(campaign) {
-            new CampaignView({
+            
+            new NetworkView({
                 model: campaign
             });
 
@@ -46,9 +47,11 @@
         var network_apps = [];
         _.each(all_campaigns, function(campaign) {
             _.each(apps, function(app) {
-                var network_app = new App({id: app.id,
-                                           campaign_id: campaign.id,
-                                           stats_endpoint: campaign.get('stats_endpoint')});
+                var network_app = new App({
+                    id: app.id,
+                    campaign_id: campaign.id,
+                    stats_endpoint: campaign.get('stats_endpoint')
+                });
 
                 var app_view = new AppView({model: network_app,
                              endpoint_specific: true,
@@ -59,7 +62,7 @@
             });
         });
 
-        if(include_adunits) {
+        if (include_adunits) {
             var adunits = new AdUnitCollection();
             adunits.campaign_id = mopub_campaign.id;
             adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
@@ -117,7 +120,7 @@
                         setTimeout(hide_network_trafficChart_series, 50);//wait 50 millisecnds then recheck
                     }
                 }
-                hide_network_trafficChart_series()
+                hide_network_trafficChart_series();
             }
         });
 
@@ -143,7 +146,7 @@
             _.each(campaigns_data, function(campaign_data) {
                 var result = initialize_campaign_data(campaign_data, apps, false);
                 all_campaigns = all_campaigns.concat(result[0]);
-                network_apps = apps_by_campaign[result[0][0].id] = result[1];
+                var network_apps = apps_by_campaign[result[0][0].id] = result[1];
             });
 
             $('.show-apps').click(function() {
@@ -185,10 +188,10 @@
 
             $('.appData').hover(
                 function() {
-                    $(this).find('.edit-link').show()
+                    $(this).find('.edit-link').show();
                 },
                 function() {
-                    $(this).find('.edit-link').hide()
+                    $(this).find('.edit-link').hide();
                 }
             );
 
@@ -463,7 +466,7 @@
                     }
 
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
-                    var tbody = $(this).closest('tbody')
+                    var tbody = $(this).closest('tbody');
                     var input = tbody.find('.app-cpm-input input');
                     // change app level cpm
                     input.val(cpm);
@@ -506,7 +509,7 @@
                             $('#loading').hide();
                             if(jsonData.success) {
                                 if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
-                                    data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
+                                    var data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
 
                                     $.ajax({url: 'https://checklogincredentials.mopub.com',
                                         data: data,
@@ -566,7 +569,7 @@
                             // Remove the form.
                             $('#form-to-submit').remove();
                         }
-                        data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
+                    data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
 
                         // Check if data submitted in the form is valid login
                         // information for the ad network
@@ -691,7 +694,7 @@
             $('.pub-id-edit').click(function (event) {
                 event.preventDefault();
                 $(this).hide();
-                var div = $(this).siblings('.pub-id-input')
+                var div = $(this).siblings('.pub-id-input');
                 div.show();
                 div.find('input').addClass('initialized');
             });
@@ -710,7 +713,7 @@
                 var input_div = $(this).closest('.pub-id-input');
                 input_div.hide();
 
-                var value = input_div.children('input').val()
+                var value = input_div.children('input').val();
                 if (value) {
                     $(this).closest('td').find('.pub-id-edit').text(value);
                 } else {
@@ -721,7 +724,7 @@
 
 
             /* Setting cpm, custom_html and custom_native */
-            var fields = [['cpm', 'input']]
+            var fields = [['cpm', 'input']];
             if(network_type == 'custom') {
                 fields.push(['custom_html', 'textarea']);
             } else if(network_type == 'custom_native') {
@@ -775,9 +778,9 @@
                 });
 
                 $('.app-' + field + '-close').click(function (event) {
-                    event.preventDefault;
+                    event.preventDefault();
                     if($('.global-' + field + '-input').is(':hidden')) {
-                        elements = $(this);
+                        var elements = $(this);
                     } else {
                         $('.global-' + field + '-input').hide();
                         $('.global-' + field + '-close').show();
@@ -785,7 +788,7 @@
                         $('.app-' + field + '-input').show();
                         $('.app-' + field + '-close').hide();
 
-                        elements = $('.app-' + field + '-close');
+                        var elements = $('.app-' + field + '-close');
                     }
 
                     elements.each(function() {
@@ -827,7 +830,7 @@
                 });
 
                 $('.global-' + field + '-close').click(function (event) {
-                    event.preventDefault;
+                    event.preventDefault();
                     // copy value of first adunit to all field inputs
                     var value = $('.' + field + '-input ' + type).val();
                     $('.global-' + field + '-input ' + type).val(value);
@@ -912,8 +915,12 @@
                 }
             });
 
-            var MODAL_FIELDS = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
-                ['hourly_frequency_cap', '/h']]);
+            var MODAL_FIELDS = ([
+                ['allocation_percentage', '%, '],
+                ['daily_frequency_cap', '/d '],
+                ['hourly_frequency_cap', '/h']
+            ]);
+            
             var ALL_KEYS = _.keys(app_for_adunit).concat(_.keys(adunits_for_app)).concat(['global']);
             function check_global(text, global_values) {
                 // text and global_values are candidates for global values
@@ -961,11 +968,11 @@
                     }
                 });
                 if(!text) {
-                    text = "None"
+                    text = "None";
                 }
 
                 if($(row).hasClass('adunit-row')) {
-                    app_key = app_for_adunit[key];
+                    var app_key = app_for_adunit[key];
                     // adunit level
                     $('#' + key + '-options-edit').text(text);
 
@@ -1051,8 +1058,8 @@
             // mimic an entry for each adunit to prepopulate settings
             // at app and global levels
             _.each(_.flatten(_.values(adunits_for_app)), function(adunit_key) {
-                adunit_row = $('#' + adunit_key + '-row')
-
+                var adunit_row = $('#' + adunit_key + '-row')
+                
                 // prepopulate advanced options modals
                 var modal_div = $('#' + adunit_key +'-options');
                 modal_ok(adunit_row, modal_div);
@@ -1128,7 +1135,7 @@
             }).filter(':checked').click();
 
         }
-    }
+    };
 
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
@@ -1163,7 +1170,7 @@
             });
 
             // create campaigns collection
-            campaigns = new Campaigns(all_campaigns);
+            var campaigns = new Campaigns(all_campaigns);
 
             new NetworkGraphView({
                 collection: campaigns,
@@ -1175,7 +1182,7 @@
             initialize_show_network();
 
             $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" } })
+                .button({ icons: { primary: "ui-icon-wrench" }});
 
             $('#delete-network')
                 .click(function () {
@@ -1207,7 +1214,7 @@
             $('#network-editActive-menu').find('li').first().hide();
 
             }
-    }
+    };
 
     window.NetworkDetailsController = NetworkDetailsController;
     window.NetworksController = NetworksController;

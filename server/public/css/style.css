@@ -5009,7 +5009,7 @@ tbody.global-settings {
 /*
  * Alerts
  */
-.close {
+div.close {
   filter: alpha(opacity=20);
   -khtml-opacity: 0.2;
   -moz-opacity: 0.2;
@@ -5020,7 +5020,7 @@ tbody.global-settings {
   font-size: 20px;
   font-weight: bold;
   text-shadow: 0 1px 0 white; }
-  .close:hover {
+  div.close:hover {
     filter: alpha(opacity=40);
     -khtml-opacity: 0.4;
     -moz-opacity: 0.4;

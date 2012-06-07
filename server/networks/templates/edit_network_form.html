@@ -1,6 +1,5 @@
 {% extends 'advertiser/base.html' %}
 
-{% load fields %}
 {% load filters %}
 
 {% block dateButtons %}
@@ -15,7 +14,7 @@
 {% block titleBarRight %}
 {% if login_form %}
 <span id="title-bar-button" class="titlebar-right{% if network.show_login %} hidden{% endif %}">
-    <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
+    <a class="btn" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
 </span>
 {% endif %}
 {% endblock titleBarRight %}
@@ -69,14 +68,14 @@
                 {% endif %}
 
                 <div class="form-submit login-credentials-submit">
-                    <a class="submit button">
+                    <a class="submit btn">
                         {% if network.name == "mobfox" %} 
                         Turn on Reporting
                         {% else %}
                         Check and Save Credentials
                         {% endif %}
                     </a>
-                    <a class="cancel button">No Thanks</a>
+                    <a class="cancel btn">No Thanks</a>
                 </div>
                 <div class="form-submit login-credentials-settings hidden">
                     <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
@@ -124,7 +123,7 @@
             </ul>
 
             <div style="margin-top:15px">
-                <a class="button" id="advanced">Show Advanced Targeting</a>
+                <a class="btn" id="advanced">Show Advanced Targeting</a>
             </div>
         </div>
     </fieldset>
@@ -269,14 +268,14 @@
             {% endif %}
 
             <div class="form-submit login-credentials-submit">
-                <a class="submit button">
+                <a class="submit btn">
                     {% if network.name == "mobfox" %} 
                     Turn on Reporting
                     {% else %}
                     Check and Save Credentials
                     {% endif %}
                 </a>
-                <a class="cancel button">No Thanks</a>
+                <a class="cancel btn">No Thanks</a>
             </div>
             <div class="form-submit login-credentials-settings hidden">
                 <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
@@ -290,7 +289,7 @@
         <table class="inventory_table">
             <thead>
                 <tr>
-                    <td class="icon"></td>
+                    <td class="icon" style="width:90px;"></td>
                     <td class="name"></td>
                     <td class="name">
                         Enabled
@@ -555,8 +554,8 @@
         <div id="loading" class="hidden">
             <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
         </div>
-        <a class="button" id="submit" href="#">Save</a>
-        <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
+        <a class="btn" id="submit" href="#">Save</a>
+        <a class="btn" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
 
 
@@ -597,8 +596,8 @@
                 </fieldset>
             </div>
             <div class="modal-footer">
-                <a class="button save" href="#">Ok</a>
-                <a class="button close" href="#">Cancel</a>
+                <a class="btn save" href="#">Ok</a>
+                <a class="btn close" href="#">Cancel</a>
             </div>
         </div>
         {% for app in apps %}
@@ -636,8 +635,8 @@
                     </fieldset>
                 </div>
                 <div class="modal-footer">
-                    <a class="button save" href="#">Ok</a>
-                    <a class="button close" href="#">Cancel</a>
+                    <a class="btn save" href="#">Ok</a>
+                    <a class="btn close" href="#">Cancel</a>
                 </div>
             </div>
             {% for adunit in app.adunits %}
@@ -669,8 +668,8 @@
                     </fieldset>
                 </div>
                 <div class="modal-footer">
-                    <a class="button save" href="#">Ok</a>
-                    <a class="button close" href="#">Cancel</a>
+                    <a class="btn save" href="#">Ok</a>
+                    <a class="btn close" href="#">Cancel</a>
                 </div>
             </div>
             {% endfor %}
@@ -680,32 +679,33 @@
 </form>
 {% endblock content %}
 
+
 {% block extraScripts %}
-{% include_style "bootstrap" %}
-{% include_script "libs/bootstrap.min.js" %}
-{% include_script "controllers/networks" %}
-<script type="text/javascript">
+
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/networks" %}
+  <script type="text/javascript">
     $(function () {
-            EditNetworkController.initialize({
-                network_type: '{{ network.name }}',
-                pretty_name: '{{ network.pretty_name }}',
-                adunits_for_app: {
+        EditNetworkController.initialize({
+            network_type: '{{ network.name }}',
+            pretty_name: '{{ network.pretty_name }}',
+            adunits_for_app: {
                 {% for app in apps %}
-                    '{{ app.key }}': [{% for adunit in app.adunits %}'{{ adunit.key }}', {% endfor %}],
+                '{{ app.key }}': [{% for adunit in app.adunits %}'{{ adunit.key }}', {% endfor %}],
                 {% endfor %}},
-                app_for_adunit: {
+            app_for_adunit: {
                 {% for app in apps %}
                 {% for adunit in app.adunits %}
                 '{{ adunit.key }}': '{{ app.key }}',
                 {% endfor %}
                 {% endfor %}},
-                account_key: '{{ account_key }}',
-                priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
-                city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},
-                login_state: {{ network.login_state }},
-                LoginStates: {{ LoginStates|safe }},
-            });
+            account_key: '{{ account_key }}',
+            priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
+            city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},
+            login_state: {{ network.login_state }},
+            LoginStates: {{ LoginStates|safe }},
+        });
     });
-</script>
+  </script>
 {% endblock extraScripts %}
 

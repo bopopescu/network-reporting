@@ -871,7 +871,6 @@ if (window.console === undefined) {
     };
 
     Chart.setupDashboardStatsChart = function() {
-        debugger;
         var seriesType = 'area';
 
         // get active metric from breakdown
@@ -896,9 +895,6 @@ if (window.console === undefined) {
             return;
         }
         
-        console.log('activedata');
-        console.log(activeData);
-
         $.each(activeData, function(i, seriesObject) {
             var seriesName, seriesData, seriesLineWidth;
             var seriesColor = colors[i];

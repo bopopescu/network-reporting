@@ -14,7 +14,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import (
     render_to_response,
-    render_to_string, 
+    render_to_string,
     HttpResponse,
     JSONResponse
 )
@@ -229,7 +229,7 @@ class AppDetailHandler(RequestHandler):
             'networks': []
         }
 
-        
+
 @login_required
 def app_detail(request, *args, **kwargs):
     handler = AppDetailHandler(id="app_key", template='publisher/app.html')
@@ -251,7 +251,7 @@ class AdUnitDetailHandler(RequestHandler):
         # write response
         return {
             'site': adunit,
-            'adunit': adunit,            
+            'adunit': adunit,
             'adunit_form_fragment': adunit_form_fragment,
         }
 
@@ -422,7 +422,7 @@ def adunit_update_ajax(request, *args, **kwargs):
     return AdUnitUpdateAJAXHandler()(request, *args, **kwargs)
 
 
-    
+
 class DeleteAppHandler(RequestHandler):
     """
     Deletes an app and redirects to the app index.
@@ -449,7 +449,7 @@ class DeleteAppHandler(RequestHandler):
 @login_required
 def delete_app(request, *args, **kwargs):
     return DeleteAppHandler()(request, *args, **kwargs)
-    
+
 
 class DeleteAdUnitHandler(RequestHandler):
     """
@@ -473,7 +473,7 @@ class DeleteAdUnitHandler(RequestHandler):
 @login_required
 def delete_adunit(request, *args, **kwargs):
     return DeleteAdUnitHandler()(request, *args, **kwargs)
-    
+
 
 class IntegrationHelpHandler(RequestHandler):
     """
@@ -501,19 +501,19 @@ def integration_help(request, *args, **kwargs):
 #############
 # Exporting #
 #############
-    
+
 class InventoryExporter(RequestHandler):
 
     def get(self):
 
         export_type = self.request.GET.get('type', 'csv')
-        
+
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
         logging.warn(apps_dict)
         app_data = [(app.name, str(app.key())) for app in apps_dict.values()]
 
-        headers = ('adunit_name', 'adunit_key')        
-        data_to_export = tablib.Dataset(headers=headers)        
+        headers = ('adunit_name', 'adunit_key')
+        data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(app_data)
 
         return HttpResponse(getattr(data_to_export, export_type))
@@ -526,20 +526,20 @@ def inventory_exporter(request, *args, **kwargs):
 class AppExporter(RequestHandler):
 
     def get(self):
-        
+
         export_type = self.request.GET.get('type', 'csv')
-        
+
         apps_dict = PublisherQueryManager.get_apps_dict_for_account(self.account)
         app_data = [(app.name, str(app.key())) \
                     for app in apps_dict.values()]
 
-        headers = ('app_name', 'app_key')        
-        data_to_export = tablib.Dataset(headers=headers)        
+        headers = ('app_name', 'app_key')
+        data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(app_data)
 
         return HttpResponse(getattr(data_to_export, export_type))
 
-        
+
 @login_required
 def app_exporter(request, *args, **kwargs):
     return AppExporter()(request, *args, **kwargs)
@@ -548,15 +548,15 @@ def app_exporter(request, *args, **kwargs):
 class AdunitExporter(RequestHandler):
 
     def get(self):
-        
+
         export_type = self.request.GET.get('type', 'csv')
-        
+
         adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(self.account)
         adunit_data = [(adunit.name, str(adunit.key())) \
                     for adunit in adunits_dict.values()]
 
-        headers = ('adunit_name', 'adunit_key')        
-        data_to_export = tablib.Dataset(headers=headers)        
+        headers = ('adunit_name', 'adunit_key')
+        data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(adunit_data)
 
         return HttpResponse(getattr(data_to_export, export_type))
@@ -564,12 +564,12 @@ class AdunitExporter(RequestHandler):
 @login_required
 def adunit_exporter(request, *args, **kwargs):
     return AdunitExporter()(request, *args, **kwargs)
-        
-    
+
+
 ##################
 # Helper methods #
 ##################
-    
+
 def enable_networks(adunit, account):
     """
     Create network adgroups for this adunit for all ad networks.
@@ -626,13 +626,14 @@ def add_demo_campaign(site):
     c = Campaign(name="MoPub Demo Campaign",
                  u=site.account.user,
                  account=site.account,
-                 campaign_type="backfill_promo",
+                 campaign_type="order",
                  description=demo_description)
     CampaignQueryManager.put(c)
 
     # Set up a test ad group for this campaign
     ag = AdGroup(name="MoPub Demo Campaign",
                  campaign=c,
+                 adgroup_type="backfill_promo",
                  account=site.account,
                  priority_level=3,
                  bid=1.0,

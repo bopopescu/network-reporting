@@ -202,6 +202,7 @@ class CampaignQueryManager(QueryManager):
             return Campaign.get_by_key_name(c_key_name)
         return Campaign(key_name=c_key_name,
                         advertiser='marketplace',
+                        campaign_type='marketplace',
                         name='MarketPlace',
                         account=account_key)
 

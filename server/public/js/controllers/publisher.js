@@ -205,8 +205,6 @@ var mopub = mopub || {};
                 .removeClass('mweb')
                 .addClass($(this).val());
         }).filter(':checked').click(); // make sure we're in sync when the page Loads
-
-        $('.radio .btn').radio()
     }
 
     function initializeEditAppForm() {
@@ -294,12 +292,17 @@ var mopub = mopub || {};
      */
     function initializeNewAdunitForm() {
 
+        function activate ( element, container ) {
+            container.find('.active').removeClass('active');
+            element.addClass('active');
+        }
 
         $("#adunit-device_format_phone").click(function(e){
             $('#adForm-tablet-container').hide();
             $('#adForm-phone-container')
                 .show()
                 .find('input[type="radio"]')[0].click();
+            activate($(this), $(this).parent());
         });
 
         // Click handler for the tablet format
@@ -308,6 +311,8 @@ var mopub = mopub || {};
             $('#adForm-tablet-container')
                 .show()
                 .find('input[type="radio"]')[0].click();
+            activate($(this), $(this).parent());
+
         });
 
         // Slide up/down handler for the form div
@@ -465,9 +470,8 @@ var mopub = mopub || {};
 
                 setDefaultAdUnitName($(this).attr("id"));
 
-            }).first().click(); //initialize by activating the first
+            }); //initialize by activating the first
         });
-
         //initialize checked elements
         $("#adunit-device_format_phone").parent().children()
             .filter(':checked')

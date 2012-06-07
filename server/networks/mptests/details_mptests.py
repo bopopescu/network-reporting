@@ -13,8 +13,7 @@ from django.core.urlresolvers import reverse
 from common.utils.test.test_utils import dict_eq, \
         confirm_all_models
 from common.constants import NETWORKS
-from networks.mptests.network_test_case import NetworkTestCase, \
-        DEFAULT_BID
+from networks.mptests.network_test_case import NetworkTestCase
 
 from ad_network_reports.models import LoginStates
 
@@ -54,15 +53,15 @@ class NetworkDetailsTestCase(NetworkTestCase):
                                      'login_state': LoginStates.NOT_SETUP,
                                      'reporting': False,
                                      'targeting': 'All',
-                                     'min_cpm': DEFAULT_BID,
-                                     'max_cpm': DEFAULT_BID,},
+                                     'min_cpm': None,
+                                     'max_cpm': None,},
                                      exclude=['apps'])
 
         eq_(len(context['network']['apps']), len(self.existing_apps))
 
         # The apps should have the right bids.
         for app, app_bid in context['network']['apps']:
-            dict_eq(app_bid, {'min_cpm': DEFAULT_BID, 'max_cpm': DEFAULT_BID})
+            dict_eq(app_bid, {'min_cpm': None, 'max_cpm': None})
 
         # TODO: This is essentially the same as context['network']['apps'] and should be refactored.
         eq_(len(context['apps']), len(self.existing_apps))

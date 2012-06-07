@@ -70,6 +70,7 @@ class Campaign(db.Model):
     # date of creation
     created = db.DateTimeProperty(auto_now_add=True)
 
+    # is this a campaign for direct sold (an order), marketplace, or networks?
     campaign_type = db.StringProperty(choices=['order',
                                                'marketplace',
                                                'network'])
@@ -105,15 +106,6 @@ class Campaign(db.Model):
     @property
     def has_daily_budget(self):
         return self.budget and self.budget_type == 'daily'
-
-    @property
-    def campaign_type(self):
-        """
-        HACK: This property is an alias for network_type to resolve conflicts
-        with Tiago's new networks app. The real fix is to change all references
-        to `campaign_type` with `network_type`.
-        """
-        return self.network_type
 
     @property
     def has_full_budget(self):

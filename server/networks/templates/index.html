@@ -11,7 +11,7 @@
 {% block titleBarRight %}
 {% if reporting %}
 <span class="titlebar-right">
-    <a class="button" id="network-settingsButton" href="#">Daily report settings</a>
+    <a class="btn" id="network-settingsButton" href="#">Daily report settings</a>
 </span>
 {% endif %}
 {% endblock titleBarRight %}
@@ -23,28 +23,30 @@
 </div>
 {% endif %}
 <section id="network-settingsForm" class="hidden">
-<div>
+  <div>
     <form accept-charset="ascii" id="networkForm" class="settingsForm">
-        <fieldset id="networkForm-details" class="alt">
-            <div id="settings-form-message" class="hidden alert-message block-message warning"></div>
-            <div>
-                <dl class="formFields" style="margin:0">
-                    <dt> E-mail: </dt>
-                    <dd> <input name="email" type="checkbox" {% if settings.email %} checked="true" {% endif %}/> &nbsp;Send me a daily ad network revenue report</dd>
-                    <dt> Recipients: </dt>
-                    <dd>
-                    <textarea name="recipients" rows="3" cols="80">{{settings.recipients}}</textarea>
-                    </dd>
-                </dl>
-            </div>
-            <div class="form-submit" style="clear:both;">
-                <span class="hidden" id="networkSettingsForm-loading"><img src="/images/loading2.gif"/></span>
-                <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-cancel">Cancel</a></span>
-                <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-submit">Save</a></span>
-            </div>
-        </fieldset>
+      <fieldset id="networkForm-details" class="alt">
+        <div id="settings-form-message" class="hidden alert-message block-message warning"></div>
+        <div>
+          <dl class="formFields" style="margin:0">
+            <dt> E-mail: </dt>
+            <dd> <input name="email" type="checkbox" {% if settings.email %} checked="true" {% endif %}/> &nbsp;Send me a daily ad network revenue report</dd>
+            <dt> Recipients: </dt>
+            <dd>
+              <textarea name="recipients" rows="3" cols="80">{{settings.recipients}}</textarea>
+            </dd>
+          </dl>
+        </div>
+        <div class="form-submit" style="clear:both;">
+          <span class="hidden" id="networkSettingsForm-loading">
+            <img src="/images/loading2.gif"/>
+          </span>
+          <a href="#" class="btn" id="networkSettingsForm-cancel">Cancel</a>          
+          <a href="#" class="btn" id="networkSettingsForm-submit">Save</a>
+        </div>
+      </fieldset>
     </form>
-</div>
+  </div>
 </section>
 {% endblock preContent %}
 
@@ -117,7 +119,7 @@ Make a table for ad networks that are active
                             </a>
                         </div>
                         <div style="clear: both;">
-                            <a class="show-apps button button-small" id="{{network.key}}" style="width:75px;">Show Apps</a>
+                            <a class="show-apps btn" id="{{network.key}}" style="width:75px;">Show Apps</a>
                         </div>
                     </td>
                     {% if network.reporting %}
@@ -319,7 +321,7 @@ Make a table for ad networks that are active
         </tbody>
     </table>
 
-    <a class="dailyCount-toggleButton button" href="#">Show details</a>
+    <a class="dailyCount-toggleButton btn" href="#">Show details</a>
 </div>
 
 </section>
@@ -332,20 +334,20 @@ Make a table for the main ad networks that are not setup
 <section id="dashboard-apps">
 <h2>Set Up Ad Networks</h2>
 {% for network in networks_to_setup %}
-<div class="appData appData-alt">
+  <div class="appData appData-alt">
     <table class="dataTable appData-main">
-        <tbody>
-            <tr id="{{network.name}}-row">
-                <td class="networkData-icon">
-                    <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                </td>
-                <td>
-                    <a class="show-status button button-small" href="{% url edit_network network=network.name %}">Set up {{network.pretty_name}}</a>
-                </td>
-            </tr>
-        </tbody>
+      <tbody>
+        <tr id="{{network.name}}-row">
+          <td class="networkData-icon">
+            <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+          </td>
+          <td>
+            <a class="show-status btn btn-small" href="{% url edit_network network=network.name %}">Set up {{network.pretty_name}}</a>
+          </td>
+        </tr>
+      </tbody>
     </table>
-</div>
+  </div>
 {% endfor %}
 </section>
 
@@ -365,16 +367,17 @@ Make a table for the main ad networks that are not setup
 {{ block.super }}
 <script>
     $(function () {
-        var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
+        var graph_start_date = {{ start_date|js_date }};
 
         NetworksController.initialize({
-            campaigns_data: [{% for network in networks %}{'id': '{{ network.key }}',
-                                                           'network': '{{ network.name }}',
-                                                           'reporting': {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
-            apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
-            date_range: {{ date_range }},
-            graph_start_date: graph_start_date,});
-
+        campaigns_data: [{% for network in networks %}{
+          'id': '{{ network.key }}',
+          'network': '{{ network.name }}',
+          'reporting': {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
+          apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
+          date_range: {{ date_range }},
+          graph_start_date: graph_start_date,
+          });
     });
 </script>
 {% endblock extraScripts %}

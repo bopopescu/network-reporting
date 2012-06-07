@@ -423,44 +423,6 @@ class CampaignServiceHandler(RequestHandler):
         return JSONResponse({'error': 'Not yet implemented'})
 
 
-class CampaignService(RequestHandler):
-    """
-    API Service for delivering serialized AdGroup data
-    """
-    def get(self, campaign_key):
-        #try:
-        campaign = CampaignQueryManager.get(campaign_key)
-
-        # REFACTOR
-        # ensure the owner of this campaign is the request's
-        # current user
-        if not campaign or campaign.account.key() != self.account.key():
-            raise Http404
-
-        # Get the stats for the campaign
-        stats_endpoint = self.request.GET.get('endpoint', 'all')
-        stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
-        campaign_stats = stats_fetcher.get_campaign_stats(campaign_key,
-                                                          self.start_date,
-                                                          self.end_date)
-
-        return JSONResponse(campaign_stats)
-    #except Exception, exception:
-            #return JSONResponse({'error': str(exception)})
-
-
-    def post(self, *args, **kwagrs):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-
-    def put(self, *args, **kwagrs):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-
-    def delete(self, *args, **kwagrs):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-
 @login_required
 def campaign_service(request, *args, **kwargs):
     return CampaignServiceHandler()(request, use_cache=False, *args, **kwargs)    

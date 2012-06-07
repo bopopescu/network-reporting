@@ -600,6 +600,42 @@ var mopub = window.mopub || {};
         }
     });
 
+    /*
+     * ## CampaignView
+     * Parameters:
+     * * model: Campaign
+     */
+    var NetworkView = Backbone.View.extend({
+        initialize: function () {
+            this.model.bind('change', this.render, this);
+        },
+        render: function () {
+            var metrics = ['att', 'imp', 'fill_rate', 'clk', 'ctr'];
+            var this_view = this;
+            var row = $("tr#" + this_view.model.id + "-row");
+
+            if (this_view.model.get('stats_endpoint') == 'networks') {
+                var selector = ' .network-data';
+
+                $('.rev', row).text(this_view.model.get_formatted_stat('rev'));
+                $('.cpm' + selector, row).text(this_view.model.get_formatted_stat('cpm'));
+            } else {
+                var selector = ' .mopub-data';
+            }
+
+            _.each(metrics, function (metric) {
+                var stat = this_view.model.get_stat(metric);
+                if ((stat || stat == 0) && (this_view.model.get('stats_endpoint') != 'networks'
+                        || this_view.model.get('network') != 'mobfox' || (metric != 'att' 
+                        && metric != 'fill_rate'))) {
+                    $('.' + metric + selector, row).text(this_view.model.get_formatted_stat(metric));
+                }
+            });
+
+            return this;
+        }
+    });
+    
     var OrderView = Backbone.View.extend({
         initialize: function () {
             try {
@@ -673,6 +709,8 @@ var mopub = window.mopub || {};
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
 
+    window.NetworkView = NetworkView;
+    
     window.LineItemView = LineItemView;
     window.OrderView = OrderView;
 

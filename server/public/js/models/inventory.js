@@ -509,7 +509,7 @@ var mopub = mopub || {};
         },
         parse: function(response) {
             if (response) {
-                var campaign_data = response.sum;
+                var campaign_data = response[0].sum;
                 campaign_data.daily_stats = response.daily_stats;
 
                 // REFACTOR attempts vs requests

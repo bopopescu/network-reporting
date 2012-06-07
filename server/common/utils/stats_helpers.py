@@ -140,11 +140,14 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                                  days=days)
         return self.format_stats(stats)
             
-    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        # mongo
-        campaign = CampaignQueryManager.get(campaign_key)
-        campaign_stats = self._get_campaign_stats(start, end, campaign,
-                daily=True)
+    def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
+        
+        if isinstance(campaign, str):
+            campaign = CampaignQueryManager.get(campaign)
+            
+        campaign_stats = self._get_campaign_stats(start, end,
+                                                  campaign,
+                                                  daily=True)
         return campaign_stats
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):

@@ -93,7 +93,7 @@ def generate_campaign(account, put=False, **kwargs):
     defaults = {
         'account': account,
         'name': 'Test Campaign',
-        'campaign_type': 'gtee',
+        'campaign_type': 'order',
     }
     return _generate_model_instance(Campaign, put, defaults, **kwargs)
 

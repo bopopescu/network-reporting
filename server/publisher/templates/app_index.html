@@ -82,18 +82,14 @@
   {% include_template "adunit" %}
   {% include_template "chart" %}
   
-  {% include_script 'models/inventory' %}
-  {% include_script 'views/inventory' %}
-  {% include_script 'controllers/publisher' %}
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/publisher" %}
   <script>
     var mopub = mopub || {};
     $(function() {
-        var graphStartDate = new Date({{ start_date.year }},
-                                     {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}
-                                     {{ start_date.day }});
-
+        var graphStartDate = {{ start_date|js_date}};
         var app_keys = {{ app_keys|safe }};
-
         DashboardController.initializeIndex({
             start_date: graphStartDate,
             app_keys: app_keys

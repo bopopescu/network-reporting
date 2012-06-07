@@ -93,14 +93,15 @@
 
 {% block extraScripts %}
 
-  <script type="text/html" id="chart-template">
-    {% include "common/partials/chart.html" %}
-  </script>
+ 
+  {% include_template "chart" %}
+  {% include_template "popover" %}
   
-{% include_script "models/inventory" %}
-{% include_script "views/inventory" %}
-{% include_script "controllers/orders" %}
-<script type="text/javascript">
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+  
+  <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeOrderDetail({

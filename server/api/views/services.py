@@ -91,10 +91,7 @@ class AppService(RequestHandler):
                                         self.start_date,
                                         self.end_date)
             app.update(s)
-
-            
-        logging.warn("\n\n\n\n\n\n\n?")
-        logging.warn(apps)
+                                                            
         return JSONResponse(apps)
 
 
@@ -182,9 +179,6 @@ class AdUnitService(RequestHandler):
 
             # Update each app with stats from the selected endpoint
             for adunit in response:
-                logging.warn('\n\n\n\n\n\n\n\n')
-                logging.warn(adunit['id'])
-                logging.warn(campaign_key)
                 adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
                                                                         campaign_key,
                                                                         self.start_date,
@@ -246,63 +240,6 @@ class AdUnitService(RequestHandler):
                     logging.warn(e)
                     adunit.update(active = False)
                     
-            return JSONResponse(response)
-
-        # If an adgroup key was specified instead of an app key,
-        # then we'll only get stats data from that adgroup. AdUnit
-        # stats will only reflect how adunits performed in that
-        # adgroup.
-        # elif adgroup_key:
-        #     adgroup = AdGroupQueryManager.get(adgroup_key)
-
-        #     # REFACTOR
-        #     # ensure the owner of this adgroup is the request's
-        #     # current user
-        #     if adgroup.account.key() != self.account.key():
-        #         raise Http404
-
-        #     adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
-        #     response = [adunit.toJSON() for adunit in adunits]
-
-        #     # Update each app with stats from the selected endpoint
-        #     for adunit in response:
-        #         adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
-        #                                                                adgroup_key,
-        #                                                                self.start_date,
-        #                                                                self.end_date)
-
-        #         # We update with the app and adgroup id/key because our
-        #         # backbone models often need it for reference
-        #         adunit_stats.update({'app_id': str(adunit['app_key'])})
-        #         adunit.update(adunit_stats)
-
-        #     return JSONResponse(response)
-
-        # elif campaign_key:
-        #     campaign = CampaignQueryManager.get(campaign_key)
-
-        #     # REFACTOR
-        #     # ensure the owner of this campaign is the request's
-        #     # current user
-        #     if campaign.account.key() != self.account.key():
-        #         raise Http404
-
-        #     adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
-
-        #     response = [adunit.toJSON() for adunit in adunits]
-
-        #     # Update each app with stats from the selected endpoint
-        #     for adunit in response:
-        #         adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
-        #                                                                campaign,
-        #                                                                self.start_date,
-        #                                                                self.end_date)
-
-        #         # We update with the app and adgroup id/key because our
-        #         # backbone models often need it for reference
-        #         adunit_stats.update({'app_id': str(adunit['app_key'])})
-        #         adunit.update(adunit_stats)
-
             return JSONResponse(response)
 
         else:
@@ -379,43 +316,6 @@ class AdGroupServiceHandler(RequestHandler):
         # current user
         if adgroup.account.key() != self.account.key():
             raise Http404
-
-            api_dict = dict(key = str(adgroup.campaign.key()),
-                            key_type = 'campaign',
-                            )
-            qs = urllib.urlencode(api_dict)
-
-            to_adserver = 'http://' + ADSERVER_HOSTNAME
-            pacing_url = to_adserver + REMOTE_PACING_URL + '?' + qs
-            try:
-                pacing_data = simplejson.loads(urllib2.urlopen(pacing_url).read())
-                #adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
-                adgroup.pace = pacing_data['pacing']
-            except:
-                adgroup.pace = None
-
-            if adgroup.pace:
-                summed_stats.pace = adgroup.pace[1]
-                if adgroup.pace[0] == "Pacing":
-                    if summed_stats.pace < .5:
-                        summed_stats.pace_type = "pace-failure"
-                    elif summed_stats.pace < .85:
-                        summed_stats.pace_type = "pace-warning"
-                    else:
-                        summed_stats.pace_type = "pace-success"
-                else:
-                    summed_stats.pace_type = "delivery"
-
-            delivered_url = to_adserver + REMOTE_DELIVERED_URL + '?' + qs
-
-            try:
-                delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
-                percent_delivered = delivered_data['percent_delivered']
-                summed_stats.percent_delivered = percent_delivered
-                adgroup.percent_delivered = percent_delivered
-                summed_stats.status = adgroup.status
-            except:
-                pass
 
         # Where are we getting stats from?
         # Choices are 'mpx', 'direct', 'networks', or 'all'
@@ -495,9 +395,11 @@ class CampaignServiceHandler(RequestHandler):
 
                 campaign_jsonified['adgroups'].append(adgroup_jsonified)
 
-            # Get the top level stats for the campaign by summing whats
-            # in the adgroups
-            campaign_jsonified.update(sum_campaign_stats(campaign_jsonified))
+            # Get the top level stats for the campaign 
+            campaign_jsonified.update(stats_fetcher.get_campaign_stats(campaign,
+                                                                   self.start_date,
+                                                                   self.end_date,
+                                                                   daily=True))
     
             campaigns_jsonified.append(campaign_jsonified)
 

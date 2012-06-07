@@ -98,7 +98,7 @@
     {% order_table orders %}
 
     <br />
-    
+
     <div class="right">
       <div class="btn-group">
         <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
@@ -106,11 +106,24 @@
           <span class="caret"></span>
         </a>
         <ul class="dropdown-menu">
-          <li> <a href="#" data-toggle="running"> XLS </a> </li>
-          <li> <a href="#" data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
         </ul>
       </div>
-    </div>
+    </div>       
+
   </div>
   
   
@@ -143,23 +156,35 @@
 
     <div class="right">
       <div class="btn-group">
-        <a class="btn" href="#"><i class="icon-download-alt"></i> Export</a>
+        <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
           <span class="caret"></span>
         </a>
         <ul class="dropdown-menu">
-          <li> <a href="#" data-toggle="export-xls"> XLS </a> </li>
-          <li> <a href="#" data-toggle="export-csv"> CSV </a> </li>
-          <li> <a href="#" data-toggle="export-json"> JSON </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
         </ul>
       </div>
-    </div>
-   
+    </div>       
   </div>
     
 {% endblock content %}
 
 {% block extraScripts %}
+
+  {% include_template "popover" %}
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}

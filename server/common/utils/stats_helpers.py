@@ -265,6 +265,16 @@ class DirectSoldStatsFetcher(AbstractStatsFetcher):
         else:
             return self.format_stats(stats)
 
+
+    def get_campaign_stats(self, campaign, start, end, daily=True):
+
+        if isinstance(campaign, str):
+            campaign = CampaignQueryManager.get(campaign)
+            
+        campaign_stats = self._get_advertiser_stats(start, end,
+                                                    advertiser=campaign,
+                                                    daily=daily)
+        return campaign_stats
         
     def get_adgroup_stats(self, adgroup, start, end, daily=True):
         

@@ -71,9 +71,11 @@
         text-overflow: ellipsis;
         overflow: hidden;
     }
-    td.type, th.type, td.goal, th.goal {
+    td.type, th.type,
+    td.goal, th.goal,
+    th.delivery, td.delivery {
         text-align: right;
-        width: 60px;
+        width: 55px;
     }
     td.name, th.name {
         width: 230px;

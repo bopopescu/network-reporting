@@ -25,7 +25,7 @@ from advertiser.models import Campaign, \
         NetworkStates
 from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
-from reporting.models import StatsModel, GEO_COUNTS
+from reporting.models import StatsModel
 from account.models import NetworkConfig
 
 ## Query Managers
@@ -249,14 +249,7 @@ class CreateAppHandler(RequestHandler):
         }
 
     def post(self):
-        app = None
-        if self.request.POST.get("app_key"):
-            app = AppQueryManager.get(self.request.POST.get("app_key"))
-            app_form = AppForm(data=self.request.POST,
-                               files=self.request.FILES,
-                               instance=app)
-        else:
-            app_form = AppForm(data=self.request.POST, files=self.request.FILES)
+        app_form = AppForm(data=self.request.POST, files=self.request.FILES)
 
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
 
@@ -268,17 +261,11 @@ class CreateAppHandler(RequestHandler):
                 'adunit_form': adunit_form
             })
 
-        if not app_form.instance:  # ensure form posts do not change ownership
-            account = self.account  # attach account info
-        else:
-            account = app_form.instance.account
+        account = self.account  # attach account info
         app = app_form.save(commit=False)
         app.account = account
 
-        if not adunit_form.instance:  # ensure form posts do not change ownership
-            account = self.account
-        else:
-            account = adunit_form.instance.account
+        account = self.account
         adunit = adunit_form.save(commit=False)
         adunit.account = account
 
@@ -604,9 +591,6 @@ class AdUnitShowHandler(RequestHandler):
     def get(self, adunit_key):
         # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
-
-        if adunit.account.key() != self.account.key():
-            raise Http404
 
         stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
         adunit.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
@@ -1016,6 +1000,7 @@ class AppExportHandler(RequestHandler):
                        [app_stats(stat) for stat in all_stats]))
         titles = ['Date', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
         return sswriter.export_writer(file_type, f_name, titles, data)
+
 
 
 @login_required

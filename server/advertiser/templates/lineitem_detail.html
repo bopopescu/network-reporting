@@ -67,8 +67,14 @@
 
     <h2>Creatives</h2>
 
-    <form action="{% url advertiser_creative_form_new line_item.key %}" {% if line_item.creatives.count %}class="hidden"{% endif %} enctype="multipart/form-data" id="new_creative_form" method="post">
+    <form action="{% url advertiser_creative_form_new line_item.key %}"
+      {% if line_item.creatives.count %}class="hidden"{% endif %}
+      enctype="multipart/form-data"
+      id="new_creative_form"
+      method="post">
+      
         {% creative_form %}
+          
         <button class="btn right submit">Continue</button>
         <button class="btn right cancel">Cancel</button>
         <div class="clear"></div>
@@ -96,22 +102,20 @@
 
 {% block extraScripts %}
 
-  <script type="text/html" id="chart-template">
-    {% include "common/partials/chart.html" %}
-  </script>
+  {% include_template "chart" %}
+  {% include_template "popover" %}
   
-{% include_script "models/inventory" %}
-{% include_script "views/inventory" %}
-{% include_script "controllers/orders" %}
-<script type="text/javascript">
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+  
+  <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
             line_item_key: "{{ line_item.key }}",
-            start_date:  Date({{ start_date.year }},
-                              {{ start_date.month|add:"-1" }},
-                              {{ start_date.day }}),
+            start_date:  {{ start_date|js_date }},
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
         });

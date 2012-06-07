@@ -35,7 +35,7 @@ class OrderForm(forms.ModelForm):
         order = super(OrderForm, self).save(*args, **kwargs)
 
         # TODO: this is dumb, do something else
-        order.is_order = True
+        order.campaign_type = 'order'
         order.save()
 
         return order

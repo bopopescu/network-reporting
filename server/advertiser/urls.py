@@ -107,4 +107,24 @@ urlpatterns = patterns(
     url('^creative/html/(?P<creative_key>[-\w\.]+)$',
         'creative_html',
         name='advertiser_creative_html'),
+
+    #############
+    # Exporting #
+    #############
+
+    url('^export/orders/$',
+        'export_multiple_orders',
+        name='advertiser_export_multiple_orders'),
+
+    url('^export/order/$',
+        'export_single_order',
+        name='advertiser_export_single_order'),
+
+    url('^export/lineitems/$',
+        'export_multiple_line_items',
+        name='advertiser_export_multiple_line_items'),
+
+    url('^export/lineitem/$',
+        'export_single_line_item',
+        name='advertiser_export_single_line_item'),
 )

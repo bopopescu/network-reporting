@@ -88,7 +88,7 @@
   <div class="active tab-section" id="performance">
 
     {% chart_placeholder start_date end_date%}
-    
+
     <div class="muted right">* Your payment from Marketplace may be less than the estimate shown here.
     <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-"
     target="_blank">Learn why</a>.
@@ -263,15 +263,15 @@
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
-          <ul id="blocked_domains">
+          <ul id="blocked_domains" style="width: 220px">
           {% for domain in blocklist %}
-            <li>
+            <li id="blocked_domain">
               {{domain}}
               <a class="blocklist_remove" id="{{domain|escape}}" href="#"> Remove </a>
               <img id="{{domain|escape}}" class="loading-img invisible" src="/images/icons-custom/spinner-12.gif"></img>
             </li>
           {% empty %}
-            <li>There are no blocked advertisers</li>
+            <li id="none_currently_blocked">There are no blocked advertisers</li>
           {% endfor %}
           </ul>
         </div>
@@ -304,7 +304,7 @@
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/marketplace" %}
-  
+
   <script type="text/javascript">
     var mopub = mopub || {};
     $(document).ready(function() {

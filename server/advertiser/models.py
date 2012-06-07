@@ -70,11 +70,11 @@ class Campaign(db.Model):
     # date of creation
     created = db.DateTimeProperty(auto_now_add=True)
 
-    # This should be subclassed
-    is_order = db.BooleanProperty(default=False)
-    is_network = db.BooleanProperty(default=False)
-    is_marketplace = db.BooleanProperty(default=False)
-
+    # is this a campaign for direct sold (an order), marketplace, or networks?
+    campaign_type = db.StringProperty(choices=['order',
+                                               'marketplace',
+                                               'network'])
+    
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank
     #
@@ -92,17 +92,20 @@ class Campaign(db.Model):
     transition_date = db.DateProperty()
 
     @property
-    def has_daily_budget(self):
-        return self.budget and self.budget_type == 'daily'
+    def is_order(self):
+        return self.campaign_type == 'order'
 
     @property
-    def campaign_type(self):
-        """
-        HACK: This property is an alias for network_type to resolve conflicts
-        with Tiago's new networks app. The real fix is to change all references
-        to `campaign_type` with `network_type`.
-        """
-        return self.network_type
+    def is_marketplace(self):
+        return self.campaign_type == 'marketplace'
+
+    @property
+    def is_network(self):
+        return self.campaign_type == 'network'        
+    
+    @property
+    def has_daily_budget(self):
+        return self.budget and self.budget_type == 'daily'
 
     @property
     def has_full_budget(self):

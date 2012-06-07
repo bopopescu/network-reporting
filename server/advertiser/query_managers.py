@@ -115,7 +115,7 @@ class CampaignQueryManager(QueryManager):
         """
         campaigns = cls.Model.all().filter('account =', account)\
                                    .filter('deleted =', False)\
-                                   .filter('is_order =', True)\
+                                   .filter('campaign_type =', 'order')\
                                    .order('name')\
                                    .fetch(1000)
         return campaigns
@@ -416,8 +416,8 @@ class AdGroupQueryManager(QueryManager):
 
     @classmethod
     def get_line_items(cls, account=None, order=None,
-                       orders=None, limit=1000):
-        adgroups = AdGroup.all()
+                       orders=None, limit=1000, keys_only=False):
+        adgroups = AdGroup.all(keys_only=keys_only)
 
         if account:
             adgroups = adgroups.filter("account =", account)

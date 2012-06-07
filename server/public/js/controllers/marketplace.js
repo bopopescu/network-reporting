@@ -27,7 +27,7 @@ var mopub = mopub || {};
     function fetchAppsFromKeys (app_keys) {
         var apps = new AppCollection();
         var fetched_apps = 0;
-        
+
         _.each(app_keys, function(app_key) {
             var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
@@ -51,7 +51,7 @@ var mopub = mopub || {};
                     }
                 }
             });
-            
+
             apps.add(app);
         });
 
@@ -361,6 +361,10 @@ var mopub = mopub || {};
 
         blocklist_xhr.done(function (response) {
             $("img#" + domain).addClass('hidden');
+            alert($("blocked_domain:visible").length);
+            if ($("blocked_domain:visible").length === 0) {
+                $("#none_currently_blocked").fadeIn();
+            }
             anchor.parent().fadeOut();
         });
 
@@ -544,6 +548,7 @@ var mopub = mopub || {};
                         addToBlocklist(domain);
                     });
                     $("textarea[name='blocklist']").val('');
+                    $("#none_currently_blocked").fadeOut()
                 });
 
                 blocklist_xhr.error(function (response) {

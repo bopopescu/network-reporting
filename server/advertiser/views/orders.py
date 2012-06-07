@@ -17,7 +17,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
 from google.appengine.ext import db
 
-from common.utils import helpers
+from common.utils import helpers, tablib, stats_helpers
 from common.ragendja.template import render_to_response, JSONResponse
 from common.utils.request_handler import RequestHandler
 
@@ -314,7 +314,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             if order_form.is_valid():
                 order = order_form.save()
                 order.account = self.account
-                order.is_order = True
+                order.campaign_type = 'order'
                 order.save()
                 CampaignQueryManager.put(order)
 
@@ -508,7 +508,219 @@ def creative_image(request, *args, **kwargs):
 def creative_html(request, *args, **kwargs):
     return DisplayCreativeHandler()(request, *args, **kwargs)
 
+    
+#############
+# Exporters #
+#############
 
+ctr = lambda clk, imp: float(clk)/float(imp)*100.0 if imp > 0 else 0
+    
+class MultipleOrderExporter(RequestHandler):
+    
+    def get(self):
+        """
+        Exports an account-level report on all orders.
+        Used by the "Export" button in the order section
+        of the index page.
+        """
+
+        # Get the export type, set up the headers for the export
+        # document, and create the export document.
+        export_type = self.request.GET.get('type', 'csv')
+        headers = (
+            'Order Name',
+            'Advertiser',
+            'Number of Line Items',
+            'Impressions',
+            'Clicks',
+            'Conversions',
+            'Revenue',
+            'CTR',
+            'Conv. Rate',
+        )
+        data_to_export = tablib.Dataset(headers=headers)
+
+        # For each order, add a new row to the document
+        stats_q = stats_helpers.DirectSoldStatsFetcher(self.account.key())
+        orders = CampaignQueryManager.get_order_campaigns(account=self.account)        
+        for order in orders:
+            stats = stats_q.get_campaign_stats(order,
+                                               self.start_date,
+                                               self.end_date,
+                                               daily=False)
+            order_data = (
+                order.name,
+                order.advertiser,
+                len(AdGroupQueryManager.get_line_items(order=order, keys_only=True)),
+                stats['imp'],
+                stats['clk'],
+                stats['conv'],
+                stats['rev'],
+                ctr(stats['clk'], stats['imp']),
+                stats['conv_rate'],
+            )
+            data_to_export.extend([order_data])
+
+        # Export the document with the desired type (json, csv, etc)
+        return HttpResponse(getattr(data_to_export, export_type))
+
+@login_required
+def export_multiple_orders(request, *args, **kwargs):
+    handler = MultipleOrderExporter()
+    return handler(request, *args, **kwargs)
+
+    
+class MultipleLineItemExporter(RequestHandler):
+    
+    def get(self):
+        """
+        Exports an account-level report on all line items.
+        Used by the "Export" button in the line item section
+        of the index page.
+        """
+        export_type = self.request.GET.get('type', 'csv')
+        headers = (
+            'Order name',
+            'Line Item name',
+            'Advertiser',
+            'Type',
+            'Start Time',
+            'Stop Time',
+            'Rate (CPM/CPC)',
+            'Budget',
+            'Impressions',
+            'Clicks',
+            'Conversions',
+            'Revenue',
+            'CTR',
+            'Conv. Rate',
+            'Allocation',
+            #'Frequency Caps',
+            'Country Target',
+            'Device Target',
+            'Keywords',
+        )        
+        data_to_export = tablib.Dataset(headers=headers)
+
+        # k
+        stats_q = stats_helpers.DirectSoldStatsFetcher(self.account.key())
+        orders = CampaignQueryManager.get_order_campaigns(account=self.account)
+        for order in orders:
+            line_items = AdGroupQueryManager.get_line_items(order=order)
+            for line_item in line_items:
+                stats = stats_q.get_adgroup_stats(line_item,
+                                                  self.start_date,
+                                                  self.end_date,
+                                                  daily=False)
+                order_data = (
+                    order.name,
+                    line_item.name,
+                    order.advertiser,
+                    line_item.adgroup_type,
+                    str(line_item.start_datetime),
+                    str(line_item.end_datetime),
+                    line_item.bid,
+                    str(line_item.budget_goal), #cast to string in case its None
+                    stats['imp'],
+                    stats['clk'],
+                    stats['conv'],
+                    stats['rev'],
+                    ctr(stats['clk'],stats['imp']),
+                    stats['conv_rate'],
+                    line_item.allocation_percentage,
+                    #'fcaps',
+                    line_item.geo_predicates,
+                    str(line_item.devices),
+                    line_item.keywords,
+                )
+            data_to_export.extend([order_data])
+
+
+        return HttpResponse(getattr(data_to_export, export_type))
+
+@login_required
+def export_multiple_line_items(request, *args, **kwargs):
+    handler = MultipleLineItemExporter()
+    return handler(request, *args, **kwargs)        
+
+    
+class SingularOrderExporter(RequestHandler):
+    
+    def get(self):
+        """
+        Exports a daily
+        """
+        export_type = self.request.GET.get('type', 'csv')
+        headers = (
+            'Date (each date has separate row)',
+            'Order name',
+            'Line Item name',
+            'Advertiser',
+            'Type',
+            'Start Time',
+            'Stop Time',
+            'Rate (CPM/CPC)',
+            'Budget',
+            'Impressions',
+            'Clicks',
+            'Conversions',
+            'Revenue',
+            'CTR',
+            'Conv. Rate',
+            'Frequency Caps',
+            'Country Target',
+            'Device Target',
+            'Keywords',
+        )
+        
+@login_required
+def export_single_order(request, *args, **kwargs):
+    handler = SingleOrderExporter()
+    return handler(request, *args, **kwargs)
+
+    
+class SingularLineItemExporter(RequestHandler):
+    
+    def get(self):
+        export_type = self.request.GET.get('type', 'csv')
+        headers = (
+            'Order name',
+            'Line Item name',
+            'Advertiser',
+            'Type',
+            'Start Time',
+            'Stop Time',
+            'Date (each date has separate row)',
+            'App',
+            'Ad Unit (each ad unit has separate row)',
+            'Creative Name (each creative has separate row)',
+            'Creative Format (size)',
+            'Creative Type (image/html)',
+            'Rate (CPM/CPC)',
+            'Budget',
+            'Impressions',
+            'Clicks',
+            'Conversions',
+            'Revenue',
+            'CTR',
+            'Conv. Rate',
+            'Frequency Caps',
+            'Country Target',
+            'Device Target',
+            'Keywords',
+        )
+
+        data_to_export = tablib.Dataset(headers=headers)        
+        data_to_export.extend(adunit_data)
+
+        return HttpResponse(getattr(data_to_export, export_type))
+        
+@login_required
+def export_single_line_item(request, *args, **kwargs):
+    handler = SingularLineItemExporter()
+    return handler(request, *args, **kwargs)
+
+    
 ###########
 # Helpers #
 ###########

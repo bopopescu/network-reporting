@@ -163,6 +163,13 @@ indexes:
   - name: account
   - name: campaign_type
   - name: deleted
+  - name: name
+
+- kind: Campaign
+  properties:
+  - name: account
+  - name: campaign_type
+  - name: deleted
   - name: network_type
 
 - kind: Campaign

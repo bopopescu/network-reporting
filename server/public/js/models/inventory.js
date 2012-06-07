@@ -839,16 +839,14 @@ var mopub = mopub || {};
             name: '',
             req: 0,
             rev: 0,
-            stats_endpoint: 'all'
+            stats_endpoint: 'direct'
         },
         url: function() {
-            var stats_endpoint = this.get('stats_endpoint');
             return '/api/campaign/'
                 + this.get('id')
                 + "?"
                 + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+                + '&endpoint=direct';
         },
         parse: function(response) {
 

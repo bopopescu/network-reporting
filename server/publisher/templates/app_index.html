@@ -55,9 +55,15 @@
         </a>
         <ul class="dropdown-menu">
           <li> <a href="{% url publisher_inventory_exporter %}?type=xls"
-                  data-toggle="running"> XLS </a> </li>
+                  data-toggle="running"> Excel XLS </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
           <li> <a href="{% url publisher_inventory_exporter %}?type=csv"
                   data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
           <li> <a href="{% url publisher_inventory_exporter %}?type=yaml"
                   data-toggle="running"> YAML </a> </li>
           <li> <a href="{% url publisher_inventory_exporter %}?type=json"
@@ -71,31 +77,23 @@
 {% endblock content %}
 
 {% block extraScripts %}
-  <script type="text/html" id="app-template">
-    {% include "common/partials/app.html" %}
-  </script>
-  <script type="text/html" id="adunit-template">
-    {% include "common/partials/adunit.html" %}
-  </script>
-  <script type="text/html" id="chart-template">
-    {% include "common/partials/chart.html" %}
-  </script>
-  {% include_script 'models/inventory' %}
-  {% include_script 'views/inventory' %}
+
+  {% include_template "app" %}
+  {% include_template "adunit" %}
+  {% include_template "chart" %}
+  
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/publisher" %}
   <script>
     var mopub = mopub || {};
     $(function() {
-        var graphStartDate = new Date({{ start_date.year }},
-                                     {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}
-                                     {{ start_date.day }});
-
+        var graphStartDate = {{ start_date|js_date}};
         var app_keys = {{ app_keys|safe }};
-
         DashboardController.initializeIndex({
             start_date: graphStartDate,
             app_keys: app_keys
         });
     });
 </script>
-{% include_script 'controllers/publisher' %}
 {% endblock %}

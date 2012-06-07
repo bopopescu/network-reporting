@@ -375,43 +375,6 @@ def include_raw(path):
     return template.loader.find_template(path)[0]
 
 
-# @register.simple_tag
-# def include_script(script_name,
-#                    load_minified=(not settings.DEBUG),
-#                    overload=settings.DEBUG):
-#     """
-#     Includes a script tag (should be a js file) and considers whether
-#     the script should be loaded (if we're in production, only load the
-#     'app' file, otherwise overload), and what the version number should
-#     be (whatever is in settings.py if we're in production, otherwise a
-#     random number to bust the cache). Just pass in the name, such as
-#     'controllers/networks', don't bother with the '.js'.
-#     """
-#     # clean up the script name
-#     script_name = script_name.replace(".min.js", "")
-#     script_name = script_name.replace(".js", "")
-
-#     # make the script path
-#     path_prefix = "/js/"
-
-#     if load_minified:
-#         path_suffix = ".min.js"
-#     else:
-#         path_suffix = ".js"
-
-#     if overload:
-#         version_number = "?=%s" % str(time.time()).split('.')[0]
-#     else:
-#         version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
-
-#     script_path = path_prefix + script_name + path_suffix + version_number
-
-#     if script_name == 'app' or overload:
-#         return """<script type="text/javascript" src="%s"></script>""" % script_path
-#     else:
-#         return ""
-
-
 @register.simple_tag
 def include_script(script_name,
                    async=False,
@@ -451,6 +414,7 @@ def include_async_script(script_name,
 
 @register.simple_tag
 def include_style(style_name):
+
     style_name = style_name.replace('.css', '')
     path_prefix = "/css/"
     path_suffix = ".css"
@@ -463,6 +427,17 @@ def include_style(style_name):
     style_path = path_prefix + style_name + path_suffix + version_number
 
     return """<link rel="stylesheet" href="%s" />""" % style_path
+
+
+@register.simple_tag
+def include_template(template_name):
+    
+    template_path = "common/partials/" + template_name + ".html"
+    template_contents = template.loader.find_template(template_path)[0]
+    template_tag = '<script type="text/html" id="%s-template">%s</script>'
+
+    return template_tag % (template_name, template_contents)
+    
 
 
 @register.filter

@@ -344,6 +344,7 @@ var mopub = mopub || {};
     function addToBlocklist (domain) {
         var anchor = $("<a href='#'>Remove</a>").click(blocklistRemoveClickHandler);
         var list_item = $("<li></li>").html(domain + " ");
+        list_item.attr("id", "blocked_domain")
         list_item.append(anchor);
         $("#blocked_domains").append(list_item);
     }
@@ -361,11 +362,10 @@ var mopub = mopub || {};
 
         blocklist_xhr.done(function (response) {
             $("img#" + domain).addClass('hidden');
-            if ($("#blocked_domain:visible").size() === 0) {
-                alert('boop');
+            anchor.parent().fadeOut();
+            if ($("#blocked_domains #blocked_domain:visible").size() === 0) {
                 $("#none_currently_blocked").fadeIn();
             }
-            anchor.parent().fadeOut();
         });
 
         blocklist_xhr.error(function (response) {

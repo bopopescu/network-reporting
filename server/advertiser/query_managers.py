@@ -115,7 +115,7 @@ class CampaignQueryManager(QueryManager):
         """
         campaigns = cls.Model.all().filter('account =', account)\
                                    .filter('deleted =', False)\
-                                   .filter('is_order =', True)\
+                                   .filter('campaign_type =', 'order')\
                                    .order('name')\
                                    .fetch(1000)
         return campaigns

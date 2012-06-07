@@ -361,8 +361,8 @@ var mopub = mopub || {};
 
         blocklist_xhr.done(function (response) {
             $("img#" + domain).addClass('hidden');
-            alert($("blocked_domain:visible").length);
-            if ($("blocked_domain:visible").length === 0) {
+            if ($("#blocked_domain:visible").size() === 0) {
+                alert('boop');
                 $("#none_currently_blocked").fadeIn();
             }
             anchor.parent().fadeOut();

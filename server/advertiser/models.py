@@ -75,6 +75,10 @@ class Campaign(db.Model):
     is_network = db.BooleanProperty(default=False)
     is_marketplace = db.BooleanProperty(default=False)
 
+    campaign_type = db.StringProperty(choices=['order',
+                                               'marketplace',
+                                               'network'])
+    
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank
     #
@@ -91,6 +95,18 @@ class Campaign(db.Model):
     old_campaign = db.SelfReferenceProperty()
     transition_date = db.DateProperty()
 
+    @property
+    def is_order(self):
+        return self.campaign_type == 'order'
+
+    @property
+    def is_marketplace(self):
+        return self.campaign_type == 'marketplace'
+
+    @property
+    def is_network(self):
+        return self.campaign_type == 'network'        
+    
     @property
     def has_daily_budget(self):
         return self.budget and self.budget_type == 'daily'

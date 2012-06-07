@@ -338,6 +338,9 @@ class AdGroupServiceHandler(RequestHandler):
             'pace': pace,
             'pace_status': pace_status
         })
+
+        if not adgroup_jsonified['percent_delivered']:
+            adgroup_jsonified['percent_delivered'] = 0
         
         return JSONResponse(adgroup_jsonified)
 
@@ -393,6 +396,10 @@ class CampaignServiceHandler(RequestHandler):
                     'pace_status': pace_status
                 })
 
+                if not adgroup_jsonified['percent_delivered']:
+                    adgroup_jsonified['percent_delivered'] = 0.0
+        
+                
                 campaign_jsonified['adgroups'].append(adgroup_jsonified)
 
             # Get the top level stats for the campaign 

@@ -680,6 +680,7 @@ var mopub = window.mopub || {};
     window.CollectionChartView = CollectionChartView;
 
     window.NetworkGraphView = NetworkGraphView;
-
+    window.NetworkDailyCountsView = NetworkDailyCountsView;
+    
 }(this.jQuery, this.Backbone, this._));
 

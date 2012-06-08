@@ -1,6 +1,5 @@
 import os
 import sys
-import inspect
 
 sys.path.append(os.environ['PWD'])
 
@@ -330,6 +329,7 @@ def confirm_all_models(method,
 
     return return_values[0]
 
+
 def get_arg_name(key):
     class_name_translation = {'AdNetworkLoginCredentials':
                                 'adnetwork_login_credentials',
@@ -491,22 +491,3 @@ def _db_to_dict(models):
 
         instances_dict[Model] = instances_of_model_dict
     return instances_dict
-
-
-
-def decorate_all_test_methods(decorator):
-    """
-    Decorator that applies a decorator to all methods in a class
-
-    NOTE: This will also wrap nested methods
-
-    Author:
-        Haydn (5/21/2012)
-    """
-    def decorate(cls):
-        for method in inspect.getmembers(cls, inspect.ismethod):
-            method_name = method[1].__name__
-            if 'mptest' in method_name:
-                setattr(cls, method_name, decorator(getattr(cls, method_name)))
-        return cls
-    return decorate

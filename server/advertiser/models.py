@@ -74,7 +74,7 @@ class Campaign(db.Model):
     campaign_type = db.StringProperty(choices=['order',
                                                'marketplace',
                                                'network'])
-    
+
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank
     #
@@ -101,8 +101,8 @@ class Campaign(db.Model):
 
     @property
     def is_network(self):
-        return self.campaign_type == 'network'        
-    
+        return self.campaign_type == 'network'
+
     @property
     def has_daily_budget(self):
         return self.budget and self.budget_type == 'daily'
@@ -375,7 +375,7 @@ class AdGroup(db.Model):
             return "paused"
         return "running"
 
-        
+
     @property
     def pace(self):
         budget = self.budget_obj

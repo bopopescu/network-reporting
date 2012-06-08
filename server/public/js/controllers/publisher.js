@@ -115,9 +115,6 @@ var mopub = mopub || {};
      * the app form.
      */
     function initializeNewAppForm() {
-
-        initializeiOSAppSearch();
-
         $('#appForm-submit')
             .click(function(e) {
                 e.preventDefault();
@@ -131,41 +128,9 @@ var mopub = mopub || {};
                 .addClass($(this).val());
         }).filter(':checked').click();
 
-        // Search button
-        $('#appForm-search-button')
-            .button({ icons: { primary: "ui-icon-search" }})
-            .click(function(e) {
-                e.preventDefault();
-                if ($(this).button( "option", "disabled" )) {
-                    return;
-                }
-
-                $('#searchAppStore-loading').show();
-
-                // $('#dashboard-searchAppStore-custom-modal').dialog({
-                //     buttons: [
-                //         {
-                //             text: 'Cancel',
-                //             click: function() {
-                //                 $('#searchAppStore-results').html('');
-                //                 $(this).dialog("close");
-                //             }
-                //         }
-                //     ]
-                // });
-                var name = $('#appForm input[name="name"]').val();
-                var script = document.createElement("script");
-                script.src = 'http://ax.itunes.apple.com'
-                    + '/WebObjects/MZStoreServices.woa/wa/wsSearch'+
-                    + '?entity=software&limit=10&callback=loadedArtwork&term='
-                    + name;
-                var head = document.getElementsByTagName("head")[0];
-                (head || document.body).appendChild( script );
-            });
+        initializeiOSAppSearch();
 
         if ($('#appForm-name').val() === '') {
-            $('#appForm-search-button').button("disable");
-            $('#appForm-search').button("disable");
             $('#appForm-market-search-button').button("disable");
             $('#appForm-market-search').button("disable");
         }
@@ -685,10 +650,9 @@ var mopub = mopub || {};
     function initializeiOSAppSearch() {
         // Search button
         $('#appForm-search-button')
-            .button({ icons: { primary: "ui-icon-search" }})
             .click(function(e) {
-                e.preventDefault();
                 if ($(this).button( "option", "disabled" )) {
+                    alert('weeeee');
                     return;
                 }
 

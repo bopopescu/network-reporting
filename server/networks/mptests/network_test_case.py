@@ -50,6 +50,12 @@ class NetworkTestCase(BaseViewTestCase):
         AdUnitQueryManager.update_config_and_put(adunit, NetworkConfig(account=self.account))
 
     def get_apps_with_adunits(self, account):
+        """Returns a list of apps sorted by name.
+
+        Each app has an `adunits` property, which is a list of its adunits.
+
+        Author: Andrew He
+        """
         apps = PublisherQueryManager.get_objects_dict_for_account(
                 account=account).values()
         return sorted(apps, key=lambda a: a.name)
@@ -77,24 +83,14 @@ class NetworkTestCase(BaseViewTestCase):
         CampaignQueryManager.put(campaign)
 
         # Generate one adgroup per adunit.
-        for app_idx, app in enumerate(apps):
-            #config = app.network_config
-            #pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
-            #setattr(config, '%s_pub_id' % network_type, pub_id)
-            #AppQueryManager.update_config_and_put(app, config)
-
-            for adunit_idx, adunit in enumerate(app.adunits):
-                #config = adunit.network_config
-                #setattr(config, '%s_pub_id' % network_type, '%s_%s' % (pub_id,
-                #    adunit_idx))
-                #AdUnitQueryManager.update_config_and_put(adunit, config)
-
+        for app in apps:
+            for adunit in app.adunits:
                 adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                         adunit.key(), account.key())
                 adgroup.active = False
                 AdGroupQueryManager.put(adgroup)
 
-                # Generate the creative for this adgroup.
+                 # Generate the creative for this adgroup.
                 if network_type in ('custom', 'custom_native'):
                     creative = adgroup.default_creative(custom_html=DEFAULT_HTML)
                 else:
@@ -106,13 +102,18 @@ class NetworkTestCase(BaseViewTestCase):
 
     def setup_post_request_data(self, apps=[], network_type=None, app_pub_ids={},
             adunit_pub_ids={}):
+
         post_data = {}
 
+        # Add default campaign form data.
         campaign_name = NETWORKS[network_type]
         campaign_form = NetworkCampaignForm({'name': campaign_name})
         post_data.update(campaign_form.data)
 
+        # Add default adgroup form data.
         for field, obj in AdGroup.properties().iteritems():
+            if field in post_data:
+                continue
             if obj.default_value() and field not in ('geo_predicates',
                     'active', 'network_type'):
                 post_data[field] = obj.default_value()
@@ -122,9 +123,7 @@ class NetworkTestCase(BaseViewTestCase):
                     not in ('active', 'network_type'):
                 post_data[field] = ''
 
-        if network_type == 'jumptap':
-            post_data['jumptap_pub_id'] = DEFAULT_PUB_ID
-
+        # Add publisher IDs, bids, f-cap, etc. 
         for app in apps:
             app_post_key = 'app_%s-%s_pub_id' % (app.key(), network_type)
 

@@ -159,9 +159,16 @@ class EditNetworkPostTestCase(NetworkTestCase):
         for app_idx, app in enumerate(self.existing_apps):
             pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
             app_pub_ids[app.key()] = pub_id
+            setattr(app.network_config, '%s_pub_id' % self.network_type,
+                    pub_id)
+            AppQueryManager.update_config_and_put(app, app.network_config)
 
             for adunit_idx, adunit in enumerate(app.adunits):
-                adunit_pub_ids[adunit.key()] = '%s_%s' % (pub_id, adunit_idx)
+                adunit_pub_id = '%s_%s' % (pub_id, adunit_idx)
+                adunit_pub_ids[adunit.key()] = adunit_pub_id
+                setattr(adunit.network_config, '%s_pub_id' % self.network_type,
+                        adunit_pub_id)
+                AdUnitQueryManager.update_config_and_put(adunit, adunit.network_config)
 
         self.url = reverse('edit_network',
                 kwargs={'campaign_key': str(self.existing_campaign.key())})

@@ -7,8 +7,10 @@ import common.utils.test.setup
 
 import simplejson as json
 from datetime import date
+from nose.plugins.skip import SkipTest
 from nose.tools import ok_, \
-       eq_
+       eq_, \
+       make_decorator
 
 from google.appengine.ext import db
 from django.core.urlresolvers import reverse
@@ -18,6 +20,9 @@ from functools import wraps
 
 from admin.randomgen import generate_app, generate_adunit
 
+from common.utils.test.fixtures import generate_adgroup, \
+        generate_campaign, \
+        generate_creative
 from common.utils.test.test_utils import dict_eq, \
         decorate_all_test_methods, \
         confirm_db, \
@@ -39,6 +44,9 @@ from advertiser.query_managers import AdvertiserQueryManager, \
         CampaignQueryManager, \
         AdGroupQueryManager, \
         CreativeQueryManager
+from ad_network_reports.query_managers import AdNetworkMapperManager
+from publisher.query_managers import AdUnitQueryManager, \
+        AppQueryManager
 
 from account.models import NetworkConfig
 from advertiser.models import Campaign, \
@@ -56,17 +64,58 @@ from networks.forms import NetworkCampaignForm, \
         AdUnitAdGroupForm
 
 
-def skip_if_no_mappers(test_method):
-    @wraps(test_method)
-    def wrapper(self):
-        if self.network_type in REPORTING_NETWORKS and \
-                self.network_type in NETWORKS_WITH_PUB_IDS:
-            return test_method(self)
+# -------------------- >> begin test decorators << --------------------
+# These methods allow for conditionally skipping tests based on network type.
+# For example, applying @requires_network_with_reporting to a test method will
+# cause the test to run only for network types that support revenue reporting.
+# For all other types, the test will show up as an 'S' in the nose output.
+
+def requires_network_with_reporting(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type not in REPORTING_NETWORKS:
+            raise SkipTest('Skipping test... requires reporting network')
+        return test_method(self, *args, **kwargs)
     return wrapper
 
+def requires_network_with_pub_ids(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type not in NETWORKS_WITH_PUB_IDS:
+            raise SkipTest('Skipping test... requires network with pub IDs')
+        return test_method(self, *args, **kwargs)
+    return wrapper
 
-#@decorate_all_test_methods(confirm_db())
+def requires_network_without_pub_ids(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type in NETWORKS_WITH_PUB_IDS:
+            raise SkipTest('Skipping test... requires network without pub IDs')
+        return test_method(self, *args, **kwargs)
+    return wrapper
+
+def requires_non_custom_network_type(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type in ['custom', 'custom_native']:
+            raise SkipTest('Skipping test... requires non-custom network type')
+        return test_method(self, *args, **kwargs)
+    return wrapper
+
+# -------------------- >> end test decorators << --------------------
+
+
 class CreateNetworkGetTestCase(NetworkTestCase):
+    """Base test case class for network campaign creation GET request.
+
+    This base class is actually used to test AdMob, but may be subclassed to
+    test any other network type as long as network_type_to_test() is overridden.
+
+    Almost all tests in this class use the confirm_all_models() function to
+    ensure that datastore models are not modified unexpectedly.
+
+    Author: Andrew He
+    """
     def setUp(self):
         super(CreateNetworkGetTestCase, self).setUp()
 
@@ -74,21 +123,25 @@ class CreateNetworkGetTestCase(NetworkTestCase):
         self.set_up_existing_apps_and_adunits()
         self.existing_apps = self.get_apps_with_adunits(self.account)
 
+        self.existing_adunits = []
+        for app in self.existing_apps:
+            self.existing_adunits += app.adunits
+
         self.url = reverse('edit_network',
                 kwargs={'network': self.network_type})
 
     def network_type_to_test(self):
         return 'admob'
 
-    @confirm_db()
     def mptest_response_code(self):
-        """Visiting the create network page should return a 200, and not modify any state.
+        """
+        Visiting the create network page should return a 200 and not modify
+        any state.
 
         Author: Tiago Bandeira
         """
         confirm_all_models(self.client.get, args=[self.url])
 
-    @confirm_db()
     def mptest_context(self):
         """The context given to the create network template should be valid.
 
@@ -140,37 +193,44 @@ class CreateNetworkGetTestCase(NetworkTestCase):
 
 
 class CreateNetworkPostTestCase(NetworkTestCase):
+    """Base test case class for network campaign creation POST request.
+
+    This base class is actually used to test AdMob, but may be subclassed to
+    test any other network type as long as network_type_to_test() is overridden.
+
+    Almost all tests in this class use the confirm_all_models() function to
+    ensure that datastore models are not modified unexpectedly.
+
+    Author: Andrew He
+    """
     def setUp(self):
         super(CreateNetworkPostTestCase, self).setUp()
 
         self.network_type = self.network_type_to_test()
         self.set_up_existing_apps_and_adunits()
+
+        # Keep references to the fixture apps and adunits.
         self.existing_apps = self.get_apps_with_adunits(self.account)
-
-        self.app_pub_ids = {}
-        self.adunit_pub_ids = {}
-
-        for app_idx, app in enumerate(self.existing_apps):
-            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
-            self.app_pub_ids[app.key()] = pub_id
-
-            for adunit_idx, adunit in enumerate(app.adunits):
-                self.adunit_pub_ids[adunit.key()] = '%s_%s' % (pub_id,
-                        adunit_idx)
+        self.existing_adunits = []
+        for app in self.existing_apps:
+            self.existing_adunits += app.adunits
 
         self.url = reverse('edit_network',
                 kwargs={'network': self.network_type})
-        self.post_data = self.setup_post_request_data(apps=self.existing_apps,
-                network_type=self.network_type, app_pub_ids=self.app_pub_ids,
-                adunit_pub_ids=self.adunit_pub_ids)
+        self.post_data = self.setup_post_request_data(
+                apps=self.existing_apps, network_type=self.network_type,
+                app_pub_ids={}, adunit_pub_ids={})
 
     def network_type_to_test(self):
         return 'admob'
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
+    def base_network_state(self):
+        return NetworkStates.DEFAULT_NETWORK_CAMPAIGN
+
+    # -------------------- >> begin tests << --------------------
+
     def mptest_response_code(self):
-        """When adding a network campaign, response code should be 200.
+        """Submitting an un-modified new network form should return a 200.
 
         Author: Andrew He
         """
@@ -178,94 +238,113 @@ class CreateNetworkPostTestCase(NetworkTestCase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 200)
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
     def mptest_puts_campaign(self):
         """A new network campaign should be initialized and saved properly.
 
         Author: Andrew He
         """
+        # Prior to making any changes, get the existing network campaigns.
         existing_campaigns = self.get_network_campaigns()
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
 
-        newly_added_campaigns = self.get_campaigns(
-                exclude=existing_campaigns)
-        eq_(len(newly_added_campaigns), 1)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions)
 
-        new_campaign = newly_added_campaigns[0]
-
-        if self.network_type in ('custom', 'custom_native'):
-            expected_network_state = NetworkStates.CUSTOM_NETWORK_CAMPAIGN
-        else:
-            expected_network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
-
+        # Verify the properties of the campaign we just added.
+        new_campaign = self.get_campaigns(exclude=existing_campaigns)[0]
+        expected_network_state = self.base_network_state()
         self.check_campaign_init(new_campaign, self.network_type,
-                expected_network_state)
+                                 expected_network_state)
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
-    def mptest_puts_custom_campaign_if_default_exists(self):
-        """When a default campaign already exists for the given network type,
-        a custom campaign should be added to the datastore.
+    def mptest_puts_custom_campaign_if_campaign_already_exists(self):
+        """
+        When a campaign already exists for the given network type, a custom
+        (rather than default) campaign should be added to the datastore.
 
         Author: Andrew He
         """
-        if self.network_type in ('custom', 'custom_native'):
-            return
+        # Generate a network campaign.
+        existing_campaigns = [self.generate_network_campaign(
+                self.network_type, self.account, self.existing_apps)]
 
-        self.generate_network_campaign(self.network_type, self.account,
-                self.existing_apps)
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
 
-        existing_campaigns = self.get_network_campaigns()
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions)
 
-        newly_added_campaigns = self.get_campaigns(
-                exclude=existing_campaigns)
-        eq_(len(newly_added_campaigns), 1)
-
-        new_campaign = newly_added_campaigns[0]
+        # Verify the properties of the campaign we just added.
+        new_campaign = self.get_campaigns(exclude=existing_campaigns)[0]
         self.check_campaign_init(new_campaign, self.network_type,
-                NetworkStates.CUSTOM_NETWORK_CAMPAIGN)
+                                 NetworkStates.CUSTOM_NETWORK_CAMPAIGN)
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
     def mptest_puts_one_adgroup_for_each_adunit(self):
-        """There should be one new adgroup w/ a valid creative for each adunit.
+        """There should be one new adgroup-creative pair for each adunit.
 
         Author: Andrew He
         """
+        # Prior to making any changes, get the existing network campaigns.
         existing_campaigns = self.get_network_campaigns()
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
-        newly_added_campaigns = self.get_campaigns(
-                exclude=existing_campaigns)
-        eq_(len(newly_added_campaigns), 1)
-        new_campaign = newly_added_campaigns[0]
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
 
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions)
+
+        # Verify that each adunit got one adgroup-creative pair.
+        new_campaign = self.get_campaigns(exclude=existing_campaigns)[0]
         for app in self.existing_apps:
             for adunit in app.adunits:
-                adgroup = AdGroupQueryManager.get_network_adgroup(new_campaign,
-                            adunit.key(), self.account.key(), get_from_db=True)
-                ok_(adgroup is not None)
-                eq_(adgroup.network_type,
-                        NETWORK_ADGROUP_TRANSLATION.get(self.network_type,
-                                                        self.network_type))
-                eq_(adgroup.bid, DEFAULT_BID)
+                # Verify the contents of the adgroup for this adunit.
+                adgroup = AdGroupQueryManager.get_network_adgroup(
+                        new_campaign, adunit.key(), self.account.key(),
+                        get_from_db=True)
 
+                expected_network_type = NETWORK_ADGROUP_TRANSLATION.get(
+                        self.network_type, self.network_type)
+                expected_adgroup = generate_adgroup(
+                        self.account, new_campaign, active=False,
+                        bid=DEFAULT_BID, name=NETWORKS[self.network_type],
+                        network_type=expected_network_type,
+                        site_keys=[adunit.key()])
+
+                model_eq(adgroup, expected_adgroup, 
+                         exclude=['created', 'last_login', 't'],
+                         check_primary_key=False)
+
+                # Verify the contents of the creative for this adgroup.
                 creatives = list(adgroup.creatives)
-                eq_(len(creatives), 1)
                 creative = creatives[0]
-                eq_(creative._account, self.account.key())
-                eq_(creative.__class__, adgroup.default_creative().__class__)
-
+ 
+                expected_creative = adgroup.default_creative()
+                expected_creative.account = self.account
                 if self.network_type in ('custom', 'custom_native'):
-                    eq_(creative.html_data, DEFAULT_HTML)
+                    expected_creative.html_data = DEFAULT_HTML
+                
+                model_eq(creative, expected_creative, check_primary_key=False)
 
-    def mptest_activates_adgroups_properly_on_creation(self):
-        """Setting adgroup.active should work.
+    @requires_network_without_pub_ids
+    def mptest_non_pub_id_adgroup_activation(self):
+        """
+        If a network doesn't use publisher IDs, it should always be possible
+        to set the `active` property of any adgroup.
+
+        This test only applies to networks WITHOUT publisher IDs.
 
         Author: Andrew He
         """
@@ -276,31 +355,100 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_active_key] = True
 
-        expected_edits = {app.network_config.key(): {'admob_pub_id': self.app_pub_ids[app.key()]},
-                adunit.network_config.key(): {'admob_pub_id': self.adunit_pub_ids[adunit.key()]}}
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
 
-        response = confirm_all_models(self.client.post,
-                                      args=[self.url, self.post_data],
-                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                                      added={Campaign: 1, AdGroup: 1, Creative: 1},
-                                      edited=expected_edits)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions)
 
-        campaign = self.get_campaigns()[0]
-        adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
-                adunit.key(), self.account.key(), get_from_db=True)
+        # Verify the contents of the new adgroup.
+        new_campaign = self.get_campaigns()[0]
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                new_campaign, adunit.key(), self.account.key(),
+                get_from_db=True)
 
-        eq_(adgroup.active, True)
+        expected_network_type = NETWORK_ADGROUP_TRANSLATION.get(
+                self.network_type, self.network_type)
+        expected_adgroup = generate_adgroup(
+                self.account, new_campaign, active=True,
+                bid=DEFAULT_BID, name=NETWORKS[self.network_type],
+                network_type=expected_network_type,
+                site_keys=[adunit.key()])
+        
+        model_eq(adgroup, expected_adgroup, 
+                 exclude=['created', 'last_login', 't'],
+                 check_primary_key=False)
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
-    def mptest_only_allow_activating_adgroups_with_pub_ids(self):
-        """Setting adgroup.active should not work if its pub ID isn't set.
+    @requires_network_with_pub_ids
+    def mptest_good_adgroup_activation(self):
+        """
+        If an adunit has its pub ID set, it should be possible to set the
+        adunit's corresponding adgroup to be active.
+
+        This test only applies to networks with publisher IDs.
 
         Author: Andrew He
         """
-        if self.network_type not in NETWORKS_WITH_PUB_IDS:
-            return
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
 
+        # Modify the base POST body to give each app / adunit a publisher ID.
+        app_pub_ids = self.generate_app_pub_ids()
+        adunit_pub_ids = self.generate_adunit_pub_ids()
+        self.update_post_data_pub_ids(app_pub_ids=app_pub_ids,
+                                      adunit_pub_ids=adunit_pub_ids)
+
+        # Mark one of the adunits as 'enabled'.
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_active_key] = True
+
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
+
+        # Expect the NetworkConfigs for app / adunit to be modified accordingly.
+        expected_edits = self.get_expected_config_edits(
+                app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
+
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions,
+                           edited=expected_edits)
+
+        # Verify the contents of the new adgroup.
+        new_campaign = self.get_campaigns()[0]
+        adgroup = AdGroupQueryManager.get_network_adgroup(new_campaign,
+                adunit.key(), self.account.key(), get_from_db=True)
+
+        expected_network_type = NETWORK_ADGROUP_TRANSLATION.get(
+                self.network_type, self.network_type)
+        expected_adgroup = generate_adgroup(self.account, new_campaign,
+                active=True,
+                bid=DEFAULT_BID, 
+                name=NETWORKS[self.network_type],
+                network_type=expected_network_type,
+                site_keys=[adunit.key()])
+        
+        model_eq(adgroup, expected_adgroup, 
+                 exclude=['created', 'last_login', 't'],
+                 check_primary_key=False)
+
+    @requires_network_with_pub_ids
+    def mptest_bad_adgroup_activation(self):
+        """
+        If an adunit doesn't have its pub ID set, it should not be possible to
+        set the adunit's corresponding adgroup to be active.
+
+        This test only applies to networks with publisher IDs.
+
+        Author: Andrew He
+        """
         app = self.existing_apps[0]
         adunit = app.adunits[0]
 
@@ -311,138 +459,195 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         self.post_data[adunit_pub_id_key] = ''
         self.post_data[adunit_active_key] = True
 
-        response = self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = confirm_all_models(
+                self.client.post,
+                args=[self.url, self.post_data],
+                kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
         response_json = json.loads(response.content)
 
+        # Verify that the POST failed.
         eq_(response_json['success'], False)
+
+        # Verify that the offending adunit is identified in the list of errors.
         ok_(adunit_pub_id_key in response_json['errors'])
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
+    @requires_network_with_pub_ids
     def mptest_updates_network_configs(self):
         """All network config objects should be updated with correct pub IDs.
 
         Author: Andrew He
         """
-        if self.network_type not in NETWORKS_WITH_PUB_IDS:
-            return
+        # Modify the base POST body to give each app / adunit a publisher ID.
+        app_pub_ids = self.generate_app_pub_ids()
+        adunit_pub_ids = self.generate_adunit_pub_ids()
+        self.update_post_data_pub_ids(app_pub_ids=app_pub_ids,
+                                      adunit_pub_ids=adunit_pub_ids)
 
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
 
-        if self.network_type == 'jumptap':
-            self.account = AccountQueryManager.get(self.account.key())
-            eq_(self.account.network_config.jumptap_pub_id, DEFAULT_PUB_ID)
+        # Expect the NetworkConfigs for app / adunit to be modified accordingly.
+        expected_edits = self.get_expected_config_edits(
+                app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
 
-        actual_apps = self.get_apps_with_adunits(self.account)
-        for app in actual_apps:
-            expected_app_pub_id = self.app_pub_ids[app.key()]
-            eq_(getattr(app.network_config, '%s_pub_id' %
-                    self.network_type), expected_app_pub_id)
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions,
+                           edited=expected_edits)
 
-            for adunit in app.adunits:
-                expected_adunit_pub_id = self.adunit_pub_ids[adunit.key()]
-                ok_(hasattr(adunit, 'network_config'))
-                eq_(getattr(adunit.network_config, '%s_pub_id' %
-                            self.network_type), expected_adunit_pub_id)
-
-    @skip_if_no_mappers
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
+    @requires_network_with_reporting
+    @requires_network_with_pub_ids
     def mptest_creates_new_mapper_only_if_login_saved(self):
         """If the user has no logins, mappers should not be created.
 
         Author: Andrew He
         """
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        # Modify the base POST body to give each app / adunit a publisher ID.
+        app_pub_ids = self.generate_app_pub_ids()
+        adunit_pub_ids = self.generate_adunit_pub_ids()
+        self.update_post_data_pub_ids(app_pub_ids=app_pub_ids,
+                                      adunit_pub_ids=adunit_pub_ids)
 
-        actual_mappers = AdNetworkAppMapper.all().fetch(1000)
-        eq_(len(actual_mappers), 0)
+        # Expect the correct number of models to be added.
+        # There should be no new mappers!
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
 
-    @skip_if_no_mappers
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper, AdNetworkLoginCredentials])
+        # Expect the NetworkConfigs for app / adunit to be modified accordingly.
+        expected_edits = self.get_expected_config_edits(
+                app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
+        
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions,
+                           edited=expected_edits)
+
+    @requires_network_with_reporting
+    @requires_network_with_pub_ids
     def mptest_creates_new_mapper_if_no_existing_mappers(self):
         """If a mapper does not exist, a new one should be created.
 
         Author: Andrew He
         """
         ad_network_login = self.generate_ad_network_login(self.network_type,
-                self.account)
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+                                                          self.account)
 
-        actual_mappers = AdNetworkAppMapper.all(). \
-                filter('application in', self.existing_apps). \
-                filter('ad_network_name =', self.network_type).fetch(1000)
-        eq_(len(actual_mappers), len(self.existing_apps))
+        # Modify the base POST body to give each app / adunit a publisher ID.
+        app_pub_ids = self.generate_app_pub_ids()
+        adunit_pub_ids = self.generate_adunit_pub_ids()
+        self.update_post_data_pub_ids(app_pub_ids=app_pub_ids,
+                                      adunit_pub_ids=adunit_pub_ids)
 
-        mappers_for_app_key = defaultdict(list)
-        for mapper in actual_mappers:
-            mappers_for_app_key[mapper.application.key()].append(mapper)
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits),
+                              AdNetworkAppMapper: len(self.existing_apps)}
+
+        # Expect the NetworkConfigs for app / adunit to be modified accordingly.
+        expected_edits = self.get_expected_config_edits(
+                app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
+
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions,
+                           edited=expected_edits)
+
+        # Verify the contents of the new mapper(s) that were created.
+        mappers = list(AdNetworkMapperManager.get_mappers(self.account,
+                                                          self.network_type))
+        mappers_by_app_key = defaultdict(list)
+        for mapper in mappers:
+            mappers_by_app_key[mapper.application.key()].append(mapper)
 
         for app in self.existing_apps:
-            # Each app should have mappers.
-            ok_(app.key() in mappers_for_app_key)
+            # Verify that each app has a mapper.
+            ok_(app.key() in mappers_by_app_key)
 
-            mappers = mappers_for_app_key[app.key()]
+            mappers = mappers_by_app_key[app.key()]
             for mapper in mappers:
-                # Each mapper should be initialized properly.
-                expected_pub_id = self.app_pub_ids[app.key()]
+                # TODO: use model_eq.
+                # Verify that each mapper is initialized properly.
+                expected_pub_id = app_pub_ids[app.key()]
                 eq_(mapper.publisher_id, expected_pub_id)
                 eq_(mapper.ad_network_name, self.network_type)
                 eq_(mapper.ad_network_login.key(), ad_network_login.key())
 
-    @skip_if_no_mappers
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper, AdNetworkLoginCredentials])
+    @requires_network_with_reporting
+    @requires_network_with_pub_ids
     def mptest_deletes_existing_mapper_if_no_stats(self):
         """Stats-less mappers should be replaced with new mappers.
 
         Author: Andrew He
         """
+        # Generate a mapper that doesn't have any stats.
         existing_mapper = self.generate_ad_network_app_mapper(self.network_type,
                 self.existing_apps[0], DEFAULT_PUB_ID, with_stats=False)
 
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        # Modify the base POST body to give each app / adunit a publisher ID.
+        app_pub_ids = self.generate_app_pub_ids()
+        adunit_pub_ids = self.generate_adunit_pub_ids()
+        self.update_post_data_pub_ids(app_pub_ids=app_pub_ids,
+                                      adunit_pub_ids=adunit_pub_ids)
 
-        actual_mappers = AdNetworkAppMapper.all(). \
-                filter('application =', self.existing_apps[0]). \
-                filter('ad_network_name =', self.network_type).fetch(1000)
-        eq_(len(actual_mappers), 1)
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits),
+                              AdNetworkAppMapper: len(self.existing_apps)}
 
-        ok_(existing_mapper.key() != actual_mappers[0].key())
+        # Expect the NetworkConfigs for app / adunit to be modified accordingly.
+        expected_edits = self.get_expected_config_edits(app_pub_ids=app_pub_ids,
+                adunit_pub_ids=adunit_pub_ids)
 
-    @skip_if_no_mappers
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper, AdNetworkLoginCredentials])
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions,
+                           edited=expected_edits,
+                           deleted=[existing_mapper.key()])
+
+    @requires_network_with_reporting
+    @requires_network_with_pub_ids
     def mptest_creates_new_mapper_if_existing_mapper_has_stats(self):
         """If a mapper already exists for this app / network type pair and it
         has stats, a new mapper should be created without deleting the old one.
 
         Author: Andrew He
         """
-        existing_mapper = self.generate_ad_network_app_mapper(self.network_type,
-                self.existing_apps[0], DEFAULT_PUB_ID, with_stats=True)
+        # Generate a mapper that has stats.
+        existing_mapper = self.generate_ad_network_app_mapper(
+                self.network_type, self.existing_apps[0], DEFAULT_PUB_ID,
+                with_stats=True)
 
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        # Modify the base POST body to give each app / adunit a publisher ID.
+        app_pub_ids = self.generate_app_pub_ids()
+        adunit_pub_ids = self.generate_adunit_pub_ids()
+        self.update_post_data_pub_ids(app_pub_ids=app_pub_ids,
+                                      adunit_pub_ids=adunit_pub_ids)
 
-        actual_mappers = AdNetworkAppMapper.all(). \
-                filter('application =', self.existing_apps[0]). \
-                filter('ad_network_name =', self.network_type).fetch(1000)
-        eq_(len(actual_mappers), 2)
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits),
+                              AdNetworkAppMapper: len(self.existing_apps)}
 
-        # Check that old mapper wasn't modified.
-        old_mapper = AdNetworkAppMapper.get_by_publisher_id(DEFAULT_PUB_ID,
-                self.network_type)
-        eq_(old_mapper.key(), existing_mapper.key())
+        # Expect the NetworkConfigs for app / adunit to be modified accordingly.
+        expected_edits = self.get_expected_config_edits(
+                app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
 
-    @confirm_db(modified=[Campaign, AdGroup, Creative, NetworkConfig,
-        AdNetworkAppMapper])
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions,
+                           edited=expected_edits)
+
     def mptest_updates_onboarding(self):
         """An account should be finished onboarding once a campaign is created.
 
@@ -451,21 +656,38 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         self.account.status = 'step4'
         AccountQueryManager.put(self.account)
 
-        self.client.post(self.url, self.post_data,
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        # Expect the correct number of models to be added.
+        expected_additions = {Campaign: 1,
+                              AdGroup:  len(self.existing_adunits),
+                              Creative: len(self.existing_adunits)}
 
-        account_after = AccountQueryManager.get(self.account.key())
-        eq_(account_after.status, '')
+        # Expect the account's status to change.
+        expected_edits = {self.account.key(): {'status': ''}}
 
-    # Helper methods.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           added=expected_additions,
+                           edited=expected_edits)
 
-    def get_network_campaigns(self):
-        """Retrieves all network campaigns corresponding to self.account.
+    # -------------------- >> end tests << --------------------
 
-        Author: Andrew He
-        """
-        return CampaignQueryManager.get_network_campaigns(
-                self.account, is_new=True)
+    # -------------------- >> begin helpers << ------------------
+
+    def generate_app_pub_ids(self, prefix=DEFAULT_PUB_ID):
+        app_pub_ids = {}
+        for app_idx, app in enumerate(self.existing_apps):
+            pub_id = '%s_%s' % (prefix, app_idx)
+            app_pub_ids[app.key()] = pub_id
+        return app_pub_ids
+
+    def generate_adunit_pub_ids(self, prefix=DEFAULT_PUB_ID):
+        adunit_pub_ids = {}
+        for app_idx, app in enumerate(self.existing_apps):
+            for adunit_idx, adunit in enumerate(app.adunits):
+                adunit_pub_ids[adunit.key()] = \
+                        '%s_%s_%s' % (prefix, app_idx, adunit_idx)
+        return adunit_pub_ids
 
     def generate_ad_network_app_mapper(self, ad_network_name, app, publisher_id,
             with_stats=False):
@@ -495,16 +717,27 @@ class CreateNetworkPostTestCase(NetworkTestCase):
 
         return mapper
 
-    def check_campaign_init(self, campaign, network_type=None,
-            network_state=None):
-        """Checks that the new campaign has the right initial properties.
+    def get_network_campaigns(self):
+        """Retrieves all network campaigns corresponding to self.account.
 
         Author: Andrew He
         """
-        eq_(campaign._account, self.account.key())
-        eq_(campaign.campaign_type, 'network')
-        eq_(campaign.network_type, network_type)
-        eq_(campaign.network_state, network_state)
+        return CampaignQueryManager.get_network_campaigns(
+                self.account, is_new=True)
+
+    def check_campaign_init(self, campaign, network_type=None,
+            network_state=None):
+        """Checks that the given campaign has the right initial properties.
+
+        Author: Andrew He
+        """
+        expected_campaign = generate_campaign(self.account,
+                                              name=NETWORKS[self.network_type],
+                                              campaign_type='network',
+                                              network_type=network_type,
+                                              network_state=network_state)
+
+        model_eq(campaign, expected_campaign, check_primary_key=False)
 
         if network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
             # Default network campaigns should have a key name.
@@ -514,11 +747,14 @@ class CreateNetworkPostTestCase(NetworkTestCase):
             # Custom network campaigns don't have a key name.
             ok_(campaign.key().name() is None)
 
-    def get_campaigns(self, exclude=[]):
-        """Retrieves all network campaigns besides those in existing_campaigns.
+    def get_campaigns(self, exclude=None):
+        """Retrieves all network campaigns besides those in the `exclude` list.
 
         Author: Andrew He
         """
+        if not exclude:
+            exclude = []
+
         excluded_campaigns_keys = [c.key() for c in exclude]
 
         all_campaigns = self.get_network_campaigns()
@@ -527,63 +763,178 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 all_campaigns)
 
         return filtered_campaigns
+    
+    def update_post_data_pub_ids(self, app_pub_ids=None, adunit_pub_ids=None):
+        """
+        Updates the given POST body dictionary with new app / adunit
+        publisher IDs.
+
+        Author: Andrew He
+        """
+
+        if not app_pub_ids:
+            return
+        
+        if not adunit_pub_ids:
+            return
+
+        for app_key, pub_id in app_pub_ids.iteritems():
+            app_post_key = 'app_%s-%s_pub_id' % (app_key, self.network_type)
+            self.post_data[app_post_key] = pub_id
+
+        for adunit_key, pub_id in adunit_pub_ids.iteritems():
+            adunit_post_key = 'adunit_%s-%s_pub_id' % (adunit_key, self.network_type)
+            self.post_data[adunit_post_key] = pub_id
+
+    def get_expected_config_edits(self, app_pub_ids=None, adunit_pub_ids=None):
+        """
+        Given dictionaries mapping app / adunit keys to new publisher IDs,
+        returns an 'edit' dictionary that may be passed as the `edited` keyword
+        argument to confirm_all_models.
+
+        Example:
+        
+        If app_pub_ids = {'app_key0': 'new_pub_id'} and self.network_type is
+        'admob', this method returns
+
+            {'app_key0': {'admob_pub_id': 'new_pub_id'}}
+        
+        Author: Andrew He
+        """
+
+        expected_edits = {}
+        
+        pub_id_prop_key = '%s_pub_id' % self.network_type
+        
+        for app in self.existing_apps:
+            new_app_pub_id = app_pub_ids[app.key()]
+            expected_edits[app.network_config.key()] = {
+                pub_id_prop_key: new_app_pub_id}
+        
+        for adunit in self.existing_adunits:
+            new_adunit_pub_id = adunit_pub_ids[adunit.key()]
+            expected_edits[adunit.network_config.key()] = {
+                pub_id_prop_key: new_adunit_pub_id}
+        
+        return expected_edits
 
 
-# class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'jumptap'
+class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'jumptap'
 
-# class CreateIAdNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'iad'
+    def update_post_data_pub_ids(self, app_pub_ids=None, adunit_pub_ids=None):
+        super(CreateJumptapNetworkTestCase, self).update_post_data_pub_ids(
+                app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
 
+        # Jumptap also supports an account-level publisher ID.
+        self.post_data['jumptap_pub_id'] = DEFAULT_PUB_ID
 
-# class CreateInmobiNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'inmobi'
-
-
-# class CreateMobfoxNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'mobfox'
-
-
-# class CreateMillennialNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'millennial'
+    def get_expected_config_edits(self, app_pub_ids=None, adunit_pub_ids=None):
+        edits = super(CreateJumptapNetworkTestCase, self). \
+                get_expected_config_edits(app_pub_ids=app_pub_ids,
+                                          adunit_pub_ids=adunit_pub_ids)
+        
+        # Include the account-level publisher ID in the expected edits dict.
+        edits[self.account.network_config.key()] = {
+                'jumptap_pub_id': DEFAULT_PUB_ID}
+        return edits
 
 
-# class CreateAdsenseNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'adsense'
+class CreateIAdNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'iad'
+
+    def update_post_data_pub_ids(self, app_pub_ids=None, adunit_pub_ids=None):
+        # iAd doesn't use publisher IDs.
+        pass
+
+    def get_expected_config_edits(self, app_pub_ids=None, adunit_pub_ids=None):
+        return {}
 
 
-# class CreateEjamNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'ejam'
+class CreateInmobiNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'inmobi'
 
 
-# class CreateBrightrollNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'brightroll'
+class CreateMobfoxNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'mobfox'
 
 
-# class CreateCustomNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'custom'
+class CreateMillennialNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'millennial'
 
 
-# class CreateCustomNativeNetworkTestCase(CreateNetworkPostTestCase):
-#     def network_type_to_test(self):
-#         return 'custom_native'
+class CreateAdsenseNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'adsense'
+
+    def update_post_data_pub_ids(self, app_pub_ids=None, adunit_pub_ids=None):
+        # AdSense doesn't use publisher IDs.
+        pass
+
+    def get_expected_config_edits(self, app_pub_ids=None, adunit_pub_ids=None):
+        return {}
 
 
-# NUM_APPS = 3
-# NUM_ADUNITS = 3
-# class ComplexEditNetworkTestCase(CreateNetworkPostTestCase):
-#     def set_up_existing_apps_and_adunits(self):
-#         """Overrides method in superclass."""
-#         for app_index in range(NUM_APPS):
-#             app = generate_app(self.account)
-#             for adunit_index in range(NUM_ADUNITS):
-#                 generate_adunit(app, self.account)
+class CreateEjamNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'ejam'
+
+
+class CreateBrightrollNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'brightroll'
+
+
+class CreateCustomNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'custom'
+
+    def base_network_state(self):
+        return NetworkStates.CUSTOM_NETWORK_CAMPAIGN
+
+    def update_post_data_pub_ids(self, app_pub_ids=None, adunit_pub_ids=None):
+        # Custom networks don't use publisher IDs.
+        pass
+
+    def get_expected_config_edits(self, app_pub_ids=None, adunit_pub_ids=None):
+        return {}
+
+
+class CreateCustomNativeNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'custom_native'
+
+    def base_network_state(self):
+        return NetworkStates.CUSTOM_NETWORK_CAMPAIGN
+
+    def update_post_data_pub_ids(self, app_pub_ids=None, adunit_pub_ids=None):
+        # Custom native networks don't use publisher IDs.
+        pass
+
+    def get_expected_config_edits(self, app_pub_ids=None, adunit_pub_ids=None):
+        return {}
+
+
+NUM_APPS = 3
+NUM_ADUNITS = 3
+class ComplexCreateNetworkPostTestCase(CreateNetworkPostTestCase):
+    """Test case with a more complex fixture (multiple apps and adunits).
+
+    Author: Andrew He
+    """
+    def set_up_existing_apps_and_adunits(self):
+        """Overrides method in superclass."""
+        for app_index in range(NUM_APPS):
+            app = generate_app(self.account)
+            AppQueryManager.update_config_and_put(
+                    app, NetworkConfig(account=self.account))
+
+            for adunit_index in range(NUM_ADUNITS):
+                adunit = generate_adunit(app, self.account)
+                AdUnitQueryManager.update_config_and_put(
+                        adunit, NetworkConfig(account=self.account))

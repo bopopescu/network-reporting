@@ -436,7 +436,7 @@ class EditNetworkHandler(RequestHandler):
                         break
 
                     pub_id = self.request.POST.get("adunit_%s-%s" %
-                            (adunit.key(), network_config_field), '')
+                            (adunit.key(), network_config_field), None)
                     # Return error if adgroup is set to active yet
                     # the user didn't enter a pub id
                     if not pub_id and self.request.POST.get('%s-active' %
@@ -524,7 +524,7 @@ class EditNetworkHandler(RequestHandler):
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
                         app_pub_id = self.request.POST.get("app_%s-%s" %
-                                (app.key(), network_config_field), '')
+                                (app.key(), network_config_field), None)
                         setattr(network_config, network_config_field,
                                 app_pub_id)
                         AppQueryManager.update_config_and_put(app,
@@ -557,7 +557,7 @@ class EditNetworkHandler(RequestHandler):
                             network_config = adunit.network_config or \
                                     NetworkConfig()
                             pub_id = self.request.POST.get("adunit_%s-%s" %
-                                    (adunit.key(), network_config_field), '')
+                                    (adunit.key(), network_config_field), None)
 
                             setattr(network_config, network_config_field,
                                     pub_id)
@@ -570,7 +570,7 @@ class EditNetworkHandler(RequestHandler):
                                     NetworkConfig()
                             setattr(network_config, network_config_field, \
                                     self.request.POST.get(network +
-                                        '_pub_id', ''))
+                                        '_pub_id', None))
                             AccountQueryManager.update_config_and_put( \
                                     self.account, network_config)
 

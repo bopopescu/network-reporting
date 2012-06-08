@@ -8,59 +8,64 @@
 </h1>
 {% endblock pageTitle %}
 
-{% block titleBarRight %}
-<span class="titlebar-right">
-    <a class="button" id="network-settingsButton" href="{% url edit_network campaign_key=network.key %}">Edit Network Settings</a>
-</span>
-{% endblock titleBarRight %}
-
 {% block innerContent %}
-{% if login.state == LoginStates.PULLING_DATA or login.state == LoginStates.ERROR %}
-<section id="login-state-message">
-    <div class="alert-message block-message warning">
+  {% if login.state == LoginStates.PULLING_DATA or login.state == LoginStates.ERROR %}
+    <section id="login-state-message">
+      <div class="alert-message block-message warning">
         {% if login.state == LoginStates.PULLING_DATA %}
-        MoPub is currently collecting data from {{ network.pretty_name }}. You will receive an email when we finish.
+          MoPub is currently collecting data from {{ network.pretty_name }}.
+          You will receive an email when we finish.
         {% else %}
-        MoPub received an error last time we tried to collect data from {{ network.pretty_name }}. Please verify that your login credentials are correct and haven't changed. If the problem persists please reach out to us at support@mopub.com.
+          MoPub received an error last time we tried to collect data
+          from {{ network.pretty_name }}. Please verify that your
+          login credentials are correct and haven't changed. If the
+          problem persists please reach out to us at
+          support@mopub.com.
         {% endif %}
     </div>
 </section>
 {% endif %}
 
+<a class="btn right" id="network-settingsButton" href="{% url edit_network campaign_key=network.key %}">
+  <i class="icon-pencil"></i>
+  Edit Network Settings
+</a>
+
 <section id="aggregate-stats">
-    <div class="appData-columnHeaders">
-        <table class="dataTable" width=100%>
-            <thead>
-                <th class="networkData-icon" style="width:75px"></th>
-                <th class="dataTable-name"> </th>
-                {% if reporting %}
-                <th class="dataTable-data numeric"> Revenue </th>
-                {% endif %}
-                <th class="dataTable-data numeric"> CPM </th>
-                <th class="dataTable-data numeric"> Attempts </th>
-                <th class="dataTable-data numeric"> Impressions </th>
-                <th class="dataTable-data numeric"> Fill Rate </th>
-                <th class="dataTable-data numeric"> Clicks </th>
+  <div class="appData-columnHeaders">
+    <table class="dataTable" width=100%>
+      <thead>
+        <th class="networkData-icon" style="width:75px"></th>
+        <th class="dataTable-name"> </th>
+        {% if reporting %}
+          <th class="dataTable-data numeric"> Revenue </th>
+        {% endif %}
+        <th class="dataTable-data numeric"> CPM </th>
+        <th class="dataTable-data numeric"> Attempts </th>
+        <th class="dataTable-data numeric"> Impressions </th>
+        <th class="dataTable-data numeric"> Fill Rate </th>
+        <th class="dataTable-data numeric"> Clicks </th>
                 <th class="dataTable-data numeric"> CTR </th>
-            </thead>
-        </table>
-    </div>
-    <div class="appData">
-        <table class="dataTable appData-main">
-            <tbody>
-                <tr id="{{network.key}}-row">
-                    <td class="networkData-icon">
-                        <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                        <div>
-                            {% if network.active %}
+      </thead>
+    </table>
+  </div>
+  
+  <div class="appData">
+    <table class="dataTable appData-main">
+      <tbody>
+        <tr id="{{network.key}}-row">
+          <td class="networkData-icon">
+            <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+            <div>
+              {% if network.active %}
+                <select id='network-editActive' class='selectmenu'>
+                  <option value="active"> Running </option>
+                  <option value="">Paused</option>
+                </select>
+              {% else %}
                             <select id='network-editActive' class='selectmenu'>
-                                <option value="active"> Running </option>
-                                <option value="">Paused</option>
-                            </select>
-                            {% else %}
-                            <select id='network-editActive' class='selectmenu'>
-                                <option value="">Paused</option>
-                                <option value="active">Running</option>
+                              <option value="">Paused</option>
+                              <option value="active">Running</option>
                             </select>
                             {% endif %}
                         </div>

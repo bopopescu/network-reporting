@@ -271,7 +271,7 @@ var mopub = window.mopub || {};
             var this_view = this;
 
             if (this_view.collection.isFullyLoaded()) {
-                console.log(this_view.collection);
+
                 var metrics = ['rev', 'imp', 'clk', 'ctr'];
 
                 var network_campaigns = new Campaigns(_.filter(this.collection.models,
@@ -308,8 +308,8 @@ var mopub = window.mopub || {};
                         ctr: [{'Total': mopub_campaigns.get_total_daily_stats('ctr')}],
                         total: false
                     };
-                } else {
-                    console.log('else');
+                } else {b
+
                     mopub.dashboardStatsChartData = {
                         pointStart: this_view.options.start_date,
                         pointInterval: 86400000,

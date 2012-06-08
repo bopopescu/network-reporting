@@ -16,7 +16,7 @@
         return pattern.test(emailAddress);
     };
 
-    function initialize_campaign_data(campaign_data, apps, include_adunits) {
+    function initialize_campaign_data(campaign_data, apps, include_adunits) {        
 
         // create mopub campaign
         // endpoint=all
@@ -49,6 +49,9 @@
                         error: toast_error
                     });
                 },
+                success: function () {
+                    
+                }
             });
         });
 
@@ -160,6 +163,16 @@
             // TODO: move fuction to mopub.js
             initializeDateButtons();
 
+            // Make the new network selector really fancy
+            function network_option_format(network) {
+                console.log(network);
+                return "<img src='/images/" + network.id.toLowerCase()  + "-transparent.png'/>" + network.text;
+            }
+
+            
+            $("#network-editSelect").chosen();
+
+
             // Fetch all the campaign data and render each network as a table row
             var all_campaigns = [];
             var apps_by_campaign = {};
@@ -220,12 +233,7 @@
                 }
             );
 
-            $('#network-editSelect').change(function() {
-                if ($(this).val()) {
-                    window.location = $(this).val();
-                }
-                $(this).selectmenu('index', 0);
-            });
+
 
             $('#network-editSelect-menu').find('li').first().hide();
 

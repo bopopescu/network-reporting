@@ -444,7 +444,6 @@ var mopub = mopub || {};
             for(day in this.at(0).get('daily_stats')) {
                 total_daily_stats.push(this.get_stat_for_day(stat, day));
             }
-            console.log(total_daily_stats);
             return total_daily_stats;
         },
 
@@ -661,10 +660,6 @@ var mopub = mopub || {};
         parse: function(response) {
             var collection = this;
             // REFACTOR attempts vs requests
-
-            console.log('response');
-            console.log(response);
-
             _.each(response, function(adunit) {
 
                 if ((adunit.req === null || adunit.req === undefined) &&

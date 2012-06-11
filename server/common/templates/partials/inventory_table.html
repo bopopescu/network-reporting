@@ -4,7 +4,7 @@
   <thead>
     <tr>
       <td class="icon"></td>
-      <td class="name"></td>
+      <td class="name" style="width:350px;"></td>
       <td class="adid"></td>
       <td class="stat">Requests</td>
       <td class="stat">Impressions</td>
@@ -31,9 +31,8 @@
                 {{ app.name }}
               </a>
               <span class="muted unbold">({{ app.type }})</span>
-              {# <span class="appData-id muted unbold hidden"> {{ app.key }} </span> #}
             {% endif %}
-            <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+            <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif" />
           </td>
           <td></td>
           {# these stats will be loaded over ajax #}

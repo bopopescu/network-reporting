@@ -1,5 +1,13 @@
-{% extends 'common/base.html' %}
-{% block dateButtons %}{% endblock dateButtons %}
+{% extends "common/base.html" %}
+{% load filters %}
+
 {% block titleBarRight %}{% endblock titleBarRight %}
 {% block pageTitle %}<h1>Account</h1>{% endblock pageTitle %}
-{% block extraScripts %}<script src="/js/controllers/account.js?v=8"></script>{% endblock extraScripts %}
+{% block extraScripts %}
+  {% include_script "controllers/account" %}
+  <script type="text/javascript">
+    $(function () {
+        RegistrationController.initialize();
+    });
+  </script>
+{% endblock extraScripts %}

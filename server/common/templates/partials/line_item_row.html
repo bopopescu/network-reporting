@@ -25,7 +25,10 @@
       {{ line_item.name }}
     </a>
     <br />
-    <span class="muted"> {{ line_item.status|capitalize }} </span>
+    <span class="muted">
+      {{ line_item.status|capitalize }}
+      {{ line_item.start_datetime|date:"m/d" }} to {{ line_item.end_datetime|date:"m/d" }}
+    </span>
     <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
   </td>
 
@@ -43,27 +46,31 @@
   </td>
   <td class="rev stat"
       {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
-    {{ line_item.stats.revenue|default:"--" }}
+    --
   </td>
   <td class="imp stat"
       {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
-    {{ line_item.stats.impression_count|default:"--" }}
+    --
   </td>
-  <td class="clk stat"
+  <td class="stat"
       {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
-    {{ line_item.stats.click_count|default:"--" }}
+    <div class="clk">
+      --
+    </div>
+    <div class="muted ctr">
+      --
+    </div>
   </td>
-  <td class="ctr stat"
-      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
-    {{ line_item.stats.ctr|default:"--" }}
+  <td class="stat cpm">
+    --
   </td>
   <td class="stat"
       {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
     <div class="conv">
-      {{ line_item.stats.conv|default:"--" }}
+      --
     </div>
     <div class="muted conv_rate">
-      ({{ line_item.stats.conv_rate|default:"--" }})
+      --
     </div>
   </td>
   <td class="delivery"

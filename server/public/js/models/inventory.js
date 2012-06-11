@@ -126,10 +126,34 @@ var mopub = mopub || {};
      * Helpful utilities for fetching and formatting stats.
      */
     var StatsMixin = {
+        get_stat: function(stat) {
+            switch(stat) {
+                case 'ctr':
+                    return calculate_ctr(this.get_stat('imp'),
+                                         this.get_stat('clk'));
+                case 'fill_rate':
+                    return calculate_fill_rate(this.get_stat('req'),
+                                               this.get_stat('imp'));
+                case 'cpm':
+                    return this.get(stat) || calculate_cpm(this.get_stat('imp'),
+                                                           this.get_stat('rev'));
+                case 'conv_rate':
+                    return this.get(stat) || calculate_conv_rate(this.get_stat('conv'),
+                                                                 this.get_stat('clk'));
+                case 'clk':
+                case 'conv':
+                case 'imp':
+                case 'req':
+                case 'att':
+                case 'rev':
+                    return this.get(stat);
+                default:
+                    throw 'Unsupported stat "' + stat + '".';
+            }
+        },
 
-        get_formatted_stat: function (stat) {
-            var value = this.get(stat);
-            return format_stat(stat, value);
+        get_formatted_stat: function(stat) {
+            return format_stat(stat, this.get_stat(stat));
         },
 
         get_formatted_stat_sum: function(stat) {

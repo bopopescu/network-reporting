@@ -664,7 +664,9 @@ var mopub = window.mopub || {};
                 'imp',
                 'fill_rate',
                 'clk',
-                'ctr'
+                'ctr',
+                'conv',
+                'conv_rate'
             ];
             _.each(display_fields, function(field){
                 var field_text = current_model.get_formatted_stat(field);
@@ -695,6 +697,7 @@ var mopub = window.mopub || {};
                 'imp',
                 'fill_rate',
                 'clk',
+                'cpm',
                 'ctr',
                 'conv',
                 'conv_rate'

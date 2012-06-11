@@ -161,103 +161,104 @@
     </table>
 </div>
 {% for app, app_bids in network.apps %}
-<div class="{% cycle 'appData' 'appData appData-alt' %} {{ network.key }}-apps-div">
+
+  <div class="{% cycle 'appData' 'appData appData-alt' %} {{ network.key }}-apps-div">
     <table class="dataTable appData-main">
-        <tbody>
-            <tr class="app-row" id="app-{{ app.key }}">
-                <td class="appData-icon">
-                    <a href="/inventory/app/{{ app.key_ }}">
-                        <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
-                    </a>
-                </td>
-                <td class="dataTable-name">
-                    <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
-                    <span class="muted unbold">({{ app.type }})</span>
-                </td>
-                {% if reporting %}
-                <td class="dataTable-data numeric rev" style="color:orange;">
-                </td>
-                {% endif %}
-                <td class="dataTable-data numeric cpm">
-                    {% if network.reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    {# django needs elif #}
-                    {% if app_bids.min_cpm == app_bids.max_cpm %}
-                    {% if app_bids.min_cpm %}
-                    <div>{{ app_bids.min_cpm|currency }}</div>
-                    {% else %}
-                    {% endif %}
-                    {% else %}
-                    <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
-                    {% endif %}
-                </td>
-                <td class="dataTable-data numeric att">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric imp">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric fill_rate">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric clk">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric ctr">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-            </tr>
-        </tbody>
+      <tbody>
+        <tr class="app-row" id="app-{{ app.key }}">
+          <td class="appData-icon">
+            <a href="/inventory/app/{{ app.key_ }}">
+              <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+            </a>
+          </td>
+          <td class="dataTable-name">
+            <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
+            <span class="muted unbold">({{ app.type }})</span>
+          </td>
+          {% if reporting %}
+            <td class="dataTable-data numeric rev" style="color:orange;">
+            </td>
+          {% endif %}
+          <td class="dataTable-data numeric cpm">
+            {% if network.reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            {# django needs elif #}
+            {% if app_bids.min_cpm == app_bids.max_cpm %}
+              {% if app_bids.min_cpm %}
+                <div>{{ app_bids.min_cpm|currency }}</div>
+              {% else %}
+            {% endif %}
+          {% else %}
+            <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
+          {% endif %}
+          </td>
+          <td class="dataTable-data numeric att">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric imp">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric fill_rate">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric clk">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric ctr">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+        </tr>
+      </tbody>
     </table>
     <div class="appData-details" style="margin: -10px 0 0 86px">
-        <table class="dataTable">
-            <tbody>
-                {% for adunit in app.adunits %}
-                <tr class="adunit-row" id="adunit-{{ adunit.key }}">
-                    <td class="dataTable-name">
-                        {% status_icon adunit.adgroup %}
-                        <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
-                    </td>
-                    <td class="dataTable-data numeric">
-                        {{ adunit.adgroup.bid|currency }}
-                    </td>
-                    <td class="dataTable-data numeric att">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric imp">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric fill_rate">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric clk">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric ctr">
-                        -
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <table class="dataTable">
+        <tbody>
+          {% for adunit in app.adunits %}
+            <tr class="adunit-row" id="adunit-{{ adunit.key }}">
+              <td class="dataTable-name">
+                {% status_icon adunit.adgroup %}
+                <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
+              </td>
+              <td class="dataTable-data numeric">
+                {{ adunit.adgroup.bid|currency }}
+              </td>
+              <td class="dataTable-data numeric att">
+                -
+              </td>
+              <td class="dataTable-data numeric imp">
+                -
+              </td>
+              <td class="dataTable-data numeric fill_rate">
+                -
+              </td>
+              <td class="dataTable-data numeric clk">
+                -
+              </td>
+              <td class="dataTable-data numeric ctr">
+                -
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-</div>
+  </div>
 {% endfor %}
 
 </section>

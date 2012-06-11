@@ -154,6 +154,14 @@ def status_icon(adgroup):
     """
     return {'adgroup': adgroup}
 
+@register.inclusion_tag("common/partials/button_icon.html")
+def button_icon(name):
+    """
+    Returns an image tag with a button icon.
+    """
+    return {'name': name}
+
+    
 @register.inclusion_tag("common/partials/chart_placeholder.html")
 def chart_placeholder(start_date, end_date):
     """

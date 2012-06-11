@@ -170,7 +170,9 @@
             }
 
             
-            $("#network-editSelect").chosen();
+            $("#network-editSelect").chosen().bind("change", function() {
+                window.location = $(this).val();
+            });
 
 
             // Fetch all the campaign data and render each network as a table row

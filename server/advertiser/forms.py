@@ -36,7 +36,8 @@ def get_filetype_extension(filename):
 
 class CampaignForm(forms.ModelForm):
     campaign_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
-                                               ('promo', 'Promotional')),
+                                               ('promo', 'Promotional'),
+                                               ('network', 'Network')),
                                       label='Campaign Type:')
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
@@ -133,12 +134,13 @@ class CampaignForm(forms.ModelForm):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
         # show deprecated networks if user is staff or hasn't migrated
-        if (is_staff or (account and not account.display_new_networks)):
+        if not (is_staff or (account and not account.display_new_networks)):
             # Hack(nafis): we cannont use choices.append because by doing
             # so we are modifying the global list defined earlier in this file
             # Instead by adding the list togther we are creating a new object
             # for this particular instance
-            self.fields['campaign_type'].choices = self.fields['campaign_type'].choices + [('network', 'Network')]
+            self.fields['campaign_type'].choices = [('gtee', 'Guaranteed'),
+                    ('promo', 'Promotional')]
 
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to

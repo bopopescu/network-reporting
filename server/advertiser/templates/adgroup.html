@@ -38,7 +38,7 @@
 {% block titleBarRight %}
 
   <span class="titlebar-right">
-    {% if not campaign.network or not account.display_new_networks %}
+    {% if is_staff or not campaign.network or not account.display_new_networks %}
     {% if adgroup.active %}
       <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
         <option value="play" selected="selected">Running</option>
@@ -70,7 +70,7 @@
     {% endif %}
     {% endif %}
     {% if campaign.network %}
-      {% if not account.display_new_networks %}
+      {% if is_staff or not account.display_new_networks %}
       <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
       {% endif %}
     {% else %}

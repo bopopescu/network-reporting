@@ -8,9 +8,9 @@
   Device format:
 </dt>
 <dd>
-  <div class="btn-group">
-    <a class="btn active" href="#" name="adunit-device_format" id="adunit-device_format_phone" value="phone">Phone</a>
-    <a class="btn" href="#" name="adunit-device_format" id="adunit-device_format_tablet" value="tablet">Tablet</a>
+  <div class="btn-group required">
+    <a class="btn active" name="adunit-device_format" id="adunit-device_format_phone" value="phone">Phone</a>
+    <a class="btn" name="adunit-device_format" id="adunit-device_format_tablet" value="tablet">Tablet</a>
   </div>
 </dd>
   {{ form.format|raw }}
@@ -42,7 +42,7 @@
     {{ form.refresh_interval|raw|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
   </dd>
   {# <dt>Default keywords:</dt>  #}
-  {# <dd>  #}
+  {# <dd>  #} 
   {#   <textarea name="{{form.keywords.name}}" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea">{{form.keywords.value}}</textarea>  #}
   {# </dd>  #}
 </dl>

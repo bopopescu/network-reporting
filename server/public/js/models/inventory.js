@@ -141,7 +141,7 @@ var mopub = mopub || {};
         },
 
         get_formatted_stat_series: function(stat) {
-            console.log(this);
+
             var stat_series = this.map(function(model) {
                 var daily_stats = model.get('daily_stats');
                 return _.map(daily_stats, function (day) {
@@ -152,6 +152,24 @@ var mopub = mopub || {};
 
             return stat_series;
         }
+    };
+
+    var TriggerLoadedMixin = {
+        
+        // Fetch the model from the server. If the server's representation of the
+        // model differs from its current attributes, they will be overriden,
+        // triggering a `"change"` event.
+        fetch: function(options) {
+            options = options ? _.clone(options) : {};
+            var model = this;
+            var success = options.success;
+            options.success = function(resp, status, xhr) {
+                if (!model.set(model.parse(resp, xhr), options)) return false;
+                if (success) success(model, resp);
+            };
+            options.error = Backbone.wrapError(options.error, model, options);
+            return (this.sync || Backbone.sync).call(this, 'read', this, options);
+        },
     };
 
     /*
@@ -426,6 +444,7 @@ var mopub = mopub || {};
             for(day in this.at(0).get('daily_stats')) {
                 total_daily_stats.push(this.get_stat_for_day(stat, day));
             }
+            console.log(total_daily_stats);
             return total_daily_stats;
         },
 
@@ -510,7 +529,7 @@ var mopub = mopub || {};
         parse: function(response) {
             if (response) {
                 var campaign_data = response[0].sum;
-                campaign_data.daily_stats = response.daily_stats;
+                campaign_data.daily_stats = response[0].daily_stats;
 
                 // REFACTOR attempts vs requests
                 if(campaign_data.req == null || campaign_data.req == undefined) {
@@ -642,7 +661,12 @@ var mopub = mopub || {};
         parse: function(response) {
             var collection = this;
             // REFACTOR attempts vs requests
+
+            console.log('response');
+            console.log(response);
+
             _.each(response, function(adunit) {
+
                 if ((adunit.req === null || adunit.req === undefined) &&
                     (adunit.att !== null && adunit.att !== undefined)) {
                     adunit.req = adunit.att;
@@ -879,7 +903,6 @@ var mopub = mopub || {};
     });
 
     _.extend(OrderCollection.prototype, StatsMixin);
-
 
     /*
      * EXPOSE HIS JUNK

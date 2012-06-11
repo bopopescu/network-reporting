@@ -870,11 +870,9 @@ if (window.console === undefined) {
         var metricElement = $(selector);
     };
 
-    Chart.setupDashboardStatsChart = function() {
-        var seriesType = 'area';
-
+    Chart.setupDashboardStatsChart = function(seriesType) {
         // get active metric from breakdown
-        var metricElement = $('#stats .stats-breakdown .active');
+        var metricElement = $('#dashboard-stats .stats-breakdown .active');
         if (metricElement === null || metricElement.length === 0) return;
         var metricElementIdComponents = metricElement.attr('id').split('-');
         var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
@@ -891,13 +889,13 @@ if (window.console === undefined) {
         var chartSeries = [];
         var activeData = data[activeMetric];
         if (typeof activeData == 'undefined') {
-            Chart.chartError();            
+            Chart.chartError();
             return;
         }
-        
+
         $.each(activeData, function(i, seriesObject) {
             var seriesName, seriesData, seriesLineWidth;
-            var seriesColor = colors[i];
+            var seriesColor = colors[i]
 
             $.each(seriesObject, function(name, value) {
                 seriesName = name;
@@ -913,21 +911,17 @@ if (window.console === undefined) {
                 } else seriesLineWidth = 4;
             });
 
-            var seriesAttributes = {
-                name: seriesName,
-                data: seriesData,
-                color: seriesColor,
-                lineWidth: seriesLineWidth
-            };
-
+            seriesAttributes = {name: seriesName,
+                                data: seriesData,
+                                color: seriesColor,
+                                lineWidth: seriesLineWidth}
             chartSeries.push(seriesAttributes);
         });
 
-
         // setup HighCharts chart
-        var chart_options = {
+        this.trafficChart = new Highcharts.Chart({
             chart: {
-                renderTo: 'stats-chart',
+                renderTo: 'dashboard-stats-chart',
                 defaultSeriesType: seriesType,
                 marginTop: 0,
                 marginBottom: 55,
@@ -972,19 +966,17 @@ if (window.console === undefined) {
             tooltip: {
                 formatter: function() {
                     var text = '', value = '', total = '';
-                    var metric_translation = {
-                        att: 'attempts',
-                        clk: 'clicks',
-                        conv: 'conversions',
-                        imp: 'impressions',
-                        req: 'requests',
-                        cpm: 'CPM',
-                        rev: 'revenue',
-                        conv_rate: 'conversion rate',
-                        ctr: 'click through rate',
-                        fill_rate: 'fill rate', 
-                        usr: 'user count'
-                    };
+                    metric_translation = {att: 'attempts',
+                                          clk: 'clicks',
+                                          conv: 'conversions',
+                                          imp: 'impressions',
+                                          req: 'requests',
+                                          cpm: 'CPM',
+                                          rev: 'revenue',
+                                          conv_rate: 'conversion rate',
+                                          ctr: 'click through rate',
+                                          fill_rate: 'fill rate', 
+                                          usr: 'user count'};
 
                     // If the metric isn't in the dict use the unformatted name
                     var metric_name = metric_translation[activeMetric];
@@ -992,7 +984,7 @@ if (window.console === undefined) {
 
                     if(activeMetric == 'rev' || activeMetric == 'cpm') {
                         value = '$' + Highcharts.numberFormat(this.y, 2);
-                        if (data.total) {
+                        if(data.total) {
                             total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
                         }
                     } else if (activeMetric == 'clk') {
@@ -1009,17 +1001,10 @@ if (window.console === undefined) {
                         }
                     }
 
-                    text += '<span style="font-size: 14px;">' + 
-                        Highcharts.dateFormat('%A, %B %e, %Y', this.x) + 
-                        '</span><br/>'+
-                        ' <span style="padding: 0; font-weight: 600; color: ' + 
-                        this.series.color + '">' + 
-                        this.series.name + '</span>' + 
-                        ': <strong style="font-weight: 600;">' + 
-                        value + 
-                        '</strong><br/>';
+                    text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
+                    text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
 
-                    if (chartSeries.length > 1) {
+                    if(chartSeries.length > 1) {
                         text += '<span style="font-size: 12px; color: #666;">';
                         if (this.total > 0 && total) {
                             text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
@@ -1032,61 +1017,10 @@ if (window.console === undefined) {
                 }
             },
             series: chartSeries
-        };
-        console.log(chart_options);
-        this.trafficChart = new Highcharts.Chart(chart_options);
+        });
 
         $('#dashboard-stats-chart').removeClass('chart-loading');
      };
-
-    /*
-     * ## Pie charts
-     * Utility function for creating a pie chart with default options
-     */
-    Chart.setupPieChart = function (selector, title, chart_data) {
-
-        this.impressionPieChart = new Highcharts.Chart({
-            chart: {
-                renderTo: selector,
-                plotBackgroundColor: null,
-                plotShadow: true,
-                margin: 0
-            },
-            title: {
-                text: title
-            },
-            tooltip: {
-                formatter: function() {
-                    return "<b>"+ this.point.name +"</b>: "+ this.point.total + " " + title;
-                }
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: "pointer",
-                    dataLabels: {
-                        enabled: false,
-                        color:  "#000000",
-                        connectorColor: "#000000",
-                        formatter: function() {
-                            return "<b>"+ this.point.name +"</b>: "+ this.percentage.toFixed(2) +" %";
-                        }
-                    },
-                    showInLegend: true
-                }
-            },
-            legend: {
-                verticalAlign: "bottom"
-            },
-            series: [{
-                type: "pie",
-                name: title,
-                data: chart_data
-            }]
-        });
-
-    };
-
 
     Chart.chartError = function() {
         $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');

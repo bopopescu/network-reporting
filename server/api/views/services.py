@@ -1,16 +1,13 @@
 __doc__ = """
 API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
-import datetime
-from advertiser.models import NetworkStates
-from advertiser.query_managers import AdGroupQueryManager, \
-        CampaignQueryManager, \
-        CreativeQueryManager
+from advertiser.query_managers import (AdGroupQueryManager,
+                                       CampaignQueryManager)
 
-from publisher.query_managers import (AdUnitQueryManager, 
+from publisher.query_managers import (PublisherQueryManager,
+                                      AdUnitQueryManager, 
                                       AppQueryManager)
 
-from adserver_constants import ADSERVER_HOSTNAME
 from budget import budget_service
 
 from common.utils.request_handler import RequestHandler
@@ -20,15 +17,11 @@ from common.utils.stats_helpers import (MarketplaceStatsFetcher,
                                         DirectSoldStatsFetcher,
                                         NetworkStatsFetcher)
 
-from common.constants import REPORTING_NETWORKS
-
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
 
 import logging
-import urllib
-import urllib2
 
 REMOTE_PACING_URL = '/admin/budget/api/pacing'
 REMOTE_DELIVERED_URL = '/admin/budget/api/delivered'
@@ -116,8 +109,8 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
-    def get(self, app_key=None, adgroup_key=None, campaign_key=None,
-            adunit_key=None):
+    def get(self, app_key=None, adgroup_key=None,
+            campaign_key=None, adunit_key=None):
         """
         Returns individual or lists of JSON-represented adunit
         metadata and stats data
@@ -166,6 +159,7 @@ class AdUnitService(RequestHandler):
                 return JSONResponse(response)
             
         elif campaign_key:
+            
             campaign = CampaignQueryManager.get(campaign_key)
 
             # REFACTOR
@@ -174,7 +168,7 @@ class AdUnitService(RequestHandler):
             if campaign.account.key() != self.account.key():
                 raise Http404
 
-            adunits = [AdUnitQueryManager.get(adunit_key)]
+            adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
             response = [adunit.toJSON() for adunit in adunits]
 
             # Update each app with stats from the selected endpoint
@@ -193,7 +187,7 @@ class AdUnitService(RequestHandler):
                 })
                 adunit.update(adunit_stats)
                 
-            return JSONResponse(response[0])
+            return JSONResponse(response)
             
         # REFACTOR: The app key isn't necessary (we can fetch an
         # adunit directly with it's key)
@@ -207,6 +201,7 @@ class AdUnitService(RequestHandler):
             if app.account.key() != self.account.key():
                 raise Http404
 
+        
             adunits = AdUnitQueryManager.get_adunits(app=app)
             response = [adunit.toJSON() for adunit in adunits]
 

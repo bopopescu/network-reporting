@@ -27,7 +27,7 @@ var mopub = mopub || {};
     function fetchAppsFromKeys (app_keys) {
         var apps = new AppCollection();
         var fetched_apps = 0;
-        
+
         _.each(app_keys, function(app_key) {
             var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
@@ -51,7 +51,7 @@ var mopub = mopub || {};
                     }
                 }
             });
-            
+
             apps.add(app);
         });
 
@@ -344,6 +344,7 @@ var mopub = mopub || {};
     function addToBlocklist (domain) {
         var anchor = $("<a href='#'>Remove</a>").click(blocklistRemoveClickHandler);
         var list_item = $("<li></li>").html(domain + " ");
+        list_item.attr("id", "blocked_domain")
         list_item.append(anchor);
         $("#blocked_domains").append(list_item);
     }
@@ -362,6 +363,9 @@ var mopub = mopub || {};
         blocklist_xhr.done(function (response) {
             $("img#" + domain).addClass('hidden');
             anchor.parent().fadeOut();
+            if ($("#blocked_domains #blocked_domain:visible").size() === 0) {
+                $("#none_currently_blocked").fadeIn();
+            }
         });
 
         blocklist_xhr.error(function (response) {
@@ -544,6 +548,7 @@ var mopub = mopub || {};
                         addToBlocklist(domain);
                     });
                     $("textarea[name='blocklist']").val('');
+                    $("#none_currently_blocked").fadeOut()
                 });
 
                 blocklist_xhr.error(function (response) {

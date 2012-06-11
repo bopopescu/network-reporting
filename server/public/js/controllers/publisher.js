@@ -115,9 +115,6 @@ var mopub = mopub || {};
      * the app form.
      */
     function initializeNewAppForm() {
-
-        initializeiOSAppSearch();
-
         $('#appForm-submit')
             .click(function(e) {
                 e.preventDefault();
@@ -131,41 +128,9 @@ var mopub = mopub || {};
                 .addClass($(this).val());
         }).filter(':checked').click();
 
-        // Search button
-        $('#appForm-search-button')
-            .button({ icons: { primary: "ui-icon-search" }})
-            .click(function(e) {
-                e.preventDefault();
-                if ($(this).button( "option", "disabled" )) {
-                    return;
-                }
-
-                $('#searchAppStore-loading').show();
-
-                // $('#dashboard-searchAppStore-custom-modal').dialog({
-                //     buttons: [
-                //         {
-                //             text: 'Cancel',
-                //             click: function() {
-                //                 $('#searchAppStore-results').html('');
-                //                 $(this).dialog("close");
-                //             }
-                //         }
-                //     ]
-                // });
-                var name = $('#appForm input[name="name"]').val();
-                var script = document.createElement("script");
-                script.src = 'http://ax.itunes.apple.com'
-                    + '/WebObjects/MZStoreServices.woa/wa/wsSearch'+
-                    + '?entity=software&limit=10&callback=loadedArtwork&term='
-                    + name;
-                var head = document.getElementsByTagName("head")[0];
-                (head || document.body).appendChild( script );
-            });
+        initializeiOSAppSearch();
 
         if ($('#appForm-name').val() === '') {
-            $('#appForm-search-button').button("disable");
-            $('#appForm-search').button("disable");
             $('#appForm-market-search-button').button("disable");
             $('#appForm-market-search').button("disable");
         }
@@ -292,12 +257,17 @@ var mopub = mopub || {};
      */
     function initializeNewAdunitForm() {
 
+        function activate ( element, container ) {
+            container.find('.active').removeClass('active');
+            element.addClass('active');
+        }
 
         $("#adunit-device_format_phone").click(function(e){
             $('#adForm-tablet-container').hide();
             $('#adForm-phone-container')
                 .show()
                 .find('input[type="radio"]')[0].click();
+            activate($(this), $(this).parent());
         });
 
         // Click handler for the tablet format
@@ -306,6 +276,8 @@ var mopub = mopub || {};
             $('#adForm-tablet-container')
                 .show()
                 .find('input[type="radio"]')[0].click();
+            activate($(this), $(this).parent());
+
         });
 
         // Slide up/down handler for the form div
@@ -463,9 +435,8 @@ var mopub = mopub || {};
 
                 setDefaultAdUnitName($(this).attr("id"));
 
-            }).first().click(); //initialize by activating the first
+            }); //initialize by activating the first
         });
-
         //initialize checked elements
         $("#adunit-device_format_phone").parent().children()
             .filter(':checked')
@@ -679,10 +650,9 @@ var mopub = mopub || {};
     function initializeiOSAppSearch() {
         // Search button
         $('#appForm-search-button')
-            .button({ icons: { primary: "ui-icon-search" }})
             .click(function(e) {
-                e.preventDefault();
                 if ($(this).button( "option", "disabled" )) {
+                    alert('weeeee');
                     return;
                 }
 

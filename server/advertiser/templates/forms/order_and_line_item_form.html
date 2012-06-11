@@ -59,7 +59,7 @@
                 <div>
                     {% comment %}TODO: do this in a tag or something{% endcomment %}
                     {% if line_item_form.instance %}
-                        {{ line_item_form.instance.adgroup_type }}
+                        {% if line_item_form.instance.gtee %}Guaranteed{% else %}Promotional{% endif %}
                         <input name="adgroup_type" type="hidden" value="{% if line_item_form.instance.gtee %}gtee{% else %}promo{% endif %}" />
                     {% else %}
                         {{ line_item_form.adgroup_type }}
@@ -75,7 +75,7 @@
                 </div>
             </li>
 
-            <li class="adgroup_type_dependant gtee">
+            <li class="adgroup_type_dependent gtee">
                 {{ line_item_form.gtee_priority.label_tag }}
                 <div>
                     {{ line_item_form.gtee_priority }}
@@ -87,7 +87,7 @@
                 </div>
             </li>
 
-            <li class="adgroup_type_dependant promo">
+            <li class="adgroup_type_dependent promo">
                 {{ line_item_form.promo_priority.label_tag }}
                 <div>
                     {{ line_item_form.promo_priority }}

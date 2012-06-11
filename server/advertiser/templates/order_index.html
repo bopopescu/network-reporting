@@ -53,10 +53,10 @@
       </div>
     </div>
   </div>
-  
+
   <br />
   {% endcomment %}
-  
+
   <ul class="tabs">
     <li class="active">
       <a href="#orders"> Orders </a>
@@ -65,13 +65,13 @@
       <a href="#line_items"> Line Items </a>
     </li>
   </ul>
-  
-  
+
+
   {% comment %}
     Order Tab
   {% endcomment %}
   <div class="active tab-section" id="orders">
-    
+
     {# Order activity controls #}
     <div class="left">
       <div class="btn-group">
@@ -93,8 +93,8 @@
         </a>
       </div>
     </div>
-    
-    
+
+
     {% order_table orders %}
 
     <br />
@@ -122,16 +122,16 @@
                   data-toggle="running"> JSON </a> </li>
         </ul>
       </div>
-    </div>       
+    </div>
 
   </div>
-  
-  
+
+
   {% comment %}
     Line Items Tab
   {% endcomment %}
   <div class="tab-section" id="line_items">
-    
+
     {# Order activity controls #}
     <div class="left btn-group">
       <a class="btn status_change" data-toggle="pause">
@@ -140,12 +140,12 @@
       <a class="btn status_change" data-toggle="play">
         <i class="icon-play"></i> Resume
       </a>
-      
+
       <a class="btn status_change" data-toggle="archive">
         <i class="icon-inbox"></i> Archive
       </a>
     </div>
-    
+
     <div class="right">
       <div class="btn-group">
         <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
@@ -154,9 +154,8 @@
       </div>
       {% filter_buttons %}
     </div>
-    
     {% line_item_table line_items %}
-    
+
     <br />
 
     <div class="right">
@@ -182,9 +181,9 @@
                   data-toggle="running"> JSON </a> </li>
         </ul>
       </div>
-    </div>       
+    </div>
   </div>
-    
+
 {% endblock content %}
 
 {% block extraScripts %}

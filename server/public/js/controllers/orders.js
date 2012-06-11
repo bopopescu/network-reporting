@@ -143,7 +143,7 @@
 
     /*
      * Sets up the click handler for the status control button. This
-     * is the button group that pauses, resumes, and archives 
+     * is the button group that pauses, resumes, and archives
      * orders/line items/creatives.
      */
     function initializeStatusControls() {
@@ -179,12 +179,12 @@
                 $('i.toggle-check', $(this)).removeClass('invisible');
             }
         });
-        
+
         $("#filter-button").click(function(e) {
             e.preventDefault();
             filterLineItems("lineitem-row", "#line_item_table");
         });
-        
+
     }
 
 
@@ -396,7 +396,7 @@
             var line_item = new LineItem({
                 id: bootstrapping_data.line_item_key
             });
-            
+
             line_item.bind('change', function (current_line_item) {
 
                 renderLineItem(current_line_item);
@@ -404,7 +404,7 @@
                 var line_items = new LineItemCollection();
                 line_items.add(line_item);
 
-                var chart_view = new CollectionChartView({                    
+                var chart_view = new CollectionChartView({
                     collection: line_items,
                     start_date: bootstrapping_data.start_date,
                     display_values: ['req', 'imp', 'clk']
@@ -718,7 +718,7 @@
             // toggle fields based on adgroup_type
             $('[name="adgroup_type"]').change(function() {
                 var adgroup_type = $(this).val();
-                $('.adgroup_type_dependant').each(function() {
+                $('.adgroup_type_dependent').each(function() {
                     $(this).toggle($(this).hasClass(adgroup_type));
                 });
             }).change(); // update on document ready

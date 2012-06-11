@@ -90,11 +90,11 @@ def dashboard_prep(request, *args, **kwargs):
     days = StatsModel.lastdays(NUM_DAYS)
     # gets all undeleted applications
     start_date = StatsModel.today() - datetime.timedelta(days=(NUM_DAYS - 1))
-    
+
     total_stats = StatsModelQueryManager(None, offline=False).get_stats_for_days(publisher=ADMIN_MONGO_PUB,
-                                                                                 account=ADMIN_MONGO_ACCT, 
-                                                                                 advertiser=ADMIN_MONGO_ADV, 
-                                                                                 days=days, use_mongo=True, 
+                                                                                 account=ADMIN_MONGO_ACCT,
+                                                                                 advertiser=ADMIN_MONGO_ADV,
+                                                                                 days=days, use_mongo=True,
                                                                                  mongo_hybrid=False)
 
     apps = AppQueryManager.get_all_apps()
@@ -368,6 +368,3 @@ def bidder_spent(request, *args, **kwargs):
     except:
         pass
     return HttpResponse(str(num_sent))
-
-
-

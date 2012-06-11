@@ -74,7 +74,7 @@ class Campaign(db.Model):
     campaign_type = db.StringProperty(choices=['order',
                                                'marketplace',
                                                'network'])
-    
+
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank
     #
@@ -101,8 +101,8 @@ class Campaign(db.Model):
 
     @property
     def is_network(self):
-        return self.campaign_type == 'network'        
-    
+        return self.campaign_type == 'network'
+
     @property
     def has_daily_budget(self):
         return self.budget and self.budget_type == 'daily'
@@ -346,6 +346,17 @@ class AdGroup(db.Model):
         return self.bid
 
     @property
+    def line_item_priority(self):
+        ranks = {
+                 'gtee_high': 1,
+                 'gtee': 2,
+                 'gtee_low': 3,
+                 'promo': 4,
+                 'backfill_promo': 5
+                 }
+        return ranks[self.adgroup_type]
+
+    @property
     def status(self):
         if self.deleted:
             return "deleted"
@@ -361,10 +372,10 @@ class AdGroup(db.Model):
             else:
                 return "scheduled"
         else:
-            return "paused"            
+            return "paused"
         return "running"
 
-        
+
     @property
     def pace(self):
         budget = self.budget_obj

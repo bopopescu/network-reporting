@@ -51,9 +51,7 @@
         New Line Item
       </a>
     </div>
-    
     {% filter_buttons %}
-      
   </div>
 
   {% line_item_table order.adgroups %}
@@ -84,7 +82,7 @@
       </a>
     </div>
     {% endcomment %}
-    
+
 
     {% inventory_table targeted_apps %}
   </section>
@@ -93,14 +91,13 @@
 
 {% block extraScripts %}
 
- 
   {% include_template "chart" %}
   {% include_template "popover" %}
-  
+
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}
-  
+
   <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;

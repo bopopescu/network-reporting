@@ -11,7 +11,7 @@
   border: 1px solid #aaa;
   border-top: 0;
   position: absolute;
-  top: 29px;
+  top: 30px;
   left: 0;
   -webkit-box-shadow: 0 4px 5px rgba(0,0,0,.15);
   -moz-box-shadow   : 0 4px 5px rgba(0,0,0,.15);
@@ -41,7 +41,7 @@
   white-space: nowrap;
   position: relative;
   height: 23px;
-  line-height: 24px;
+  line-height: 23px;
   padding: 0 0 0 8px;
   color: #444444;
   text-decoration: none;
@@ -103,7 +103,7 @@
   background: url('/images/chosen-sprite.png') no-repeat 100% -22px, -o-linear-gradient(top, #eeeeee 1%, #ffffff 15%);
   background: url('/images/chosen-sprite.png') no-repeat 100% -22px, -ms-linear-gradient(top, #eeeeee 1%, #ffffff 15%);
   background: url('/images/chosen-sprite.png') no-repeat 100% -22px, linear-gradient(top, #eeeeee 1%, #ffffff 15%);
-  margin: 1px 0;
+  margin: 0 0 1px 0;
   padding: 4px 20px 4px 5px;
   outline: 0;
   border: 1px solid #aaa;

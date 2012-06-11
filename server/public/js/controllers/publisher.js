@@ -735,7 +735,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['req', 'imp', 'clk'],
+                    display_values: ['req', 'imp', 'clk']
                 });
                 chart_view.render();
             });
@@ -744,6 +744,11 @@ var mopub = mopub || {};
             // the table row for the adunit will be rendered
             _.each(bootstrapping_data.app_keys, function(app_key) {
                 fetchAdunitsFromKeys(app_key);
+            });
+
+            // Set up the quick jump dropdown
+            $("#app-quick-navigate").chosen().change(function() {
+                window.location = $(this).val();
             });
 
         },

@@ -59,16 +59,20 @@ Make a table for ad networks that are active
 {% endcomment %}
 <section>
 
-<div style="float: left;">
-    <h2>Network Breakdown</h2>
+<div class="left">
+  <h2>Network Breakdown</h2>
 </div>
-<div style="float: right;">
-    <select id='network-editSelect' class='selectmenu'>
-        <option value="">Add a Network</option>
-        {% for network in additional_networks %}
-        <option value="{% url edit_network network=network.name %}">{{network.pretty_name}}</option>
-        {% endfor %}
-    </select>
+
+<div class="right">
+  <select id='network-editSelect'>
+    <option value="">Add a Network</option>
+    {% for network in additional_networks %}
+      <option id="network-editSelect-{{ network.name }}"
+              value="{% url edit_network network=network.name %}">
+        {{network.pretty_name}}
+      </option>
+    {% endfor %}
+  </select>
 </div>
 
 <div style="clear:both;">
@@ -366,19 +370,19 @@ Make a table for the main ad networks that are not setup
 {% block extraScripts %}
 {{ block.super }}
 <script>
-    $(function () {
-        var graph_start_date = {{ start_date|js_date }};
-
-        NetworksController.initialize({
-        campaigns_data: [{% for network in networks %}{
-          'id': '{{ network.key }}',
-          'network': '{{ network.name }}',
-          'reporting': {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
-          apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
-          date_range: {{ date_range }},
-          graph_start_date: graph_start_date,
-          });
-    });
+  $(function () {
+    var graph_start_date = {{ start_date|js_date }};
+  
+    NetworksController.initialize({
+      campaigns_data: [{% for network in networks %}{
+        id: '{{ network.key }}',
+        network: '{{ network.name }}',
+        reporting: {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
+        apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
+        date_range: {{ date_range }},
+        graph_start_date: graph_start_date,
+  });
+  });
 </script>
 {% endblock extraScripts %}
 

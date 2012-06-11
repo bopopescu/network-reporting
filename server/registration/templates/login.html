@@ -1,5 +1,7 @@
 {% extends "registration/base.html" %}
 
+{% load filters %}
+
 {% block pageTitle %}<h1>Account - Login</h1>{% endblock %}
 
 {% block content %}
@@ -49,14 +51,10 @@
 {% endblock content %}
 
 {% block extraScripts %}
-  <script type="text/javascript">
-    $(document).ready(function(){
-        $('.formFields input').keypress(function(e) {
-            if (e.which == 13) {
-                e.preventDefault();
-                $('#accountForm').submit();
-            }
-        });
-    });
-</script>
+  {% include_script "controllers/account" %}
+    <script type="text/javascript">
+      $(function () {
+          LoginController.initialize();
+      });
+    </script>
 {% endblock extraScripts %}

@@ -259,6 +259,7 @@ var mopub = window.mopub || {};
                     ctr: this_view.collection.get_chart_data('ctr', this_view.options.mopub_optimized),
                     total: false
                 };
+
                 this.show_chart();
             }
         }
@@ -270,6 +271,7 @@ var mopub = window.mopub || {};
             var this_view = this;
 
             if (this_view.collection.isFullyLoaded()) {
+
                 var metrics = ['rev', 'imp', 'clk', 'ctr'];
 
                 var network_campaigns = new Campaigns(_.filter(this.collection.models,
@@ -306,7 +308,8 @@ var mopub = window.mopub || {};
                         ctr: [{'Total': mopub_campaigns.get_total_daily_stats('ctr')}],
                         total: false
                     };
-                } else {
+                } else {b
+
                     mopub.dashboardStatsChartData = {
                         pointStart: this_view.options.start_date,
                         pointInterval: 86400000,
@@ -321,6 +324,7 @@ var mopub = window.mopub || {};
                         total: false
                     };
                 }
+
                 mopub.Chart.setupDashboardStatsChart('line');
                 $('#dashboard-stats-chart').show();
             }
@@ -337,19 +341,22 @@ var mopub = window.mopub || {};
             var this_view = this;
 
             if (this_view.collection.isFullyLoaded()) {
+
                 var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr'];
 
                 var network_campaigns = new Campaigns(_.filter(this.collection.models,
                     function(campaign){
                         return campaign.get('stats_endpoint') == 'networks';
-                        }));;
+                    }));;
+
                 var mopub_campaigns = new Campaigns(_.filter(this.collection.models,
                     function(campaign){
                         return campaign.get('stats_endpoint') == 'all';
-                        }));
+                    }));
 
                 // Render Total daily count stats
                 _.each(metrics, function (metric) {
+
                     var selector = '#dailyCounts-totals';
                     // Mopub doesn't track rev
                     if (metric == 'rev' || metric == 'cpm') {
@@ -359,6 +366,7 @@ var mopub = window.mopub || {};
                         var mopub_selector = selector + ' .' + metric + ' .mopub-data';
                         var network_selector = selector + ' .' + metric + ' .network-data';
                     }
+
                     $(mopub_selector).text(mopub_campaigns.get_formatted_stat(metric));
                     if (!_.isEmpty(network_campaigns.models)) {
                         $(network_selector).text(network_campaigns.get_formatted_stat(metric));
@@ -366,6 +374,7 @@ var mopub = window.mopub || {};
 
                     function renderColumn(campaigns, selector) {
                         var totals = campaigns.get_formatted_total_daily_stats(metric).reverse();
+
                         // Render td in rows a column at a time
                         $('.dailyCounts-stats').each(function (index, row) {
                             var value = totals[index];
@@ -706,10 +715,37 @@ var mopub = window.mopub || {};
         }
     });
 
-    window.AdUnitView = AdUnitView;
-    window.AppView = AppView;
 
-    window.NetworkView = NetworkView;
+    /*
+     * ## AdUnitCollectionView
+     */
+    var AdUnitCollectionView = Backbone.View.extend({
+        initialize: function () {
+            this.collection.bind('reset', this.render, this);
+        },
+        
+        render: function () {
+            if(this.collection.isFullyLoaded()) {
+                this.collection.each(function(adunit) {
+                    var adunit_view = new AdUnitView({
+                        model: adunit,
+                        el: 'div#content'
+                    });
+                    adunit_view.renderInline();
+                });
+            }
+
+            // hide spinner
+            $('#' + this.options.campaign.id + '-loading').hide();
+
+            return this;
+        }
+    });
+
+
+    window.AdUnitView = AdUnitView;
+    window.AdUnitCollectionView = AdUnitCollectionView;
+    window.AppView = AppView;
     
     window.LineItemView = LineItemView;
     window.OrderView = OrderView;
@@ -717,6 +753,7 @@ var mopub = window.mopub || {};
     window.CollectionGraphView = CollectionGraphView;
     window.CollectionChartView = CollectionChartView;
 
+    window.NetworkView = NetworkView;
     window.NetworkGraphView = NetworkGraphView;
     window.NetworkDailyCountsView = NetworkDailyCountsView;
     

@@ -34,10 +34,22 @@
 
   {% chart_placeholder start_date end_date %}
 
-  <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
-      <a class="btn" href='{% url publisher_create_app %}'>
-        <i class="icon-plus"></i>
+  <section id="dashboard-apps" class="chzn-select">
+    <div class="right">
+      <select data-placeholder="Quick jump to an app"
+              style=" width:200px;"
+              id="app-quick-navigate">
+        <option value=""></option>
+        {% for app in apps %}
+          {% if not app.deleted %}
+            <option value="{% url publisher_app_show app_key=app.key %}">
+              {{app.name}} ({{ app.type }})
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <a class="btn" href='{% url publisher_create_app %}' style="margin-top: -3px">
+        {% button_icon "plus" %}
         Add an app
       </a>
     </div>

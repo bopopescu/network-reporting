@@ -53,10 +53,12 @@
                   {{ adunit.name }}
                 </a>
               </td>
-              <td>              
+              <td>
+                {% comment %}
                 <span class="appData-id muted unbold hidden">
                   AdUnit ID: {{ adunit.key }}
                 </span>
+                {% endcomment %}
               </td>
               {# these stats will be loaded over ajax #}
               <td class="req stat">--</td>

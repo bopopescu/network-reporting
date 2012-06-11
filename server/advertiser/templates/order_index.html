@@ -6,57 +6,6 @@
 
 {% block content %}
 
-  {% comment %}
-  <div class="new-rollup">
-    <div class="active rollup-box">
-      <h3 class="rollup-title">Impressions</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-impressions">
-          --
-        </div>
-        <div class="positive delta-value">
-          + 2.05%
-        </div>
-      </div>
-    </div>
-    <div class="rollup-box">
-      <h3 class="rollup-title">Clicks</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-clicks">
-          --
-        </div>
-        <div class="negative delta-value">
-          - 9.25%
-        </div>
-      </div>
-    </div>
-    <div class="rollup-box">
-      <h3 class="rollup-title">CTR</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-ctr">
-          --
-        </div>
-        <div class="negative delta-value">
-          - 4.41%
-        </div>
-      </div>
-    </div>
-    <div class="rollup-box">
-      <h3 class="rollup-title">Conversions</h3>
-      <div class="rollup-stat">
-        <div class="stat-value" id="rollup-conversions">
-          --
-        </div>
-        <div class="positive delta-value">
-          + 0.41%
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <br />
-  {% endcomment %}
-
   <ul class="tabs">
     <li class="active">
       <a href="#orders"> Orders </a>
@@ -76,24 +25,27 @@
     <div class="left">
       <div class="btn-group">
         <button class="btn status_change" data-toggle="pause">
-          <i class="icon-pause"></i> Pause
+          {% button_icon "pause" %}
+          Pause
         </button>
         <button class="btn status_change" data-toggle="play">
-          <i class="icon-play"></i> Resume
+          {% button_icon "play" %}
+          Resume
         </button>
         <button class="btn status_change" data-toggle="archive">
-          <i class="icon-inbox"></i> Archive
+          {% button_icon "inbox" %}
+          Archive
         </button>
       </div>
     </div>
     <div class="right">
       <div class="btn-group">
         <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
-          <i class="icon-plus"></i> Add a new order
+          {% button_icon "plus" %}
+          Add a new order
         </a>
       </div>
     </div>
-
 
     {% order_table orders %}
 
@@ -132,7 +84,7 @@
   {% endcomment %}
   <div class="tab-section" id="line_items">
 
-    {# Order activity controls #}
+    {# Line item activity controls #}
     <div class="left btn-group">
       <a class="btn status_change" data-toggle="pause">
         <i class="icon-pause"></i> Pause
@@ -149,7 +101,8 @@
     <div class="right">
       <div class="btn-group">
         <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
-          <i class="icon-plus"></i> Add a new order
+          {% button_icon "plus" %}
+          Add a new order
         </a>
       </div>
       {% filter_buttons %}
@@ -192,6 +145,7 @@
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}
+  
   <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;

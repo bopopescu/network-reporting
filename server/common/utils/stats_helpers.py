@@ -93,7 +93,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
             return self.format_stats(stats)
 
     def _get_campaign_stats(self, start, end, campaign, publisher=None,
-            daily=True, *args, **kwargs):
+                            daily=True, *args, **kwargs):
         # mongo
         query_manager = StatsModelQueryManager(AccountQueryManager.get(
             self.account_key))
@@ -129,6 +129,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         if daily:
             return self.format_daily_stats(all_stats)
         else:
+
             return self.format_stats(all_stats)
             
     def _get_advertiser_stats(self, advertiser, start, end,

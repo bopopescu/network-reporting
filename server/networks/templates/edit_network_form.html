@@ -1,9 +1,7 @@
 {% extends 'advertiser/base.html' %}
 
 {% load filters %}
-
-{% block dateButtons %}
-{% endblock dateButtons %}
+{% load elements %}
 
 {% block pageTitle %}
 <h1>
@@ -12,19 +10,15 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-{% if login_form %}
-<span id="title-bar-button" class="titlebar-right{% if network.show_login %} hidden{% endif %}">
-    <a class="btn" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
-</span>
-{% endif %}
 {% endblock titleBarRight %}
 
 {% block content %}
 {% if login_form %}
+  
 <section id="network-settingsForm" class="hidden">
-    <form accept-charset="ascii" id="network-login-form" autocomplete="off">
-        {% if not network.show_login %}
-        <fieldset class="alt login-fields" style="padding-top:20px">
+  <form accept-charset="ascii" id="network-login-form" autocomplete="off">
+    {% if not network.show_login %}
+      <fieldset class="alt login-fields" style="padding-top:20px">
             <legend>
                 <h2>
                     Revenue Reporting
@@ -123,8 +117,20 @@
             </ul>
 
             <div style="margin-top:15px">
-                <a class="btn" id="advanced">Show Advanced Targeting</a>
+                <a class="btn" id="advanced">
+                  {% button_icon "eye-open" %}
+                  Show Advanced Targeting
+                </a>
+                {% if login_form %}      
+                  <a class="btn{% if network.show_login %} hidden{% endif %}" id="network-settingsButton" href="#">
+                    {% button_icon "pencil" %}
+                    Change Revenue Reporting
+                  </a>
+                {% endif %}
             </div>
+            
+
+
         </div>
     </fieldset>
 
@@ -284,7 +290,8 @@
     </fieldset>
     {% endif %}
 
-    <h2>App Targeting</h2>
+    <h2 class="left">App Targeting</h2>
+    
     <div>
         <table class="inventory_table">
             <thead>
@@ -554,7 +561,10 @@
         <div id="loading" class="hidden">
             <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
         </div>
-        <a class="btn" id="submit" href="#">Save</a>
+        <a class="btn" id="submit" href="#">
+          {% button_icon "ok" %}
+          Save
+        </a>
         <a class="btn" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
 
@@ -597,7 +607,7 @@
             </div>
             <div class="modal-footer">
                 <a class="btn save" href="#">Ok</a>
-                <a class="btn close" href="#">Cancel</a>
+                <a class="btn cancel" href="#">Cancel</a>
             </div>
         </div>
         {% for app in apps %}
@@ -636,7 +646,7 @@
                 </div>
                 <div class="modal-footer">
                     <a class="btn save" href="#">Ok</a>
-                    <a class="btn close" href="#">Cancel</a>
+                    <a class="btn cancel" href="#">Cancel</a>
                 </div>
             </div>
             {% for adunit in app.adunits %}
@@ -669,7 +679,7 @@
                 </div>
                 <div class="modal-footer">
                     <a class="btn save" href="#">Ok</a>
-                    <a class="btn close" href="#">Cancel</a>
+                    <a class="btn cancel" href="#">Cancel</a>
                 </div>
             </div>
             {% endfor %}

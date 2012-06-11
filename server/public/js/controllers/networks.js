@@ -9,7 +9,15 @@
         Toast.error(message, "Error fetching app data.");
     };
 
-    function initialize_campaign_data(campaign_data, apps, include_adunits) {
+    // TODO: move to a utils package
+    // checks if email is valid
+    function isValidEmailAddress(emailAddress) {
+        var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
+        return pattern.test(emailAddress);
+    };
+
+    function initialize_campaign_data(campaign_data, apps, include_adunits) {        
+
         // create mopub campaign
         // endpoint=all
         var mopub_campaign = new Campaign(campaign_data);
@@ -40,6 +48,9 @@
                     campaign.fetch({
                         error: toast_error
                     });
+                },
+                success: function () {
+                    
                 }
             });
         });
@@ -53,9 +64,11 @@
                     stats_endpoint: campaign.get('stats_endpoint')
                 });
 
-                var app_view = new AppView({model: network_app,
-                             endpoint_specific: true,
-                             network: campaign.get('network')});
+                var app_view = new AppView({
+                    model: network_app,
+                    endpoint_specific: true,
+                    network: campaign.get('network')
+                });
                 app_view.el = '.' + campaign.id + '-apps-div';
 
                 network_apps.push(network_app);
@@ -67,8 +80,10 @@
             adunits.campaign_id = mopub_campaign.id;
             adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
 
-            new AdUnitCollectionView({collection: adunits,
-                                      campaign: mopub_campaign});
+            new AdUnitCollectionView({
+                collection: adunits,
+                campaign: mopub_campaign
+            });
 
             return [all_campaigns, network_apps, adunits];
         } else {
@@ -124,31 +139,54 @@
             }
         });
 
+        // We drop a cookie when someone clicks on the 'show reporting data'
+        // check box, so that their preference is saved. If that cookie exists,
+        // check the box automatically. 
         if (!$.cookie("show-network-data")) {
             $('#show-network').click();
         } else {
             $('#show-network').change();
         }
-    }
+    };
 
     var NetworksController = { 
+
         initialize: function(bootstrapping_data) {
+            
+            // Set up variables from the boostrapping data
             var campaigns_data = bootstrapping_data.campaigns_data,
                 apps = bootstrapping_data.apps,
                 date_range = bootstrapping_data.date_range,
                 graph_start_date = bootstrapping_data.graph_start_date;
 
+            // Initialize common stuff
             // TODO: move fuction to mopub.js
             initializeDateButtons();
 
+            // Make the new network selector really fancy
+            function network_option_format(network) {
+                console.log(network);
+                return "<img src='/images/" + network.id.toLowerCase()  + "-transparent.png'/>" + network.text;
+            }
+
+            
+            $("#network-editSelect").chosen().bind("change", function() {
+                window.location = $(this).val();
+            });
+
+
+            // Fetch all the campaign data and render each network as a table row
             var all_campaigns = [];
             var apps_by_campaign = {};
             _.each(campaigns_data, function(campaign_data) {
+
                 var result = initialize_campaign_data(campaign_data, apps, false);
                 all_campaigns = all_campaigns.concat(result[0]);
                 var network_apps = apps_by_campaign[result[0][0].id] = result[1];
             });
 
+            // Set up the click handler that shows the apps targeted
+            // by each network
             $('.show-apps').click(function() {
                 var key = $(this).attr('id');
                 var div = $('.' + key + '-apps-div');
@@ -156,7 +194,7 @@
                     div.show();
                     $(this).children('span').text("Hide Apps");
                 } else {
-                    div.hide()
+                    div.hide();
                     $(this).children('span').text("Show Apps");
                 }
                 // load the apps via ajax
@@ -179,10 +217,12 @@
                 date_range: date_range,
                 start_date: graph_start_date,
                 line_graph: false,
-                mopub_optimized: false,
+                mopub_optimized: false
             });
 
-            new NetworkDailyCountsView({collection: campaigns});
+            new NetworkDailyCountsView({
+                collection: campaigns
+            });
 
             initialize_show_network();
 
@@ -195,28 +235,12 @@
                 }
             );
 
-            $('#network-editSelect').change(function() {
-                if ($(this).val()) {
-                    window.location = $(this).val();
-                }
-                $(this).selectmenu('index', 0);
-            });
+
 
             $('#network-editSelect-menu').find('li').first().hide();
 
-            // TODO: move to a utils package
-            // checks if email is valid
-            function isValidEmailAddress(emailAddress) {
-                var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
-                return pattern.test(emailAddress);
-            };
-
             // taken from mopub-dashboard.js #appEditForm (could be combined)
             $('#networkSettingsForm-submit')
-                .button({
-                    icons: { secondary: "ui-icon-circle-triangle-e" }
-                })
-
                 .click(function(e) {
                     e.preventDefault();
                     $('#networkSettingsForm-loading').show();
@@ -1048,7 +1072,7 @@
                         $(modal_div).modal('hide');
                     });
 
-                    $(modal_div).find('.close').click(function() {
+                    $(modal_div).find('.cancel').click(function() {
                         $(modal_div).modal('hide');
                     });
                 });

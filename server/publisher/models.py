@@ -130,6 +130,8 @@ class App(db.Model):
 
             return domain
 
+        return None
+
     @property
     def type(self):
         types = {

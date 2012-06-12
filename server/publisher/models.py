@@ -3,7 +3,6 @@ asdfasdf
 """
 from google.appengine.ext import blobstore
 from google.appengine.ext import db
-from google.appengine.api import users
 from django.conf import settings
 from account.models import Account, NetworkConfig
 from advertiser.models import Creative
@@ -11,8 +10,8 @@ from simple_models import SimpleApp, SimpleAdUnit
 
 import datetime
 import time
-import logging
 import re
+import urlparse
 
 #
 # A mobile app, which can have multiple Sites on which ads can be displayed
@@ -48,7 +47,6 @@ class App(db.Model):
     account = db.ReferenceProperty(Account)
 
     name = db.StringProperty(required=True)
-    global_id = db.StringProperty() # used to store appstore or marketplace id
     adsense_app_name = db.StringProperty()
     adsense_app_id = db.StringProperty()
     admob_bgcolor = db.StringProperty()
@@ -103,6 +101,36 @@ class App(db.Model):
                          primary_category = self.primary_category,
                          secondary_category = self.secondary_category,
                          force_marketplace = self.force_marketplace)
+
+    @property
+    def global_id(self):
+        if self.app_type == 'android' and self.package:
+            return self.package
+
+        if self.app_type in ['iphone', 'ipad'] and self.url:
+            parse_result = urlparse.urlparse(self.url)
+            match = re.search('\/id(\d+)$', parse_result.path.lower())
+            if match:
+                return match.group(1)
+
+        elif self.app_type == 'mweb' and self.url:
+            parse_result = urlparse.urlparse(self.url)
+            if parse_result.netloc:
+                domain = parse_result.netloc.lower()
+            elif parse_result.path:
+                domain = parse_result.path.lower()
+            else:
+                return None
+
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            index = domain.find('/')
+            if index != -1:
+                domain = domain[:index]
+
+            return domain
+
+        return None
 
     @property
     def type(self):
@@ -172,7 +200,7 @@ class App(db.Model):
     def external_key(self):
         return db.Key.from_path(self.key().kind(), self.key().id_or_name(), _app='mopub-inc')
 
-        
+
 class Site(db.Model):
     DEVICE_FORMAT_CHOICES = (
            u'phone',
@@ -349,7 +377,7 @@ class Site(db.Model):
             return account_level_id
 
     def external_key(self):
-        return db.Key.from_path(self.key().kind(), self.key().id_or_name(), _app='mopub-inc')            
+        return db.Key.from_path(self.key().kind(), self.key().id_or_name(), _app='mopub-inc')
 
 ###############
 # rename Site #

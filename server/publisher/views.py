@@ -398,32 +398,33 @@ class AppDetailHandler(RequestHandler):
             if not campaign.network_type:
                 campaign.adgroup = campaign.adgroups[0]
 
-            # 1 GET
-            summed_fetcher = SummedStatsFetcher(self.account.key())
-            campaign.stats =  summed_fetcher.get_campaign_specific_app_stats(
-                    app.key(), campaign, self.start_date, self.end_date)
-            #budget_object = campaign.budget_obj
-            #campaign.percent_delivered = budget_service.percent_delivered(
-                    #budget_object)
+            if len(app.campaigns) < 20:
+                # 1 GET
+                summed_fetcher = SummedStatsFetcher(self.account.key())
+                campaign.stats =  summed_fetcher.get_campaign_specific_app_stats(
+                        app.key(), campaign, self.start_date, self.end_date)
+                #budget_object = campaign.budget_obj
+                #campaign.percent_delivered = budget_service.percent_delivered(
+                        #budget_object)
 
-            # Overwrite the revenue from MPX if its marketplace
-            # TODO: overwrite clicks as well
-            if campaign.campaign_type in ['marketplace']:
-                try:
-                    # 1 urlfetch
-                    mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
-                                                            self.start_date,
-                                                            self.end_date)
-                except MPStatsAPIException, error:
-                    logging.warning("MPStatsAPIException: %s" % error)
-                    mpx_stats = {}
+                # Overwrite the revenue from MPX if its marketplace
+                # TODO: overwrite clicks as well
+                if campaign.campaign_type in ['marketplace']:
+                    try:
+                        # 1 urlfetch
+                        mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
+                                                                self.start_date,
+                                                                self.end_date)
+                    except MPStatsAPIException, error:
+                        logging.warning("MPStatsAPIException: %s" % error)
+                        mpx_stats = {}
 
-                campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
-                campaign.stats['imp'] = int(mpx_stats.get('imp', 0))
+                    campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
+                    campaign.stats['imp'] = int(mpx_stats.get('imp', 0))
 
-            if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
-                    'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
-                campaign.calculated_ecpm = calculate_ecpm(campaign)
+                if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
+                        'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
+                    campaign.calculated_ecpm = calculate_ecpm(campaign)
 
 
         # Sort out all of the campaigns that are targeting this app

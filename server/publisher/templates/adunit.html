@@ -201,7 +201,13 @@
                         </th>
                         <td class="dataTable-data numeric">
                             Guaranteed<br/><span class="muted">{{level.name}}</span></td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                        <td class="dataTable-data numeric">
+                          {% if adgroup.stats %}
+                            {{adgroup.stats.revenue|currency}}
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
                         <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if adgroup.bid_strategy == 'cpc' %}
                             {{ adgroup.calculated_ecpm|currency }}
@@ -210,14 +216,28 @@
                           {% endif %}
                         </td>
                         <td class="dataTable-data numeric">-</td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">
-                            {{adgroup.stats.click_count|withsep}}<br/>
-                            <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                          {% if adgroup.stats %}
+                            {{adgroup.stats.impression_count|withsep}}
+                          {% else %}
+                            -
+                          {% endif %}
                         </td>
                         <td class="dataTable-data numeric">
-                          {{adgroup.stats.conversion_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                          {% if adgroup.stats %}
+                            {{adgroup.stats.click_count|withsep}}<br/>
+                            <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
+                        <td class="dataTable-data numeric">
+                          {% if adgroup.stats %}
+                            {{adgroup.stats.conversion_count|withsep}}<br/>
+                            <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                          {% else %}
+                            -
+                          {% endif %}
                         </td>
                       </tr>
                     {% endfor %}
@@ -265,14 +285,28 @@
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{adgroup.stats.click_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}<span>
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.impression_count|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
-                        {{adgroup.stats.conversion_count|withsep}}<br/>
-                        <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.click_count|withsep}}<br/>
+                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}<span>
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.conversion_count|withsep}}<br/>
+                          <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                     </tr>
                   {% endfor %}
@@ -292,10 +326,34 @@
                             </a>
                           </th>
                           <td class="dataTable-data numeric">Marketplace</td>
-                          <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                          <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                          <td class="dataTable-data numeric">{{adgroup.stats.attempt_count|withsep}}</td>
-                          <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                          <td class="dataTable-data numeric">
+                            {% if adgroup.stats %}
+                              {{adgroup.stats.revenue|currency}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <td class="dataTable-data numeric">
+                            {% if adgroup.stats %}
+                              {{adgroup.stats.cpm|currency}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <td class="dataTable-data numeric">
+                            {% if adgroup.stats %}
+                              {{adgroup.stats.attempt_count|withsep}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <td class="dataTable-data numeric">
+                            {% if adgroup.stats %}
+                              {{adgroup.stats.impression_count|withsep}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
                           <td class="dataTable-data numeric">-</td>
                           <td class="dataTable-data numeric">-</td>
                         </tr>
@@ -317,11 +375,27 @@
                       <td class="dataTable-data numeric {% if adgroup.cpc %}dataTable-campaign-ecpm{% endif %}">
                         {{ adgroup.calculated_ecpm|currency }}
                       </td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.attempt_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.attempt_count|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.impression_count|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if adgroup.stats %}
                           {{adgroup.stats.click_count|withsep}}<br/>
                           <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                       <td class="dataTable-data numeric">-</td>
                     </tr>
@@ -370,14 +444,28 @@
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{adgroup.stats.click_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}</span>
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.impression_count|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
-                        {{adgroup.stats.conversion_count|withsep}}<br/>
-                        <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.click_count|withsep}}<br/>
+                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if adgroup.stats %}
+                          {{adgroup.stats.conversion_count|withsep}}<br/>
+                          <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                     </tr>
                   {% endfor %}

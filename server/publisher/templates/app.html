@@ -252,7 +252,7 @@
                           {% if campaign.stats %}
                             {{campaign.stats.revenue|currency}}
                           {% else %}
-                            --
+                            -
                           {% endif %}
                         </td>
                         <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
@@ -267,7 +267,7 @@
                           {% if campaign.stats %}
                             {{campaign.stats.imp|withsep}}
                           {% else %}
-                            --
+                            -
                           {% endif %}
                         </td>
                         <td class="dataTable-data numeric">
@@ -275,7 +275,7 @@
                             {{campaign.stats.clk|withsep}}<br/>
                             <span class="muted">{{campaign.stats.ctr|percentage}}</span>
                           {% else %}
-                            --
+                            -
                           {% endif %}
                         </td>
                         <td class="dataTable-data numeric">
@@ -283,7 +283,7 @@
                             {{campaign.stats.conv|withsep}}<br/>
                             <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
                           {% else %}
-                            --
+                            -
                           {% endif %}
                         </td>
                       </tr>
@@ -323,7 +323,7 @@
                         </span>
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Normal</span></td>
-                      <td class="dataTable-data numeric"> -- </td>
+                      <td class="dataTable-data numeric"> - </td>
                       <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if campaign.adgroup.bid_strategy == 'cpc' %}
                             {{ campaign.adgroup.calculated_ecpm|currency }}
@@ -336,7 +336,7 @@
                         {% if campaign.stats %}
                           {{campaign.stats.imp|withsep}}
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
@@ -344,7 +344,7 @@
                           {{campaign.stats.clk|withsep}}<br/>
                           <span class="muted">{{campaign.stats.ctr|percentage|withsep}}<span>
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
@@ -352,7 +352,7 @@
                           {{campaign.stats.conv|withsep}}<br/>
                           <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                     </tr>
@@ -378,28 +378,28 @@
                             {% if campaign.stats %}
                               {{campaign.stats.rev|currency}}
                             {% else %}
-                              --
+                              -
                             {% endif %}
                           </td>
                           <td class="dataTable-data numeric">
                             {% if campaign.stats %}
                               {{campaign.stats.cpm|currency}}
                             {% else %}
-                              --
+                              -
                             {% endif %}
                           </td>
                           <td class="dataTable-data numeric">
                             {% if campaign.stats %}
                               {{campaign.stats.req|withsep}}
                             {% else %}
-                              --
+                              -
                             {% endif %}
                           </td>
                           <td class="dataTable-data numeric">
                             {% if campaign.stats %}
                               {{campaign.stats.imp|withsep}}
                             {% else %}
-                              --
+                              -
                             {% endif %}
                           </td>
                           <td class="dataTable-data numeric">-</td>
@@ -443,14 +443,14 @@
                         {% if campaign.stats %}
                           {{campaign.stats.req|withsep}}
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
                         {% if campaign.stats %}
                           {{campaign.stats.imp|withsep}}
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
@@ -458,7 +458,7 @@
                           {{campaign.stats.clk|withsep}}<br/>
                           <span class="muted">{{campaign.stats.ctr|percentage}}</span>
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">-</td>
@@ -512,7 +512,7 @@
                         {% if campaign.stats %}
                           {{campaign.stats.imp|withsep}}
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
@@ -520,7 +520,7 @@
                           {{campaign.stats.clk|withsep}}<br/>
                           <span class="muted">{{campaign.stats.ctr|percentage|withsep}}</span>
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
@@ -528,7 +528,7 @@
                           {{campaign.stats.conv|withsep}}<br/>
                           <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
                         {% else %}
-                          --
+                          -
                         {% endif %}
                       </td>
                     </tr>

@@ -137,8 +137,6 @@ class LineItemForm(forms.ModelForm):
 
     cities   = forms.Field(required=False, widget=forms.SelectMultiple)
 
-    keywords = forms.Field(required=False, widget=forms.SelectMultiple)
-
     def __init__(self, *args, **kwargs):
         # initial
         if len(args) > 5:

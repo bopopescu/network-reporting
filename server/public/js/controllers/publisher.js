@@ -554,11 +554,9 @@ var mopub = mopub || {};
         // Search button
         $('#appForm-search-button')
             .click(function(e) {
-                if ($(this).button( "option", "disabled" )) {
-                    alert('weeeee');
+                if ($(this).button('option', 'disabled')) {
                     return;
                 }
-
                 $('#searchAppStore-loading').show();
 
                 $('#dashboard-searchAppStore-custom-modal').dialog({

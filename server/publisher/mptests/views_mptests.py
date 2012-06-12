@@ -960,7 +960,7 @@ class AppUpdateAJAXViewTestCase(BaseViewTestCase):
             u'app_type': [u'iphone'],
             u'name': [u'Business App'],
             u'package': [u''],
-            u'url': [u'', u''],
+            u'url': [u''],
             u'img_file': [u''],
             u'secondary_category': [u''],
             u'ajax': [u'true'],

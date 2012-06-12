@@ -128,8 +128,24 @@ var mopub = mopub || {};
             $('#appForm .appForm-platformDependent')
                 .removeClass('iphone')
                 .removeClass('android')
+                .removeClass('mweb')
                 .addClass($(this).val());
-        }).filter(':checked').click();
+            if($(this).val() == 'android') {
+                $('#appForm input#appForm-url').hide();
+                $('#appForm input#appForm-package').show();
+            }
+            else {
+                $('#appForm input#appForm-package').hide();
+                $('#appForm input#appForm-url').show();
+                if($(this).val() == 'iphone') {
+                    $('#appForm input#appForm-url').attr('placeholder', 'http://itunes.apple.com/yourapp');
+                }
+                else {
+                    $('#appForm input#appForm-url').attr('placeholder', 'http://www.yourapp.com/');
+                }
+            }
+
+        }).filter(':checked').click(); // make sure we're in sync when the page Loads
 
         initializeiOSAppSearch();
 
@@ -165,14 +181,6 @@ var mopub = mopub || {};
             $('#appForm-icon-upload').show();
             $('#appForm input[name="img_url"]').val('');
         });
-
-        $('input[name="app_type"]').click(function(e) {
-            $('#appForm .appForm-platformDependent')
-                .removeClass('iphone')
-                .removeClass('android')
-                .removeClass('mweb')
-                .addClass($(this).val());
-        }).filter(':checked').click(); // make sure we're in sync when the page Loads
     }
 
     function initializeEditAppForm() {
@@ -508,115 +516,8 @@ var mopub = mopub || {};
         });
     }
 
-    /*
-     * ## initializeDailyCounts
-     * Initializes click handlers in the daily counts section for the
-     * app/adunit detail pages.
-     */
-    function initializeDailyCounts() {
-
-        var button = $('.appData-details-toggleButton');
-        button.button();
-
-        var individual_daily_counts = $("#appData-individual");
-
-        button.click(function(e) {
-            e.preventDefault();
-            if (individual_daily_counts.hasClass("hidden")) {
-                individual_daily_counts.removeClass("hidden");
-                button.button('option', 'label', 'Hide Details');
-            } else {
-                individual_daily_counts.addClass("hidden");
-                button.button('option', 'label', 'Show Details');
-                button.button();
-            }
-        });
-    }
 
     /*
-     * ## initializeDateButtons
-     * Loads all click handlers/visual stuff for the date buttons. Used
-     * on a ton of pages, probably could be refactored by someone brave
-     * enough.
-     */
-    function initializeDateButtons () {
-        $('#dashboard-dateOptions input').click(function() {
-            var option = $(this).val();
-            if (option == 'custom') {
-                $('#dashboard-dateOptions-custom-modal').dialog({
-                    width: 570,
-                    buttons: [
-                        {
-                            text: 'Set dates',
-                            css: { fontWeight: '600' },
-                            click: function() {
-                                var from_date = $('#dashboard-dateOptions-custom-from').xdatepicker("getDate");
-                                var to_date = $('#dashboard-dateOptions-custom-to').xdatepicker("getDate");
-                                var num_days = Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
-
-                                var from_day = from_date.getDate();
-                                // FYI, months are indexed from 0
-                                var from_month = from_date.getMonth() + 1;
-                                var from_year = from_date.getFullYear();
-
-                                $(this).dialog("close");
-                                var location = document.location.href.replace(/\?.*/,'');
-                                document.location.href = location
-                                    + '?r=' + num_days
-                                    + '&s=' + from_year + "-" + from_month + "-" + from_day;
-                            }
-                        },
-                        {
-                            text: 'Cancel',
-                            click: function() {
-                                $(this).dialog("close");
-                            }
-                        }
-                    ]
-                });
-            } else {
-                // Tell server about selected option to get new data
-                var location = document.location.href.replace(/\?.*/,'');
-                document.location.href = location + '?r=' + option;
-            }
-        });
-
-
-        // set up stats breakdown dateOptions
-        $('#stats-breakdown-dateOptions input').click(function() {
-            $('.stats-breakdown-value').hide();
-            $('.stats-breakdown-value.'+$(this).val()).show();
-        });
-
-        // set up custom dateOptions modal dialog
-        $('#dashboard-dateOptions-custom-from').xdatepicker({
-            defaultDate: '-15d',
-            maxDate: '0d',
-            onSelect: function(selectedDate) {
-                var other = $('#dashboard-dateOptions-custom-to');
-                var instance = $(this).data("datepicker");
-                var date = $.xdatepicker.parseDate(instance.settings.dateFormat
-                                                  || $.xdatepicker._defaults.dateFormat,
-                                                  selectedDate,
-                                                  instance.settings);
-                other.xdatepicker('option', 'minDate', date);
-            }
-        });
-
-        $('#dashboard-dateOptions-custom-to').xdatepicker({
-            defaultDate: '-1d',
-            maxDate: '0d',
-            onSelect: function(selectedDate) {
-                var other = $('#dashboard-dateOptions-custom-from');
-                var instance = $(this).data("datepicker");
-                var date = $.xdatepicker.parseDate(instance.settings.dateFormat ||
-                                                  $.xdatepicker._defaults.dateFormat,
-                                                  selectedDate,
-                                                  instance.settings);
-                other.xdatepicker('option', 'maxDate', date);
-            }
-        });
-    }
 
     /*
      * ## initializeDeleteForm
@@ -688,7 +589,7 @@ var mopub = mopub || {};
      * all of the publisher pages (inventory, app, adunit stuff)
      */
     function initializeCommon() {
-        initializeDateButtons();
+
         // Use breakdown to switch charts
         $('.stats-breakdown tr').click(function(e) {
             $('#dashboard-stats-chart').fadeOut(100, function() {
@@ -724,6 +625,7 @@ var mopub = mopub || {};
      * ## Dashboard Controller
      */
     var DashboardController = {
+
         initializeIndex: function (bootstrapping_data) {
 
             // Adds click handlers for the top date buttons and stats breakdown
@@ -746,7 +648,7 @@ var mopub = mopub || {};
             // Fetch all of the adunit stats for each app. After fetch,
             // the table row for the adunit will be rendered
             _.each(bootstrapping_data.app_keys, function(app_key) {
-                fetchAdunitsFromKeys(app_key);
+                var new_adunits = fetchAdunitsFromKeys(app_key);
             });
 
             // Set up the quick jump dropdown
@@ -762,7 +664,6 @@ var mopub = mopub || {};
             initializeNewAdunitForm();
             initializeDeleteForm();
             initializeiOSAppSearch();
-            initializeDailyCounts();
 
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdunitsFromKeys(bootstrapping_data.app_key);
@@ -781,7 +682,6 @@ var mopub = mopub || {};
         initializeAdunitDetail: function (bootstrapping_data) {
             initializeCommon();
             initializeDeleteForm();
-            initializeDailyCounts();
             initializeEditAdunitForm();
 
             $('#advertisers-testAdServer').click(function(e) {
@@ -794,9 +694,13 @@ var mopub = mopub || {};
                     }
                 });
                 $('#adserverTest-iFrame')
-                    .attr('src',$('#adserverTest-iFrame-src').text());
+                    .attr('src', $('#adserverTest-iFrame-src').text());
             });
 
+            
+            // Fetch the adunit and its app over ajax. We then use
+            // the app collection (which just has the one app) to fill
+            // in the chart.
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdunitsFromKeys(bootstrapping_data.app_key);
 

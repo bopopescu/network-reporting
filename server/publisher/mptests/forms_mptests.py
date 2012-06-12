@@ -16,6 +16,7 @@ from nose.tools import ok_, eq_
 from common.utils.test.fixtures import generate_app, generate_adunit
 from common.utils.test.test_utils import model_eq
 from publisher.forms import AppForm, AdUnitForm
+from publisher.mptests.models_mptests import GLOBAL_ID_TESTS
 
 
 setup_test_environment()
@@ -143,6 +144,30 @@ class CreateAppFormTestCase(unittest.TestCase):
         eq_(image_data, DEFAULT_IMG_URL_DATA)
 
         ok_(app.image_serve_url, get_url_for_blob(app.icon_blob))
+
+    def mptest_create_and_check_global_id(self):
+
+        for app_type, url, package, expected_global_id in GLOBAL_ID_TESTS:
+            data = copy.copy(DEFAULT_APP_DATA)
+            data['app_type'] = app_type
+            if url:
+                data['url'] = url
+            if package:
+                data['package'] = package
+
+            app_form = AppForm(data)
+
+            ok_(app_form.is_valid(),
+                "The AppForm was passed valid data but failed to validate:\n%s" %
+                    app_form._errors.as_text())
+
+            app = app_form.save()
+
+            expected_app = generate_app(None, **data)
+
+            model_eq(app, expected_app, exclude=['t'], check_primary_key=False)
+
+            eq_(app.global_id, expected_global_id)
 
 
 class EditAppFormTestCase(unittest.TestCase):

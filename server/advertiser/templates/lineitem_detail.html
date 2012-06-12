@@ -37,10 +37,31 @@
     </a>
 
     {% line_item_table line_item %}
+    
+    <br />
+    
+    <div class="btn-group">
+      <button class="btn status_change" data-toggle="pause">
+        {% button_icon "pause" %}
+        Pause
+      </button>
+      <button class="btn status_change" data-toggle="play">
+        {% button_icon "play" %}
+        Resume
+      </button>
+      <button class="btn status_change" data-toggle="archive">
+        {% button_icon "stop" %}
+        Archive
+      </button>
+    </div>
 
     {% if user.is_admin %}
-    <a class='btn' href="/budget/view/{{line_item.key}}"> Admin Budget View </a>
+    <a class="btn right" href="/budget/view/{{line_item.key}}">
+      {% button_icon "wrench" %}
+      Admin Budget View
+    </a>
     {% endif %}
+
 </section>
 
 

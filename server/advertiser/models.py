@@ -12,6 +12,7 @@ from common.constants import (MIN_IOS_VERSION,
                               MIN_ANDROID_VERSION,
                               MAX_ANDROID_VERSION,
                               IOS_VERSION_CHOICES,
+                              ISO_COUNTRY_LOOKUP_TABLE,
                               ANDROID_VERSION_CHOICES,
                               NETWORKS)
 import datetime
@@ -348,12 +349,12 @@ class AdGroup(db.Model):
     @property
     def line_item_priority(self):
         ranks = {
-                 'gtee_high': 1,
-                 'gtee': 2,
-                 'gtee_low': 3,
-                 'promo': 4,
-                 'backfill_promo': 5
-                 }
+            'gtee_high': 1,
+            'gtee': 2,
+            'gtee_low': 3,
+            'promo': 4,
+            'backfill_promo': 5
+        }
         return ranks[self.adgroup_type]
 
     @property
@@ -688,6 +689,79 @@ class AdGroup(db.Model):
         return self.created.date()
 
 
+    @property
+    def frequency_cap_display(self):
+
+        display = []
+        
+        if self.minute_frequency_cap:
+            display.append(str(self.minute_frequency_cap) + "/minute")
+        if self.hourly_frequency_cap:
+            display.append(str(self.hourly_frequency_cap) + "/hour")
+        if self.daily_frequency_cap:
+            display.append(str(self.daily_frequency_cap) + "/day")
+        if self.weekly_frequency_cap:
+            display.append(str(self.weekly_frequency_cap) + "/week")
+        if self.monthly_frequency_cap:
+            display.append(str(self.monthly_frequency_cap) + "/month")
+        if self.lifetime_frequency_cap:
+            display.append(str(self.lifetime_frequency_cap) + " total")
+        
+        if not display:
+            return "No frequency caps"
+        else:
+            return ", ".join(display)
+
+    @property
+    def country_targeting_display(self):
+
+        display = []
+        for country in self.geo_predicates:
+            country_name = ISO_COUNTRY_LOOKUP_TABLE[country.strip("country_name=")]
+            display.append(country_name)
+
+        if not display:
+            return "All countries"
+        else:
+            return ", ".join(sorted(display))
+
+    @property
+    def device_targeting_display(self):
+
+        if self.device_targeting and not self.uses_default_device_targeting:
+
+            display = []
+
+            # iOS Targeting
+            ios_display = []
+            if self.target_iphone:
+                ios_display.append("iPhone")
+            if self.target_ipad:
+                ios_display.append("iPad")
+            if self.target_ipod:
+                ios_display.append("iPod")
+                
+            if ios_display:
+                ios_display_all = ", ".join(ios_display) + \
+                                  " (iOS version " + self.ios_version_min + \
+                                  " to " + self.ios_version_max + ")"
+                display.append(ios_display_all)
+
+            # Android Targeting
+            if self.target_android:
+                android_display_all = "Android Devices (version " + \
+                                      self.android_version_min + " to " + \
+                                      self.android_version_max + ")"
+                display.append(android_display_all)
+
+            if self.target_other:
+                display.append("Other Devices")
+
+            if display:
+                return display
+
+        return ["All devices"]
+        
     def toJSON(self):
         d = {
             'key': str(self.key()),
@@ -702,10 +776,10 @@ class AdGroup(db.Model):
             'adgroup_type': self.adgroup_type,
             'start_datetime': self.start_datetime,
             'end_datetime': self.end_datetime,
-            'device_targeting': [],
-            'country_targeting': self.geo_predicates,
-            'frequency_caps': [],
-            'allocation': 0,
+            'device_targeting': self.device_targeting_display,
+            'country_targeting': self.country_targeting_display,
+            'frequency_caps': self.frequency_cap_display,
+            'allocation': self.allocation_percentage,
         }
         return d
 

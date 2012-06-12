@@ -1,14 +1,14 @@
 <h6>Allocation</h6> 
- 50%
+ <%= allocation %>%
 <br /><br />
  
 <h6> Frequency Caps </h6> 
- 3/hour, 1/d
+ <%= frequency_caps %>
 <br /><br />
  
 <h6> Country Targeting </h6> 
- United State, Canada, United Kingdom
+<%= country_targeting %>
 <br /><br />
 
 <h6> Device Targeting </h6> 
- Android (1.5 - No Max)
+<%= device_targeting.join('<br />') %>

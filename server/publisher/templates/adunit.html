@@ -210,7 +210,11 @@
                         </td>
                         <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if adgroup.bid_strategy == 'cpc' %}
-                            {{ adgroup.calculated_ecpm|currency }}
+                            {% if adgroup.stats %}
+                              {{ adgroup.calculated_ecpm|currency }}
+                            {% else %}
+                              -
+                            {% endif %}
                           {% else %}
                             {{ adgroup.bid|currency }}
                           {% endif %}
@@ -279,7 +283,11 @@
                       <td class="dataTable-data numeric">-</td>
                       <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                         {% if adgroup.bid_strategy == 'cpc' %}
-                          {{ adgroup.calculated_ecpm|currency }}
+                          {% if adgroup.stats %}
+                            {{ adgroup.calculated_ecpm|currency }}
+                          {% else %}
+                            -
+                          {% endif %}
                         {% else %}
                           {{ adgroup.bid|currency }}
                         {% endif %}
@@ -373,7 +381,11 @@
                       <td class="dataTable-data numeric">Network</td>
                       <td class="dataTable-data numeric">-</td>
                       <td class="dataTable-data numeric {% if adgroup.cpc %}dataTable-campaign-ecpm{% endif %}">
-                        {{ adgroup.calculated_ecpm|currency }}
+                        {% if adgroup.stats %}
+                          {{ adgroup.calculated_ecpm|currency }}
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
                         {% if adgroup.stats %}
@@ -438,7 +450,11 @@
                       <td class="dataTable-data numeric">-</td>
                       <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                         {% if adgroup.bid_strategy == 'cpc' %}
-                          {{ adgroup.calculated_ecpm|currency }}
+                          {% if adgroup.stats %}
+                            {{ adgroup.calculated_ecpm|currency }}
+                          {% else %}
+                            -
+                          {% endif %}
                         {% else %}
                           {{ adgroup.bid|currency }}
                         {% endif %}

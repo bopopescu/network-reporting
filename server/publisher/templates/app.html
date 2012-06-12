@@ -257,7 +257,11 @@
                         </td>
                         <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if campaign.adgroup.bid_strategy == 'cpc' %}
-                            {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% if campaign.stats %}
+                              {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% else %}
+                              -
+                            {% endif %}
                           {% else %}
                             {{ campaign.adgroup.bid|currency }}
                           {% endif %}
@@ -326,7 +330,11 @@
                       <td class="dataTable-data numeric"> - </td>
                       <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if campaign.adgroup.bid_strategy == 'cpc' %}
-                            {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% if campaign.stats %}
+                              {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% else %}
+                              -
+                            {% endif %}
                           {% else %}
                             {{ campaign.adgroup.bid|currency }}
                           {% endif %}
@@ -433,7 +441,11 @@
                           -
                           {% else %}
                               {% if campaign.adgroup.bid_strategy == 'cpc' %}
-                                {{ campaign.adgroup.calculated_ecpm|currency }}
+                                {% if campaign.stats %}
+                                  {{ campaign.adgroup.calculated_ecpm|currency }}
+                                {% else %}
+                                  -
+                                {% endif %}
                               {% else %}
                                 {{ campaign.adgroup.bid|currency }}
                               {% endif %}

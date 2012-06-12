@@ -124,7 +124,7 @@ class CreateAppHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, app_form=None, adunit_form=None, reg_complete=None):
-
+        
         # create the forms
         app_form = app_form or AppForm()
         adunit_form = adunit_form or AdUnitForm(prefix="adunit")
@@ -245,20 +245,26 @@ def app_detail(request, *args, **kwargs):
 class AdUnitDetailHandler(RequestHandler):
 
     def get(self, adunit_key):
-        # load the site
-        adunit = AdUnitQueryManager.get(adunit_key)
 
+        # Load the adunit 
+        adunit = AdUnitQueryManager.get(adunit_key)
         if adunit.account.key() != self.account.key():
             raise Http404
 
-        # to allow the adunit to be edited
+        # HACK: the inventory table expects to take a list of apps,
+        # where each app has as an attribute a list of its adunits.
+        # set that attribute manually so the inventory table works
+        app = adunit.app
+        app.adunits = [adunit]
+
+        # get the form to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
-        # write response
         return {
             'site': adunit,
             'adunit': adunit,
             'adunit_form_fragment': adunit_form_fragment,
+            'app': app
         }
 
 
@@ -629,7 +635,7 @@ def add_demo_campaign(site):
     """
     # Set up a test campaign that returns a demo ad
     demo_description = "Demo campaign for checking that MoPub works for your application"
-    c = Campaign(name="MoPub Demo Campaign",
+    c = Campaign(name="MoPub Demo Order",
                  u=site.account.user,
                  account=site.account,
                  campaign_type="order",
@@ -637,7 +643,7 @@ def add_demo_campaign(site):
     CampaignQueryManager.put(c)
 
     # Set up a test ad group for this campaign
-    ag = AdGroup(name="MoPub Demo Campaign",
+    ag = AdGroup(name="MoPub Demo Line Item",
                  campaign=c,
                  adgroup_type="backfill_promo",
                  account=site.account,

@@ -266,6 +266,13 @@ var mopub = window.mopub || {};
     });
 
 
+    var DailyCountsView = Backbone.View.extend({
+        render: function () {
+            var this_view = this;
+        },
+    });
+
+
     var NetworkGraphView = CollectionGraphView.extend({
         render: function () {
             var this_view = this;
@@ -432,8 +439,7 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var this_view = this;
-
-            var app_row = $('#app-' + this_view.model.id, this_view.el);
+            var app_row = $('#app-' + this_view.model.id);
             var metrics = [
                 'cpm', 
                 'imp', 
@@ -531,7 +537,7 @@ var mopub = window.mopub || {};
         renderInline: function () {
             /*jslint maxlen: 200 */
             var current_model = this.model;
-            var adunit_row = $('#adunit-' + this.model.id, this.el);
+            var adunit_row = $('#adunit-' + this.model.id);
             var metrics = [
                 'rev', 
                 'cpm', 
@@ -708,6 +714,8 @@ var mopub = window.mopub || {};
 
             var popover_template = _.template($("#popover-template").html());
             var popover_content = popover_template(current_model.toJSON());
+            
+            console.log(current_model);
 
             $(".moreinfo", row).popover({
                 placement: 'bottom',

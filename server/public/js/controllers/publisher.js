@@ -86,7 +86,10 @@ var mopub = mopub || {};
         adunits.bind('reset', function(adunits_collection) {
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: '#dashboard-apps' });
+                var adunitView = new AdUnitView({ 
+                    model: adunit, 
+                    el: '#dashboard-apps' 
+                });
                 adunitView.renderInline();
             });
         });
@@ -761,8 +764,18 @@ var mopub = mopub || {};
             initializeiOSAppSearch();
             initializeDailyCounts();
 
-            fetchAppsFromKeys([bootstrapping_data.app_key]);
+            var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdunitsFromKeys(bootstrapping_data.app_key);
+
+            apps.bind('loaded', function(current_app) {
+                var chart_view = new CollectionChartView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['rev', 'imp', 'cpm' ] //TODO include cpm
+                });
+                chart_view.render();
+            });
+
         },
 
         initializeAdunitDetail: function (bootstrapping_data) {
@@ -771,19 +784,32 @@ var mopub = mopub || {};
             initializeDailyCounts();
             initializeEditAdunitForm();
 
-            $('#advertisers-testAdServer')
-                .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
-                .click(function(e) {
-                    e.preventDefault();
-                    $('#adserverTest').dialog({
-                        buttons: {
-                            "Close": function() {
-                                $(this).dialog("close");
-                            }
+            $('#advertisers-testAdServer').click(function(e) {
+                e.preventDefault();
+                $('#adserverTest').dialog({
+                    buttons: {
+                        "Close": function() {
+                            $(this).dialog("close");
                         }
-                    });
-                    $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
+                    }
                 });
+                $('#adserverTest-iFrame')
+                    .attr('src',$('#adserverTest-iFrame-src').text());
+            });
+
+            var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
+            fetchAdunitsFromKeys(bootstrapping_data.app_key);
+
+            apps.bind('loaded', function(current_app) {
+                var chart_view = new CollectionChartView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['rev', 'imp', 'cpm' ] 
+                });
+                chart_view.render();
+            });
+
+
         },
 
         initializeAppCreate: function (bootstrapping_data) {

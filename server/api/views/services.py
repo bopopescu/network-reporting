@@ -320,6 +320,7 @@ class AdGroupServiceHandler(RequestHandler):
         stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)                        
         # JSONify and update with stats
         adgroup_jsonified = adgroup.toJSON()
+        logging.warn(adgroup_jsonified)
         stats = stats_fetcher.get_adgroup_stats(adgroup,
                                                 self.start_date,
                                                 self.end_date,
@@ -382,6 +383,8 @@ class CampaignServiceHandler(RequestHandler):
                                                         self.end_date,
                                                         daily=False)
                 adgroup_jsonified = adgroup.toJSON()
+                logging.warn('\n\n\n\n\n\n\n\n\n')
+                logging.warn(adgroup_jsonified)
                 adgroup_jsonified.update(stats)
                 # pacing
                 pace, pace_status = get_pace(adgroup)

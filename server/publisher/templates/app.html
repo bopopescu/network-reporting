@@ -9,37 +9,38 @@
 {% endblock pageTitle %}
 
 {% block content %}
-  <section id="dashboard-appEditForm" class="hidden">
-    <div>
-      <a name="appForm" class="hidden">anchor</a>
-      <form action="{% url publisher_app_update_ajax app_key=app.key %}"
-            enctype='multipart/form-data'
-            method="POST"
-            accept-charset="utf-8"
-            id="appForm"
-            class="appEditForm">
-        <fieldset id="appForm-details" class="alt">
-          <div id="appForm-fragment">
+  <div id="dashboard-appEditForm" class="hidden" style="margin-bottom: 10px;">
+    <a name="appForm" class="hidden">anchor</a>
+    <form action="{% url publisher_app_update_ajax app_key=app.key %}"
+          enctype='multipart/form-data'
+          method="POST"
+          accept-charset="utf-8"
+          id="appForm"
+          class="appEditForm">
+      <fieldset id="appForm-details" class="alt">
+        <div id="appForm-fragment">
           {{ app_form_fragment }}
-          </div>
-          <div class="form-submit">
-            <span class="hidden" id="appEditForm-loading">
-            <img src="/images/loading2.gif"/></span>
-            <span class="buttonWrap">
-              <a href="#" class="button" id="appEditForm-cancel">Cancel</a>
-            </span>
-            <span class="buttonWrap">
-              <a href="#" class="button" id="appEditForm-submit">Save</a>
-            </span>
-          </div>
-        </fieldset>
-      </form>
-    </div>
-  </section>
+        </div>
+        <div class="form-submit">
+          <span class="hidden" id="appEditForm-loading">
+            <img src="/images/icons-custom/spinner-12.gif"/>
+          </span>
 
+          <a href="#" class="btn" id="appEditForm-cancel">
+            Cancel
+          </a>
+          <a href="#" class="btn" id="appEditForm-submit">
+            {% button_icon "ok" %}
+            Save
+          </a>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+
+  
   {% chart_placeholder start_date end_date %}
-
-  <section id="dashboard-apps">
+  <div id="dashboard-apps">
 
     <div class="right">
       <a class="btn" id="dashboard-apps-editAppButton" href="#">
@@ -51,152 +52,103 @@
         Add an Ad Unit
       </a>
     </div>
-
+  </div>
+    
     <h2>Ad units for {{ app.name }}</h2>
+
 
     {% comment %}
       Form/buttons for adding a new adunit
     {% endcomment %}
 
-    <section id="dashboard-adunitAddForm" class="hidden">
-      <div>
-        <a name="adunitForm" class="hidden">anchor</a>
-        <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm">
-          <fieldset id="adunitForm-details" class="alt">
-            <div id="adunitForm-fragment">
-              {{ adunit_form_fragment }}
-            </div>
-            <div class="form-submit">
-              <span class="hidden" id="adunitForm-loading">
-                <img src="/images/loading2.gif"/>
-              </span>
-              <span class="buttonWrap">
-                <a href="#" class="button" id="adunitAddForm-cancel"> Cancel </a>
-              </span>
-              <span class="buttonWrap">
-                <a href="#" class="button" id="adunitAddForm-submit"> Save </a>
-              </span>
-            </div>
-          </fieldset>
-        </form>
-      </div>
-    </section>
+    <div id="dashboard-adunitAddForm" class="hidden">
+      <form action="{% url publisher_adunit_update_ajax %}"
+            method="POST"
+            accept-charset="utf-8"
+            id="adunitAddForm">
+        <fieldset id="adunitForm-details" class="alt">
+          <div id="adunitForm-fragment">
+            {{ adunit_form_fragment }}
+          </div>
+          
+          <div class="form-submit">
+            <span class="hidden" id="adunitForm-loading">
+              <img src="/images/loading2.gif"/>
+            </span>
+            <a href="#" class="btn" id="adunitAddForm-cancel">
+              Cancel
+            </a>
+            <a href="#" class="btn" id="adunitAddForm-submit">
+              {% button_icon "ok" %}
+              Save
+            </a>
+          </div>
+        </fieldset>
+      </form>
+  </div>
 
     {% comment %}
       Table containing each adunit for the app
     {% endcomment %}
 
-    {% inventory_table app %}
+    <div id="dashboard-apps">
+      {% inventory_table app %}
+    </div>
 
     <div class="divSpacer"></div>
-
 
     {% comment %}
       Tables containing targeting information for each campaign
       the app is in
     {% endcomment %}
 
-    <h2>Ad sources for {{app.name}}</h2>
-    <div>
-
-
-  <section id="dashboard-apps">
-
-    <h2>Daily Counts</h2>
-    <div class="appData-details noneg">
-      <table class="dataTable appData-main">
-        <thead>
-          <tr>
-            <th class="dataTable-name big">&nbsp;</th>
-            <th class="dataTable-data numeric special">Requests</th>
-            <th class="dataTable-data numeric special">Impressions</th>
-            <th class="dataTable-data numeric special">Fillrate</th>
-            <th class="dataTable-data numeric special">Clicks</th>
-            <th class="dataTable-data numeric special">CTR</th>
-            <th class="dataTable-data numeric special">Conversions</th>
-          </tr>
-        </thead>
-        <tbody id="appData-totals">
-          <tr>
-            <th class="dataTable-name big">Totals</th>
-            <td class="dataTable-data numeric"><b>{{app.stats.request_count|withsep}}</b></td>
-            <td class="dataTable-data numeric"><b>{{app.stats.impression_count|withsep}}</b></td>
-            <td class="dataTable-data numeric"><b>{{app.stats.fill_rate|percentage}}</b></td>
-            <td class="dataTable-data numeric"><b>{{app.stats.click_count|withsep}}</b></td>
-            <td class="dataTable-data numeric"><b>{{app.stats.ctr|percentage}}</b></td>
-            <td class="dataTable-data numeric"><b>{{app.stats.conversion_count|withsep}}</b></td>
-          </tr>
-        </tbody>
-        <tbody id="appData-individual" class="hidden">
-          {% for stat in app.all_stats reversed %}
-            <tr class="appData-details-inner hide">
-              <th class="dataTable-name">{{stat.date|format_date}}</th>
-              <td class="dataTable-data numeric">{{stat.request_count|withsep}}</td>
-              <td class="dataTable-data numeric">{{stat.impression_count|withsep}}</td>
-              <td class="dataTable-data numeric">{{stat.fill_rate|percentage}}</td>
-              <td class="dataTable-data numeric">{{stat.click_count|withsep}}</td>
-              <td class="dataTable-data numeric">{{stat.ctr|percentage}}</td>
-              <td class="dataTable-data numeric">{{stat.conversion_count|withsep}}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-      <a class="btn appData-details-toggleButton" href="#">
-        <i class="icon-eye-open"></i>
-        Show details
-      </a>
-
-      <div class="right">
-        <div class="btn-group">
-          <button class="btn" href="#">
-            <i class="icon-download-alt"></i>
-            Export Daily Counts
-          </button>
-          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            <span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu">
-            <li> <a href="#" data-toggle="running"> XLS </a> </li>
-            <li> <a href="#" data-toggle="running"> CSV </a> </li>
-          </ul>
-        </div>
-      </div>
-
-
+    <div id="app-ad-sources">
+      <h2>Ad sources for {{app.name}}</h2>
     </div>
-  </section>
 
-  <div class="clear"></div>
+    <div id="app-daily-counts">
 
-  <div style="margin-top: 1em">
-    <div class="buttonBank buttonBank-right">
-      <form method="post" id="dashboard-deleteForm" action="{% url publisher_delete_app app_key=app.key %}">
-        <a href="#" id="dashboard-delete-link">Remove app from dashboard</a>
+      <h2>Daily Counts</h2>  
+      <a class="btn appData-details-toggleButton" href="#">
+        {% button_icon "eye-open" %}
+        Show details
+      </a>    
+    </div>
+    
+    <div id="app-delete">
+      <form method="post"
+            id="dashboard-deleteForm"
+            action="{% url publisher_delete_app app_key=app.key %}">
+        <a href="#" id="dashboard-delete-link" class="right btn">
+          {% button_icon "trash" %}
+          Remove app from dashboard
+        </a>
       </form>
-
+      
       <div id="dashboard-delete-modal" class="hidden">
         <h2>Remove confirmation</h2>
         <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
       </div>
-
+      
     </div>
   </div>
-
+  
 {% endblock content %}
 
 
 {% block extraScripts %}
+  
+  {% include_template "chart" %}
+  
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/publisher" %}
+  
   <script type="text/javascript">
     $(function() {
         DashboardController.initializeAppDetail({
             app_key: "{{ app.key }}",
-            start_date: Date({{start_date.year}},
-                             {{start_date.month|add:"-1"}},
-                             {{start_date.day}}),
+            start_date: {{ start_date|js_date }}
         });
     });
   </script>

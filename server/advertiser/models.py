@@ -702,6 +702,10 @@ class AdGroup(db.Model):
             'adgroup_type': self.adgroup_type,
             'start_datetime': self.start_datetime,
             'end_datetime': self.end_datetime,
+            'device_targeting': [],
+            'country_targeting': self.geo_predicates,
+            'frequency_caps': [],
+            'allocation': 0,
         }
         return d
 

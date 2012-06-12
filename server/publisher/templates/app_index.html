@@ -97,14 +97,11 @@
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/publisher" %}
-  <script>
-    var mopub = mopub || {};
+  <script type="text/javascript">
     $(function() {
-        var graphStartDate = {{ start_date|js_date}};
-        var app_keys = {{ app_keys|safe }};
         DashboardController.initializeIndex({
-            start_date: graphStartDate,
-            app_keys: app_keys
+            start_date: {{ start_date|js_date}},
+            app_keys: {{ app_keys|safe }}
         });
     });
 </script>

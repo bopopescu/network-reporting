@@ -48,6 +48,11 @@ STATES_AND_PROVINCES = [("", "-")] + US_STATES + CA_PROVINCES
 #Formats for exported files
 TABLE_FILE_FORMATS = ( 'xls', 'csv' )
 
+ISO_COUNTRY_LOOKUP_TABLE = {}
+for country_tuple in ISO_COUNTRIES:
+    ISO_COUNTRY_LOOKUP_TABLE[country_tuple[0]] = country_tuple[1]
+    ISO_COUNTRY_LOOKUP_TABLE[country_tuple[1]] = country_tuple[0]
+
 #Stats
 SIT_STAT = 'site_STAT' #Site
 OWN_STAT = 'owner_STAT' #Owner

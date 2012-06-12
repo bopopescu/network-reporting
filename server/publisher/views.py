@@ -83,6 +83,7 @@ class AppIndexHandler(RequestHandler):
     A list of apps and their real-time stats.
     """
     def get(self):
+        
         # Get all of the account's apps.
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
         app_keys = simplejson.dumps([str(key) for key in apps_dict.keys()])
@@ -92,6 +93,7 @@ class AppIndexHandler(RequestHandler):
         if len(apps_dict) == 0:
             return HttpResponseRedirect(reverse('publisher_create_app'))
 
+            
         return {
             'apps': sorted_apps,
             'app_keys': app_keys,
@@ -122,7 +124,7 @@ class CreateAppHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, app_form=None, adunit_form=None, reg_complete=None):
-
+        
         # create the forms
         app_form = app_form or AppForm()
         adunit_form = adunit_form or AdUnitForm(prefix="adunit")
@@ -146,8 +148,6 @@ class CreateAppHandler(RequestHandler):
         # If there are validation errors in either the app_form or adunit_form,
         # fail by returning the page rendered with the invalid forms.
         if not app_form.is_valid() or not adunit_form.is_valid():
-            logging.warn('asdf')
-            logging.warn(adunit_form.errors)
             return render_to_response(self.request, self.template, {
                 'app_form': app_form,
                 'adunit_form': adunit_form
@@ -192,6 +192,7 @@ class CreateAppHandler(RequestHandler):
 
             status = "welcome"
 
+        logging.warn("\n\n\n\n\n\n\n\n\nyo")
         # Redirect to the code snippet page
         publisher_integration_url = reverse('publisher_integration_help',
                                             kwargs = {
@@ -242,20 +243,26 @@ def app_detail(request, *args, **kwargs):
 class AdUnitDetailHandler(RequestHandler):
 
     def get(self, adunit_key):
-        # load the site
-        adunit = AdUnitQueryManager.get(adunit_key)
 
+        # Load the adunit 
+        adunit = AdUnitQueryManager.get(adunit_key)
         if adunit.account.key() != self.account.key():
             raise Http404
 
-        # to allow the adunit to be edited
+        # HACK: the inventory table expects to take a list of apps,
+        # where each app has as an attribute a list of its adunits.
+        # set that attribute manually so the inventory table works
+        app = adunit.app
+        app.adunits = [adunit]
+
+        # get the form to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
-        # write response
         return {
             'site': adunit,
             'adunit': adunit,
             'adunit_form_fragment': adunit_form_fragment,
+            'app': app
         }
 
 
@@ -626,7 +633,7 @@ def add_demo_campaign(site):
     """
     # Set up a test campaign that returns a demo ad
     demo_description = "Demo campaign for checking that MoPub works for your application"
-    c = Campaign(name="MoPub Demo Campaign",
+    c = Campaign(name="MoPub Demo Order",
                  u=site.account.user,
                  account=site.account,
                  campaign_type="order",
@@ -634,7 +641,7 @@ def add_demo_campaign(site):
     CampaignQueryManager.put(c)
 
     # Set up a test ad group for this campaign
-    ag = AdGroup(name="MoPub Demo Campaign",
+    ag = AdGroup(name="MoPub Demo Line Item",
                  campaign=c,
                  adgroup_type="backfill_promo",
                  account=site.account,

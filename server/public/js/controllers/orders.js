@@ -415,7 +415,6 @@
 
             line_item.fetch();
 
-
             /*
              * Load the data in the targetting table
              */

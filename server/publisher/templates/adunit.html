@@ -30,20 +30,32 @@
       <a href="{% url advertiser_order_index %}">Campaigns</a> page.
     </div>
   {% endif %}
-
+  
   <section id="dashboard-adunitEditForm" class="hidden">
     <div>
       <a name="adunitForm" class="hidden">anchor</a>
-      <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm" class="adunitEditForm validate">
+      <form action="{% url publisher_adunit_update_ajax %}"
+            method="POST"
+            accept-charset="utf-8"
+            id="adunitAddForm"
+            class="adunitEditForm validate">
+        
         <fieldset id="appForm-details" class="alt">
           <input type="hidden" name="adunit_key" value="{{adunit.key}}"/>
           <div id="adunitForm-fragment">
             {{adunit_form_fragment}}
           </div>
           <div class="form-submit">
-            <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-            <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-cancel">Cancel</a></span>
-            <span class="buttonWrap"><a href="#" class="button" id="adunitEditForm-submit">Save</a></span>
+            <span class="hidden" id="adunitForm-loading">
+              <img src="/images/loading2.gif"/>
+            </span>
+            <a href="#" class="btn" id="adunitEditForm-cancel">
+              Cancel
+            </a>
+            <a href="#" class="btn" id="adunitEditForm-submit">
+              {% button_icon "ok" %}
+              Save
+            </a>            
           </div>
         </fieldset>
       </form>
@@ -55,9 +67,11 @@
   <section id="dashboard-apps">
     <div class="right">
       <a class="btn" id="advertisers-testAdServer" href="#">
+        {% button_icon "tasks" %}
         Test Ad
       </a>
       <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
+        {% button_icon "pencil" %}
         Edit ad unit settings
       </a>      
     </div>
@@ -68,84 +82,53 @@
 
     </div>
 
-    <h2>Ad sources for {{adunit.name}}</h2>
+    {% inventory_table adunit.app %}
+    
+  </section>
+
+  
+  <section id="dashboard-apps">
+    <h2>Daily Counts</h2>
+
+    <br />
+    
+    <a class="btn" href="#">
+      {% button_icon "eye-open" %}
+      Show details
+    </a>
 
   </section>
 
-<section id="dashboard-apps">
-  <h2 class="left">Daily Counts</h2>
-  <div class="right">
-    <a class="button" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
-    <a class="button" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
+  
+  <form method="post"
+        id="dashboard-deleteForm"
+        action="{% url publisher_delete_adunit adunit_key=adunit.key %}">
+    <a href="#" id="dashboard-delete-link" class="right btn">
+      {% button_icon "trash" %}
+      Remove this Adunit
+    </a>
+  </form>
+  
+  <div id="dashboard-delete-modal" class="hidden">
+    <h2>Remove confirmation</h2>
+    <p>Are you sure you want to remove {{adunit.name}} from the app?</p>
   </div>
-  <div class="appData-details noneg">
-    <table class="dataTable appData-main">
-      <thead>
-        <tr>
-          <th class="dataTable-name big">&nbsp;</th>
-          <th class="dataTable-name">&nbsp;</th>
-          <th class="dataTable-data numeric special">Requests</th>
-          <th class="dataTable-data numeric special">Impressions</th>
-          <th class="dataTable-data numeric special">Fillrate</th>
-          <th class="dataTable-data numeric special">Clicks</th>
-          <th class="dataTable-data numeric special">CTR</th>
-          <th class="dataTable-data numeric special">Conversions</th>
-        </tr>
-      </thead>
-      <tbody id="appData-totals">
-        <tr>
-          <th class="dataTable-name big">Totals</th>
-          <td class="dataTable-data numeric">&nbsp;</td>
-          <td class="dataTable-data numeric"><b>{{adunit.stats.request_count|withsep}}</b></td>
-          <td class="dataTable-data numeric"><b>{{adunit.stats.impression_count|withsep}}</b></td>
-          <td class="dataTable-data numeric"><b>{{adunit.stats.fill_rate|percentage}}</b></td>
-          <td class="dataTable-data numeric"><b>{{adunit.stats.click_count|withsep}}</b></td>
-          <td class="dataTable-data numeric"><b>{{adunit.stats.ctr|percentage}}</b></td>
-          <td class="dataTable-data numeric"><b>{{adunit.stats.conversion_count|withsep}}</b></td>
-        </tr>
-      </tbody>
-      <tbody id="appData-individual" class="hidden">
-        {% for s in adunit.all_stats reversed %}
-          <tr class="appData-details-inner hide">
-            <th class="dataTable-name">{{s.date|format_date}}</th>
-            <td class="dataTable-data numeric">&nbsp;</td>
-            <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
-            <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
-            <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>
-            <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
-            <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-            <td class="dataTable-data numeric">{{s.conversion_count|withsep}}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <a class="appData-details-toggleButton" href="#">Show details</a>
-  </div>
-</section>
-
-<div class="clear"></div>
-
-<div style="margin-top: 1em;">
-  <div class="buttonBank buttonBank-right">
-    <form method="post" id="dashboard-deleteForm" action="{% url publisher_delete_adunit adunit_key=adunit.key %}">
-      <a href="#" id="dashboard-delete-link">Remove ad unit from dashboard</a>
-    </form>
-    <div id="dashboard-delete-modal" class="hidden">
-      <h2>Remove confirmation</h2>
-      <p>Are you sure you want to remove {{adunit.name}} from the app?</p>
-    </div>
-  </div>
-</div>
-
+  
 {% endblock content %}
 
 {% block extraScripts %}
+  {% include_template "chart" %}
+  
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
   {% include_script "controllers/publisher" %}
   <script type="text/javascript">
     $(function() {
-      DashboardController.initializeAdunitDetail({
-          // not needed yet
-      });
+        DashboardController.initializeAdunitDetail({
+            start_date: {{ start_date|js_date }},
+            app_key: "{{app.key}}",
+            adunit_key: "{{adunit.key}}"
+        });
     });
   </script>
 {% endblock extraScripts %}

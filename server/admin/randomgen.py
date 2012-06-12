@@ -156,7 +156,8 @@ def get_random_datetime_pair():
 def generate_app(account):
     app = App(name=get_app_name(),
               app_type=select_rand(APP_TYPES),
-              account = account)
+              account = account,
+              deleted=False)
     app.put()
     return app
 

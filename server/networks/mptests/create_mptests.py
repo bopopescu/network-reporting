@@ -24,7 +24,6 @@ from common.utils.test.fixtures import generate_adgroup, \
         generate_campaign, \
         generate_creative
 from common.utils.test.test_utils import dict_eq, \
-        decorate_all_test_methods, \
         confirm_db, \
         confirm_all_models, \
         model_eq
@@ -245,7 +244,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         """
         # Prior to making any changes, get the existing network campaigns.
         existing_campaigns = self.get_network_campaigns()
-        
+
         # Expect the correct number of models to be added.
         expected_additions = {Campaign: 1,
                               AdGroup:  len(self.existing_adunits),
@@ -323,19 +322,19 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                         network_type=expected_network_type,
                         site_keys=[adunit.key()])
 
-                model_eq(adgroup, expected_adgroup, 
+                model_eq(adgroup, expected_adgroup,
                          exclude=['created', 'last_login', 't'],
                          check_primary_key=False)
 
                 # Verify the contents of the creative for this adgroup.
                 creatives = list(adgroup.creatives)
                 creative = creatives[0]
- 
+
                 expected_creative = adgroup.default_creative()
                 expected_creative.account = self.account
                 if self.network_type in ('custom', 'custom_native'):
                     expected_creative.html_data = DEFAULT_HTML
-                
+
                 model_eq(creative, expected_creative, check_primary_key=False)
 
     @requires_network_without_pub_ids
@@ -378,8 +377,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 bid=DEFAULT_BID, name=NETWORKS[self.network_type],
                 network_type=expected_network_type,
                 site_keys=[adunit.key()])
-        
-        model_eq(adgroup, expected_adgroup, 
+
+        model_eq(adgroup, expected_adgroup,
                  exclude=['created', 'last_login', 't'],
                  check_primary_key=False)
 
@@ -430,12 +429,12 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 self.network_type, self.network_type)
         expected_adgroup = generate_adgroup(self.account, new_campaign,
                 active=True,
-                bid=DEFAULT_BID, 
+                bid=DEFAULT_BID,
                 name=NETWORKS[self.network_type],
                 network_type=expected_network_type,
                 site_keys=[adunit.key()])
-        
-        model_eq(adgroup, expected_adgroup, 
+
+        model_eq(adgroup, expected_adgroup,
                  exclude=['created', 'last_login', 't'],
                  check_primary_key=False)
 
@@ -520,7 +519,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         # Expect the NetworkConfigs for app / adunit to be modified accordingly.
         expected_edits = self.get_expected_config_edits(
                 app_pub_ids=app_pub_ids, adunit_pub_ids=adunit_pub_ids)
-        
+
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
@@ -763,7 +762,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 all_campaigns)
 
         return filtered_campaigns
-    
+
     def update_post_data_pub_ids(self, app_pub_ids=None, adunit_pub_ids=None):
         """
         Updates the given POST body dictionary with new app / adunit
@@ -774,7 +773,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
 
         if not app_pub_ids:
             return
-        
+
         if not adunit_pub_ids:
             return
 
@@ -793,29 +792,29 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         argument to confirm_all_models.
 
         Example:
-        
+
         If app_pub_ids = {'app_key0': 'new_pub_id'} and self.network_type is
         'admob', this method returns
 
             {'app_key0': {'admob_pub_id': 'new_pub_id'}}
-        
+
         Author: Andrew He
         """
 
         expected_edits = {}
-        
+
         pub_id_prop_key = '%s_pub_id' % self.network_type
-        
+
         for app in self.existing_apps:
             new_app_pub_id = app_pub_ids[app.key()]
             expected_edits[app.network_config.key()] = {
                 pub_id_prop_key: new_app_pub_id}
-        
+
         for adunit in self.existing_adunits:
             new_adunit_pub_id = adunit_pub_ids[adunit.key()]
             expected_edits[adunit.network_config.key()] = {
                 pub_id_prop_key: new_adunit_pub_id}
-        
+
         return expected_edits
 
 
@@ -834,7 +833,7 @@ class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
         edits = super(CreateJumptapNetworkTestCase, self). \
                 get_expected_config_edits(app_pub_ids=app_pub_ids,
                                           adunit_pub_ids=adunit_pub_ids)
-        
+
         # Include the account-level publisher ID in the expected edits dict.
         edits[self.account.network_config.key()] = {
                 'jumptap_pub_id': DEFAULT_PUB_ID}

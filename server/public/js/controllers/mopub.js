@@ -240,13 +240,10 @@ if (window.console === undefined) {
             width: 400
         });
 
-        // Override default jQuery UI datepicker options
-        $.xdatepicker.setDefaults({
-            dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        });
-
         // Set up form placeholders
-        $('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
+        $('input[placeholder], textarea[placeholder]').placeholder({ 
+            preventRefreshIssues: true 
+        });
 
         // Set up text overflow elements
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
@@ -259,7 +256,9 @@ if (window.console === undefined) {
             $(this).parent().fadeOut();
         });
 
-        $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
+        $('.formFields-field-help-link[title]').click(function(e) { 
+            e.preventDefault(); 
+        });
 
         // Set up highcharts default options
         Highcharts.setOptions({

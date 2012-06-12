@@ -38,13 +38,15 @@ var mopub = mopub || {};
 		    $('input:text').addClass('input-text');
 	        $('input:password').addClass('input-text');
 	        
-		    
-
+		    $('#accountForm-submit').click(function(e) {
+			    e.preventDefault();
+			    $('#accountForm').submit();
+		    });
             
             
 		    // set up showing/hiding of app details
 		    $('.adForm').each(function() {
-			        var details = $(this);
+			    var details = $(this);
 			    var data = $('.formFields', details);
 			    var button = $('.adForm-fields-toggleButton', details);
 			    var infobutton = $('.adForm-fields-infoButton', details);

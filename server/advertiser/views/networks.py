@@ -53,6 +53,7 @@ class NetworkIndexHandler(RequestHandler):
                                   "advertiser/network_index.html",
                                   {
                                       'account': self.account,
+                                      'is_staff': self.request.user.is_staff,
                                       'network_adgroups': network_adgroups,
                                       'start_date': self.start_date,
                                       'end_date': self.end_date,

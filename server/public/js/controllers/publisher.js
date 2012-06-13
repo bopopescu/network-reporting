@@ -43,7 +43,7 @@ var mopub = mopub || {};
      */
     function populateGraphWithAccountStats(stats, start_date) {
         if (!stats.hasOwnProperty("all_stats")) return;
-        
+
         var dailyStats = stats["all_stats"]["||"]["daily_stats"];
 
         mopub.dashboardStatsChartData = {
@@ -139,8 +139,24 @@ var mopub = mopub || {};
             $('#appForm .appForm-platformDependent')
                 .removeClass('iphone')
                 .removeClass('android')
+                .removeClass('mweb')
                 .addClass($(this).val());
-        }).filter(':checked').click();
+            if($(this).val() == 'android') {
+                $('#appForm input#appForm-url').hide();
+                $('#appForm input#appForm-package').show();
+            }
+            else {
+                $('#appForm input#appForm-package').hide();
+                $('#appForm input#appForm-url').show();
+                if($(this).val() == 'iphone') {
+                    $('#appForm input#appForm-url').attr('placeholder', 'http://itunes.apple.com/yourapp');
+                }
+                else {
+                    $('#appForm input#appForm-url').attr('placeholder', 'http://www.yourapp.com/');
+                }
+            }
+
+        }).filter(':checked').click(); // make sure we're in sync when the page Loads
 
         // Search button
         $('#appForm-search-button')
@@ -208,14 +224,6 @@ var mopub = mopub || {};
             $('#appForm-icon-upload').show();
             $('#appForm input[name="img_url"]').val('');
         });
-
-        $('input[name="app_type"]').click(function(e) {
-            $('#appForm .appForm-platformDependent')
-                .removeClass('iphone')
-                .removeClass('android')
-                .removeClass('mweb')
-                .addClass($(this).val());
-        }).filter(':checked').click(); // make sure we're in sync when the page Loads
     }
 
     function initializeEditAppForm() {
@@ -877,7 +885,7 @@ var mopub = mopub || {};
     };
 
     window.DashboardController = DashboardController;
-    
+
 })(this.jQuery, this.Backbone, this._);
 
 /* REFACTOR */

@@ -210,6 +210,14 @@ class MpxReportHandler(webapp.RequestHandler):
         
         return (total, a)
         
+    def mpx_cleared(self, start, end):
+        # total cleared impressions
+        mpx = json.loads(urlfetch.fetch(MPX_URL % (start.strftime("%m-%d-%Y"), end.strftime("%m-%d-%Y")), deadline=30).content)
+        total = sum([x["imp"] for x in mpx.values()])
+        
+        return total
+
+        
     def cost_total(self, end):
         BANDWIDTH = ["AWS Data Transfer"]
         CPU = ["Amazon Elastic Compute Cloud", "Amazon Simple Notification Service", "Amazon Simple Queue Service", "Amazon SimpleDB", "Amazon Elastic MapReduce"]
@@ -257,6 +265,11 @@ class MpxReportHandler(webapp.RequestHandler):
             self.mpx_total(week[0], week[1])[0] / 1000.0, 
             self.mpx_total(month[0], month[1])[0] / 1000.0)
             
+        # clear rate
+        mpx_cleared = (self.mpx_cleared(now, now) / 1000000.0, 
+            self.mpx_cleared(week[0], week[1]) / 1000000000.0, 
+            self.mpx_cleared(month[0], month[1]) / 1000000000.0)
+            
         # total cost 
         cost = self.cost_total(now)
             
@@ -266,6 +279,7 @@ class MpxReportHandler(webapp.RequestHandler):
         # compute body
         body = "Total Spend: $%.2f (7d: $%.1fK 30d: $%.1fK)\n" % mpx_spend
         body += "Total Inventory: %.1fMM (7d: %.1fB 30d: %.1fB)\n" % request_count
+        body += "Clear Rate: %.1f%% (7d: %.1f%% 30d: %.1f%%)\n" % (100 * mpx_cleared[0] / request_count[0], 100 * mpx_cleared[1] / request_count[1], 100 * mpx_cleared[2] / request_count[2])
         body += "eCPM: $%.3f (7d: $%.3f 30d: $%.3f)\n" % cpm
         body += "COGS: $%.3f (bandwidth: $%.3f storage: $%.3f cpu: $%.3f)\n" % cost
         

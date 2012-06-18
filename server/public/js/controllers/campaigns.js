@@ -73,7 +73,7 @@
 
         // help links
         // TODO: make sure all of these are necessary, rename?
-        $.each(['type', 'priority', 'promo-priority', 'bid', 'keyword'], function(iter, link_type) {
+        $.each(['type', 'priority', 'promo-priority', 'bid', 'keyword', 'apps'], function(iter, link_type) {
             $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
                 e.preventDefault();
                 $('#campaignForm-' + link_type + '-helpContent').dialog({
@@ -446,11 +446,11 @@
         $('[name="included_apps"]').chosen();
         $('[name="excluded_apps"]').chosen();
 
-        if($('[name="excluded_apps"] option:selected').length > 0) {
-            $('#user_targeting_type').val('excluded_apps');
+        if($('[name="included_apps"] option:selected').length > 0) {
+            $('#user_targeting_type').val('included_apps');
         }
         else {
-            $('#user_targeting_type').val('included_apps');
+            $('#user_targeting_type').val('excluded_apps');
         }
 
         $('#user_targeting_type').change(function() {

@@ -486,6 +486,8 @@ form#campaign_and_adgroup, form#network-login-form, fieldset.dialog {
             border-top-color: #b9b9b9;
             background: #fafafa;
             @include border-radius(3px);
+            padding: 1px 2px 2px 3px;
+            width: 290px;
         }
     }
 }

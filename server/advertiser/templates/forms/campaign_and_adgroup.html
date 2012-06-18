@@ -288,10 +288,15 @@
                 <div>
                     Target users that
                     <select id="user_targeting_type">
-                        <option value="included_apps">have</option>
                         <option value="excluded_apps">don't have</option>
+                        <option value="included_apps">have</option>
                     </select>
-                    these apps.
+                    these apps
+                    <a href="#" id="campaignForm-apps-helpLink">What's this?</a>
+                    <div id="campaignForm-apps-helpContent" class="hidden">
+                        <h3>Included/Excluded Apps</h3>
+                        <p></p>
+                    </div>
                 </div>
                 <div>
                     {{ adgroup_form.included_apps }}

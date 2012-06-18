@@ -264,12 +264,9 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         adgroup_key -- the key of the adgroup we want to edit (only used for editing, not creating)
         """
 
-        apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
-        apps_choices = [(str(app.key()), app.name) for app in apps]
-
         adgroup_to_edit = AdGroupQueryManager.get(adgroup_key) if adgroup_key else None
         campaign_form = self._campaign_form(adgroup=adgroup_to_edit)
-        adgroup_form = self._adgroup_form(adgroup=adgroup_to_edit, apps=apps_choices)
+        adgroup_form = self._adgroup_form(adgroup=adgroup_to_edit, apps_choices=get_apps_choices(self.account))
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
         apps = self._apps_with_network_config_forms_for_account(self.account)
 
@@ -310,7 +307,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
                             is_staff=self.request.user.is_staff,
                             account=self.account)
 
-    def _adgroup_form(self, adgroup=None, apps=[]):
+    def _adgroup_form(self, adgroup=None, apps_choices=[]):
         """
         Returns a form that can create an adgroup. If an adgroup object is provided as an argument
         to this method, the adgroup will be used as the instance for the form.
@@ -318,7 +315,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Keyword arguments:
         adgroup -- an adgroup object used as the instance for the AdGroupForm (default None)
         """
-        return AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff, apps=apps)
+        return AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff, apps_choices=apps_choices)
 
     def _apps_with_network_config_forms_for_account(self, account):
         """
@@ -366,7 +363,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             self._flush_adunit_contexts_affected_by_adgroup(adgroup_to_edit)
 
         apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
-        apps_choices = [(str(app.key()), app.name) for app in apps]
+        apps_choices = get_apps_choices(self.account)
         adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
 
         # Construct the campaign and adgroup objects from the form data. Return an error response
@@ -380,7 +377,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             campaign.save()
 
             adgroup = self._adgroup_from_form_data_with_campaign_and_adunits(campaign, adunits,
-                    instance=adgroup_to_edit, apps=apps_choices)
+                    instance=adgroup_to_edit, apps_choices=apps_choices)
         except self.MPFormValidationException, ex:
             errors = ex[0] if len(ex.args) > 0 else {}
             return self._json_failure_response_with_errors(errors)
@@ -1291,3 +1288,9 @@ class CampaignExporter(RequestHandler):
 
 def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
+
+
+def get_apps_choices(account):
+    apps = PublisherQueryManager.get_apps_dict_for_account(account).values()
+    apps.sort(key=lambda app: app.name.lower())
+    return [(str(app.key()), "%s (%s)" % (app.name, app.type)) for app in apps]

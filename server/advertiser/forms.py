@@ -399,7 +399,7 @@ class AdGroupForm(forms.ModelForm):
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
-        apps = kwargs.pop('apps', [])
+        apps_choices = kwargs.pop('apps_choices', [])
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
@@ -415,10 +415,10 @@ class AdGroupForm(forms.ModelForm):
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
         self.fields['included_apps'] = forms.MultipleChoiceField(
-            choices=apps, required=False, widget=forms.SelectMultiple(
+            choices=apps_choices, required=False, widget=forms.SelectMultiple(
                 attrs={'data-placeholder': ' '}))
         self.fields['excluded_apps'] = forms.MultipleChoiceField(
-            choices=apps, required=False, widget=forms.SelectMultiple(
+            choices=apps_choices, required=False, widget=forms.SelectMultiple(
                 attrs={'data-placeholder': ' '}))
 
     def clean_allocation_percentage(self):

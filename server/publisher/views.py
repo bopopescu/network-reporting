@@ -143,6 +143,7 @@ class CreateAppHandler(RequestHandler):
         
         app_form = AppForm(data=self.request.POST, files=self.request.FILES)
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
+        logging.warn(self.request.POST)
 
         # If there are validation errors in either the app_form or adunit_form,
         # fail by returning the page rendered with the invalid forms.

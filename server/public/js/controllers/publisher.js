@@ -288,7 +288,6 @@ var mopub = mopub || {};
                 .show()
                 .find('input[type="radio"]')[0].click();
             activate($(this), $(this).parent());
-
         });
 
         // Slide up/down handler for the form div

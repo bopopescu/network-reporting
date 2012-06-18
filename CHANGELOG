@@ -1,127 +1,134 @@
+# Deployed Monday, June 18, 2012 at 06:51PM PST
+### Deployed by John Pena
+### Tagged deploy-126
+### Bugs Fixed: []
+### Included Commits: 
+ * 49ed08c [#1288 state:resolved] [#1265 state:resolved] [#1282 state:resolved]
+ 
 # Deployed Monday, June 18, 2012 at 06:06PM PST
 ### Deployed by John Pena
 ### Tagged deploy-125
 ### Bugs Fixed: ['1288', '1265', '1282']
-### Included Commits: 
- * 6d7be81 fixed versions merge conflict
- * c30c66a Merge branch '1288-app-adunit-speedup'
- * 6467608 [#1288 state:fixed] removed calculated_ecpm when stats aren't loaded
- * 3ce6cfa did same for adunit page
- * a1aae6f Merge branch 'master' into old-networks
- * af809bf sped up app page with more than 20 adsources
- * 729c0d7 Make sure campaign_type is valid in form
- * 8e18ec9 Merge branch '1257-price-floor-wording' of github.com:mopub/mopub
- * ad442e9 Merge branch 'master' of github.com:mopub/mopub
- * 8c22115 removed unused import, explicity return None in global_id
- * 015883e [#1265 state:fixed] fixed app.url not being updated for ios, removed app.global_id db property and replaced it with one constructed using app_type and url or package, added/updated tests
- * 9643bfd [#1282 state:fixed]
- * f85a54a Merge branch 'master' of github.com:mopub/mopub
- * 878a787 Merge master
- * a44206b Finalize create_mptests.py, add skip decorators; Small change to EditNetworkHandler that sets NetworkConfig IDs to None rather than empty string if not present in the POST body
- * dc6e7ec Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
- * e4d48c7 fix index.yaml
- * 0b6141e Change Price Floor wording [#1257 status:review-requested]
- * d042852 Changed wording
- * 88b732c fixed network details test context check
- * bebbb87 -- HTML version of John Chen email
- * 3394858 -- Adding COGS to the daily report, based  on AWS programmatic access to bills
- * 085531a Merge branch 'master' of github.com:mopub/mopub
- * 003f7c5 Merge branch 'cached-query-manager'
- * 76f8c8a changed two instances of fetch to run
- * 168a23d Merge branch '1217-creative-limit-text' of github.com:mopub/mopub
- * b5b7316 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
- * ba9797f network_type no longer set in post data
- * c5c6bc3 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
- * 11ea394 Remove network config changes from generate_network_campaign in network_test_case.py
- * 8fd4799 All edit network tests pass again
- * b5d12fc Changed things to write to /mnt because they take upa lot of room
- * 135b9e4 fixed pre_test_instances_dict in confirm edited for test utils
- * 96e8851 Merge branch 'master' of github.com:mopub/mopub
- * eee0734 Merge branch 'report-none-fix'
- * ef951cf GOOD CALL SIMON
- * b1b259a All network edit tests pass
- * a6966df updated formatting
- * 610b090 Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
- * ff4a7c4 add comments to advertiser.tests.marketplace
- * 6451a44 updated advertiser marketplace testing
- * 3057642 added publisher query manager tests
- * e68c4c9 fixed some echos
- * df071f7 [#1225 state:resolved]
- * 2abd6f2 merge
- * d7b5985 All edit tests working except for bs appengine django issue
- * 0e5455e added marketplace view tests
- * ad0e2fe Make some test_utils 2.5-compatible, edit NetworkTestCase fixture to include NetworkConfigs, starting to use confirm_all_models in create_mptests
- * c261c2f Added pub ids to generated network configs in generate network campaign, working on edit network tests
- * fb0d175 removed flawed check for added instances
- * 035c338 Small changes to network tests
- * cdbc18b removed network tests, added network campaign fixture function, updated publisher views and view tests
- * 5cfd980 Ugly hack to fix people deleting things that they shoudln't delete
- * 4f2a7b2 updated query manager tests
- * a8c9b0c updated query manager tests, only iad pub ids to test
- * ee1ebd4 Merge branch 'master' into networks-tests
- * b09b5c9 Updating network edit tests
- * 08e2992 added confirm_db, fixed indentation
- * 589d50b remove decorate_all_test_methods from qm_tests
- * 43621b5 use new confirm_db in view tests
- * 6143091 commented form tests
- * 28ca05e removed functions that use Python 2.7 modules and syntax
- * ef6586f Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
- * 836ab25 Merge branch 'networks-tests' of github.com:mopub/mopub into publisher-refactor
- * c043464 Updated index and pause network mptests to use new test helper
- * 674d459 Updated network details test to use new test helper, added hack to pass back response
- * 6b1bd32 Updated delete network tests to use new helper test function, fixed delete in network test view
- * 4e9ea87 Completely changed helper function to confirm entire db state to check additions correctly, needs testing
- * fe308b2 Add work in progress publisher query_manager tests
- * 2c45c69 Converted new test decorators to functions
- * 677758f Fixing new test decorator
- * 5151cb5 Default values in test decorator signatures should be evaluated later
- * e48805a some bug fixes for test decorators
- * 8be4c52 Added confirm_model_changes and confirm_all_models to commom/utils/test/test_utils
- * 613f772 Merge + new confirm_all / confirm_db concept showing
- * a2b32b2 Merge branch 'master' into networks-tests
- * ad6163b updated confirm db
- * b31ec40 Merge
- * fe47007 updated test to match change in app detail view
- * f1c17f0 merged in master
- * ae3de44 confirm_db fix
- * 812ec03 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
- * 1124ae7 Working on confirm_db
- * ffc5541 updated form tests
- * cb7b7df updated form tests
- * ac57128 actually fixed timezone issue
- * d2fadfe added form tests
- * 9eec3e7 Start using model_eq to verify model changes
- * f12cf87 create and edit network campaign test checks adgroup instance and pub_id
- * eb74190 Added confirm_db decorator to delete, edit and pause networks tests
- * e6174c2 Added confirm_db decorators to create network mptests
- * 2ed6a10 decorate_all_test_methods working for index and details network mptests
- * 8cb54e0 Added mptest_context for network details
- * 3c0ce45 Cleaned up edit network and create network get tests
- * 13c0841 Cleaned up edit network and create network get tests
- * a2f90d2 Merge
- * 7200810 Added context checks for edit and create network, missing imports
- * d47129a Broke up networks/mptests/views_mptests.py
- * 741c092 Moved networks tests helpers to new base class
- * 21df2f0 Moved networks tests helpers to new base class
- * 19487d9 Merge Tiago's tests
- * f560dc1 adding tests for editing networks
- * c295c74 Merge, + bug fixes
- * 55858e7 Clarify that we are showing top 100 creatives
- * 34d4534 Added networks, details, delete, and pause tests
- * c425345 changed some helper methods to functions
- * 353be3c ready for review
- * 33ed9e8 hey tiago
- * fa437cb breaking apart check_response
- * cc50be2 some more tests
- * e68cab1 Merge branch 'master' into networks-tests
- * f38224a Added some additional networks tests
- * 8906332 migration script now uses old net_creative reference and shouldn't create new custom networks for old custom_native networks
- * 7b99b90 Fixed bug in network edit views testing
- * 3d4b4e4 Removed unnecessary clear_db helper from network views test
- * 8331c31 Created two new tests for the edit network view
- * 35ccf7b Created some helpers and wrote some doc strings and method signatures for network edit view testing
- * 8650098 Created default network creation test
- 
+### Included Commits:
+* 6d7be81 fixed versions merge conflict
+* c30c66a Merge branch '1288-app-adunit-speedup'
+* 6467608 [#1288 state:fixed] removed calculated_ecpm when stats aren't loaded
+* 3ce6cfa did same for adunit page
+* a1aae6f Merge branch 'master' into old-networks
+* af809bf sped up app page with more than 20 adsources
+* 729c0d7 Make sure campaign_type is valid in form
+* 8e18ec9 Merge branch '1257-price-floor-wording' of github.com:mopub/mopub
+* ad442e9 Merge branch 'master' of github.com:mopub/mopub
+* 8c22115 removed unused import, explicity return None in global_id
+* 015883e [#1265 state:fixed] fixed app.url not being updated for ios, removed app.global_id db property and replaced it with one constructed using app_type and url or package, added/updated tests
+* 9643bfd [#1282 state:fixed]
+* f85a54a Merge branch 'master' of github.com:mopub/mopub
+* 878a787 Merge master
+* a44206b Finalize create_mptests.py, add skip decorators; Small change to EditNetworkHandler that sets NetworkConfig IDs to None rather than empty string if not present in the POST body
+* dc6e7ec Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* e4d48c7 fix index.yaml
+* 0b6141e Change Price Floor wording [#1257 status:review-requested]
+* d042852 Changed wording
+* 88b732c fixed network details test context check
+* bebbb87 -- HTML version of John Chen email
+* 3394858 -- Adding COGS to the daily report, based  on AWS programmatic access to bills
+* 085531a Merge branch 'master' of github.com:mopub/mopub
+* 003f7c5 Merge branch 'cached-query-manager'
+* 76f8c8a changed two instances of fetch to run
+* 168a23d Merge branch '1217-creative-limit-text' of github.com:mopub/mopub
+* b5b7316 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* ba9797f network_type no longer set in post data
+* c5c6bc3 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* 11ea394 Remove network config changes from generate_network_campaign in network_test_case.py
+* 8fd4799 All edit network tests pass again
+* b5d12fc Changed things to write to /mnt because they take upa lot of room
+* 135b9e4 fixed pre_test_instances_dict in confirm edited for test utils
+* 96e8851 Merge branch 'master' of github.com:mopub/mopub
+* eee0734 Merge branch 'report-none-fix'
+* ef951cf GOOD CALL SIMON
+* b1b259a All network edit tests pass
+* a6966df updated formatting
+* 610b090 Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* ff4a7c4 add comments to advertiser.tests.marketplace
+* 6451a44 updated advertiser marketplace testing
+* 3057642 added publisher query manager tests
+* e68c4c9 fixed some echos
+* df071f7 [#1225 state:resolved]
+* 2abd6f2 merge
+* d7b5985 All edit tests working except for bs appengine django issue
+* 0e5455e added marketplace view tests
+* ad0e2fe Make some test_utils 2.5-compatible, edit NetworkTestCase fixture to include NetworkConfigs, starting to use confirm_all_models in create_mptests
+* c261c2f Added pub ids to generated network configs in generate network campaign, working on edit network tests
+* fb0d175 removed flawed check for added instances
+* 035c338 Small changes to network tests
+* cdbc18b removed network tests, added network campaign fixture function, updated publisher views and view tests
+* 5cfd980 Ugly hack to fix people deleting things that they shoudln't delete
+* 4f2a7b2 updated query manager tests
+* a8c9b0c updated query manager tests, only iad pub ids to test
+* ee1ebd4 Merge branch 'master' into networks-tests
+* b09b5c9 Updating network edit tests
+* 08e2992 added confirm_db, fixed indentation
+* 589d50b remove decorate_all_test_methods from qm_tests
+* 43621b5 use new confirm_db in view tests
+* 6143091 commented form tests
+* 28ca05e removed functions that use Python 2.7 modules and syntax
+* ef6586f Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* 836ab25 Merge branch 'networks-tests' of github.com:mopub/mopub into publisher-refactor
+* c043464 Updated index and pause network mptests to use new test helper
+* 674d459 Updated network details test to use new test helper, added hack to pass back response
+* 6b1bd32 Updated delete network tests to use new helper test function, fixed delete in network test view
+* 4e9ea87 Completely changed helper function to confirm entire db state to check additions correctly, needs testing
+* fe308b2 Add work in progress publisher query_manager tests
+* 2c45c69 Converted new test decorators to functions
+* 677758f Fixing new test decorator
+* 5151cb5 Default values in test decorator signatures should be evaluated later
+* e48805a some bug fixes for test decorators
+* 8be4c52 Added confirm_model_changes and confirm_all_models to commom/utils/test/test_utils
+* 613f772 Merge + new confirm_all / confirm_db concept showing
+* a2b32b2 Merge branch 'master' into networks-tests
+* ad6163b updated confirm db
+* b31ec40 Merge
+* fe47007 updated test to match change in app detail view
+* f1c17f0 merged in master
+* ae3de44 confirm_db fix
+* 812ec03 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* 1124ae7 Working on confirm_db
+* ffc5541 updated form tests
+* cb7b7df updated form tests
+* ac57128 actually fixed timezone issue
+* d2fadfe added form tests
+* 9eec3e7 Start using model_eq to verify model changes
+* f12cf87 create and edit network campaign test checks adgroup instance and pub_id
+* eb74190 Added confirm_db decorator to delete, edit and pause networks tests
+* e6174c2 Added confirm_db decorators to create network mptests
+* 2ed6a10 decorate_all_test_methods working for index and details network mptests
+* 8cb54e0 Added mptest_context for network details
+* 3c0ce45 Cleaned up edit network and create network get tests
+* 13c0841 Cleaned up edit network and create network get tests
+* a2f90d2 Merge
+* 7200810 Added context checks for edit and create network, missing imports
+* d47129a Broke up networks/mptests/views_mptests.py
+* 741c092 Moved networks tests helpers to new base class
+* 21df2f0 Moved networks tests helpers to new base class
+* 19487d9 Merge Tiago's tests
+* f560dc1 adding tests for editing networks
+* c295c74 Merge, + bug fixes
+* 55858e7 Clarify that we are showing top 100 creatives
+* 34d4534 Added networks, details, delete, and pause tests
+* c425345 changed some helper methods to functions
+* 353be3c ready for review
+* 33ed9e8 hey tiago
+* fa437cb breaking apart check_response
+* cc50be2 some more tests
+* e68cab1 Merge branch 'master' into networks-tests
+* f38224a Added some additional networks tests
+* 8906332 migration script now uses old net_creative reference and shouldn't create new custom networks for old custom_native networks
+* 7b99b90 Fixed bug in network edit views testing
+* 3d4b4e4 Removed unnecessary clear_db helper from network views test
+* 8331c31 Created two new tests for the edit network view
+* 35ccf7b Created some helpers and wrote some doc strings and method signatures for network edit view testing
+* 8650098 Created default network creation test
+
 # Deployed Tuesday, June 05, 2012 at 05:06PM PST
 ### Deployed by John Pena
 ### Tagged deploy-124

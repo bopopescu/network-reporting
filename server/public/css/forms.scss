@@ -474,6 +474,20 @@ form#campaign_and_adgroup, form#network-login-form, fieldset.dialog {
     input.token-input-field.focused {
         background-color: white;
     }
+
+    select[name="included_apps"], select[name="excluded_apps"] {
+        width: 300px;
+    }
+
+    #id_included_apps_chzn, #id_excluded_apps_chzn {
+        margin-top: 5px;
+        ul.chzn-choices {
+            border: 1px solid #eaeaea;
+            border-top-color: #b9b9b9;
+            background: #fafafa;
+            @include border-radius(3px);
+        }
+    }
 }
 
 .input-prepend,

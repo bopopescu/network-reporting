@@ -441,6 +441,35 @@
                 });
             }
         }).filter(':checked').click();
+
+        // Negative User Targeting
+        $('[name="included_apps"]').chosen();
+        $('[name="excluded_apps"]').chosen();
+
+        if($('[name="excluded_apps"] option:selected').length > 0) {
+            $('#user_targeting_type').val('excluded_apps');
+        }
+        else {
+            $('#user_targeting_type').val('included_apps');
+        }
+
+        $('#user_targeting_type').change(function() {
+            $this = $(this);
+            if($this.val() == 'included_apps') {
+                $('#id_excluded_apps_chzn').hide();
+                console.log($('[name="excluded_apps"] option:selected'));
+                $('[name="excluded_apps"] option:selected').removeAttr('selected');
+                $('[name="excluded_apps"]').trigger("liszt:updated");
+                $('#id_included_apps_chzn').show();
+            }
+            else {
+                $('#id_included_apps_chzn').hide();
+                console.log($('[name="included_apps"] option:selected'));
+                $('[name="included_apps"] option:selected').removeAttr('selected');
+                $('[name="included_apps"]').trigger("liszt:updated");
+                $('#id_excluded_apps_chzn').show();
+            }
+        }).change();
     }
 
 

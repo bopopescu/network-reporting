@@ -399,6 +399,7 @@ class AdGroupForm(forms.ModelForm):
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
+        apps = kwargs.pop('apps', [])
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
@@ -413,10 +414,12 @@ class AdGroupForm(forms.ModelForm):
         # set choices based on the users adunits
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
-        # hack to make the forms ordered correctly
-        # TODO: fix common.utils.djangoforms.ModelForm to conform to
-        # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
-        self.fields.keyOrder = self.Meta.fields
+        self.fields['included_apps'] = forms.MultipleChoiceField(
+            choices=apps, required=False, widget=forms.SelectMultiple(
+                attrs={'data-placeholder': ' '}))
+        self.fields['excluded_apps'] = forms.MultipleChoiceField(
+            choices=apps, required=False, widget=forms.SelectMultiple(
+                attrs={'data-placeholder': ' '}))
 
     def clean_allocation_percentage(self):
         allocation_percentage = self.cleaned_data.get('allocation_percentage', None)
@@ -424,6 +427,12 @@ class AdGroupForm(forms.ModelForm):
             not isinstance(allocation_percentage, float)):
             allocation_percentage = 100
         return allocation_percentage
+
+    def clean_included_apps(self):
+        return [Key(app_key) for app_key in self.cleaned_data.get('included_apps', [])]
+
+    def clean_excluded_apps(self):
+        return [Key(app_key) for app_key in self.cleaned_data.get('excluded_apps', [])]
 
     def clean_site_keys(self):
         return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
@@ -482,6 +491,8 @@ class AdGroupForm(forms.ModelForm):
                   'android_version_min',
                   'android_version_max',
                   'target_other',
+                  'included_apps',
+                  'excluded_apps',
                   'geo_predicates',
                   'region_targeting',
                   'cities',

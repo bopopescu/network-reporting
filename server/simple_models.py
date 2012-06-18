@@ -337,6 +337,8 @@ class SimpleAdGroup(SimpleModel):
                  optimizable=None,
                  default_cpm=None,
                  network_type=None,
+                 included_apps=None,
+                 excluded_apps=None,
                  *args,
                  **kwargs
                  ):
@@ -373,6 +375,8 @@ class SimpleAdGroup(SimpleModel):
         self.optimizable = optimizable
         self.default_cpm = default_cpm
         self.network_type = network_type
+        self.included_apps = included_apps
+        self.excluded_apps = excluded_apps
 
     def __str__(self):
         return self.__repr__()

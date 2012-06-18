@@ -277,6 +277,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         return render_to_response(self.request,
                                   template,
                                   {
+                                      'is_staff': self.request.user.is_staff,
                                       'campaign_form': campaign_form,
                                       'adgroup': adgroup_to_edit,
                                       'adgroup_form': adgroup_form,
@@ -853,6 +854,7 @@ class AdGroupDetailHandler(RequestHandler):
                                   'advertiser/adgroup.html',
                                   {
                                       'account': self.account,
+                                      'is_staff': self.request.user.is_staff,
                                       'campaign': adgroup.campaign,
                                       'apps': sorted_apps,
                                       'adgroup': adgroup,

@@ -398,32 +398,33 @@ class AppDetailHandler(RequestHandler):
             if not campaign.network_type:
                 campaign.adgroup = campaign.adgroups[0]
 
-            # 1 GET
-            summed_fetcher = SummedStatsFetcher(self.account.key())
-            campaign.stats =  summed_fetcher.get_campaign_specific_app_stats(
-                    app.key(), campaign, self.start_date, self.end_date)
-            #budget_object = campaign.budget_obj
-            #campaign.percent_delivered = budget_service.percent_delivered(
-                    #budget_object)
+            if len(app.campaigns) < 20:
+                # 1 GET
+                summed_fetcher = SummedStatsFetcher(self.account.key())
+                campaign.stats =  summed_fetcher.get_campaign_specific_app_stats(
+                        app.key(), campaign, self.start_date, self.end_date)
+                #budget_object = campaign.budget_obj
+                #campaign.percent_delivered = budget_service.percent_delivered(
+                        #budget_object)
 
-            # Overwrite the revenue from MPX if its marketplace
-            # TODO: overwrite clicks as well
-            if campaign.campaign_type in ['marketplace']:
-                try:
-                    # 1 urlfetch
-                    mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
-                                                            self.start_date,
-                                                            self.end_date)
-                except MPStatsAPIException, error:
-                    logging.warning("MPStatsAPIException: %s" % error)
-                    mpx_stats = {}
+                # Overwrite the revenue from MPX if its marketplace
+                # TODO: overwrite clicks as well
+                if campaign.campaign_type in ['marketplace']:
+                    try:
+                        # 1 urlfetch
+                        mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
+                                                                self.start_date,
+                                                                self.end_date)
+                    except MPStatsAPIException, error:
+                        logging.warning("MPStatsAPIException: %s" % error)
+                        mpx_stats = {}
 
-                campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
-                campaign.stats['imp'] = int(mpx_stats.get('imp', 0))
+                    campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
+                    campaign.stats['imp'] = int(mpx_stats.get('imp', 0))
 
-            if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
-                    'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
-                campaign.calculated_ecpm = calculate_ecpm(campaign)
+                if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
+                        'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
+                    campaign.calculated_ecpm = calculate_ecpm(campaign)
 
 
         # Sort out all of the campaigns that are targeting this app
@@ -607,62 +608,63 @@ class AdUnitShowHandler(RequestHandler):
         adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
         adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
         for ag in adunit.adgroups:
-            campaign = ag.campaign
-            # If its a new network campaign that has been migrated and the
-            # transition date is after the start date
-            if campaign.campaign_type == 'network' and campaign.network_state == \
-                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
-                    campaign.old_campaign and self.start_date <= \
-                    campaign.transition_date:
-                new_stats = None
-                if self.end_date >= campaign.transition_date:
-                    # get new campaign stats (specific for the single adgroup)
-                    days = date_magic.gen_days(campaign.transition_date,
-                            self.end_date)
-                    new_stats = stats_manager.get_stats_for_days(
-                            publisher=adunit, advertiser=ag,
-                            days=days)
-                    days = date_magic.gen_days(self.start_date,
-                            campaign.transition_date)
+            if len(adunit.adgroups) < 20:
+                campaign = ag.campaign
+                # If its a new network campaign that has been migrated and the
+                # transition date is after the start date
+                if campaign.campaign_type == 'network' and campaign.network_state == \
+                        NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
+                        campaign.old_campaign and self.start_date <= \
+                        campaign.transition_date:
+                    new_stats = None
+                    if self.end_date >= campaign.transition_date:
+                        # get new campaign stats (specific for the single adgroup)
+                        days = date_magic.gen_days(campaign.transition_date,
+                                self.end_date)
+                        new_stats = stats_manager.get_stats_for_days(
+                                publisher=adunit, advertiser=ag,
+                                days=days)
+                        days = date_magic.gen_days(self.start_date,
+                                campaign.transition_date)
+                    else:
+                        # getting only legacy campaign stats (back when campaign
+                        # and adgroup were one to one)
+                        days = self.days
+                    # get old campaign stats
+                    old_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                            advertiser=campaign.old_campaign, days=days)
+                    if new_stats:
+                        transition_stats = old_stats[-1] + new_stats[0]
+                        ag.all_stats = old_stats[:-1] + [transition_stats] + \
+                                new_stats[1:]
+                    else:
+                        ag.all_stats = old_stats
                 else:
-                    # getting only legacy campaign stats (back when campaign
+                    # getting only adgroup stats (back when campaign
                     # and adgroup were one to one)
                     days = self.days
-                # get old campaign stats
-                old_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                        advertiser=campaign.old_campaign, days=days)
-                if new_stats:
-                    transition_stats = old_stats[-1] + new_stats[0]
-                    ag.all_stats = old_stats[:-1] + [transition_stats] + \
-                            new_stats[1:]
-                else:
-                    ag.all_stats = old_stats
-            else:
-                # getting only adgroup stats (back when campaign
-                # and adgroup were one to one)
-                days = self.days
-                ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                        advertiser=ag, days=days)
+                    ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                            advertiser=ag, days=days)
 
-            ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            budget_object = campaign.budget_obj
-            ag.percent_delivered = budget_service.percent_delivered(budget_object)
+                ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
+                budget_object = campaign.budget_obj
+                ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
-            # Overwrite the revenue from MPX if its marketplace
-            # TODO: overwrite clicks as well
-            if campaign.campaign_type in ['marketplace']:
-                try:
-                    mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
-                                                               self.start_date,
-                                                               self.end_date)
-                except MPStatsAPIException, error:
-                    logging.warning("MPStatsAPIException: %s" % error)
-                    mpx_stats = {}
-                ag.stats.revenue = float(mpx_stats.get('rev', 0.0))
-                ag.stats.impression_count = int(mpx_stats.get('imp', 0))
+                # Overwrite the revenue from MPX if its marketplace
+                # TODO: overwrite clicks as well
+                if campaign.campaign_type in ['marketplace']:
+                    try:
+                        mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
+                                                                   self.start_date,
+                                                                   self.end_date)
+                    except MPStatsAPIException, error:
+                        logging.warning("MPStatsAPIException: %s" % error)
+                        mpx_stats = {}
+                    ag.stats.revenue = float(mpx_stats.get('rev', 0.0))
+                    ag.stats.impression_count = int(mpx_stats.get('imp', 0))
 
-            if campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
-                ag.calculated_ecpm = calculate_ecpm(ag)
+                if campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
+                    ag.calculated_ecpm = calculate_ecpm(ag)
 
 
         # to allow the adunit to be edited

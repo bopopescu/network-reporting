@@ -36,7 +36,8 @@ def get_filetype_extension(filename):
 
 class CampaignForm(forms.ModelForm):
     campaign_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
-                                               ('promo', 'Promotional')),
+                                               ('promo', 'Promotional'),
+                                               ('network', 'Network')),
                                       label='Campaign Type:')
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
@@ -127,18 +128,20 @@ class CampaignForm(forms.ModelForm):
             if instance.end_datetime:
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
-        is_staff = kwargs.pop('is_staff', False)
-        account = kwargs.pop('account', False)
+        self.is_staff = kwargs.pop('is_staff', False)
+        self.account = kwargs.pop('account', False)
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
         # show deprecated networks if user is staff or hasn't migrated
-        if (is_staff or (account and not account.display_new_networks)):
+        if not (self.is_staff or (self.account and not self.account. \
+                display_new_networks)):
             # Hack(nafis): we cannont use choices.append because by doing
             # so we are modifying the global list defined earlier in this file
             # Instead by adding the list togther we are creating a new object
             # for this particular instance
-            self.fields['campaign_type'].choices = self.fields['campaign_type'].choices + [('network', 'Network')]
+            self.fields['campaign_type'].choices = [('gtee', 'Guaranteed'),
+                    ('promo', 'Promotional')]
 
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
@@ -167,6 +170,16 @@ class CampaignForm(forms.ModelForm):
             # end_datetime is entered in Pacific Time
             end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
         return end_datetime
+
+    def clean_campaign_type(self):
+        campaign_type = self.cleaned_data.get('campaign_type', None)
+        if not (self.is_staff or (self.account and not \
+                self.account.display_new_networks)) and campaign_type == \
+                'network':
+            raise forms.ValidationError("'network' is not a valid " \
+                    "campaign_type choice for campaigns not created by " \
+                    "staff or non deprecated users")
+        return campaign_type
 
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()

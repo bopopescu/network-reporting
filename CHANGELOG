@@ -1,10 +1,17 @@
+# Deployed Monday, June 18, 2012 at 07:53PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-129
+### Bugs Fixed: []
+### Included Commits: 
+ * e69a367 Deployed without finding any bug fixes.
+ 
 # Deployed Monday, June 18, 2012 at 07:49PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-128
 ### Bugs Fixed: []
-### Included Commits: 
- * c0791f8 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* c0791f8 Deployed without finding any bug fixes.
+
 # Deployed Monday, June 18, 2012 at 07:21PM PST
 ### Deployed by John Pena
 ### Tagged deploy-127

@@ -57,6 +57,7 @@ class LineItemForm(forms.ModelForm):
                                                 ('low', 'Low')),
                                        required=False)
 
+
     promo_priority = forms.ChoiceField(label='Priority:', initial='normal',
                                        choices=(('normal', 'Normal'),
                                                 ('backfill', 'Backfill')),
@@ -226,13 +227,6 @@ class LineItemForm(forms.ModelForm):
         if end_datetime:
             end_datetime = pacific_to_utc(end_datetime)
         return end_datetime
-
-    # def clean_allocation_percentage(self):
-    #     allocation_percentage = self.cleaned_data.get('allocation_percentage', None)
-    #     if (not isinstance(allocation_percentage, int) and
-    #         not isinstance(allocation_percentage, float)):
-    #         allocation_percentage = 100
-    #     return allocation_percentage
 
     def clean_site_keys(self):
         return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]

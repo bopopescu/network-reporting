@@ -79,7 +79,6 @@
     <div id="adserverTest" style="display:none;">
       <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
       </iframe>
-
     </div>
 
     {% inventory_table adunit.app %}
@@ -87,16 +86,25 @@
   </section>
 
   
-  <section id="dashboard-apps">
-    <h2>Daily Counts</h2>
-
+  <section>
+    <h2>Ad sources targeting this adunit</h2>
     <br />
-    
     <a class="btn" href="#">
       {% button_icon "eye-open" %}
       Show details
     </a>
-
+    <div id="daily_counts"></div>
+  </section>
+  
+  
+  <section>
+    <h2>Daily Counts</h2>
+    <br />
+    <a class="btn" href="#">
+      {% button_icon "eye-open" %}
+      Show details
+    </a>
+    <div id="daily_counts"></div>
   </section>
 
   

@@ -33,8 +33,16 @@ class ReportIndexHandler(RequestHandler):
         scheduled = manager.get_scheduled()
         defaults, adding_reps = manager.get_default_reports()
         scheduled = defaults + scheduled
+
+        for report in scheduled:
+            report.form = ReportForm(instance=report,
+                                     prefix=str(report.key()),
+                                     save_as=True)
+
         if adding_reps:
-            self.request.flash['generating_defaults'] = "Default reports are currently being generated, you will be notified when they are completed."
+            self.request.flash['generating_defaults'] = "Default reports " \
+                    "are currently being generated, you will be notified " \
+                    "when they are completed."
         report_form = ReportForm(initial={'recipients':self.request.user.email})
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(scheduled  = scheduled,
@@ -211,8 +219,8 @@ def sched_runner(request, *args, **kwargs):
 
 
 class ReportExporter(RequestHandler):
-    def post(self, report_key, account_key, f_type, *args, **kwargs):
-        return sswriter.write_report(f_type, report_key, account_key)
+    def get(self, report_key, *args, **kwargs):
+        return sswriter.write_report('csv', report_key, self.account.key())
 
 def exporter(request, *args, **kwargs):
     return ReportExporter()(request, *args, **kwargs)

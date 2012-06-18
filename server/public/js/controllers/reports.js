@@ -1,6 +1,4 @@
-(function($) {
-
- $(document).ready(function() {
+(function($, _) {
 
 
      function addPlaceholder() {
@@ -99,6 +97,7 @@
              $('#reportForm-container').dialog({width:750});
         });
 
+
      $('#reportCreateForm-cancel').button()
          .click(function(e) {
              e.preventDefault();
@@ -117,28 +116,44 @@
              }
          });
 
-     $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
-         .click(function(e) {
-             e.preventDefault();
-             $('#saveAs').val('False');
-             $('#reportCreateForm-submit').button({label: 'Save'});
-             var report_form = $('#reportForm-container');
-             report_form.dialog({width:750});
-         });
+     var ReportIndexController = {
+         initialize: function(bootstrapping_data) {
+             var report_keys = bootstrapping_data.report_keys;
 
+             _.each(report_keys, function(key) {
+                 var row = $('#' + key + '-row')
 
-     $('#reportCreateForm-cancel')
-         .button()
-         .click(function(e) {
-             e.preventDefault();
-             $('.dim-selectmenu').selectmenu('enable');
-             $('#interval').selectmenu('enable');
-             $('#start-input').xdatepicker('enable');
-             $('#end-input').xdatepicker('enable');
-             revert_state(form_state);
-             $(this).parents('#reportForm-container')
-                 .dialog('close');
-         });
+                 $(row).mouseenter(function(e) {
+                     $('#' + key + '-edit-link').show();
+                 })
+                 $(row).mouseleave(function(e) {
+                     $('#' + key + '-edit-link').hide();
+                 })
+
+                 $('#' + key + '-edit-link')
+                     .click(function(e) {
+                         e.preventDefault();
+                         $('#' + key + '-saveAs').val('False');
+                         $('#' + key + '-reportCreateForm-submit').button({label: 'Save'});
+                         var report_form = $('#' + key + '-reportForm-container');
+                         report_form.dialog({width:750});
+                     });
+
+                 $('#' + key + '-reportCreateForm-cancel')
+                     .click(function(e) {
+                         e.preventDefault();
+                         $('.dim-selectmenu').selectmenu('enable');
+                         $('#interval').selectmenu('enable');
+                         $('#start-input').xdatepicker('enable');
+                         $('#end-input').xdatepicker('enable');
+                         revert_state(form_state);
+                         $('#' + key + '-reportForm-container').dialog('close');
+                     });
+
+            });
+         }
+     }
+
 
      $('#reportUpdateForm-cancel')
          .button()
@@ -645,5 +660,5 @@ function obj_equals(x, y) {
             $('#reportStateChangeForm').find('#action').val('delete').end().submit();
         });
 
- });
-})(this.jQuery);
+    window.ReportIndexController = ReportIndexController;
+})(window.jQuery, window._);

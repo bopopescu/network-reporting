@@ -374,11 +374,21 @@ class AdGroup(db.Model):
 
     @property
     def included_apps_global_ids(self):
-        return [db.get(app_key).global_id for app_key in self.included_apps]
+        global_ids = []
+        for app_key in self.included_apps:
+            app = db.get(app_key)
+            if app.global_id:
+                global_ids.append(app.global_id)
+        return global_ids
 
     @property
     def excluded_apps_global_ids(self):
-        return [db.get(app_key).global_id for app_key in self.excluded_apps]
+        global_ids = []
+        for app_key in self.excluded_apps:
+            app = db.get(app_key)
+            if app.global_id:
+                global_ids.append(app.global_id)
+        return global_ids
 
     @property
     def calculated_cpm(self):

@@ -140,8 +140,8 @@ class CreateAppHandler(RequestHandler):
         }
 
     def post(self):
+        
         app_form = AppForm(data=self.request.POST, files=self.request.FILES)
-
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
         logging.warn(self.request.POST)
 
@@ -192,7 +192,6 @@ class CreateAppHandler(RequestHandler):
 
             status = "welcome"
 
-        logging.warn("\n\n\n\n\n\n\n\n\nyo")
         # Redirect to the code snippet page
         publisher_integration_url = reverse('publisher_integration_help',
                                             kwargs = {
@@ -637,7 +636,8 @@ def add_demo_campaign(site):
                  u=site.account.user,
                  account=site.account,
                  campaign_type="order",
-                 description=demo_description)
+                 description=demo_description,
+                 active=True)
     CampaignQueryManager.put(c)
 
     # Set up a test ad group for this campaign

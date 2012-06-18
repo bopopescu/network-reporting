@@ -33,6 +33,8 @@ class AppService(RequestHandler):
     """
     def get(self, app_key=None, adgroup_key=None, campaign_key=None):
 
+        callback_name = self.request.GET.get('callback', None)
+        
         # make sure app_key/adgroup_key are for apps/adgroups that
         # belong to this user
         if app_key:
@@ -85,7 +87,7 @@ class AppService(RequestHandler):
                                         self.end_date)
             app.update(s)
                                                             
-        return JSONResponse(apps)
+        return JSONResponse(apps, callback=callback_name)
 
 
     def post(self):

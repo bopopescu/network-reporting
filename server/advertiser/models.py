@@ -717,8 +717,10 @@ class AdGroup(db.Model):
 
         display = []
         for country in self.geo_predicates:
-            country_name = ISO_COUNTRY_LOOKUP_TABLE[country.strip("country_name=")]
-            display.append(country_name)
+            country_id = country.strip("country_name=")
+            if country_id.find("*") == -1:
+                country_name = ISO_COUNTRY_LOOKUP_TABLE[country_id]
+                display.append(country_name)
 
         if not display:
             return "All countries"

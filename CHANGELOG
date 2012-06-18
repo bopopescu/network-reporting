@@ -1,10 +1,17 @@
+# Deployed Monday, June 18, 2012 at 07:21PM PST
+### Deployed by John Pena
+### Tagged deploy-127
+### Bugs Fixed: []
+### Included Commits: 
+ * 2949ec5 Deployed without finding any bug fixes.
+ 
 # Deployed Monday, June 18, 2012 at 06:51PM PST
 ### Deployed by John Pena
 ### Tagged deploy-126
 ### Bugs Fixed: []
-### Included Commits: 
- * 49ed08c [#1288 state:resolved] [#1265 state:resolved] [#1282 state:resolved]
- 
+### Included Commits:
+* 49ed08c [#1288 state:resolved] [#1265 state:resolved] [#1282 state:resolved]
+
 # Deployed Monday, June 18, 2012 at 06:06PM PST
 ### Deployed by John Pena
 ### Tagged deploy-125

@@ -38,6 +38,7 @@ class ReportIndexHandler(RequestHandler):
             report.form = ReportForm(instance=report,
                                      prefix=str(report.key()),
                                      save_as=True)
+        scheduled = sorted(scheduled, key=lambda report: report.last_run)
 
         if adding_reps:
             self.request.flash['generating_defaults'] = "Default reports " \

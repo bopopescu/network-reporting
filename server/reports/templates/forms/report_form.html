@@ -23,15 +23,9 @@
     <dd>
         {{ form.interval|attrs:'{"class":"int-selectmenu","id":"interval"}'|raw }}
         &nbsp;&nbsp;
-        <input id='start-input' type='text' class='date-required input-text input-text-number date-field update-button' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
-        <input id='end-input' type='text' class='date-required input-text input-text-number date-field update-button' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
+        {{ form.start }}
+        {{form.end }}
         <span id='dateError' style="display:none; color:red;">* Required</span>
-    </dd>
-    <dt>
-        E-mail:
-    </dt>
-    <dd>
-        {{form.email|raw|attrs:'{"id":"email-input-checkbox"}'}}&nbsp;&nbsp;<label for="email-input-checkbox">Notify me when the report finishes</label>
     </dd>
     <div id='email-recipients'>
         <dt>

@@ -49,28 +49,6 @@
         return success;
     }
 
-    var sub_label;
-    if (window.location.pathname == '/reports/') {
-        sub_label = 'Run';
-    }
-    else {
-        sub_label = 'Save';
-    }
-
-    $('#reportCreateForm-submit')
-    .button({
-        label: sub_label,
-        icons: {secondary: 'ui-icon-circle-triangle-e' }})
-    .click(function(e) {
-            e.preventDefault();
-            if (rep_validate($('#reportCreateForm'))) {
-                $('#reportCreateForm').submit();
-            }
-            else {
-                $('#formError').show();
-            }
-    });
-
     $('#reports-view-runReportButton').button({
         icons: {secondary: 'ui-icon-circle-triangle-e' }});
 
@@ -98,31 +76,51 @@
         });
 
 
-     $('#reportCreateForm-cancel').button()
-         .click(function(e) {
-             e.preventDefault();
-             $('#reports-reportAddForm').slideUp('fast');
-         });
-
-     $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
-         .click(function(e){
-                e.preventDefault();
-             var report_form = $('#reports-reportAddForm');
-             if (report_form.is(':hidden')) {
-                 $('#reports-reportAddForm').slideDown('fast');
-             }
-             else {
-                 $('#reports-reportAddForm').slideUp('fast');
-             }
-         });
-
      var ReportIndexController = {
          initialize: function(bootstrapping_data) {
              var report_keys = bootstrapping_data.report_keys;
 
+
+             /* Add a new report UI */
+             // Show new report form
+             $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
+                 .click(function(e){
+                        e.preventDefault();
+                     var report_form = $('#reports-reportAddForm');
+                     if (report_form.is(':hidden')) {
+                         $('#reports-reportAddForm').slideDown('fast');
+                     }
+                     else {
+                         $('#reports-reportAddForm').slideUp('fast');
+                     }
+                 });
+
+             // Create new report
+            $('#reportCreateForm-run')
+                .button({label: 'Run',
+                         icons: {secondary: 'ui-icon-circle-triangle-e' }})
+                .click(function(e) {
+                    e.preventDefault();
+                    if (rep_validate($('#reportCreateForm'))) {
+                        $('#reportCreateForm').submit();
+                    }
+                    else {
+                        $('#formError').show();
+                    }
+                });
+
+             // Cancel new report form
+             $('#reportCreateForm-cancel').button()
+                 .click(function(e) {
+                     e.preventDefault();
+                     $('#reports-reportAddForm').slideUp('fast');
+                 });
+
+             /* Edit existing saved and scheduled reports */
              _.each(report_keys, function(key) {
                  var row = $('#' + key + '-row')
 
+                 // hide / show wrench edit icon
                  $(row).mouseenter(function(e) {
                      $('#' + key + '-edit-link').show();
                  })
@@ -130,11 +128,12 @@
                      $('#' + key + '-edit-link').hide();
                  })
 
+                 // when wrench is clicked open an edit report form dialog
                  $('#' + key + '-edit-link')
                      .click(function(e) {
                          e.preventDefault();
                          $('#' + key + '-saveAs').val('False');
-                         $('#' + key + '-reportCreateForm-submit').button({label: 'Save'});
+                         $('#' + key + '-reportCreateForm-save').button({label: 'Save'});
                          var report_form = $('#' + key + '-reportForm-container');
                          report_form.dialog({width:750});
                      });
@@ -150,7 +149,21 @@
                          $('#' + key + '-reportForm-container').dialog('close');
                      });
 
+                 $(row).find('.update-button')
+                    .change(function(e) {
+                        e.preventDefault();
+                        if (!obj_equals(form_state, get_form_state())) {
+                            $('#' + key + 'reportCreateForm-submit').button({label:'Save and Run'});
+                        }
+                        else {
+                            $('#' + key + 'reportCreateForm-submit').button({label:'Save'});
+                        }
+                    }).change();
+
+
             });
+
+
          }
      }
 
@@ -506,17 +519,6 @@
             d1_validate($('#d1'));
             d2_validate($(this));
         });
-
-    $('.update-button').change(
-        function(e) {
-            e.preventDefault();
-            if (!obj_equals(form_state, get_form_state())) {
-                $('#reportCreateForm-submit').button({label:'Save and Run'});
-            }
-            else {
-                $('#reportCreateForm-submit').button({label:'Save'});
-            }
-        }).change();
 
 
 

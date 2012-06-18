@@ -1,64 +1,54 @@
-import urllib2
 import logging
-from datetime import datetime, timedelta
-
-from google.appengine.ext import db
+from datetime import timedelta
 
 from django import forms
-from common.utils import forms as mpforms
-from common.utils import fields as mpfields
-from common.utils import widgets as mpwidgets
-from common.utils import date_magic
-from reports.models import Report, ScheduledReport
+from reports.models import ScheduledReport
 
-#NONE = '--------' (this is for my sanity) #0
-APP = 'app' #1
-AU = 'adunit' #2
-P = 'priority' #3
-CAMP = 'campaign' #4
-CRTV = 'creative' #5
-MO = 'month' #6
-WEEK = 'week' #7
-DAY = 'day' #8
-HOUR = 'hour' #9
-CO = 'country' #10
-#device is now just marketing name
-DEV = 'marketing' #11
-OS = 'os' #12
-OS_VER = 'os_ver' #13
-KEY = 'kw' #14
-CHOICES = [('','------------'),
-           (APP, 'App'),
-           (AU, 'Ad Unit'),
-           (P, 'Priority'),
-           (CAMP, 'Campaign'),
-           (CRTV, 'Creative'),
-           (MO, 'Month'),
-           (WEEK, 'Week'),
-           (DAY, 'Day'),
-           (HOUR, 'Hour'),
-           (CO, 'Country'),
-           (DEV, 'Device'),
-           (OS, 'OS'),
-           (OS_VER, 'OS Version'),
+DIMENSIONS = [('','------------'),
+              ('app', 'App'),
+              ('adunit', 'Ad Unit'),
+              ('priority', 'Priority'),
+              ('campaign', 'Campaign'),
+              ('creative', 'Creative'),
+              ('month', 'Month'),
+              ('week', 'Week'),
+              ('day', 'Day'),
+              ('hour', 'Hour'),
+              ('country', 'Country'),
+              ('marketing', 'Device'),
+              ('os', 'OS'),
+              ('os_ver', 'OS Version'),
            ]
-           #(KEY, 'Keywords')]
-TARG = 'targeting' # I don't know what this is
-
-INT_CHCES = [('yesterday', 'Yesterday'), ('7days', 'Last 7 days'), ('lmonth', 'Last month'), ('custom', 'Custom')]
-SCHED_CHCES = [('none', "Don't schedule"), ('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ('quarterly', 'Quarterly')]
 
 
-class ReportForm(mpforms.MPModelForm):
+
+class ReportForm(forms.ModelForm):
 
     TEMPLATE = 'reports/forms/report_form.html'
-    d1 = mpfields.MPChoiceField(choices=CHOICES,widget=mpwidgets.MPSelectWidget())
-    d2 = mpfields.MPChoiceField(choices=CHOICES,widget=mpwidgets.MPSelectWidget())
-    d3 = mpfields.MPChoiceField(choices=CHOICES,widget=mpwidgets.MPSelectWidget())
-    interval = mpfields.MPChoiceField(choices=INT_CHCES, widget=mpwidgets.MPSelectWidget())
-    sched_interval = mpfields.MPChoiceField(choices=SCHED_CHCES, widget=mpwidgets.MPSelectWidget())
-    start = forms.Field()
-    recipients = mpfields.MPTextareaField()
+    d1 = forms.ChoiceField(choices=DIMENSIONS,
+                           label='Report Breakdown:')
+    d2 = forms.ChoiceField(choices=DIMENSIONS,
+                           label='>')
+    d3 = forms.ChoiceField(choices=DIMENSIONS,
+                           label='>')
+    interval = forms.ChoiceField(choices=(('yesterday', 'Yesterday'),
+                                          ('7days', 'Last 7 days'),
+                                          ('lmonth', 'Last month'),
+                                          ('custom', 'Custom')),
+                                 label='Dates:')
+    sched_interval = forms.ChoiceField(choices=(('none', "Don't schedule"),
+                                                ('daily', 'Daily'),
+                                                ('weekly', 'Weekly'),
+                                                ('monthly', 'Monthly'),
+                                                ('quarterly', 'Quarterly')),
+                                       label='Schedule:')
+    start = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+                                         label='Start:', required=False,
+                                         widget=forms.DateInput(attrs={'class': 'date',
+                                                                       'placeholder': 'MM/DD/YYYY'},
+                                                                format='%m/%d/%Y',))
+    recipients = forms.CharField(label='Recipients:',
+                           widget=forms.TextInput())
 
     def __init__(self, save_as=False,*args, **kwargs):
         instance = kwargs.get('instance', None)
@@ -89,5 +79,5 @@ class ReportForm(mpforms.MPModelForm):
 
     class Meta:
         model = ScheduledReport
-        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval', 'email', 'recipients')
+        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval', 'recipients')
 

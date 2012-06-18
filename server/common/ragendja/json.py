@@ -14,8 +14,11 @@ class LazyEncoder(DjangoJSONEncoder):
 
 class JSONResponse(HttpResponse):
     def __init__(self, pyobj, **kwargs):
-        super(JSONResponse, self).__init__(
-            simplejson.dumps(pyobj, cls=LazyEncoder),
-            content_type='application/json; charset=%s' %
-                            settings.DEFAULT_CHARSET,
-            **kwargs)
+        dump = simplejson.dumps(pyobj, cls=LazyEncoder)
+        jsonp_callback = kwargs.get('callback', None)
+        if jsonp_callback:
+            dump = jsonp_callback + '(' + dump + '); '
+            del kwargs['callback']
+        super(JSONResponse, self).__init__(dump,
+            content_type='application/json; charset=%s' % settings.DEFAULT_CHARSET,
+                                           **kwargs)

@@ -140,16 +140,13 @@ class CreateAppHandler(RequestHandler):
         }
 
     def post(self):
+        
         app_form = AppForm(data=self.request.POST, files=self.request.FILES)
-
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
 
         # If there are validation errors in either the app_form or adunit_form,
         # fail by returning the page rendered with the invalid forms.
         if not app_form.is_valid() or not adunit_form.is_valid():
-            logging.warn('\n\n\n\n\n\n\n\n\n\n\nraaaahhhhhh')
-            logging.warn(app_form.errors)
-            logging.warn(adunit_form.errors)
             return render_to_response(self.request, self.template, {
                 'app_form': app_form,
                 'adunit_form': adunit_form
@@ -194,7 +191,6 @@ class CreateAppHandler(RequestHandler):
 
             status = "welcome"
 
-        logging.warn("\n\n\n\n\n\n\n\n\nyo")
         # Redirect to the code snippet page
         publisher_integration_url = reverse('publisher_integration_help',
                                             kwargs = {
@@ -639,7 +635,8 @@ def add_demo_campaign(site):
                  u=site.account.user,
                  account=site.account,
                  campaign_type="order",
-                 description=demo_description)
+                 description=demo_description,
+                 active=True)
     CampaignQueryManager.put(c)
 
     # Set up a test ad group for this campaign

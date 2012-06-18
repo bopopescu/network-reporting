@@ -556,18 +556,22 @@ var mopub = window.mopub || {};
                 $('.' + metric, adunit_row).text(metric_text);
             });
 
-            $('.price_floor', adunit_row).html('<img class="loading-img hidden" ' +
-                                               'src="/images/icons-custom/spinner-12.gif">' +
-                                               '</img> ' +
-                                               '<input id="' + this.model.id + '" ' +
-                                               'type="text" ' +
-                                               'class="input-text input-text-number number" ' +
-                                               'style="width:50px;margin: -3px 0;" ' +
-                                               'value="' + this.model.get('price_floor') +
-                                               '"> ');
-            $('.targeting', adunit_row).html('<img class="loading-img hidden" ' +
-                                             'src="/images/icons-custom/spinner-12.gif"></img> ' +
-                                             '<input class="targeting-box" type="checkbox">');
+            var price_floor_html = '<input id="' + this.model.id + '" ' +
+                'type="text" ' +
+                'class="input-text input-text-number number" ' +
+                'style="width:50px;margin: -3px 0;" ' +
+                'value="' + this.model.get('price_floor') + '"> ' + 
+                '<img class="loading-img hidden" ' +
+                'src="/images/icons-custom/spinner-12.gif">' +
+                '</img> ';
+            $('.price_floor', adunit_row).html(price_floor_html);
+
+            var targeting_html = '<input class="targeting-box" type="checkbox">' +
+                '<img class="loading-img hidden" ' +
+                'src="/images/icons-custom/spinner-12.gif"></img> ';
+
+
+            $('.targeting', adunit_row).html(targeting_html);
 
             /*jslint maxlen: 110 */
 

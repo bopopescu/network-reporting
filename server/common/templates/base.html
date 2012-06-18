@@ -1,5 +1,4 @@
 {% load filters %}
-
 <!doctype html>
 <html>
   <head>
@@ -176,11 +175,6 @@
         </footer>
         </div> {# end of #container #}
 
-        {% comment %}
-        {# TypeKit #}
-        <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
-        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
-        {% endcomment %}
         {# Google load for jquery and jqueryui #}
         <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
         <script type="text/javascript">
@@ -193,13 +187,14 @@
         {% include_script "plugins" %}
 
         {# MoPub #}
-        {% include_script "app" 1 %}
+        {# {% include_script "app" 1 %} #}
         {% include_script "controllers/mopub" %}
         
         {% block extraScripts %}{% endblock extraScripts %}
 
         {# Mixpanel #}
 
+        {% comment %}
         <script type="text/javascript">
           (function(d,c){var a,b,g,e;a=d.createElement("script");a.type="text/javascript";
                          a.async=!0;a.src=("https:"===d.location.protocol?"https:":"http:")+
@@ -216,7 +211,8 @@
   </script>
 
   {#  End Mixpanel #}
-
+  {% endcomment %}
+  
   <script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-20014961-2']);
@@ -230,21 +226,6 @@
       })();
   </script>
 
-  <script type="text/javascript">
-    var _kmq = _kmq || [];
-    function _kms(u){
-        setTimeout(function(){
-            var s = document.createElement('script'); var f = document.getElementsByTagName('script')[0]; s.type = 'text/javascript'; s.async = true;
-            s.src = u; f.parentNode.insertBefore(s, f);
-        }, 1);
-    }
-    _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/df1cac838b87437e951e9a26136cc8ae203e052e.1.js');
-
-    _kmq.push(['identify', '{{ user.email }}']);
-
-  </script>
-        
-       
     </body>
   {% endblock body_content %}
 </html>

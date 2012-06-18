@@ -47,7 +47,10 @@ class OrderIndexHandler(RequestHandler):
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
                                                         orders=orders)
-        line_items.sort(key=lambda x: x.line_item_priority )
+
+        for line_item in line_items:
+            logging.warn(line_item.status)
+            
         return {
             'orders': orders,
             'line_items': line_items
@@ -602,7 +605,7 @@ class MultipleLineItemExporter(RequestHandler):
         )        
         data_to_export = tablib.Dataset(headers=headers)
 
-        # k
+
         stats_q = stats_helpers.DirectSoldStatsFetcher(self.account.key())
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         for order in orders:
@@ -634,7 +637,6 @@ class MultipleLineItemExporter(RequestHandler):
                     line_item.keywords,
                 )
             data_to_export.extend([order_data])
-
 
         return HttpResponse(getattr(data_to_export, export_type))
 

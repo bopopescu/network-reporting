@@ -19,6 +19,21 @@
 {% endblock dateButtons %}
 
 {% block content %}
+  {% if not targeted_apps %}
+    <div class="alert-message block-message">
+      This line item is not targeted at any <strong>Ad Units</strong>.
+      In order for this line item to deliver, you will need to target
+      at least one Ad Unit.
+    </div>
+  {% endif %}
+  {% if not line_item.creatives.count %}
+    <div class="alert-message block-message">
+      This line item needs to have at least
+      one <strong>Creative</strong> in order to serve.  Set up a
+      creative below.
+    </div>
+  {% endif %}
+
 {# The stats breakdown and graph #}
 
   {% chart_placeholder start_date end_date %}

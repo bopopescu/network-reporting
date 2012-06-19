@@ -736,10 +736,7 @@ var mopub = mopub || {};
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdunitsFromKeys(bootstrapping_data.app_key);
 
-            apps.bind('loaded', function(current_app) {
-
-                console.log(apps);
-                window.jcpapps = apps;
+            apps.bind('loaded', function() {
 
                 var chart_view = new CollectionChartView({
                     collection: apps,
@@ -750,7 +747,7 @@ var mopub = mopub || {};
 
                 // Load the daily counts
                 var daily_counts_view = new DailyCountsView({
-                    collection: apps,
+                    model: apps.models[0],
                     start_date: bootstrapping_data.start_date,
                     display_values: ['req', 'imp', 'clk']
                 });

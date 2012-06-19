@@ -209,8 +209,11 @@ var mopub = window.mopub || {};
         },
         render: function () {
             var this_view = this;
-            var template_values = {};
-            _.extend(template_values, this_view.options);
+            console.log(this_view);
+            var template_values = {
+                daily_stats: this_view.options.model.get('daily_stats'),
+                totals: 0
+            };
             
             $(this_view.el).html(this_view.template(template_values));
                 

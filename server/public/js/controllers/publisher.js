@@ -443,7 +443,6 @@ var mopub = mopub || {};
         initializeNewAdunitForm();
 
         $('#dashboard-apps-editAdUnitButton')
-            .button({ icons: { primary: "ui-icon-wrench" } })
             .click(function(e) {
                 e.preventDefault();
                 if ($('#dashboard-adunitEditForm').is(':visible'))
@@ -453,11 +452,9 @@ var mopub = mopub || {};
             });
 
         $('#adunitEditForm-submit')
-            .button({
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
             .click(function(e) {
                 e.preventDefault();
+                $('#adunitEditForm-submit').addClass('disabled');
                 $('#adunitForm-loading').show();
                 $('#adunitAddForm').submit();
             });
@@ -475,6 +472,7 @@ var mopub = mopub || {};
             dataType: 'json',
             success: function(jsonData, statusText, xhr, $form) {
                 $('#adunitForm-loading').hide();
+                $('#adunitEditForm-submit').removeClass('disabled');
                 if (jsonData.success) {
                     window.location.reload();
                 } else {
@@ -560,27 +558,81 @@ var mopub = mopub || {};
                 // If we get a response, hide the loading stuff
                 // and put a row in the modal for each app
                 itunes_search.success(function (response) {
+                    
                     loading_stuff.hide();
 
-                    var message = "Found " + response.resultCount + " results. " +
-                        "Click on an app to use its data in the form.";
-                    var message_div = "<div class='alert-message block-message info'>" + message + "</div>";
-                    results_section.append(message_div);
-                    _.each(response.results, function (result) {
-                        var result_div = itunes_result_template(result);
-                        results_section.append(result_div);
-                    });
-                });
+                    // Add all of the apps to the modal if we got 
+                    // some search results.
+                    if (response.resultCount > 0) {
 
+                        var message = "Found " 
+                            + response.resultCount 
+                            + " results. " +
+                            "Click on an app to use its data in the form.";
+                        var message_div = "<div class='alert-message block-message info'>" + 
+                            message + 
+                            "</div>";
+
+                        results_section.append(message_div);
+                        _.each(response.results, function (result) {
+                            var result_div = itunes_result_template(result);
+                            results_section.append(result_div);
+
+                            // When the div is clicked, fill the form in with the info.
+                            $("#" + result.trackId).click(function() {
+                                $("#appForm-name").val(result.trackName);
+                                $("#appForm-url").val(result.trackViewUrl);
+                                $('#appForm input[name="img_url"]')
+                                    .val(result.artworkUrl60);
+                                $('#appForm select[name="primary_category"]')
+                                    .val(result.primaryGenreName.toLowerCase());
+                                $('#appForm select[name="secondary_category"]')
+                                    .val(result.genres[1].toLowerCase());
+                                
+                                // This doesn't do anything to the form data but
+                                // it makes the icon appear to have been uploaded.
+                                $('#appForm-icon').html('').append(
+                                    $("<img />")
+                                        .attr("src", result.artworkUrl60)
+                                        .width(40)
+                                        .height(40)
+                                );
+
+                                search_modal.modal('hide');
+                            });
+
+                        });
+                    } else {
+                        var message = "No apps matching this name or description were " +
+                            "found in the App Store.";
+                        var message_div = "<div class='alert-message block-message'>" + 
+                            message + 
+                            "</div>";
+                        results_section.append(message_div);
+                    }
+
+                });
+                
+                // If we got an error it's probably because we can't connect
                 itunes_search.error(function () {
-                    
+                    var message = "We were unable to connect to the App Store to find your app. " +
+                        "Sorry for the inconvenience.";
+                        var message_div = "<div class='alert-message block-message error'>" + 
+                            message + 
+                            "</div>";
+                        results_section.append(message_div);
                 });
                 
             } else {
-
                 // Hide the loading stuff, but show a "you did it wrong" message
                 loading_stuff.hide();
-                results_section.html("Please enter an app to search for.");
+                var message = "Please enter your app's name in the 'App name' " +
+                    "field so we can search the App Store.";
+                var message_div = "<div class='alert-message block-message'>" + 
+                    message + 
+                    "</div>";
+                results_section.append(message_div);
+
             }
 
             // Reset the defaults when the modal is hidden again

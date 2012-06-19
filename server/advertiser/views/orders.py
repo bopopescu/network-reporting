@@ -107,6 +107,8 @@ class LineItemDetailHandler(RequestHandler):
     def get(self, line_item_key):
 
         line_item = AdGroupQueryManager.get(line_item_key)
+        for c in line_item.creatives:
+            logging.warn(c.name)
 
         # Create creative forms
         creative_form = NewCreativeForm()

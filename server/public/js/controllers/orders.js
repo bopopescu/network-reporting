@@ -572,18 +572,23 @@
 
             /* EDIT CREATIVE FORMS */
             // creative preview button
-            $('button.creative_preivew_button').click(function() {
-                var preview = $(this).siblings('div.creative_preview');
+            $('a#creative_preview_button').click(function(e) {
+                e.preventDefault();
+                var modal = $(this).siblings('div#creative_preview');
+                var preview = modal.children('div.modal-body');
                 var src = preview.children('input[name="src"]').val();
                 var iframe = preview.children('iframe');
-                iframe.attr('src', src);
+                iframe.attr('src', src);                
                 var width = parseInt(iframe.attr("width"));
                 var height = parseInt(iframe.attr("height"));
-                preview.dialog({
-                    buttons: { 'Close': function() { $(this).dialog('close'); } },
-                    width: width+100,
-                    height: height+130
-                });
+                modal.css({
+                                'width': 'auto',
+                                'height': 'auto',
+                                'margin-left': function () {
+                                                return -($(this).width() / 2);},
+                                'margin-top': function () {
+                                                return -($(this).height() / 2);}});
+                modal.modal('show');
             });
 
             $('.advertiser-inLineCreativePreview')

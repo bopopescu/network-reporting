@@ -13,7 +13,7 @@
             <input type='hidden' name='saved' value='False' />
             <fieldset id="reportAddForm-details" class="alt">
                 <div id="reportAddForm-fragment" class="reportAddForm-fragment">
-                    {{report_fragment.as_template}}
+                    {% include "reports/forms/report_form.html" %}
                 </div>
                 <div class='clear'></div>
                 <div class='form-submit'>

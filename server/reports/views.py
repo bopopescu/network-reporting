@@ -46,9 +46,8 @@ class ReportIndexHandler(RequestHandler):
                     "when they are completed."
         report_form = ReportForm(initial={'recipients':self.request.user.email})
         return render_to_response(self.request, 'reports/report_index.html',
-                dict(scheduled  = scheduled,
-                     report_fragment = report_form,
-                     ))
+                                 {'scheduled': scheduled,
+                                  'report_form': report_form, })
 
 @login_required
 def report_index(request, *args, **kwargs):

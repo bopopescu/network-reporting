@@ -43,6 +43,7 @@
         </div>
       {% endifequal %}
 
+
       <form enctype='multipart/form-data'
             action=""
             method="POST"
@@ -52,15 +53,17 @@
         {% if app_key %}
           <input type="hidden" name="app_key" value="{{app_key}}"/>
         {% endif %}
+
+        <h2> App Details </h2>
         <fieldset id="appForm-details" class="alt">
-          <legend>
-            App Details
-          </legend>
           {{ app_form.as_template }}
         </fieldset>
 
+        <br />
+        
+        <h2>Ad Unit</h2>
         <fieldset id="appForm-ad" class="adForm">
-          <legend>Ad Unit</legend>
+          
           <p>
             An ad unit is a single place in your app or mobile website
             where an ad of a specific size can appear. Your app can have

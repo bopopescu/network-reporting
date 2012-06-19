@@ -52,9 +52,9 @@
 
 #appForm-market-search-button, #appForm-search-button {
     margin: 0;
-    position: absolute;
-    top: -14px;
-    left: 4px;
+    position: relative;
+    top: -18px;
+    left: 300px;
     white-space: nowrap;
 }
 
@@ -314,4 +314,45 @@ span.big {
     font-weight: 600;
     text-transform: none;
     background: none;
+}
+
+
+.itunes-result {
+    @include clearfix();
+    @include border-radius(3px);
+    border: 1px solid #E1E1E8;
+    margin: 4px auto;
+    background: #F7F7F9;
+    height: 70px;
+
+    .itunes-result-image {
+        background: #FBFBFC;
+        float: left;
+        width: 75px;
+        padding: 2px;
+
+        img {
+            width: 57px;
+            margin: 2px auto;
+            display: block;
+        }
+    }
+
+    .itunes-result-description {
+        padding: 2px;
+        float: right;
+        width: 425px;
+        background: #F7F7F9;
+        border-left: 1px solid #E1E1E8;
+        height: 65px;
+        overflow: ellipsis;
+    }
+
+    &:hover {
+        cursor: pointer;
+    }
+
+    &:active {
+        border: 1px solid #4CA7EA;
+    }
 }

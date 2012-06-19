@@ -77,6 +77,10 @@ $zindexModal:           1050;
     float: right;
 }
 
+.center {
+    margin: 0 auto;
+}
+
 // Image  replacement (used in the logo)
 @mixin image_replacement {
     display: block;

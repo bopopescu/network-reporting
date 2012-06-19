@@ -102,6 +102,19 @@
       {{message|safe}}
     </div>
   {% endif %}
+    {% if apps_without_global_id %}
+        <div class="alert-message block-message error">
+            <p>
+                User targeting is enabled for this campaign but the following
+                apps are missing either the iTunes URL or the Android package
+                name.  This campaign may not work properly without this
+                information.
+            </p>
+            {% for app in apps_without_global_id %}
+                <p style="margin: 10px 0px 0px 15px;">{{ app.name }} <a href="{% url publisher_app_show app.key %}">Edit</a></p>
+            {% endfor %}
+        </div>
+    {% endif %}
 
   <div class="separated" id="chartWrapper">
     <section class="offset nomargin" id="dashboard-stats">

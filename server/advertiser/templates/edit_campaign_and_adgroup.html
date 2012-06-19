@@ -24,6 +24,20 @@
 {% endblock pageTitle %}
 
 {% block content %}
+    {% if apps_without_global_id %}
+        <div class="alert-message block-message error">
+            <p>
+                User targeting is enabled for this campaign but the following
+                apps are missing either the iTunes URL or the Android package
+                name.  This campaign may not work properly without this
+                information.
+            </p>
+            {% for app in apps_without_global_id %}
+                <p style="margin: 10px 0px 0px 15px;">{{ app.name }} <a href="{% url publisher_app_show app.key %}">Edit</a></p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     <form action="{% url advertiser_campaign_edit adgroup.key %}" id="campaign_and_adgroup" method="post">
         {% include 'advertiser/forms/campaign_and_adgroup.html' %}
     </form>

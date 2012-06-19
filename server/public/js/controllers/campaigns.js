@@ -457,14 +457,12 @@
             $this = $(this);
             if($this.val() == 'included_apps') {
                 $('#id_excluded_apps_chzn').hide();
-                console.log($('[name="excluded_apps"] option:selected'));
                 $('[name="excluded_apps"] option:selected').removeAttr('selected');
                 $('[name="excluded_apps"]').trigger("liszt:updated");
                 $('#id_included_apps_chzn').show();
             }
             else {
                 $('#id_included_apps_chzn').hide();
-                console.log($('[name="included_apps"] option:selected'));
                 $('[name="included_apps"] option:selected').removeAttr('selected');
                 $('[name="included_apps"]').trigger("liszt:updated");
                 $('#id_excluded_apps_chzn').show();

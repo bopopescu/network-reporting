@@ -1,62 +1,23 @@
 {% load filters %}
 
 <dl class='formFields'>
-    {% if form.save_as %}
-    <dt>Report Name:</dt>
+    <dt>{{ report_form.name.label_tag }}</dt>
+    <dd>{{ report_form.name }}</dd>
+    <dt>{{ report_form.d1.label_tag }}</dt>
     <dd>
-    <input id='reportName-input' type='text' name='name' value='{{form.name.value}}' size=60 placeholder='Report Name'></input></dd>
-    {% endif %}
-    <dt>Report Breakdown:</dt>
-    <dd>
-        {{ form.d1|attrs:'{"class":"selectmenu-required dim-selectmenu update-button","id":"d1"}'|raw }}
-        <span id='d1Error' style="display:none; color:red;">* Required</span>
-        <span id="d2-show" {% if not form.d2.value %}class='hidden'{% endif %}>
-            &nbsp;>&nbsp;
-            {{ form.d2|attrs:'{"class":"dim-selectmenu update-button","id":"d2"}'|raw }}
-            <span id='d3-show' {% if not form.d3.value %}class='hidden'{% endif %}>
-                &nbsp;>&nbsp;
-                {{ form.d3|attrs:'{"class":"dim-selectmenu update-button","id":"d3"}'|raw }}
-            </span>
-        </span>
+    {{ report_form.d1 }}
+    {{ report_form.d2.label_tag }}
+    {{ report_form.d2 }}
+    {{ report_form.d3.label_tag }}
+    {{ report_form.d3 }}
     </dd>
-    <dt>Dates:</dt>
+    <dt>{{ report_form.interval.label_tag }}</dt>
     <dd>
-        {{ form.interval|attrs:'{"class":"int-selectmenu","id":"interval"}'|raw }}
-        &nbsp;&nbsp;
-        {{ form.start }}
-        {{form.end }}
-        <span id='dateError' style="display:none; color:red;">* Required</span>
+    {{ report_form.interval }}
+    {{ report_form.start }} - {{ report_form.end }}
     </dd>
-    <div id='email-recipients'>
-        <dt>
-            Recipients:
-        </dt>
-        <dd>
-            {{form.recipients|raw}}
-        </dd>
-    </div>
-    <div id='reports-email-helpContent' class='hidden'>
-        <h3>Emailing Scheduled Reports</h3>
-        <p>If you would like to be emailed with a copy of the report as an attachment <strong>each</strong> time that this report is run.</p>
-    </div>
-    <dt>Schedule:</dt>
-    <dd>
-        {{ form.sched_interval|attrs:'{"class":"sched-int-selectmenu", "id": "sched_interval"}'|raw}}
-        <div style='padding-top:5px'>
-            &nbsp;
-            &nbsp;
-            <span class='schedule-help daily'>
-                Daily scheduled reports are run every day, 12:00 AM GMT.
-            </span>
-            <span class='schedule-help weekly'>
-                Weekly scheduled reports are run every Monday, 12:00 AM GMT.
-            </span>
-            <span class='schedule-help monthly'>
-                Montly scheduled reports are run on the first of every month, 12:00 AM GMT.
-            </span>
-            <span class='schedule-help quarterly'>
-                Quarterly scheduled reports are run at the start of every quarter, 12:00 AM GMT.
-            </span>
-        </div>
-    </dd>
-    <input id='interval-toggle' type='hidden' value=2 />
+    <dt>{{ report_form.recipients.label_tag }}</dt>
+    <dd>{{ report_form.recipients }}</dd>
+    <dt>{{ report_form.sched_interval.label_tag }}</dt>
+    <dd>{{ report_form.sched_interval }}</dd>
+</dl>

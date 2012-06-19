@@ -25,6 +25,9 @@ DIMENSIONS = [('','------------'),
 class ReportForm(forms.ModelForm):
 
     TEMPLATE = 'reports/forms/report_form.html'
+    name = forms.CharField(label='Name:',
+                           widget=forms.TextInput(attrs={'class': 'required',
+                                                         'placeholder': 'Report Name'}))
     d1 = forms.ChoiceField(choices=DIMENSIONS,
                            label='Report Breakdown:')
     d2 = forms.ChoiceField(choices=DIMENSIONS,
@@ -36,19 +39,26 @@ class ReportForm(forms.ModelForm):
                                           ('lmonth', 'Last month'),
                                           ('custom', 'Custom')),
                                  label='Dates:')
+    start = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+                                required=False,
+                                widget=forms.DateInput(attrs={'class': 'date',
+                                                              'placeholder': 'MM/DD/YYYY'},
+                                                       format='%m/%d/%Y',))
+    end = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+                              required=False,
+                              widget=forms.DateInput(attrs={'class': 'date',
+                                                            'placeholder': 'MM/DD/YYYY'},
+                                                     format='%m/%d/%Y',))
+    recipients = forms.CharField(label='Recipients:',
+                                 widget=forms.Textarea(attrs={'cols': 50,
+                                                              'rows': 3,
+                                                              'placeholder': 'E-mail addresses to receive report'}))
     sched_interval = forms.ChoiceField(choices=(('none', "Don't schedule"),
                                                 ('daily', 'Daily'),
                                                 ('weekly', 'Weekly'),
                                                 ('monthly', 'Monthly'),
                                                 ('quarterly', 'Quarterly')),
                                        label='Schedule:')
-    start = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
-                                         label='Start:', required=False,
-                                         widget=forms.DateInput(attrs={'class': 'date',
-                                                                       'placeholder': 'MM/DD/YYYY'},
-                                                                format='%m/%d/%Y',))
-    recipients = forms.CharField(label='Recipients:',
-                           widget=forms.TextInput())
 
     def __init__(self, save_as=False,*args, **kwargs):
         instance = kwargs.get('instance', None)
@@ -79,5 +89,5 @@ class ReportForm(forms.ModelForm):
 
     class Meta:
         model = ScheduledReport
-        fields = ('d1', 'd2', 'd3', 'end', 'days', 'name', 'interval', 'sched_interval', 'recipients')
+        fields = ('name', 'd1', 'd2', 'd3', 'start', 'end', 'days', 'name', 'interval', 'sched_interval', 'recipients')
 

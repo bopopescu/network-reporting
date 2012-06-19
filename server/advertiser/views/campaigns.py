@@ -671,9 +671,12 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
     ### END helper methods for post()
 
+
 @login_required
 def create_or_edit_campaign_and_adgroup(request, *args, **kwargs):
-    return CreateOrEditCampaignAndAdGroupHandler()(request, *args, **kwargs)
+    handler = CreateOrEditCampaignAndAdGroupHandler()
+    return handler(request, use_cache=False, *args, **kwargs)
+
 
 class AdGroupDetailHandler(RequestHandler):
     """

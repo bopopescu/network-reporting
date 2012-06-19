@@ -104,16 +104,14 @@
 
     <div id="app-ad-sources">
       <h2>Ad sources for {{app.name}}</h2>
+      <img src="/images/loading2.gif" style='margin-left:450px' />
     </div>
 
+    <br />
     
-    <div id="app-daily-counts">
-
-      <h2>Daily Counts</h2>  
-      <a class="btn appData-details-toggleButton" href="#">
-        {% button_icon "eye-open" %}
-        Show details
-      </a>    
+    <div id="daily-counts">
+      <h2>Daily Counts</h2>
+      <img src="/images/loading2.gif" style='margin-left:450px' />
     </div>
     
     <div id="app-delete">
@@ -140,6 +138,7 @@
 {% block extraScripts %}
   
   {% include_template "chart" %}
+  {% include_template "daily-counts" %}
   
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}

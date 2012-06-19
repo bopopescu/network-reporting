@@ -81,9 +81,12 @@
       {% if line_item.pace %}
         <div class="bar"
           style="width: {{ line_item.pace|percentage}}">{{ line_item.pace|percentage }}</div>
+        <div class="amount"></div>
       {% else %}
-        <div class="bar" style="width: 100%">--</div>
+        <div class="bar" style="width: 0%"></div>
+        <div class="amount">--</div>
       {% endif %}
+      
     </div>
   </td>
   <td class="popdown">

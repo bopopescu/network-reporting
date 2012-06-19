@@ -703,6 +703,8 @@ var mopub = mopub || {};
             // are finished loading, we render the chart.
             var apps = fetchAppsFromKeys(bootstrapping_data.app_keys);
             apps.bind('loaded', function() {
+
+                // Load the chart
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
@@ -735,12 +737,25 @@ var mopub = mopub || {};
             fetchAdunitsFromKeys(bootstrapping_data.app_key);
 
             apps.bind('loaded', function(current_app) {
+
+                console.log(apps);
+                window.jcpapps = apps;
+
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
                     display_values: ['rev', 'imp', 'cpm' ] //TODO include cpm
                 });
                 chart_view.render();
+
+                // Load the daily counts
+                var daily_counts_view = new DailyCountsView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['req', 'imp', 'clk']
+                });
+                daily_counts_view.render();
+
             });
 
         },

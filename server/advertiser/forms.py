@@ -78,7 +78,7 @@ class LineItemForm(forms.ModelForm):
     end_datetime  = forms.DateTimeField(label='Stop Time:', required=False,
                                         input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
                                         widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
-                                                                                          'placeholder': 'MM/DD/YYYY'},
+                                                                                           'placeholder': 'MM/DD/YYYY'},
                                                                               time_attrs={'class': 'time',
                                                                                           'placeholder': 'HH:MM'},
                                                                               date_format='%m/%d/%Y',

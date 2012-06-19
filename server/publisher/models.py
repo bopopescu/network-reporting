@@ -1,17 +1,21 @@
 """
 asdfasdf
 """
+
+from django.conf import settings
 from google.appengine.ext import blobstore
 from google.appengine.ext import db
-from django.conf import settings
+
+import datetime
+import logging
+import re
+import time
+import urlparse
+
 from account.models import Account, NetworkConfig
 from advertiser.models import Creative
 from simple_models import SimpleApp, SimpleAdUnit
 
-import datetime
-import time
-import re
-import urlparse
 
 #
 # A mobile app, which can have multiple Sites on which ads can be displayed
@@ -112,6 +116,8 @@ class App(db.Model):
             match = re.search('\/id(\d+)$', parse_result.path.lower())
             if match:
                 return match.group(1)
+            else:
+                logging.error("No global_id match for URL %s" % self.url)
 
         elif self.app_type == 'mweb' and self.url:
             parse_result = urlparse.urlparse(self.url)
@@ -120,6 +126,7 @@ class App(db.Model):
             elif parse_result.path:
                 domain = parse_result.path.lower()
             else:
+                logging.error("No domain match for URL %s" % self.url)
                 return None
 
             if domain.startswith('www.'):

@@ -6,8 +6,31 @@
          value="{{form.app_key.value}}"/>
   
   <dl class="formFields formatDependent" id="adunitFormFields">
+    {% comment %}
     {{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}
     {{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
+    {% endcomment %}
+    <dt>
+      Name:
+    </dt>
+    <dd>
+      <input type="text"
+             name="adunit-name"
+             class="required input-text"
+             id="appForm-adUnitName"
+             value="Banner Ad" /> 
+    </dd>
+
+    <dt>
+      Description:
+    </dt>
+    <dd>
+      <textarea name="adunit-description"
+                id="appForm-adUnitDescription"
+                class="input-text"
+                cols="50" rows="3"></textarea>
+   </dd>
+
     <dt>
       Device format:
     </dt>

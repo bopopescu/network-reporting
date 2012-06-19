@@ -584,11 +584,16 @@ var mopub = mopub || {};
                                 $("#appForm-url").val(result.trackViewUrl);
                                 $('#appForm input[name="img_url"]')
                                     .val(result.artworkUrl60);
-                                $('#appForm select[name="primary_category"]')
-                                    .val(result.primaryGenreName.toLowerCase());
-                                $('#appForm select[name="secondary_category"]')
-                                    .val(result.genres[1].toLowerCase());
                                 
+                                if (result.hasOwnProperty('primaryGenreName')) {
+                                    $('#appForm select[name="primary_category"]')
+                                        .val(result.primaryGenreName.toLowerCase());
+                                }
+                                if (result.genres[1] !== undefined) {
+                                    $('#appForm select[name="secondary_category"]')
+                                        .val(result.genres[1].toLowerCase());
+                                }
+
                                 // This doesn't do anything to the form data but
                                 // it makes the icon appear to have been uploaded.
                                 $('#appForm-icon').html('').append(

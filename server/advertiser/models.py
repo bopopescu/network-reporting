@@ -397,6 +397,10 @@ class AdGroup(db.Model):
                 return ["Pacing", min(1, last_slice.actual_spending / last_slice.desired_spending)]
         return None
 
+    @property
+    def progress(self):
+        return self.budget_obj.total_spent / self.budget_obj.total_budget
+
     def adgroup_type_display(self):
         kinds = {
             'gtee_high': "Guaranteed (High)",

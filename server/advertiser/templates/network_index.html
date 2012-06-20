@@ -76,7 +76,7 @@
   </div>
 
   <br />
-  {% if not account.display_new_networks %}
+  {% if is_staff or not account.display_new_networks %}
   <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#network">Add a network</a>
   {% endif %}
 
@@ -84,7 +84,7 @@
     <input type="hidden" name="action" id="action"/>
     <div id="adgroups">
     </div>
-    {% if not account.display_new_networks %}
+    {% if is_staff or not account.display_new_networks %}
     <div class="form-submit-left">
       <span class="buttonWrap">
         <a class="button pause icon" id="campaignForm-pause">Pause</a>

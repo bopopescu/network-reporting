@@ -1,4 +1,8 @@
 {% load filters %}
+{% load elements %}
+
+{% include_template "itunes_result" %}
+
   <dl class="formFields">
     <dt>Platform:</dt>
     <dd>
@@ -37,15 +41,17 @@
     <label class="mweb" for="appForm-name">Site name:</label>
   </dt>
 
-  <dd class="appForm-platformDependent iphone">
+  <dd class="appForm-platformDependent iphone" style='height:15px;'>
     <input type="text"
            class="input-text {% if form.name.errors %}form-error{% endif %} required"
            name="name"
            value="{{form.name.value}}"
            id="appForm-name" />
 
-    <div class="formFields-field-help" id="appForm-search">
-      <a href="#" class="btn iphone disabled" disabled="disabled" id="appForm-search-button"><i class="icon-search"></i> Search App Store</a>
+      <a class="btn iphone" id="appForm-search-button">
+        <i class="icon-search"></i>
+        Search App Store
+      </a>
       {% comment %}
         {# Commented out since Android search is blocked #}
         <a href="#" class="btn android" id="appForm-market-search-button">
@@ -53,18 +59,32 @@
         </a>
       {% endcomment %}
 
-      <div id="dashboard-searchAppStore-custom-modal" class="hidden">
-        <h3>Search Results</h3>
-        <div class="loading" id="searchAppStore-loading">
-          <img src="/images/icons-custom/spinner-16.gif" alt="Loading" /> Please wait ...
-        </div>
-        <div id="searchAppStore-results"></div>
-      </div>
-    </div>
-
     {% for error in form.name.errors %}
       <div class="form-error-text">{{error}}</div>
     {% endfor %}
+
+    <div class="modal hidden" id="appForm-search-modal">
+
+      <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal">×</a>
+        <h3> Search App Store </h3>
+      </div>
+
+      <div class="modal-body">
+        <div id="appForm-modal-preload" class="center" style='width:140px;'>
+          <img class="preload" src="/images/report-preloader.gif" />
+          <h2 class="center loading" style='width:80px;'> Loading... </h2>
+        </div>
+        <div id="appForm-modal-results"></div>
+      </div>
+
+      <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+        <a href="#" class="btn btn-primary">Save changes</a>
+      </div>
+      
+    </div>
+    
   </dd>
 
   <dt class="appForm-platformDependent iphone">
@@ -119,3 +139,4 @@
 </dl>
 
 <div class="clear"></div>
+

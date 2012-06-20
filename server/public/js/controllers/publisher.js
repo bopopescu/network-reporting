@@ -12,7 +12,7 @@
 
 var mopub = mopub || {};
 
-(function($, Backbone, _){
+(function($, Backbone, _) {
 
 
     /*
@@ -148,32 +148,6 @@ var mopub = mopub || {};
         }).filter(':checked').click(); // make sure we're in sync when the page Loads
 
         initializeiOSAppSearch();
-
-        if ($('#appForm-name').val() === '') {
-            $('#appForm-market-search-button').button("disable");
-            $('#appForm-market-search').button("disable");
-        }
-
-        $('#appForm-name').keyup(function(e) {
-            // Show/hide the app search button
-            var name = $.trim($(this).val());
-            var type = $('input:radio[name="app_type"]:checked').val();
-
-            if (name.length) {
-                $('#appForm-search-button').button("enable");
-                $('#appForm-market-search-button').button('enable');
-            } else {
-                $('#appForm-search-button').button("disable");
-                $('#appForm-market-search-button').button('disable');
-            }
-            if (e.keyCode == 13) {
-                if (type == 'iphone') {
-                    $('#appForm-search-button').click();
-                } else if (type == 'android') {
-                    $('#appForm-market-search-button').click();
-                }
-            }
-        });
 
         $('#appForm-changeIcon-link').click(function (e) {
             e.preventDefault();
@@ -469,7 +443,6 @@ var mopub = mopub || {};
         initializeNewAdunitForm();
 
         $('#dashboard-apps-editAdUnitButton')
-            .button({ icons: { primary: "ui-icon-wrench" } })
             .click(function(e) {
                 e.preventDefault();
                 if ($('#dashboard-adunitEditForm').is(':visible'))
@@ -479,11 +452,9 @@ var mopub = mopub || {};
             });
 
         $('#adunitEditForm-submit')
-            .button({
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
             .click(function(e) {
                 e.preventDefault();
+                $('#adunitEditForm-submit').addClass('disabled');
                 $('#adunitForm-loading').show();
                 $('#adunitAddForm').submit();
             });
@@ -501,6 +472,7 @@ var mopub = mopub || {};
             dataType: 'json',
             success: function(jsonData, statusText, xhr, $form) {
                 $('#adunitForm-loading').hide();
+                $('#adunitEditForm-submit').removeClass('disabled');
                 if (jsonData.success) {
                     window.location.reload();
                 } else {
@@ -551,33 +523,130 @@ var mopub = mopub || {};
      * Sets up the iTunes app store searching functionality for creating new apps.
      */
     function initializeiOSAppSearch() {
-        // Search button
-        $('#appForm-search-button')
-            .click(function(e) {
-                if ($(this).button('option', 'disabled')) {
-                    return;
-                }
-                $('#searchAppStore-loading').show();
 
-                $('#dashboard-searchAppStore-custom-modal').dialog({
-                    buttons: [
-                        {
-                            text: 'Cancel',
-                            click: function() {
-                                $('#searchAppStore-results').html('');
-                                $(this).dialog("close");
-                            }
-                        }
-                    ]
+        var search_modal = $("#appForm-search-modal").modal({
+            show: false,
+            keyboard: false,
+            backdrop: true
+        });
+
+        var itunes_result_template = _.template($('#itunes_result-template').html());
+
+        // Search button
+        $('#appForm-search-button').click(function(e) {
+
+            // Get all the stuff we'll need later
+            var app_name_value = $("#appForm-name").val();
+            var loading_stuff = $("#appForm-modal-preload");
+            var results_section = $("#appForm-modal-results");
+
+            // Show the modal
+            search_modal.modal('show');
+
+            // If they've entered some text, make the ajax call to apple
+            // searching for the app they typed in. 
+            if (app_name_value.length) {
+                var itunes_search = $.ajax({
+                    dataType: 'jsonp',
+                    url: "http://itunes.apple.com/search",
+                    data: {
+                        term: app_name_value,
+                        media: 'software'
+                    }
                 });
-                var name = $('#appForm input[name="name"]').val();
-                var script = document.createElement("script");
-                script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'
-                    + 'entity=software&limit=10&callback=loadedArtwork&term='
-                    + name;
-                var head = document.getElementsByTagName("head")[0];
-                (head || document.body).appendChild( script );
+
+                // If we get a response, hide the loading stuff
+                // and put a row in the modal for each app
+                itunes_search.success(function (response) {
+                    
+                    loading_stuff.hide();
+
+                    // Add all of the apps to the modal if we got 
+                    // some search results.
+                    if (response.resultCount > 0) {
+
+                        var message = "Found " 
+                            + response.resultCount 
+                            + " results. " +
+                            "Click on an app to use its data in the form.";
+                        var message_div = "<div class='alert-message block-message info'>" + 
+                            message + 
+                            "</div>";
+
+                        results_section.append(message_div);
+                        _.each(response.results, function (result) {
+                            var result_div = itunes_result_template(result);
+                            results_section.append(result_div);
+
+                            // When the div is clicked, fill the form in with the info.
+                            $("#" + result.trackId).click(function() {
+                                $("#appForm-name").val(result.trackName);
+                                $("#appForm-url").val(result.trackViewUrl);
+                                $('#appForm input[name="img_url"]')
+                                    .val(result.artworkUrl60);
+                                
+                                if (result.hasOwnProperty('primaryGenreName')) {
+                                    $('#appForm select[name="primary_category"]')
+                                        .val(result.primaryGenreName.toLowerCase());
+                                }
+                                if (result.genres[1] !== undefined) {
+                                    $('#appForm select[name="secondary_category"]')
+                                        .val(result.genres[1].toLowerCase());
+                                }
+
+                                // This doesn't do anything to the form data but
+                                // it makes the icon appear to have been uploaded.
+                                $('#appForm-icon').html('').append(
+                                    $("<img />")
+                                        .attr("src", result.artworkUrl60)
+                                        .width(40)
+                                        .height(40)
+                                );
+
+                                search_modal.modal('hide');
+                            });
+
+                        });
+                    } else {
+                        var message = "No apps matching this name or description were " +
+                            "found in the App Store.";
+                        var message_div = "<div class='alert-message block-message'>" + 
+                            message + 
+                            "</div>";
+                        results_section.append(message_div);
+                    }
+
+                });
+                
+                // If we got an error it's probably because we can't connect
+                itunes_search.error(function () {
+                    var message = "We were unable to connect to the App Store to find your app. " +
+                        "Sorry for the inconvenience.";
+                        var message_div = "<div class='alert-message block-message error'>" + 
+                            message + 
+                            "</div>";
+                        results_section.append(message_div);
+                });
+                
+            } else {
+                // Hide the loading stuff, but show a "you did it wrong" message
+                loading_stuff.hide();
+                var message = "Please enter your app's name in the 'App name' " +
+                    "field so we can search the App Store.";
+                var message_div = "<div class='alert-message block-message'>" + 
+                    message + 
+                    "</div>";
+                results_section.append(message_div);
+
+            }
+
+            // Reset the defaults when the modal is hidden again
+            search_modal.on('hide', function(){
+                loading_stuff.show();
+                results_section.html("");
             });
+
+        });
     }
 
     /*
@@ -634,6 +703,8 @@ var mopub = mopub || {};
             // are finished loading, we render the chart.
             var apps = fetchAppsFromKeys(bootstrapping_data.app_keys);
             apps.bind('loaded', function() {
+
+                // Load the chart
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
@@ -666,12 +737,25 @@ var mopub = mopub || {};
             fetchAdunitsFromKeys(bootstrapping_data.app_key);
 
             apps.bind('loaded', function(current_app) {
+
+                console.log(apps);
+                window.jcpapps = apps;
+
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
                     display_values: ['rev', 'imp', 'cpm' ] //TODO include cpm
                 });
                 chart_view.render();
+
+                // Load the daily counts
+                var daily_counts_view = new DailyCountsView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['req', 'imp', 'clk']
+                });
+                daily_counts_view.render();
+
             });
 
         },
@@ -723,79 +807,3 @@ var mopub = mopub || {};
     window.DashboardController = DashboardController;
 
 })(this.jQuery, this.Backbone, this._);
-
-/* REFACTOR */
-var artwork_json;
-
-// fuck you
-function loadedArtwork(json) {
-    if (!$('#dashboard-searchAppStore-custom-modal').dialog("isOpen"))
-        return;
-
-    $('#searchAppStore-results').html('');
-    $('#searchAppStore-loading').hide();
-    $('#dashboard-searchAppStore-custom-modal').dialog("close");
-
-    artwork_json = json;
-        var resultCount = json['resultCount'];
-    if (resultCount == 0) {
-        $('#searchAppStore-results').append("<div class='adForm-appSearch-text' />")
-            .append("No results found");
-        $('#dashboard-searchAppStore-custom-modal').dialog("open");
-        return;
-    }
-    for (var i=0;i<resultCount;i++) {
-        if (i > 10 ) {
-            break;
-        }
-        var app = json['results'][i];
-
-        $('#searchAppStore-results')
-            .append($("<div class='adForm-appSearch' />")
-                    .append($("<div class='adForm-appSearch-img' />")
-                            .append($("<img />")
-                                    .attr("src",app['artworkUrl60'])
-                                    .width(40)
-                                    .height(40)
-                                   )
-                            .append($("<span />"))
-                           )
-                    .append($("<div class='adForm-appSearch-text' />")
-                            .append($("<span />")
-                                    .append($("<a href=\"#\" onclick=\"selectArtwork("+i
-                                              +");return false\";>"+app['trackName']+"</a>"))
-                                    .append("<br />"+app['artistName'])
-                                   )
-                           )
-                    .append($("<div class='clear' />"))
-                   );
-    }
-
-    $('#dashboard-searchAppStore-custom-modal').dialog("open");
-}
-
-function selectArtwork(index) {
-    $('#searchAppStore-results').html('');
-    $('#appForm-icon').html('');
-    $('#dashboard-searchAppStore-custom-modal').dialog("close");
-
-    var app = artwork_json.results[index];
-    var type = $('input:radio[name="app_type"]:checked').val();
-
-    var form = $('app_form');
-    $('#appForm input[name="name"]').val(app['trackName']);
-    $('#appForm input[name="description"]').val(app['description']);
-    if ( type == 'iphone' )
-        $('#appForm input[name="url"]').val(app['trackViewUrl']);
-    else if ( type == 'android' )
-        $('#appForm input[name="package"]').val(app['trackViewUrl']);
-    $('#appForm input[name="img_url"]').val(app['artworkUrl60']);
-    $('#appForm select[name="primary_category"]').val(app['primaryGenreName'].toLowerCase());
-    $('#appForm select[name="secondary_category"]').val(app['genres'][1].toLowerCase());
-
-    $('#appForm-icon').append($("<img />")
-                              .attr("src",app.artworkUrl60)
-                              .width(40)
-                              .height(40)
-                              .append($("<span />")) );
-}

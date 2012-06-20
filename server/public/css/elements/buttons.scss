@@ -317,6 +317,23 @@ button.btn, input[type="submit"].btn {
   }
 }
 
+// Hack by Pena:
+// Embedding a radio input inside a button so that the button acts
+// as the radio input. This css makes the radio input as big as the button,
+// and sets the opacity to 0, so that the user clicks the radio input
+// when they think theyre clicking the button
+// Probably doesnt work in IE
+// example markup in the adunit form
+.btn-group[data-toggle=buttons-radio] input[type=radio] {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+}
+
 // Reposition the caret
 .btn .caret {
     margin-top: 7px;

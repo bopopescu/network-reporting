@@ -241,6 +241,9 @@ button {
 .right {
   float: right; }
 
+.center {
+  margin: 0 auto; }
+
 .ir {
   display: block;
   text-indent: -999em;
@@ -346,6 +349,9 @@ button {
 
 .right {
   float: right; }
+
+.center {
+  margin: 0 auto; }
 
 .ir {
   display: block;
@@ -581,6 +587,9 @@ button {
 
 .right {
   float: right; }
+
+.center {
+  margin: 0 auto; }
 
 .ir {
   display: block;
@@ -1673,9 +1682,9 @@ div#advertiser_filters, div#publisher_filters {
 
 #appForm-market-search-button, #appForm-search-button {
   margin: 0;
-  position: absolute;
-  top: -14px;
-  left: 4px;
+  position: relative;
+  top: -18px;
+  left: 300px;
   white-space: nowrap; }
 
 #searchAppStore-loading {
@@ -1882,6 +1891,44 @@ span.big {
   font-weight: 600;
   text-transform: none;
   background: none; }
+
+.itunes-result {
+  zoom: 1;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  border: 1px solid #E1E1E8;
+  margin: 4px auto;
+  background: #F7F7F9;
+  height: 70px; }
+  .itunes-result:before, .itunes-result:after {
+    content: "\0020";
+    display: block;
+    height: 0;
+    visibility: hidden; }
+  .itunes-result:after {
+    clear: both; }
+  .itunes-result .itunes-result-image {
+    background: #FBFBFC;
+    float: left;
+    width: 75px;
+    padding: 2px; }
+    .itunes-result .itunes-result-image img {
+      width: 57px;
+      margin: 2px auto;
+      display: block; }
+  .itunes-result .itunes-result-description {
+    padding: 2px;
+    float: right;
+    width: 425px;
+    background: #F7F7F9;
+    border-left: 1px solid #E1E1E8;
+    height: 65px;
+    overflow: ellipsis; }
+  .itunes-result:hover {
+    cursor: pointer; }
+  .itunes-result:active {
+    border: 1px solid #4CA7EA; }
 
 1
 .campaignData .reportData {
@@ -2445,6 +2492,15 @@ button.btn, input[type="submit"].btn {
   -moz-box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05);
   box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05); }
 
+.btn-group[data-toggle=buttons-radio] input[type=radio] {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0; }
+
 .btn .caret {
   margin-top: 7px;
   margin-left: 0; }
@@ -2469,6 +2525,9 @@ button.btn, input[type="submit"].btn {
 
 .right {
   float: right; }
+
+.center {
+  margin: 0 auto; }
 
 .ir {
   display: block;
@@ -5355,6 +5414,9 @@ tbody.global-settings {
 
 .right {
   float: right; }
+
+.center {
+  margin: 0 auto; }
 
 .ir {
   display: block;

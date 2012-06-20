@@ -11,8 +11,8 @@
 <h1>{% comment %}TODO: title{% endcomment %}</h1>
 {% endblock pageTitle %}
 
-{% block dateButtons %}
-{% endblock dateButtons %}
+{% block titleBarRight %}
+{% endblock titleBarRight %}
 
 {% block content %}
 <form id="order_and_line_item_form" method="post">
@@ -52,32 +52,32 @@
             <h2>Line Item Details</h2>
             <p>Each Order has one or more Line Items.  A Line Item is a set of creatives and targeting parameters that runs with a specific budget.</p>
         </legend>
-
+    
         <ul class="form_fields">
-            <li>
-                {{ line_item_form.adgroup_type.label_tag }}
-                <div>
-                    {% comment %}TODO: do this in a tag or something{% endcomment %}
-                    {% if line_item_form.instance %}
-                        {% if line_item_form.instance.gtee %}Guaranteed{% else %}Promotional{% endif %}
-                        <input name="adgroup_type" type="hidden" value="{% if line_item_form.instance.gtee %}gtee{% else %}promo{% endif %}" />
+          <li>
+            {{ line_item_form.adgroup_type.label_tag }}
+            <div>
+              {% comment %}TODO: do this in a tag or something{% endcomment %}
+              {% if line_item_form.instance %}
+                {% if line_item_form.instance.gtee %}Guaranteed{% else %}Promotional{% endif %}
+                <input name="adgroup_type" type="hidden" value="{% if line_item_form.instance.gtee %}gtee{% else %}promo{% endif %}" />
                     {% else %}
-                        {{ line_item_form.adgroup_type }}
+                      {{ line_item_form.adgroup_type }}
                     {% endif %}
                     <a href="#" id="adgroup_type-helpLink">What's this?</a>
                     <div class="hidden" id="adgroup_type-helpContent">
-                        <h3>Campaign Type</h3>
-                        <h4>Guaranteed</h4>
-                        <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
-                        <h4>Promotional</h4>
-                        <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
+                      <h3>Campaign Type</h3>
+                      <h4>Guaranteed</h4>
+                      <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
+                      <h4>Promotional</h4>
+                      <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
                     </div>
-                </div>
+            </div>
             </li>
-
+            
             <li class="adgroup_type_dependent gtee">
-                {{ line_item_form.gtee_priority.label_tag }}
-                <div>
+              {{ line_item_form.gtee_priority.label_tag }}
+              <div>
                     {{ line_item_form.gtee_priority }}
                     <a href="#" id="gtee_priority-helpLink">What's this?</a>
                     <div id="gtee_priority-helpContent" class="hidden">

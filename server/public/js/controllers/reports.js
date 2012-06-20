@@ -1,7 +1,7 @@
 (function($, _) {
 
 
-     function addPlaceholder() {
+    function addPlaceholder() {
         $('.reportData-placeholder').hide();
         $('table').each(function() {
             visible = $(this).find('.reportData:visible');
@@ -9,8 +9,8 @@
                 $(this).find('.reportData-placeholder').show();
             }
         });
-     }
-     addPlaceholder();
+    }
+    addPlaceholder();
 
     $('input[name="start"]').xdatepicker().change(function (e) {
         var dte = new Date($(this).val());
@@ -49,181 +49,172 @@
         return success;
     }
 
-    $('#reports-view-runReportButton').button({
-        icons: {secondary: 'ui-icon-circle-triangle-e' }});
-
     function ajaxSave() {
         $.ajax({
             url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/',
-            success: function() {
-                $('#reports-view-toIndex').click();
-            }
+        success: function() {
+            $('#reports-view-toIndex').click();
+        }
         });
     }
 
-     $('#reports-view-saveAsButton').button({icons: {secondary: 'ui-icon-check'}})
-         .click(function(e) {
-             e.preventDefault();
-             $('#saveAs').val('True');
-             $('#reportName-input').val('Copy of '+ $('#reportName-input').val());
-             $('.dim-selectmenu').selectmenu('disable');
-             $('#interval').selectmenu('disable');
-             $('#start-input').xdatepicker('disable');
-             $('#end-input').xdatepicker('disable');
-             $('#reportCreateForm-submit').button({label: 'Save As'});
-             $('#sched_interval').selectmenu('index', 0).change();
-             $('#reportForm-container').dialog({width:750});
-        });
-
-
-     var ReportIndexController = {
-         initialize: function(bootstrapping_data) {
-             var report_keys = bootstrapping_data.report_keys;
-
-
-             /* Add a new report UI */
-             // Show new report form
-             $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
-                 .click(function(e){
-                        e.preventDefault();
-                     var report_form = $('#reports-reportAddForm');
-                     if (report_form.is(':hidden')) {
-                         $('#reports-reportAddForm').slideDown('fast');
-                     }
-                     else {
-                         $('#reports-reportAddForm').slideUp('fast');
-                     }
-                 });
-
-             // Create new report
-            $('#reportCreateForm-run')
-                .button({label: 'Run',
-                         icons: {secondary: 'ui-icon-circle-triangle-e' }})
-                .click(function(e) {
-                    e.preventDefault();
-                    if (rep_validate($('#reportCreateForm'))) {
-                        $('#reportCreateForm').submit();
-                    }
-                    else {
-                        $('#formError').show();
-                    }
-                });
-
-             // Cancel new report form
-             $('#reportCreateForm-cancel').button()
-                 .click(function(e) {
-                     e.preventDefault();
-                     $('#reports-reportAddForm').slideUp('fast');
-                 });
-
-             /* Edit existing saved and scheduled reports */
-             _.each(report_keys, function(key) {
-                 var row = $('#' + key + '-row')
-
-                 // hide / show wrench edit icon
-                 $(row).mouseenter(function(e) {
-                     $('#' + key + '-edit-link').show();
-                 })
-                 $(row).mouseleave(function(e) {
-                     $('#' + key + '-edit-link').hide();
-                 })
-
-                 // when wrench is clicked open an edit report form dialog
-                 $('#' + key + '-edit-link')
-                     .click(function(e) {
-                         e.preventDefault();
-                         $('#' + key + '-saveAs').val('False');
-                         $('#' + key + '-reportCreateForm-save').button({label: 'Save'});
-                         var report_form = $('#' + key + '-reportForm-container');
-                         report_form.dialog({width:750});
-                     });
-
-                 $('#' + key + '-reportCreateForm-cancel')
-                     .click(function(e) {
-                         e.preventDefault();
-                         $('.dim-selectmenu').selectmenu('enable');
-                         $('#interval').selectmenu('enable');
-                         $('#start-input').xdatepicker('enable');
-                         $('#end-input').xdatepicker('enable');
-                         revert_state(form_state);
-                         $('#' + key + '-reportForm-container').dialog('close');
-                     });
-
-                 $(row).find('.update-button')
-                    .change(function(e) {
-                        e.preventDefault();
-                        if (!obj_equals(form_state, get_form_state())) {
-                            $('#' + key + 'reportCreateForm-submit').button({label:'Save and Run'});
-                        }
-                        else {
-                            $('#' + key + 'reportCreateForm-submit').button({label:'Save'});
-                        }
-                    }).change();
-
-
-            });
-
-
-         }
-     }
-
-
-     $('#reportUpdateForm-cancel')
-         .button()
-         .click(function(e) {
-             e.preventDefault();
-             $(this).parents('#reportFormSaveAs-container')
-                 .dialog('close');
-         });
-
-     $('#reportUpdateForm-submit')
-         .button()
-         .click(function(e) {
-             e.preventDefault();
-            if($('#start-input').xdatepicker('isDisabled')) {
-                $('#start-input').xdatepicker('enable');
-            }
-            if($('#end-input').xdatepicker('isDisabled')) {
-                $('#end-input').xdatepicker('enable');
-            }
-            $(this).parents('form').submit();
-         });
-
-     $('#reports-view-exportSelect')
-         .change(function(e) {
-             e.preventDefault();
-             var val = $(this).val();
-             if (val != 'exp') {
-                 $('#reportExportForm')
-                     .find('#report-exportFtype')
-                     .val(val)
-                     .end()
-                     .submit();
-             }
-             $(this).selectmenu('index', 0);
-        });
-
-    $('#reports-view-exportSelect-menu').find('li').first().hide();
-
-    $('#reports-view-exportButton')
+    $('#reports-view-saveAsButton').button({icons: {secondary: 'ui-icon-check'}})
         .click(function(e) {
             e.preventDefault();
-            $('#reportExportForm').submit();
+            $('#saveAs').val('True');
+            $('#reportName-input').val('Copy of '+ $('#reportName-input').val());
+            $('.dim-selectmenu').selectmenu('disable');
+            $('#interval').selectmenu('disable');
+            $('#start-input').xdatepicker('disable');
+            $('#end-input').xdatepicker('disable');
+            $('#reportCreateForm-submit').button({label: 'Save As'});
+            $('#sched_interval').selectmenu('index', 0).change();
+            $('#reportForm-container').dialog({width:750});
         });
 
 
+    var ReportIndexController = {
+        initialize: function(bootstrapping_data) {
+                        var report_keys = bootstrapping_data.report_keys;
 
-    $('.int-selectmenu').selectmenu({
-        style: 'popup',
-        maxHeight:300,
-        width:115
-    });
 
-    $('#sched_interval').selectmenu({
-        style:'popup',
-        maxHeight:300,
-        width:135,
-    });
+                        /* Add a new report UI */
+                        // Show new report form
+                        $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
+                            .click(function(e){
+                                e.preventDefault();
+                                var report_form = $('#reports-reportAddForm');
+                                if (report_form.is(':hidden')) {
+                                    $('#reports-reportAddForm').slideDown('fast');
+                                }
+                                else {
+                                    $('#reports-reportAddForm').slideUp('fast');
+                                }
+                            });
+
+
+                        // Set up d1 selection for creating new scheduled reports
+                        // based on d1's selection, modify options for d2 and d3 
+                        $('#id_new-d1').change(
+                                function(e) {
+                                    // TODO error?
+                                    if ($(this).val() != '') {
+                                        $('#d1Error').hide();
+                                    }
+                                    e.preventDefault();
+                                    d1_validate('new');
+                                    d2_validate('new');
+                                }).change();
+
+                        // Set up d2 selection for creating new scheduled reports
+                        // based on d2's selection, modify options for d3 
+                        $('#id_new-d2').change(
+                                function(e) {
+                                    e.preventDefault();
+                                    d2_validate('new');
+                                });
+                        // Create new report
+                        $('#reportCreateForm-run')
+                            .button({label: 'Run',
+                                icons: {secondary: 'ui-icon-circle-triangle-e' }})
+                            .click(function(e) {
+                                e.preventDefault();
+                                if (rep_validate($('#reportCreateForm'))) {
+                                    $('#reportCreateForm').submit();
+                                }
+                                else {
+                                    $('#formError').show();
+                                }
+                            });
+
+                        // Cancel new report form
+                        $('#reportCreateForm-cancel').button()
+                            .click(function(e) {
+                                e.preventDefault();
+                                $('#reports-reportAddForm').slideUp('fast');
+                            });
+
+                        // set up selects as chosen elements
+                        $('.chzn-select').chosen();
+
+                        /* Edit existing saved and scheduled reports */
+                        _.each(report_keys, function(key) {
+                            var row = $('#' + key + '-row')
+
+                            // hide / show wrench edit icon
+                            $(row).mouseenter(function(e) {
+                                $('#' + key + '-edit-link').show();
+                            })
+                        $(row).mouseleave(function(e) {
+                            $('#' + key + '-edit-link').hide();
+                        })
+
+                        // when wrench is clicked open an edit report form dialog
+                        $('#' + key + '-edit-link')
+                            .click(function(e) {
+                                e.preventDefault();
+                                $('#' + key + '-saveAs').val('False');
+                                $('#' + key + '-reportCreateForm-save').button({label: 'Save'});
+                                var report_form = $('#' + key + '-reportForm-container');
+                                report_form.dialog({width:750});
+                            });
+
+                        // close dialog
+                        $('#' + key + '-reportCreateForm-cancel')
+                            .click(function(e) {
+                                e.preventDefault();
+                                $('.dim-selectmenu').selectmenu('enable');
+                                $('#interval').selectmenu('enable');
+                                $('#start-input').xdatepicker('enable');
+                                $('#end-input').xdatepicker('enable');
+                                // TODO
+                                //revert_state(form_state);
+                                $('#' + key + '-reportForm-container').dialog('close');
+                            });
+
+                        // TODO
+                        $(row).find('.update-button')
+                            .change(function(e) {
+                                e.preventDefault();
+                                if (!obj_equals(form_state, get_form_state())) {
+                                    $('#' + key + 'reportCreateForm-save').button({label:'Save and Run'});
+                                }
+                                else {
+                                    $('#' + key + 'reportCreateForm-save').button({label:'Save'});
+                                }
+                            }).change();
+
+                        // based on d1's selection, modify options for d2 and d3 
+                        $('#id_' + key + '-d1').change(
+                                function(e) {
+                                    // TODO error?
+                                    if ($(this).val() != '') {
+                                        $('#d1Error').hide();
+                                    }
+                                    e.preventDefault();
+                                    d1_validate(key);
+                                    d2_validate(key);
+                                }).change();
+
+                        // based on d2's selection, modify options for d3 
+                        $('#id_' + key + '-d2').change(
+                                function(e) {
+                                    e.preventDefault();
+                                    d2_validate(key);
+                                });
+
+                        });
+
+                        /* Delete report */
+                        $('#reportStateChangeForm-delete')
+                            .click(function(e) {
+                                e.preventDefault();
+                                $('#reportStateChangeForm').find('#action').val('delete').end().submit();
+                            });
+
+                    }
+    }
+
 
     function fix_date(dte) {
         if (dte < 10) {
@@ -246,32 +237,32 @@
             if (val != 'custom') {
                 $('#interval-toggle').val(2);
                 var one_day = 1000*60*60*24
-                switch (val) {
-                    case 'yesterday':
+            switch (val) {
+                case 'yesterday':
+                    today.setTime(today.getTime() - one_day);
+                    var dte = format_date(today);
+                    $('#end-input').val(dte).change();
+                    $('#start-input').val(dte).change();
+                    break;
+                case '7days':
+                    var dte = format_date(today);
+                    $('#end-input').val(dte).change();
+                    today.setTime(today.getTime() - (7*one_day));
+                    dte = format_date(today);
+                    $('#start-input').val(dte).change();
+                    break;
+                case 'lmonth':
+                    var this_mo = today.getMonth();
+                    while (today.getMonth() == this_mo) {
                         today.setTime(today.getTime() - one_day);
-                        var dte = format_date(today);
-                        $('#end-input').val(dte).change();
-                        $('#start-input').val(dte).change();
-                        break;
-                    case '7days':
-                        var dte = format_date(today);
-                        $('#end-input').val(dte).change();
-                        today.setTime(today.getTime() - (7*one_day));
-                        dte = format_date(today);
-                        $('#start-input').val(dte).change();
-                        break;
-                    case 'lmonth':
-                        var this_mo = today.getMonth();
-                        while (today.getMonth() == this_mo) {
-                            today.setTime(today.getTime() - one_day);
-                        }
-                        var dte = format_date(today);
-                        $('#end-input').val(dte).change();
-                        today.setDate(1);
-                        dte = format_date(today);
-                        $('#start-input').val(dte).change();
-                        break;
-                }
+                    }
+                    var dte = format_date(today);
+                    $('#end-input').val(dte).change();
+                    today.setDate(1);
+                    dte = format_date(today);
+                    $('#start-input').val(dte).change();
+                    break;
+            }
             }
             else {
                 return;
@@ -288,16 +279,6 @@
                 $('#interval-toggle').val(inter_val - 1);
             }
         });
-
-    var selects = $('.dim-selectmenu').selectmenu({
-        style: 'popup',
-        maxHeight:320,
-        width:110
-    });
-
-    d1_sel = $(selects[0]);
-    d2_sel = $(selects[1]);
-    d3_sel = $(selects[2]);
 
     function revert_state(state) {
         d1_sel.selectmenu('index', state.d1);
@@ -321,17 +302,17 @@
         }
     }
 
-    function get_form_state() {
+    function get_form_state(d1_sel, d2_sel, d3_sel) {
         return build_state( sel_state(d1_sel),
-                            sel_state(d2_sel),
-                            sel_state(d3_sel),
-                            sel_state($('#interval')),
-                            sel_state($('#sched_interval')),
-                            $('#end-input').val(),
-                            $('#start-input').val(),
-                            $('#reportName-input').val(),
-                            $('#email-input-checkbox')
-                          );
+                sel_state(d2_sel),
+                sel_state(d3_sel),
+                sel_state($('#interval')),
+                sel_state($('#sched_interval')),
+                $('#end-input').val(),
+                $('#start-input').val(),
+                $('#reportName-input').val(),
+                $('#email-input-checkbox')
+                );
     }
     function build_state(d1, d2, d3, interv, sched_interv, end, start, name, email) {
         return {
@@ -349,318 +330,155 @@
     function sel_state(obj) {
         return obj.selectmenu('index');
     }
-    //Get the state of the form so we go back to this on cancel
-    var form_state = get_form_state();
 
 
-    $('#d1').change(
-        function(e) {
-            if ($(this).val() != '') {
-                $('#d1Error').hide();
+
+
+
+
+    function obj_equals(x, y) {
+        for(p in y) {
+            if(typeof(x[p])=='undefined') {return false;}
+        }
+        for(p in y) {
+            if (y[p]) {
+                switch(typeof(y[p])) {
+                    case 'object':
+                        if (!y[p].equals(x[p])) { return false }; break;
+                    case 'function':
+                        if (typeof(x[p])=='undefined' || (p != 'equals' && y[p].toString() != x[p].toString())) { return false; }; break;
+                    default:
+                        if (y[p] != x[p]) { return false; }
+                }
             }
-            e.preventDefault();
-            d1_validate($(this));
-            d2_validate($('#d2'));
-        }).change();
-
-
-    function d1_validate(obj) {
-            var idx = obj.selectmenu('index');
-            //start with everything enabled
-            for (var i = 0; i < 14; i++) {
-                d3_sel.selectmenu('enable', i);
-                d2_sel.selectmenu('enable', i);
+            else {
+                if (x[p]) {
+                    return false;
+                }
             }
-            var d2_idx = d2_sel.selectmenu("index");
-            var d3_idx = d3_sel.selectmenu("index");
-            $('#d2-show').show();
-            switch(obj.val()) {
-                case '':
-                    d2_sel.selectmenu("index", 0);
-                    d3_sel.selectmenu("index", 0);
-                    $('#d2-show').hide();
-                    $('#d3-show').hide();
-                    break;
-                case 'adunit':
-                    if (d2_idx == 2) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 2) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '2');
-                    d3_sel.selectmenu('disable', '2');
-
-                case 'app':
-                    if (d2_idx == 1) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 1) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '1');
-                    d3_sel.selectmenu('disable', '1');
-                    break;
-
-                case 'creative':
-                    if (d2_idx == 5) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 5) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '5');
-                    d3_sel.selectmenu('disable', '5');
-
-                case 'campaign':
-                    if (d2_idx == 4) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 4) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '4');
-                    d3_sel.selectmenu('disable', '4');
-
-                case 'priority':
-                    if (d2_idx == 3) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 3) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '3');
-                    d3_sel.selectmenu('disable', '3');
-                    break;
-                case 'hour':
-                    if (d2_idx == 9) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 9) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '9');
-                    d3_sel.selectmenu('disable', '9');
-                case 'day':
-                    if (d2_idx == 8) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 8) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '8');
-                    d3_sel.selectmenu('disable', '8');
-                case 'week':
-                    if (d2_idx == 7) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 7) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '7');
-                    d3_sel.selectmenu('disable', '7');
-                case 'month':
-                    if (d2_idx == 6) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 6) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '6');
-                    d3_sel.selectmenu('disable', '6');
-                    break;
-                case 'country':
-                    if (d2_idx == 10) {
-                        d2_sel.selectmenu("index", 0);
-                    }
-                    if (d3_idx == 10) {
-                        d3_sel.selectmenu("index", 0);
-                    }
-                    d2_sel.selectmenu('disable', '10');
-                    d3_sel.selectmenu('disable', '10');
-                    break;
-                case 'marketing':
-                    if (d2_idx == 11) {
-                        d2_sel.selectmenu('index', 0);
-                    }
-                    if (d3_idx == 11) {
-                        d3_sel.selectmenu('index', 0);
-                    }
-                    d2_sel.selectmenu('disable', 11);
-                    d3_sel.selectmenu('disable', 11);
-                    break;
-                case 'os_ver':
-                    if (d2_idx == 13) {
-                        d2_sel.selectmenu('index', 0);
-                    }
-                    if (d3_idx == 13) {
-                        d3_sel.selectmenu('index', 0);
-                    }
-                    d2_sel.selectmenu('disable', 13);
-                    d3_sel.selectmenu('disable', 13);
-                case 'os':
-                    if (d2_idx == 12) {
-                        d2_sel.selectmenu('index', 0);
-                    }
-                    if (d3_idx == 12) {
-                        d3_sel.selectmenu('index', 0);
-                    }
-                    d2_sel.selectmenu('disable', 12);
-                    d3_sel.selectmenu('disable', 12);
-                    break;
-                default:
-                    break;
-            }
+        }
+        for(p in x){
+            if(typeof(y[p])=='undefined') {return false;}
+        }
+        return true;
     }
 
-    $('#d2').change(
-        function(e) {
-            e.preventDefault();
-            d1_validate($('#d1'));
-            d2_validate($(this));
+
+
+    /* Based on d1's selection change what options are shown for d2 and d3 */
+    function d1_validate(prefix) {
+        var d1_sel = $('#id_' + prefix + '-d1');
+        var d2_sel = $('#id_' + prefix + '-d2');
+        var d3_sel = $('#id_' + prefix + '-d3');
+
+        //start with everything
+        reset_dimensions(d2_sel);
+        reset_dimensions(d3_sel);
+
+        if(d1_sel.val() == '') {
+            d2_sel.children().first().select();
+            d3_sel.children().first().select();
+            $('#' + prefix + '-d2-show').hide();
+            $('#' + prefix + '-d3-show').hide();
+        } else {
+            check_and_remove(d1_sel.val(), d2_sel, d3_sel);
+            $('#' + prefix + '-d2-show').show();
+        }
+
+        // update chosen
+        d2_sel.trigger("liszt:updated");
+        d3_sel.trigger("liszt:updated");
+    }
+
+
+    /* Based on d2's selection change what options are shown for d3 */
+    function d2_validate(prefix) {
+        var d2_sel = $('#id_' + prefix + '-d2');
+        var d3_sel = $('#id_' + prefix + '-d3');
+
+        if(d2_sel.val() == '') {
+            d2_sel.children().first().select();
+            d3_sel.children().first().select();
+            $('#' + prefix + '-d3-show').hide();
+        } else {
+            $('#' + prefix + '-d3-show').show();
+            check_and_remove(d2_sel.val(), d3_sel);
+            $('#' + prefix + '-d3-show').show();
+        }
+
+        // update chosen
+        d3_sel.trigger("liszt:updated");
+    }
+
+    DIMENSIONS = [['','------------'],
+               ['app', 'App'],
+               ['adunit', 'Ad Unit'],
+               ['priority', 'Priority'],
+               ['campaign', 'Campaign'],
+               ['creative', 'Creative'],
+               ['month', 'Month'],
+               ['week', 'Week'],
+               ['day', 'Day'],
+               ['hour', 'Hour'],
+               ['country', 'Country'],
+               ['marketing', 'Device'],
+               ['os', 'OS'],
+               ['os_ver', 'OS Version']]
+
+    /* Reset dimension selector back to initial options */
+    function reset_dimensions(selector) {
+        // clear all options
+        selector.html('');
+
+        // rebuild options
+        _.each(DIMENSIONS, function(dims) {
+            dim = dims[0];
+            text = dims[1];
+            selector.append('<option value="' + dim + '">' + text + '</option>')
         });
 
-
-
-function obj_equals(x, y) {
-    for(p in y) {
-        if(typeof(x[p])=='undefined') {return false;}
+        // update chosen
+        selector.trigger("liszt:updated");
     }
-    for(p in y) {
-        if (y[p]) {
-            switch(typeof(y[p])) {
-              case 'object':
-                if (!y[p].equals(x[p])) { return false }; break;
-              case 'function':
-                if (typeof(x[p])=='undefined' || (p != 'equals' && y[p].toString() != x[p].toString())) { return false; }; break;
-            default:
-                if (y[p] != x[p]) { return false; }
+
+    CONNECTED_DIMENSIONS = {'adunit': ['app'],
+                            'campaign': ['priority'],
+                            'creative': ['campaign', 'priority'],
+                            'week': ['month'],
+                            'day': ['week', 'month'],
+                            'hour': ['day', 'week', 'month'],
+                            'os_ver': ['os']}
+
+    /* Check if text is selected in selects if it is, it resets the select.
+     * Remove the option from the select. Remove connected options from the select.
+     *
+     * Take text and optional number of select objects */
+    function check_and_remove(text) {
+        // The selection of certain dims filters the potential set of sub dims by more
+        // than just itself in instances described by CONNECTED_DIMENSIONS
+        var connected_dims = [];
+        if(CONNECTED_DIMENSIONS[text] !== undefined) {
+            connected_dims = CONNECTED_DIMENSIONS[text];
+        }
+
+        _.each(_.toArray(arguments).slice(1), function(selector) {
+            if (selector.val() == text) {
+                selector.children().first.select();
             }
-        }
-        else {
-            if (x[p]) {
-                return false;
-            }
-        }
-    }
-    for(p in x){
-        if(typeof(y[p])=='undefined') {return false;}
-    }
-    return true;
-}
+            selector.children('option[value="' + text + '"]').remove();
 
-
-
-
-     function d2_validate(obj) {
-         var idx = obj.selectmenu('index');
-        //start with everything enabled
-        var d3_idx = d3_sel.selectmenu("index");
-        $('#d3-show').show();
-        switch(obj.val()) {
-            case '':
-                d3_sel.selectmenu("index", 0);
-                $('#d3-show').hide();
-                break;
-            case 'adunit':
-                if (d3_idx == 2) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '2');
-            case 'app':
-                if (d3_idx == 1) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '1');
-                break;
-
-            case 'creative':
-                if (d3_idx == 5) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '5');
-            case 'campaign':
-                if (d3_idx == 4) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '4');
-            case 'priority':
-                if (d3_idx == 3) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '3');
-                break;
-
-            case 'hour':
-                if (d3_idx == 9) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '9');
-            case 'day':
-                if (d3_idx == 8) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '8');
-            case 'week':
-                if (d3_idx == 7) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '7');
-            case 'month':
-                if (d3_idx == 6) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '6');
-                break;
-            case 'country':
-                if (d3_idx == 10) {
-                    d3_sel.selectmenu("index", 0);
-                }
-                d3_sel.selectmenu('disable', '10');
-                break;
-            case 'marketing':
-                if (d3_idx == 11) {
-                    d3_sel.selectmenu('index', 0);
-                }
-                d3_sel.selectmenu('disable', 11);
-                break;
-            case 'os_ver':
-                if (d3_idx == 13) {
-                    d3_sel.selectmenu('index', 0);
-                }
-                d3_sel.selectmenu('disable', 13);
-            case 'os':
-                if (d3_idx == 12) {
-                    d3_sel.selectmenu('index', 0);
-                }
-                d3_sel.selectmenu('disable', 12);
-                break;
-            default:
-                break;
-        }
+            _.each(connected_dims, function(dim) {
+                selector.children('option[value="' + dim + '"]').remove();
+            });
+        });
     }
 
 
     $("#sched_interval")
-    .change(function(e) {
-        $('.schedule-help').hide();
-        $('.schedule-help.'+$(this).val()).show();
-    }).change();
-
-    $("#email-input-checkbox")
-    .change(function(e) {
-        if ($(this).attr('checked')) {
-            $('#email-recipients').show();
-        } else {
-            $('#email-recipients').hide();
-        }
-    }).change();
-
-    $('#reportStateChangeForm-delete')
-        .click(function(e) {
-            e.preventDefault();
-            $('#reportStateChangeForm').find('#action').val('delete').end().submit();
-        });
+        .change(function(e) {
+            $('.schedule-help').hide();
+            $('.schedule-help.'+$(this).val()).show();
+        }).change();
 
     window.ReportIndexController = ReportIndexController;
 })(window.jQuery, window._);

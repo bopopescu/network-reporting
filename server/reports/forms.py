@@ -29,16 +29,20 @@ class ReportForm(forms.ModelForm):
                            widget=forms.TextInput(attrs={'class': 'required',
                                                          'placeholder': 'Report Name'}))
     d1 = forms.ChoiceField(choices=DIMENSIONS,
-                           label='Report Breakdown:')
+                           label='Report Breakdown:',
+                           widget=forms.Select(attrs={'class': 'chzn-select'}))
     d2 = forms.ChoiceField(choices=DIMENSIONS,
-                           label='>')
+                           label='>',
+                           widget=forms.Select(attrs={'class': 'chzn-select'}))
     d3 = forms.ChoiceField(choices=DIMENSIONS,
-                           label='>')
+                           label='>',
+                           widget=forms.Select(attrs={'class': 'chzn-select'}))
     interval = forms.ChoiceField(choices=(('yesterday', 'Yesterday'),
                                           ('7days', 'Last 7 days'),
                                           ('lmonth', 'Last month'),
                                           ('custom', 'Custom')),
-                                 label='Dates:')
+                                 label='Dates:',
+                                 widget=forms.Select(attrs={'class': 'chzn-select'}))
     start = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
                                 required=False,
                                 widget=forms.DateInput(attrs={'class': 'date',
@@ -58,7 +62,8 @@ class ReportForm(forms.ModelForm):
                                                 ('weekly', 'Weekly'),
                                                 ('monthly', 'Monthly'),
                                                 ('quarterly', 'Quarterly')),
-                                       label='Schedule:')
+                                       label='Schedule:',
+                                       widget=forms.Select(attrs={'class': 'chzn-select'}))
 
     def __init__(self, save_as=False,*args, **kwargs):
         instance = kwargs.get('instance', None)

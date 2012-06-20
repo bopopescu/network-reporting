@@ -177,19 +177,6 @@ class ReportQueryManager(CachedQueryManager):
         report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False).filter('default =', False)
         return report_q.fetch(to_fetch)
 
-    def get_default_reports(self, dont_add=False):
-        # There are three by default, so fetching three should yield three
-        reports = ScheduledReport.all().filter('account =', self.account).filter('deleted =', False).filter('default =', True).fetch(3)
-        adding_reps = False
-        if len(reports) != 3:
-            # Well shit
-            report_dim_names = [(str(report.d1), str(report.name)) for report in reports]
-            for (dim, name) in DEFAULT_REPORT_DIM_LIST:
-                if (dim, name) not in report_dim_names and not dont_add:
-                    adding_reps = True
-                    reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
-        return reports, adding_reps
-
     def new_report(self, report, now=None, testing=False):
         if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report)
@@ -294,7 +281,8 @@ class ReportQueryManager(CachedQueryManager):
             end = datetime.datetime.now().date()
         if sched_interval != 'none':
             if testing:
-                next_sched_date =  date_magic.get_next_day(sched_interval, d = end)
+                next_sched_date =  date_magic.get_next_day(sched_interval,
+                        d=end)
             else:
                 next_sched_date =  date_magic.get_next_day(sched_interval)
         else:
@@ -317,7 +305,6 @@ class ReportQueryManager(CachedQueryManager):
                                 name=name,
                                 saved=saved,
                                 default=default,
-                                email=email,
                                 recipients=recipients or [],
                                 )
         sched.put()

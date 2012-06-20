@@ -20,7 +20,8 @@ from mail.mails import REPORT_FINISHED_SIMPLE
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
-from reports.models import ScheduledReport
+from reports.models import ScheduledReport, \
+        Report
 from reports.query_managers import ReportQueryManager
 
 
@@ -31,23 +32,24 @@ class ReportIndexHandler(RequestHandler):
     def get(self):
         manager = ReportQueryManager(self.account)
         scheduled = manager.get_scheduled()
-        defaults, adding_reps = manager.get_default_reports()
-        scheduled = defaults + scheduled
+
+        saved_reports = manager.get_saved()
+        reports = scheduled + saved_reports
 
         for report in scheduled:
             report.form = ReportForm(instance=report,
                                      prefix=str(report.key()),
                                      save_as=True)
-        scheduled = sorted(scheduled, key=lambda report: report.last_run)
 
-        if adding_reps:
-            self.request.flash['generating_defaults'] = "Default reports " \
-                    "are currently being generated, you will be notified " \
-                    "when they are completed."
-        report_form = ReportForm(initial={'recipients':self.request.user.email})
+        reports = sorted(reports, key=lambda report: report.completed_at if isinstance(report,
+            Report) else report.last_run)
+
+        new_report_form = ReportForm(initial={'recipients': self.request.user.email},
+                                     prefix='new')
         return render_to_response(self.request, 'reports/report_index.html',
-                                 {'scheduled': scheduled,
-                                  'report_form': report_form, })
+                                 {'reports': reports,
+                                  'scheduled': scheduled,
+                                  'new_report_form': new_report_form, })
 
 @login_required
 def report_index(request, *args, **kwargs):
@@ -55,19 +57,8 @@ def report_index(request, *args, **kwargs):
 
 
 class AddReportHandler(RequestHandler):
-    TEMPLATE = 'reports/report_create_form.html'
-    def get(self):
-        report_form = ReportForm(initial={'recipients':[self.user.email]})
-        return render_to_response(self.request,
-                                 self.TEMPLATE,
-                                 dict(report_form=report_form))
-
-    def render(self,template=None,**kwargs):
-        template_name = template or self.TEMPLATE
-        return render_to_string(self.request, template_name=template_name, data=kwargs)
-
     def post(self, d1, end, days=None, start=None, d2=None, d3=None,
-                            name=None, saved=False, interval=None, email=False,
+                            name=None, saved=False, interval=None,
                             sched_interval=None, recipients=None, report_key=None):
         if not d2:
             d2 = None
@@ -82,7 +73,7 @@ class AddReportHandler(RequestHandler):
                 self.request.flash['error'] = 'Please limit reports to three months.'
                 return HttpResponseRedirect('/reports/')
         edit = False
-        man = ReportQueryManager(self.account)
+        manager = ReportQueryManager(self.account)
 
         recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else []
         recipients = filter(None, recipients)
@@ -90,19 +81,18 @@ class AddReportHandler(RequestHandler):
         if report_key is not None:
             logging.info("there is a report key")
             edit = True
-            report = man.get_report_data_by_key(report_key)
+            report = manager.get_report_data_by_key(report_key)
             if d1 == report.d1 and d2 == report.d2 and d3 == report.d3 and start == report.start and end == report.end:
                 # All the actual data dims are the same, edit the sched settings
                 sched = report.schedule
                 sched.name = name
                 sched.sched_interval = sched_interval
                 sched.recipients = recipients
-                sched.email = True if email else False
                 sched.put()
                 return HttpResponseRedirect('/reports/view/%s/' % sched.key())
 
         saved = True
-        report = man.add_report(d1,
+        report = manager.add_report(d1,
                                 d2,
                                 d3,
                                 end,
@@ -111,7 +101,6 @@ class AddReportHandler(RequestHandler):
                                 saved = saved,
                                 interval = interval,
                                 sched_interval = sched_interval,
-                                email = True if email else False,
                                 recipients = recipients,
                                 )
         if edit:

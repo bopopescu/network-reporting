@@ -6,10 +6,14 @@
     <dt>{{ report_form.d1.label_tag }}</dt>
     <dd>
     {{ report_form.d1 }}
-    {{ report_form.d2.label_tag }}
-    {{ report_form.d2 }}
-    {{ report_form.d3.label_tag }}
-    {{ report_form.d3 }}
+    <span id='{{ prefix }}-d2-show' class='hidden'>
+        {{ report_form.d2.label_tag }}
+        {{ report_form.d2 }}
+        <span id='{{ prefix }}-d3-show' class='hidden'>
+            {{ report_form.d3.label_tag }}
+            {{ report_form.d3 }}
+        </span>
+    </span>
     </dd>
     <dt>{{ report_form.interval.label_tag }}</dt>
     <dd>

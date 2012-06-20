@@ -19,7 +19,7 @@
     {% if order %}
         <fieldset id="order_fieldset">
             <legend>
-                <h2>Order Details</h2>
+                <h2 id="order_header">Order tails</h2>
             </legend>
 
             <ul class="form_fields">
@@ -46,7 +46,7 @@
     {% else %}
         {% include 'forms/order_form.html' %}
     {% endif %}
-
+    <div>&nbsp;</div>
     <fieldset id="line_item_fieldset">
         <legend>
             <h2>Line Item Details</h2>

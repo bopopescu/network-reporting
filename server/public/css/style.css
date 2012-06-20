@@ -1972,6 +1972,10 @@ table.reportData-table {
   border-radius: 10px;
   padding: 5px 40px; }
 
+.pace {
+  position: absolute;
+  top: 22px; }
+
 .pace-success {
   color: #53a600; }
 
@@ -3725,6 +3729,10 @@ form#new_creative_form {
  *
  * TODO: consolidate all the form styles
  */
+form#order_and_line_item_form #order_header {
+  position: absolute;
+  top: 15px; }
+
 form#order_and_line_item_form fieldset, form#order_form fieldset, form#new_creative_form fieldset, form.edit_creative_form fieldset {
   padding: 25px 25px 25px 25px; }
 form#order_and_line_item_form fieldset#order_fieldset, form#order_form fieldset#order_fieldset, form#new_creative_form fieldset#order_fieldset, form.edit_creative_form fieldset#order_fieldset {

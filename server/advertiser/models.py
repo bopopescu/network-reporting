@@ -375,7 +375,7 @@ class AdGroup(db.Model):
     @property
     def included_apps_global_ids(self):
         global_ids = []
-        for app_key in self.included_apps:
+        for app_key in self.included_apps or []:
             app = db.get(app_key)
             if app.global_id:
                 global_ids.append(app.global_id)
@@ -384,7 +384,7 @@ class AdGroup(db.Model):
     @property
     def excluded_apps_global_ids(self):
         global_ids = []
-        for app_key in self.excluded_apps:
+        for app_key in self.excluded_apps or []:
             app = db.get(app_key)
             if app.global_id:
                 global_ids.append(app.global_id)

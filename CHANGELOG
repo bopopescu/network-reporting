@@ -1,10 +1,24 @@
+# Deployed Tuesday, June 19, 2012 at 05:54PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-134
+### Bugs Fixed: []
+### Included Commits: 
+ * 19e1f34 Deployed without finding any bug fixes.
+ 
+# Deployed Tuesday, June 19, 2012 at 04:04PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-133
+### Bugs Fixed: []
+### Included Commits:
+* 38c66fd added logging to global_id generation
+
 # Deployed Monday, June 18, 2012 at 07:58PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-130
 ### Bugs Fixed: []
-### Included Commits: 
- * fa4c995 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* fa4c995 Deployed without finding any bug fixes.
+
 # Deployed Monday, June 18, 2012 at 07:53PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-129

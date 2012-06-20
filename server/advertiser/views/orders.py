@@ -47,7 +47,11 @@ class OrderIndexHandler(RequestHandler):
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
                                                         orders=orders)
-            
+        # Filter out archived
+        orders = [order for order in orders if order.active]
+        line_items = [line_item for line_item in line_items \
+                      if line_item.active and line_item.campaign.active]
+        
         return {
             'orders': orders,
             'line_items': line_items
@@ -61,7 +65,36 @@ def order_index(request, *args, **kwargs):
                                          use_cache=False,
                                          *args, **kwargs)
 
+    
+class OrderArchiveHandler(RequestHandler):
+    """
+    Shows a list of archived orders and line items.
+    """
+    def get(self):
+        
+        orders = CampaignQueryManager.get_order_campaigns(account=self.account)
+        line_items = AdGroupQueryManager.get_line_items(account=self.account,
+                                                        orders=orders)
 
+        archived_orders = [order for order in orders if order.archived]
+        archived_line_items = [line_item for line_item in line_items \
+                               if line_item.archived or line_item.campaign.archived]
+        
+            
+        return {
+            'orders': archived_orders,
+            'line_items': archived_line_items
+        }
+
+
+@login_required
+def order_archive(request, *args, **kwargs):
+    t = "advertiser/order_archive.html"
+    return OrderArchiveHandler(template=t)(request,
+                                           use_cache=False,
+                                           *args, **kwargs)
+
+    
 class OrderDetailHandler(RequestHandler):
     """
     Top level stats rollup for all of the line items within the order.
@@ -80,6 +113,13 @@ class OrderDetailHandler(RequestHandler):
         # Set up the form
         order_form = OrderForm(instance=order)
 
+        logging.warn(order)
+        logging.warn(order)
+        logging.warn(order)
+        logging.warn(order)
+        logging.warn(order)
+        logging.warn(order)
+
         return {
             'order': order,
             'order_form': order_form,
@@ -92,9 +132,8 @@ class OrderDetailHandler(RequestHandler):
 @login_required
 def order_detail(request, *args, **kwargs):
     t="advertiser/order_detail.html"
-    return OrderDetailHandler(template=t, id="order_key")(request,
-                                                          use_cache=False,
-                                                          *args, **kwargs)
+    handler = OrderDetailHandler(template=t, id="order_key")
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class LineItemDetailHandler(RequestHandler):
@@ -104,8 +143,6 @@ class LineItemDetailHandler(RequestHandler):
     def get(self, line_item_key):
 
         line_item = AdGroupQueryManager.get(line_item_key)
-        for c in line_item.creatives:
-            logging.warn(c.name)
 
         # Create creative forms
         creative_form = NewCreativeForm()
@@ -126,7 +163,7 @@ class LineItemDetailHandler(RequestHandler):
 
 @login_required
 def line_item_detail(request, *args, **kwargs):
-    t = "advertiser/lineitem_detail.html"
+    t = "advertiser/line_item_detail.html"
     return LineItemDetailHandler(template=t, id="line_item_key")(request,
                                                                  use_cache=False,
                                                                  *args, **kwargs)

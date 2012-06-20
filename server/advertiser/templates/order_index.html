@@ -49,6 +49,12 @@
 
     <br />
 
+    <div class="left">
+      <a href="{% url advertiser_order_archive %}">
+        Archived Orders
+      </a>
+    </div>
+
     <div class="right">
       <div class="btn-group">
         <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
@@ -84,16 +90,18 @@
 
     {# Line item activity controls #}
     <div class="left btn-group">
-      <a class="btn status_change" data-toggle="pause">
-        <i class="icon-pause"></i> Pause
-      </a>
-      <a class="btn status_change" data-toggle="play">
-        <i class="icon-play"></i> Resume
-      </a>
-
-      <a class="btn status_change" data-toggle="archive">
-        <i class="icon-inbox"></i> Archive
-      </a>
+      <button class="btn status_change" data-toggle="pause">
+        {% button_icon "pause" %}
+        Pause
+      </button>
+      <button class="btn status_change" data-toggle="play">
+        {% button_icon "play" %}
+        Resume
+      </button>
+      <button class="btn status_change" data-toggle="archive">
+        {% button_icon "inbox" %}
+        Archive
+      </button>
     </div>
 
     <div class="right">
@@ -109,6 +117,12 @@
 
     <br />
 
+    <div class="left">
+      <a href="{% url advertiser_order_archive %}#line_items-tab">
+        Archived Line Items
+      </a>
+    </div>
+    
     <div class="right">
       <div class="btn-group">
         <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>

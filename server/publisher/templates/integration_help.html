@@ -165,7 +165,12 @@ mpv.loadAd();</pre>
               {% ifequal status 'welcome' %}
                 <a href="{% url app_index %}" class="btn">Continue to Step 3</a>
               {% else %}
-                <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>
+                <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="btn">
+                  Continue
+                  <i class="icon-chevron-right"></i>
+                </a>
               {% endifequal %}
             </div>
-          </section>{% endblock content %}
+            </section>
+
+{% endblock content %}

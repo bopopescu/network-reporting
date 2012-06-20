@@ -64,69 +64,70 @@
                             {% endif %}
                             <span class="ui-icon ui-icon-wrench"></span>
                         </div>
+                    </div>
 
-                    </th>
-                    <td class='dataTable-name'>{{report.details|safe}}</td>
-                    <td id='{{report.key}}-status' class='dataTable-date'>
-                        {% if report.status == 'Completed' %}
-                        {% if report in scheduled %}
-                        {{ report.last_run|date:'N j, Y \<\b\r /\> f a'|safe }}
-                        {% else %}
-                        {{ report.completed_at|date:'N j, Y \<\b\r /\> f a'|safe }}
-                        {% endif %}
-                        {% endif %}
-                    </td>
-                    <td class='dataTable-data'>{% if report.sched_interval and report.sched_interval != 'none' %}{{ report.sched_interval|capfirst }}{% endif %}</td>
-                    <td class='dataTable-name'>
-                        {% if report.status == 'Completed' %}
-                        <a href='{% url report_export report_key=report.key %}'>Export</a>
-                        {% else %}
-                        {{ report.status }}
-                        {% endif %}
-                    </td>
-                    <td class='dataTable-data numeric'></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class='form-submit-left'>
-            <a class='button' id='reportStateChangeForm-delete'>Delete</a>
-        </div>
-    </form>
-    </section>
-
-
-    {% for report in scheduled %}
-    <div id='{{ report.key }}-reportForm-container' style='display: none;'>
-        <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
-            <fieldset id="reportAddForm-details" class="alt">
-                <div id="reportAddForm-fragment" class="reportAddForm-fragment">
-                    {% with report.form as report_form %}
-                    {% with report.key as prefix %}
-                    {% include "reports/forms/report_form.html" %}
-                    {% endwith %}
-                    {% endwith %}
-                </div>
-                <div class='clear'></div>
-                <div class='form-submit'>
-                    <span id='reportCreateForm-success' class='hidden'>Success!</span>
-                    <span class='buttonWrap'><a href='#' class='button' id='{{ report.key }}-reportCreateForm-save'>Save</a></span>
-                    <span class='buttonWrap'><a href='#' class='button' id='{{ report.key }}-reportCreateForm-cancel'>Cancel</a></span>
-                </div>
-            </fieldset>
-        </form>
+                </th>
+                <td class='dataTable-name'>{{report.details|safe}}</td>
+                <td id='{{report.key}}-status' class='dataTable-date'>
+                    {% if report.status == 'Completed' %}
+                    {% if report in scheduled %}
+                    {{ report.last_run|date:'N j, Y \<\b\r /\> f a'|safe }}
+                    {% else %}
+                    {{ report.completed_at|date:'N j, Y \<\b\r /\> f a'|safe }}
+                    {% endif %}
+                    {% endif %}
+                </td>
+                <td class='dataTable-data'>{% if report.sched_interval and report.sched_interval != 'none' %}{{ report.sched_interval|capfirst }}{% endif %}</td>
+                <td class='dataTable-name'>
+                    {% if report.status == 'Completed' %}
+                    <a href='{% url report_export report_key=report.key %}'>Export</a>
+                    {% else %}
+                    {{ report.status }}
+                    {% endif %}
+                </td>
+                <td class='dataTable-data numeric'></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class='form-submit-left'>
+        <a class='button' id='reportStateChangeForm-delete'>Delete</a>
     </div>
-    {% endfor %}
+</form>
+</section>
 
-    {% endblock content %}
 
-    {% block extraScripts %}
-    {{ block.super }}
-    <script>
-        $(function () {
-            ReportIndexController.initialize({
-                report_keys: [{% for report in scheduled %}'{{ report.key }}',{% endfor %}],
-            });
+{% for report in scheduled %}
+<div id='{{ report.key }}-reportForm-container' style='display: none;'>
+    <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
+        <fieldset id="reportAddForm-details" class="alt">
+            <div id="reportAddForm-fragment" class="reportAddForm-fragment">
+                {% with report.form as report_form %}
+                {% with report.key as prefix %}
+                {% include "reports/forms/report_form.html" %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+            <div class='clear'></div>
+            <div class='form-submit'>
+                <span id='reportCreateForm-success' class='hidden'>Success!</span>
+                <span class='buttonWrap'><a href='#' class='button' id='{{ report.key }}-reportCreateForm-save'>Save</a></span>
+                <span class='buttonWrap'><a href='#' class='button' id='{{ report.key }}-reportCreateForm-cancel'>Cancel</a></span>
+            </div>
+        </fieldset>
+    </form>
+</div>
+{% endfor %}
+
+{% endblock content %}
+
+{% block extraScripts %}
+{{ block.super }}
+<script>
+    $(function () {
+        ReportIndexController.initialize({
+            report_keys: [{% for report in scheduled %}'{{ report.key }}',{% endfor %}],
         });
-    </script>
-    {% endblock extraScripts %}
+    });
+</script>
+{% endblock extraScripts %}

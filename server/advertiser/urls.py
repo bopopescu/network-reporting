@@ -57,6 +57,10 @@ urlpatterns = patterns(
         'order_index',
         name='advertiser_order_index'),
 
+    url('^order_archive/$',
+        'order_archive',
+        name='advertiser_order_archive'),
+
     # Status changing (active/pause/archive)
     url('^ad_source/status/$',
         'ad_source_status_change',

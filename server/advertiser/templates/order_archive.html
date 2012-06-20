@@ -1,0 +1,75 @@
+{% extends "advertiser/base.html" %}
+{% load filters %}
+{% load elements %}
+
+{% block content %}
+
+  <ul class="tabs">
+    <li class="active">
+      <a href="#orders"> Orders </a>
+    </li>
+    <li>
+      <a href="#line_items"> Line Items </a>
+    </li>
+  </ul>
+
+
+  {% comment %}
+    Order Tab
+  {% endcomment %}
+  <div class="active tab-section" id="orders">
+
+    {# Order activity controls #}
+    <div class="left">      
+      <button class="btn status_change" data-toggle="play">
+        {% button_icon "play" %}
+        Resume
+      </button>
+    </div>
+    
+    {% order_table orders %}
+
+    <br />
+
+    <a href="{% url advertiser_order_index %}#orders-tab" class="right">
+      Back to Orders
+    </a>
+  </div>
+
+
+  {% comment %}
+    Line Items Tab
+  {% endcomment %}
+  <div class="tab-section" id="line_items">
+
+    {# Line item activity controls #}
+    <a class="btn status_change" data-toggle="play">
+      <i class="icon-play"></i> Resume
+    </a>
+    
+    {% line_item_table line_items %}
+
+    <br />
+
+    <a href="{% url advertiser_order_index %}#line_items-tab" class="right">
+      Back to Line Items
+    </a>
+
+  </div>
+
+{% endblock content %}
+
+{% block extraScripts %}
+
+  {% include_template "popover" %}
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+  
+  <script type="text/javascript">
+    $(function() {
+        var OrdersController = mopub.Controllers.OrdersController;
+        OrdersController.initializeIndex({});
+    });
+  </script>
+{% endblock extraScripts %}

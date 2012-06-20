@@ -31,10 +31,12 @@
 
   {# Table with all of the line items #}
   <section>
-    <h3 class="left"> Status of {{ order.name }} </h3>
+    <h3 class="left">
+      Status of {{ order.name }}
+    </h3>
     <div class="right">
       <a class="btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
-        <i class="icon-pencil"></i>
+        {% button_icon "pencil" %}
         Edit this order
       </a>
     </div>

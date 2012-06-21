@@ -33,12 +33,12 @@ class BudgetQueryManager(QueryManager):
     Model = Budget
 
     @classmethod
-    def update_or_create_budgets_for_campaign_keys(cls, campaign_keys, total_spent=0.0, 
+    def update_or_create_budgets_for_campaign_keys(cls, campaign_keys, total_spent=0.0,
                                                    testing=False, fetcher=None, migrate_total=False):
         campaigns = CampaignQueryManager.get(campaign_keys)
         for campaign in campaigns:
-            budget_obj = cls.update_or_create_budget_for_campaign(campaign, total_spent=total_spent, 
-                                                                  testing=False, fetcher=None, 
+            budget_obj = cls.update_or_create_budget_for_campaign(campaign, total_spent=total_spent,
+                                                                  testing=False, fetcher=None,
                                                                   migrate_total=False)
             campaign.budget_obj = budget_obj
 
@@ -66,7 +66,11 @@ class BudgetQueryManager(QueryManager):
             remote_end = None
 
         adgroups = [ag for ag in camp.adgroups]
-        adgroup = adgroups[0]    
+        try:
+            adgroup = adgroups[0]
+        except IndexError:
+            logging.error("Campaign %s has no adgroups." % camp.key())
+            raise
         remote_update_dict = dict(adgroup_key = str(adgroup.key()),
                                   campaign_key = str(camp.key()),
                                   start_datetime = remote_start,
@@ -185,8 +189,8 @@ class BudgetQueryManager(QueryManager):
             return budget
         # No budget
         else:
-            return None            
-            
+            return None
+
     @classmethod
     def migrate_campaign(cls, campaign):
         if campaign.budget_obj:

@@ -1,10 +1,24 @@
+# Deployed Thursday, June 21, 2012 at 07:20AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-138
+### Bugs Fixed: []
+### Included Commits: 
+ * 6ee9b61 Merge branch 'master' of github.com:mopub/mopub into budget-migration
+ * ba7188f removed everything that modifies budgets
+ * 70872c3 Deployed without finding any bug fixes.
+ * 4ee4541 fixed date
+ * dd6546a Deployed without finding any bug fixes.
+ * 46b0960 added alert for budget freeze
+ * d496552 adgroup key passed down in the remote update dict
+ * f82380c added fields that will be moved to the adgroup to SimpleAdGroup
+ 
 # Deployed Tuesday, June 19, 2012 at 05:54PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-134
 ### Bugs Fixed: []
-### Included Commits: 
- * 19e1f34 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 19e1f34 Deployed without finding any bug fixes.
+
 # Deployed Tuesday, June 19, 2012 at 04:04PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-133

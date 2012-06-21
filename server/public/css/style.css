@@ -2308,6 +2308,10 @@ a.disabled {
       margin-right: 30px; }
     .alert-message.block-message ul {
       margin-bottom: 0; }
+      .alert-message.block-message ul.simple {
+        list-style-type: none;
+        margin-top: 15px;
+        margin-bottom: 15px; }
     .alert-message.block-message li {
       color: #444444; }
     .alert-message.block-message .alert-actions {

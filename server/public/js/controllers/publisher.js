@@ -31,7 +31,7 @@ var mopub = mopub || {};
      * ## fetchAppsFromKeys
      * Fetches all app stats using a list of app keys and renders
      * them into table rows that have already been created in the
-     * page. Useful for decreasing page load time along with `fetchAdunitsFromKeys`.
+     * page. Useful for decreasing page load time along with `fetchAdUnitsFromAppKeys`.
      */
     function fetchAppsFromKeys (app_keys) {
         var apps = new AppCollection();
@@ -72,12 +72,12 @@ var mopub = mopub || {};
     }
 
     /*
-     * ## fetchAdunitsFromKeys
+     * ## fetchAdUnitsFromAppKeys
      * Fetches AdUnit stats for an app over ajax and renders them in already
      * existing table rows. This method is useful for decreasing page load time.
      * Uses a parent app's key to bootstrap the fetch.
      */
-    function fetchAdunitsFromKeys (app_key) {
+    function fetchAdUnitsFromAppKeys (app_key) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
         adunits.stats_endpoint = 'all';
@@ -716,7 +716,7 @@ var mopub = mopub || {};
             // Fetch all of the adunit stats for each app. After fetch,
             // the table row for the adunit will be rendered
             _.each(bootstrapping_data.app_keys, function(app_key) {
-                var new_adunits = fetchAdunitsFromKeys(app_key);
+                var new_adunits = fetchAdUnitsFromAppKeys(app_key);
             });
 
             // Set up the quick jump dropdown
@@ -734,7 +734,7 @@ var mopub = mopub || {};
             initializeiOSAppSearch();
 
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
-            fetchAdunitsFromKeys(bootstrapping_data.app_key);
+            fetchAdUnitsFromAppKeys(bootstrapping_data.app_key);
 
             apps.bind('loaded', function() {
 
@@ -747,9 +747,7 @@ var mopub = mopub || {};
 
                 // Load the daily counts
                 var daily_counts_view = new DailyCountsView({
-                    model: apps.models[0],
-                    start_date: bootstrapping_data.start_date,
-                    display_values: ['req', 'imp', 'clk']
+                    model: apps.models[0]
                 });
                 daily_counts_view.render();
 
@@ -780,7 +778,7 @@ var mopub = mopub || {};
             // the app collection (which just has the one app) to fill
             // in the chart.
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
-            fetchAdunitsFromKeys(bootstrapping_data.app_key);
+            fetchAdUnitsFromAppKeys(bootstrapping_data.app_key);
 
             apps.bind('loaded', function(current_app) {
                 var chart_view = new CollectionChartView({
@@ -789,6 +787,13 @@ var mopub = mopub || {};
                     display_values: ['rev', 'imp', 'cpm' ] 
                 });
                 chart_view.render();
+
+                // Load the daily counts
+                var daily_counts_view = new DailyCountsView({
+                    model: apps.models[0],
+                });
+                daily_counts_view.render();
+
             });
 
 

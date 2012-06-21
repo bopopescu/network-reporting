@@ -163,7 +163,7 @@ var mopub = window.mopub || {};
                 template_values[display_val] = formatted_sum;
 
                 // Set up the series that will go into the chart.
-                var current_series = this_view.collection.get_formatted_stat_series(display_val);
+                var current_series = this_view.collection.get_full_stat_series(display_val);
                 series_list[display_val] = current_series;
             });
 
@@ -208,14 +208,37 @@ var mopub = window.mopub || {};
             }
         },
         render: function () {
+
             var this_view = this;
-            console.log(this_view);
+            var this_model = this_view.options.model;
+            var daily_stats = this_model.get_formatted_daily_stats();
+
+            var total_stats = {
+                rev: this_model.get_formatted_stat('rev'),
+                req: this_model.get_formatted_stat('req'),
+                imp: this_model.get_formatted_stat('imp'),
+                clk: this_model.get_formatted_stat('clk'),
+                att: this_model.get_formatted_stat('att'),
+                cpm: this_model.get_formatted_stat('cpm'),
+                fill_rate: this_model.get_formatted_stat('fill_rate'),
+                ctr: this_model.get_formatted_stat('ctr'),
+                conv: this_model.get_formatted_stat('conv')
+            };
+
             var template_values = {
-                daily_stats: this_view.options.model.get('daily_stats'),
-                totals: 0
+                daily_stats: daily_stats,
+                total_stats: total_stats
             };
             
+            // Expose yourself
             $(this_view.el).html(this_view.template(template_values));
+
+            // When the 'show/hide daily totals' button is clicked,
+            // hide or show daily totals
+            $("#daily-totals-toggle").click(function () {
+                $("#daily-totals-toggle .toggle-on-click").toggleClass('hidden');
+                $("#appData-individual").toggleClass('hidden');
+            });
                 
         }
     });

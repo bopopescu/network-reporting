@@ -25,7 +25,7 @@
           <span class="hidden" id="appEditForm-loading">
             <img src="/images/icons-custom/spinner-12.gif"/>
           </span>
-
+          
           <a href="#" class="btn" id="appEditForm-cancel">
             Cancel
           </a>
@@ -37,11 +37,11 @@
       </fieldset>
     </form>
   </div>
-
   
   {% chart_placeholder start_date end_date %}
+  
   <div id="dashboard-apps">
-
+    
     <div class="right">
       <a class="btn" id="dashboard-apps-editAppButton" href="#">
         <i class="icon-pencil"></i>
@@ -54,82 +54,81 @@
     </div>
   </div>
     
-    <h2>Ad units for {{ app.name }}</h2>
+  <h2>Ad units for {{ app.name }}</h2>
 
 
-    {% comment %}
-      Form/buttons for adding a new adunit
-    {% endcomment %}
+  {% comment %}
+    Form/buttons for adding a new adunit
+  {% endcomment %}
 
-    <div id="dashboard-adunitAddForm" class="hidden">
-      <form action="{% url publisher_adunit_update_ajax %}"
-            method="POST"
-            accept-charset="utf-8"
-            id="adunitAddForm">
-        <fieldset id="adunitForm-details" class="alt">
-          <div id="adunitForm-fragment">
-            {{ adunit_form_fragment }}
-          </div>
+  <div id="dashboard-adunitAddForm" class="hidden">
+    <form action="{% url publisher_adunit_update_ajax %}"
+          method="POST"
+          accept-charset="utf-8"
+          id="adunitAddForm">
+      <fieldset id="adunitForm-details" class="alt">
+        <div id="adunitForm-fragment">
+          {{ adunit_form_fragment }}
+        </div>
           
-          <div class="form-submit">
-            <span class="hidden" id="adunitForm-loading">
-              <img src="/images/loading2.gif"/>
-            </span>
-            <a href="#" class="btn" id="adunitAddForm-cancel">
-              Cancel
-            </a>
-            <a href="#" class="btn" id="adunitAddForm-submit">
-              {% button_icon "ok" %}
-              Save
-            </a>
-          </div>
-        </fieldset>
-      </form>
+        <div class="form-submit">
+          <span class="hidden" id="adunitForm-loading">
+            <img src="/images/loading2.gif"/>
+          </span>
+          <a href="#" class="btn" id="adunitAddForm-cancel">
+            Cancel
+          </a>
+          <a href="#" class="btn" id="adunitAddForm-submit">
+            {% button_icon "ok" %}
+            Save
+          </a>
+        </div>
+      </fieldset>
+    </form>
   </div>
 
-    {% comment %}
-      Table containing each adunit for the app
-    {% endcomment %}
+  {% comment %}
+    Table containing each adunit for the app
+  {% endcomment %}
 
-    <div id="dashboard-apps">
-      {% inventory_table app %}
-    </div>
+  <div id="dashboard-apps">
+    {% inventory_table app %}
+  </div>
 
-    <div class="divSpacer"></div>
+  <div class="divSpacer"></div>
 
-    {% comment %}
+  {% comment %}
       Tables containing targeting information for each campaign
       the app is in
-    {% endcomment %}
+  {% endcomment %}
 
-    <div id="app-ad-sources">
-      <h2>Ad sources for {{app.name}}</h2>
-      <img src="/images/loading2.gif" style='margin-left:450px' />
-    </div>
+  <div id="app-ad-sources">
+    <h2>Ad sources for {{app.name}}</h2>
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
 
-    <br />
+  <br />
     
-    <div id="daily-counts">
-      <h2>Daily Counts</h2>
-      <img src="/images/loading2.gif" style='margin-left:450px' />
-    </div>
+  <div id="daily-counts">
+    <h2>Daily Counts</h2>
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
     
-    <div id="app-delete">
-      <form method="post"
-            id="dashboard-deleteForm"
-            action="{% url publisher_delete_app app_key=app.key %}">
-        <a href="#" id="dashboard-delete-link" class="right btn">
-          {% button_icon "trash" %}
-          Remove app from dashboard
+  <div id="app-delete">
+    <form method="post"
+          id="dashboard-deleteForm"
+          action="{% url publisher_delete_app app_key=app.key %}">
+      <a href="#" id="dashboard-delete-link" class="right btn">
+        {% button_icon "trash" %}
+        Remove app from dashboard
         </a>
-      </form>
+    </form>
       
-      <div id="dashboard-delete-modal" class="hidden">
-        <h2>Remove confirmation</h2>
-        <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
-      </div>
-      
+    <div id="dashboard-delete-modal" class="hidden">
+      <h2>Remove confirmation</h2>
+      <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
     </div>
+      
   </div>
   
 {% endblock content %}

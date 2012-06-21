@@ -274,23 +274,8 @@ class CampaignQueryManager(QueryManager):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
 
-        #TODO_ADGROUPS:
-        # This needs to be moved into the AdgroupQueryManager.put method
-        # for camp in campaigns:
-        #     budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
-        #     camp.budget_obj = budg_obj
-
-
         # Put campaigns so if they're new they have a key
         put_response = db.put(campaigns)
-
-        # Update campaign budgets asynchronously using a Task Queue.
-        campaign_keys = [campaign.key() for campaign in campaigns]
-        queue = taskqueue.Queue()
-        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
-                              method='POST',
-                              url='/fetch_api/budget/update_or_create')
-        queue.add(task)
 
         # Clear cache
         adunits = []
@@ -542,6 +527,14 @@ class AdGroupQueryManager(QueryManager):
     @wraps_first_arg
     def put(self, adgroups):
         put_response = db.put(adgroups)
+
+        # Update campaign budgets asynchronously using a Task Queue.
+        adgroup_keys = [adgroup.key() for adgroup in adgroups]
+        queue = taskqueue.Queue()
+        task = taskqueue.Task(params=dict(adgroup_keys=adgroup_keys),
+                              method='POST',
+                              url='/fetch_api/budget/update_or_create')
+        queue.add(task)
 
         # Clear cache
         adunits = []

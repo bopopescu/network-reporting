@@ -18,7 +18,7 @@ from budget.helpers import (build_budget_update_string,
                             )
 
 from adserver_constants import BUDGET_UPDATE_URL, ADSERVER_ADMIN_HOSTNAME
-from advertiser.query_managers import CampaignQueryManager
+from advertiser.query_managers import AdGroupQueryManager
 
 ZERO_BUDGET = 0.0
 ONE_DAY = timedelta(days=1)
@@ -33,51 +33,51 @@ class BudgetQueryManager(QueryManager):
     Model = Budget
 
     @classmethod
-    def update_or_create_budgets_for_campaign_keys(cls, campaign_keys, total_spent=0.0, 
-                                                   testing=False, fetcher=None, migrate_total=False):
-        campaigns = CampaignQueryManager.get(campaign_keys)
-        for campaign in campaigns:
-            budget_obj = cls.update_or_create_budget_for_campaign(campaign, total_spent=total_spent, 
-                                                                  testing=False, fetcher=None, 
-                                                                  migrate_total=False)
-            campaign.budget_obj = budget_obj
+    def update_or_create_budgets_for_adgroup_keys(cls, adgroup_keys, total_spent=0.0, 
+                                                  testing=False, fetcher=None, migrate_total=False):
+        adgroups = AdGroupQueryManager.get(adgroup_keys)
+        for adgroup in adgroups:
+            budget_obj = cls.update_or_create_budget_for_adgroup(adgroup, total_spent=total_spent, 
+                                                                 testing=False, fetcher=None, 
+                                                                 migrate_total=False)
+            adgroup.budget_obj = budget_obj
 
-        # Use db.put() instead of CampaignQueryManager.put(). The latter calls this method, which
+        # Use db.put() instead of AdGroupQueryManager.put(). The latter calls this method, which
         # would cause an infinite loop!
-        db.put(campaigns)
+        db.put(adgroups)
 
     @classmethod
-    def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0, testing=False, fetcher=None, migrate_total=False):
+    def update_or_create_budget_for_adgroup(cls, ag, total_spent=0.0, testing=False, fetcher=None, migrate_total=False):
         # Update budget
-        if camp.start_datetime is None:
-            camp.start_datetime = datetime.utcnow()
-        elif str(camp.start_datetime.tzinfo) == str(Pacific):
-            camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo=None)
-        if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
-            camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo=None)
+        if ag.start_datetime is None:
+            ag.start_datetime = datetime.utcnow()
+        elif str(ag.start_datetime.tzinfo) == str(Pacific):
+            ag.start_datetime = ag.start_datetime.astimezone(utc).replace(tzinfo=None)
+        if ag.end_datetime and str(ag.end_datetime.tzinfo) == str(Pacific):
+            ag.end_datetime = ag.end_datetime.astimezone(utc).replace(tzinfo=None)
 
-        if camp.start_datetime:
-            remote_start = camp.start_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
+        if ag.start_datetime:
+            remote_start = ag.start_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
         else:
             remote_start = None
-        if camp.end_datetime:
-            remote_end = camp.end_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
+        if ag.end_datetime:
+            remote_end = ag.end_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
         else:
             remote_end = None
-        remote_update_dict = dict(campaign_key = str(camp.key()),
+        remote_update_dict = dict(adgroup_key = str(ag.key()),
                                   start_datetime = remote_start,
                                   end_datetime = remote_end,
-                                  static_total_budget = camp.full_budget,
-                                  static_daily_budget = camp.budget,
-                                  active = camp.active,
-                                  delivery_type = camp.budget_strategy,
+                                  static_total_budget = ag.full_budget,
+                                  static_daily_budget = ag.daily_budget,
+                                  active = ag.active,
+                                  delivery_type = ag.budget_strategy,
                                   )
-        if camp.has_daily_budget:
+        if ag.has_daily_budget:
             remote_update_dict['static_total_budget'] = None
-        elif camp.has_full_budget:
+        elif ag.has_full_budget:
             remote_update_dict['static_daily_budget'] = None
         if migrate_total:
-            remote_update_dict['total_spent'] = camp.budget_obj.total_spent
+            remote_update_dict['total_spent'] = ag.budget_obj.total_spent
         qs = urllib.urlencode(remote_update_dict)
         update_uri = BUDGET_UPDATE_URL + '?' + qs
 
@@ -95,17 +95,17 @@ class BudgetQueryManager(QueryManager):
                 #TODO(tornado): need to implement this and things
                 pass
 
-        if camp.budget_obj:
-            budget = camp.budget_obj
-            # if the budget and the campaign have differing activity levels sync them
-            if camp.active != budget.active:
-                remote_update_dict['active'] = camp.active
-                budget.active = camp.active
+        if ag.budget_obj:
+            budget = ag.budget_obj
+            # if the budget and the adgroup have differing activity levels sync them
+            if ag.active != budget.active:
+                remote_update_dict['active'] = ag.active
+                budget.active = ag.active
                 budget.put()
-            # if the campaign is now deleted and the budget says it's still active,
-            # make the budget not active.  This will be fine if the campaign becomes undeleted
+            # if the adgroup is now deleted and the budget says it's still active,
+            # make the budget not active.  This will be fine if the adgroup becomes undeleted
             # because then the activity levels will differ and everything will be right again
-            if camp.deleted and budget.active:
+            if ag.deleted and budget.active:
                 budget.active = False
                 budget.put()
 
@@ -113,67 +113,67 @@ class BudgetQueryManager(QueryManager):
             # Camp datetimes will either be PST/PDT and aware of it, or UTC and unaware of it
             # budget datetimes will always be UTC and unaware
 
-            # if Campaigns are aware of their tz, set them to UTC and make them unaware of it
+            # if AdGroups are aware of their tz, set them to UTC and make them unaware of it
             # doesn't matter if we put budgets at this point because when it gets put it'll fix itself
-            if camp.start_datetime is None:
-                camp.start_datetime = datetime.utcnow()
-            elif str(camp.start_datetime.tzinfo) == str(Pacific):
-                camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo=None)
-            if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
-                camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo=None)
+            if ag.start_datetime is None:
+                ag.start_datetime = datetime.utcnow()
+            elif str(ag.start_datetime.tzinfo) == str(Pacific):
+                ag.start_datetime = ag.start_datetime.astimezone(utc).replace(tzinfo=None)
+            if ag.end_datetime and str(ag.end_datetime.tzinfo) == str(Pacific):
+                ag.end_datetime = ag.end_datetime.astimezone(utc).replace(tzinfo=None)
 
             #Do the same thing above, but for budgets
-            budget_start = camp.budget_obj.start_datetime
-            budget_end = camp.budget_obj.end_datetime
+            budget_start = ag.budget_obj.start_datetime
+            budget_end = ag.budget_obj.end_datetime
 
             if budget_start.tzinfo is not None:
                 budget_start = budget_start.astimezone(utc).replace(tzinfo=None)
             if budget_end and budget_end.tzinfo is not None:
                 budget_end = budget_end.astimezone(utc).replace(tzinfo=None)
 
-            if not camp.start_datetime == budget_start:
-                update_dict['start_datetime'] = camp.start_datetime
-            if not camp.end_datetime == budget_end:
-                update_dict['end_datetime'] = camp.end_datetime
+            if not ag.start_datetime == budget_start:
+                update_dict['start_datetime'] = ag.start_datetime
+            if not ag.end_datetime == budget_end:
+                update_dict['end_datetime'] = ag.end_datetime
 
-            if not camp.budget_strategy == camp.budget_obj.delivery_type:
-                update_dict['delivery_type'] = camp.budget_strategy
+            if not ag.budget_strategy == ag.budget_obj.delivery_type:
+                update_dict['delivery_type'] = ag.budget_strategy
 
-            if camp.has_daily_budget:
-                slice_budget = get_slice_budget_from_daily(camp.budget)
+            if ag.has_daily_budget:
+                slice_budget = get_slice_budget_from_daily(ag.daily_budget)
                 # Only update the update dict if new values
-                if not slice_budget == camp.budget_obj.static_slice_budget:
+                if not slice_budget == ag.budget_obj.static_slice_budget:
                     update_dict['static_total_budget'] = None
                     update_dict['static_slice_budget'] = slice_budget
-            elif camp.has_full_budget:
-                if not camp.full_budget == camp.budget_obj.static_total_budget:
-                    update_dict['static_total_budget'] = camp.full_budget
+            elif ag.has_full_budget:
+                if not ag.full_budget == ag.budget_obj.static_total_budget:
+                    update_dict['static_total_budget'] = ag.full_budget
                     update_dict['static_slice_budget'] = None
             else:
                 return None
 
             if update_dict:
-                cls.prep_update_budget(camp.budget_obj, **update_dict)
-            return camp.budget_obj
+                cls.prep_update_budget(ag.budget_obj, **update_dict)
+            return ag.budget_obj
         # Create budget
-        elif camp.has_full_budget:
-            budget = Budget(start_datetime = camp.start_datetime,
-                            end_datetime = camp.end_datetime,
-                            active = camp.active,
-                            delivery_type = camp.budget_strategy,
-                            static_total_budget = camp.full_budget,
+        elif ag.has_full_budget:
+            budget = Budget(start_datetime = ag.start_datetime,
+                            end_datetime = ag.end_datetime,
+                            active = ag.active,
+                            delivery_type = ag.budget_strategy,
+                            static_total_budget = ag.full_budget,
                             total_spent = total_spent,
                             day_tz = 'Pacific',
                             )
             budget.put()
             return budget
 
-        elif camp.has_daily_budget:
-            budget = Budget(start_datetime = camp.start_datetime,
-                            end_datetime = camp.end_datetime,
-                            active = camp.active,
-                            delivery_type = camp.budget_strategy,
-                            static_slice_budget = get_slice_budget_from_daily(camp.budget),
+        elif ag.has_daily_budget:
+            budget = Budget(start_datetime = ag.start_datetime,
+                            end_datetime = ag.end_datetime,
+                            active = ag.active,
+                            delivery_type = ag.budget_strategy,
+                            static_slice_budget = get_slice_budget_from_daily(ag.daily_budget),
                             total_spent = total_spent,
                             day_tz = 'Pacific',
                             )
@@ -184,42 +184,42 @@ class BudgetQueryManager(QueryManager):
             return None
 
     @classmethod
-    def migrate_campaign(cls, campaign):
-        if campaign.budget_obj:
+    def migrate_adgroup(cls, adgroup):
+        if adgroup.budget_obj:
             return
-        campaign, budget = cls.test_migrate(campaign)
-        campaign.budget_obj = budget
-        campaign.put()
+        adgroup, budget = cls.test_migrate(adgroup)
+        adgroup.budget_obj = budget
+        adgroup.put()
 
     @classmethod
-    def test_migrate(cls, campaign):
+    def test_migrate(cls, adgroup):
         now = datetime.now().date()
-        start = campaign.start_date
-        end = campaign.end_date
-        slicer = BudgetSlicer.get_by_campaign(campaign)
+        start = adgroup.start_date
+        end = adgroup.end_date
+        slicer = BudgetSlicer.get_by_adgroup(adgroup)
         if slicer is not None:
             spent_today = slicer.spent_today
-            spent_in_camp = slicer.spent_in_campaign
+            spent_in_ag = slicer.spent_in_adgroup
         else:
             spent_today = 0.0
-            spent_in_camp = 0.0
+            spent_in_ag = 0.0
         print spent_today
-        print spent_in_camp
-        total_spent = spent_today + spent_in_camp
+        print spent_in_ag
+        total_spent = spent_today + spent_in_ag
         if start is None:
-            if campaign.budget is not None or campaign.full_budget is not None:
+            if adgroup.budget is not None or adgroup.full_budget is not None:
                 start = now
         if start:
             # make it the start of the day if it's a start date
-            campaign.start_datetime = datetime(start.year, start.month, start.day, 0, tzinfo = Pacific)
+            adgroup.start_datetime = datetime(start.year, start.month, start.day, 0, tzinfo = Pacific)
         if end:
             # make it the end of the day if it's an end date
-            campaign.end_datetime = datetime(end.year, end.month, end.day, 23, 59, 0, tzinfo = Pacific)
+            adgroup.end_datetime = datetime(end.year, end.month, end.day, 23, 59, 0, tzinfo = Pacific)
         print "Total spent1: %s" % total_spent
         if not total_spent:
             total_spent = 0.0
         print "Total spent2: %s" % total_spent
-        budget = cls.update_or_create_budget_for_campaign(campaign, total_spent = total_spent)
+        budget = cls.update_or_create_budget_for_adgroup(adgroup, total_spent = total_spent)
         if budget is not None:
             budget.put()
             if spent_today:
@@ -227,21 +227,21 @@ class BudgetQueryManager(QueryManager):
                                             slice_num = get_slice_from_datetime(now),
                                             desired_spending = spent_today,
                                             actual_spending = spent_today,
-                                            prev_total_spending = spent_in_camp,
+                                            prev_total_spending = spent_in_ag,
                                             prev_braking_fraction = 1.0,
                                             )
                 todays_log.put()
-            if spent_in_camp:
+            if spent_in_ag:
                 all_prev_logs = BudgetSliceLog(budget = budget,
                                                slice_num = get_slice_from_datetime(now - ONE_DAY),
-                                               desired_spending = spent_in_camp,
-                                               actual_spending = spent_in_camp,
+                                               desired_spending = spent_in_ag,
+                                               actual_spending = spent_in_ag,
                                                prev_total_spending = 0.0,
                                                prev_braking_fraction = 1.0,
                                                )
                 all_prev_logs.put()
         print budget
-        return campaign, budget
+        return adgroup, budget
 
     @classmethod
     def prep_update_budget(cls, budget,

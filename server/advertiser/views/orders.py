@@ -358,7 +358,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
         order_form_is_valid = order_form.is_valid()
         line_item_form_is_valid = line_item_form.is_valid()
-        logging.error('what')
         if order_form_is_valid and line_item_form_is_valid:            
             order = order_form.save()
             order.account = self.account
@@ -377,7 +376,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
                 self.account.status = ""
                 AccountQueryManager.put_accounts(self.account)
 
-            logging.error('reached')
             return JSONResponse({
                 'success': True,
                 'redirect': reverse('advertiser_line_item_detail',

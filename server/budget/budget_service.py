@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, date
 from google.appengine.api import memcache
 
 from ad_server.debug_console import trace_logging
-from advertiser.models import Campaign
 
 from advertiser.query_managers import AdGroupQueryManager
 from budget.helpers import get_curr_slice_num, get_slice_from_datetime, get_datetime_from_slice
@@ -39,7 +38,7 @@ def has_budget(budget, cost, today=None):
 
     if budget is None:
         return False
-
+ 
     if not budget.is_active:
         trace_logging.warning('Budget is not active for slice: %s' % budget.curr_slice)
         return False

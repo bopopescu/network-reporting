@@ -32,7 +32,6 @@ from simple_models import (SimpleAdGroup,
                            SimpleDummyFailureCreative,
                            SimpleDummySuccessCreative,
                            )
-# from budget import budget_service
 
 
 class NetworkStates:
@@ -103,14 +102,6 @@ class Campaign(db.Model):
     @property
     def is_network(self):
         return self.campaign_type == 'network'
-
-    @property
-    def has_daily_budget(self):
-        return self.budget and self.budget_type == 'daily'
-
-    @property
-    def has_full_budget(self):
-        return self.full_budget and self.budget_type == 'full_campaign'
 
     def simplify(self):
         return SimpleCampaign(key = str(self.key()),
@@ -337,6 +328,14 @@ class AdGroup(db.Model):
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
     @property
+    def has_daily_budget(self):
+        return self.daily_budget and self.budget_type == 'daily'
+
+    @property
+    def has_full_budget(self):
+        return self.full_budget and self.budget_type == 'full_campaign'
+
+    @property
     def calculated_cpm(self):
         """
         Calculate the ecpm for a cpc campaign.
@@ -378,8 +377,11 @@ class AdGroup(db.Model):
 
     @property
     def pace(self):
-        return .5
-        # return budget_service.get_pace(self.budget_obj)
+        try:
+            logging.warn(self.budget_obj.last_slice_log.pace)
+            return self.budget_obj.last_slice_log.pace
+        except:
+            return None
 
     @property
     def pace_indicator(self):
@@ -393,8 +395,24 @@ class AdGroup(db.Model):
         
     @property
     def progress(self):
-        return .9
-        # return budget_service.get_percent_delivered(self.budget_obj)
+        """ Get the % of the budget that has been delivered """
+        budget = self.budget_obj
+        if not budget:
+            return None
+        if budget.static_slice_budget and not budget.finite:
+            spent_today = budget.spent_today
+            if spent_today:
+                return budget.daily_budget / (spent_today * 1.0)
+            else:
+                return 0.0
+
+        total_budget = budget.total_budget
+        if total_budget:
+            # includes the memcache spending
+            return total_spent(budget) / (total_budget * 1.0)
+        else:
+            logging.warning("OMG no total budget...? %s" % budget)
+            return None
 
     def adgroup_type_display(self):
         kinds = {

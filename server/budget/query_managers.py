@@ -64,7 +64,11 @@ class BudgetQueryManager(QueryManager):
             remote_end = camp.end_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
         else:
             remote_end = None
-        remote_update_dict = dict(campaign_key = str(camp.key()),
+
+        adgroups = [ag for ag in camp.adgroups]
+        adgroup = adgroups[0]    
+        remote_update_dict = dict(adgroup_key = str(adgroup.key()),
+                                  campaign_key = str(camp.key()),
                                   start_datetime = remote_start,
                                   end_datetime = remote_end,
                                   static_total_budget = camp.full_budget,
@@ -181,8 +185,8 @@ class BudgetQueryManager(QueryManager):
             return budget
         # No budget
         else:
-            return None
-
+            return None            
+            
     @classmethod
     def migrate_campaign(cls, campaign):
         if campaign.budget_obj:

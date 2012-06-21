@@ -376,26 +376,25 @@ class AdGroup(db.Model):
             return "paused"
         return "running"
 
-
     @property
     def pace(self):
-        budget = self.budget_obj
-        if not budget.is_active_for_date(datetime.date.today()):
-            return None
+        return .5
+        # return budget_service.get_pace(self.budget_obj)
 
-        last_slice = budget.most_recent_slice_log
-        percent_days = budget.elapsed_slices / float(budget.total_slices)
-        if budget.delivery_type == "allatonce":
-            if budget.static_slice_budget and not budget.end_datetime:
-                return ["Delivery", min(1, last_slice.actual_spending / last_slice.desired_spending)]
-            else:
-                return ["Delivery", min(1, (budget.total_spent / budget.total_budget))]
+    @property
+    def pace_indicator(self):
+        pace = self.pace
+        if pace > .8:
+            return 'pace-success'
+        elif pace >= .4:
+            return 'pace-warning'
         else:
-            if budget.end_datetime:
-                return ["Pacing", min(1, ((budget.total_spent / budget.total_budget) / percent_days))]
-            else:
-                return ["Pacing", min(1, last_slice.actual_spending / last_slice.desired_spending)]
-        return None
+            return 'pace-failure'
+        
+    @property
+    def progress(self):
+        return .9
+        # return budget_service.get_percent_delivered(self.budget_obj)
 
     def adgroup_type_display(self):
         kinds = {

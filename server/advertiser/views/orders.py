@@ -350,65 +350,59 @@ class OrderAndLineItemFormHandler(RequestHandler):
         else:
             order_form = OrderForm(self.request.POST, instance=order, prefix='order')
 
-            if order_form.is_valid():
-                order = order_form.save()
-                order.account = self.account
-                order.campaign_type = 'order'
-                order.save()
-                CampaignQueryManager.put(order)
+            # TODO: do this in the form? maybe pass the account in?
+            adunits = AdUnitQueryManager.get_adunits(account=self.account)
+            site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
+            line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
 
-            else:
-                # TODO: dict comprehension?
-                errors = {}
-                for key, value in order_form.errors.items():
+            order_form_is_valid = order_form.is_valid()
+            line_item_form_is_valid = line_item_form.is_valid()
+            if order_form_is_valid and line_item_form_is_valid:            
+                    order = order_form.save()
+                    order.account = self.account
+                    order.campaign_type = 'order'
+                    order.save()
+                    CampaignQueryManager.put(order)
+
+                    line_item = line_item_form.save()
+                    line_item.account = self.account
+                    line_item.campaign = order
+                    line_item.save()
+                    AdGroupQueryManager.put(line_item)
+
+                    # Onboarding: user is done after they set up their first campaign
+                    if self.account.status == "step4":
+                        self.account.status = ""
+                        AccountQueryManager.put_accounts(self.account)
+
+                    return JSONResponse({
+                        'success': True,
+                        'redirect': reverse('advertiser_line_item_detail',
+                                            kwargs={'line_item_key': line_item.key()}),
+                    })
+            
+            errors = {}
+            if not line_item_form_is_valid:
+                for key, value in line_item_form.errors.items():
+                    # TODO: find a less hacky way to get jQuery validator's
+                    # showErrors function to work with the SplitDateTimeWidget
+                    if key == 'start_datetime':
+                        key = 'start_datetime_1'
+                    elif key == 'end_datetime':
+                        key = 'end_datetime_1'
                     # TODO: just join value?
                     errors[key] = ' '.join([error for error in value])
 
-                return JSONResponse({
-                    'errors': errors,
-                    'success': False,
-                })
-
-        # TODO: do this in the form? maybe pass the account in?
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-        line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
-
-        if line_item_form.is_valid():
-            line_item = line_item_form.save()
-            line_item.account = self.account
-            line_item.campaign = order
-            line_item.save()
-            AdGroupQueryManager.put(line_item)
-
-            # Onboarding: user is done after they set up their first campaign
-            if self.account.status == "step4":
-                self.account.status = ""
-                AccountQueryManager.put_accounts(self.account)
-
-            return JSONResponse({
-                'success': True,
-                'redirect': reverse('advertiser_line_item_detail',
-                                    kwargs={'line_item_key': line_item.key()}),
-            })
-
-        else:
-            errors = {}
-            for key, value in line_item_form.errors.items():
-                # TODO: find a less hacky way to get jQuery validator's
-                # showErrors function to work with the SplitDateTimeWidget
-                if key == 'start_datetime':
-                    key = 'start_datetime_1'
-                elif key == 'end_datetime':
-                    key = 'end_datetime_1'
-                # TODO: just join value?
-                errors[key] = ' '.join([error for error in value])
+            if not order_form_is_valid:
+                # TODO: dict comprehension?
+                for key, value in order_form.errors.items():
+                    # TODO: just join value?
+                    errors[key] = ' '.join([error for error in value])
 
             return JSONResponse({
                 'errors': errors,
                 'success': False,
             })
-
 
 @login_required
 def order_and_line_item_form_new_order(request, *args, **kwargs):

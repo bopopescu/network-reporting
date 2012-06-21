@@ -312,6 +312,13 @@ form#new_creative_form {
     vertical-align: top;
 }
 
+form#order_and_line_item_form {
+    #order_header {
+        position: absolute;
+        top: 15px;
+    }
+}
+
 form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edit_creative_form {
     fieldset {
         padding: 25px 25px 25px 25px;
@@ -322,6 +329,7 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
         -moz-border-radius: 5px;
         border-radius: 5px;
     }
+
     input[type="text"], input[type="password"], textarea {
         padding: 1px 2px 2px 3px;
         border: 1px solid #eaeaea;

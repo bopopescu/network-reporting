@@ -2019,6 +2019,10 @@ table.reportData-table {
   border-radius: 10px;
   padding: 5px 40px; }
 
+.pace {
+  position: absolute;
+  top: 22px; }
+
 .pace-success {
   color: #53a600; }
 
@@ -3784,6 +3788,10 @@ form#new_creative_form {
  *
  * TODO: consolidate all the form styles
  */
+form#order_and_line_item_form #order_header {
+  position: absolute;
+  top: 15px; }
+
 form#order_and_line_item_form fieldset, form#order_form fieldset, form#new_creative_form fieldset, form.edit_creative_form fieldset {
   padding: 25px 25px 25px 25px; }
 form#order_and_line_item_form fieldset#order_fieldset, form#order_form fieldset#order_fieldset, form#new_creative_form fieldset#order_fieldset, form.edit_creative_form fieldset#order_fieldset {
@@ -4398,15 +4406,15 @@ form#order_and_line_item_form input.token-input-field.focused, form#order_form i
   overflow: hidden;
   height: 18px;
   margin-bottom: 18px;
-  background-color: #e9e9e9;
+  background-color: #bababa;
   background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#e5e5e5), to(#e9e9e9));
-  background-image: -moz-linear-gradient(top, #e5e5e5, #e9e9e9);
-  background-image: -ms-linear-gradient(top, #e5e5e5, #e9e9e9);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e5e5e5), color-stop(100%, #e9e9e9));
-  background-image: -webkit-linear-gradient(top, #e5e5e5, #e9e9e9);
-  background-image: -o-linear-gradient(top, #e5e5e5, #e9e9e9);
-  background-image: linear-gradient(top, #e5e5e5, #e9e9e9);
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#e5e5e5), to(#bababa));
+  background-image: -moz-linear-gradient(top, #e5e5e5, #bababa);
+  background-image: -ms-linear-gradient(top, #e5e5e5, #bababa);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e5e5e5), color-stop(100%, #bababa));
+  background-image: -webkit-linear-gradient(top, #e5e5e5, #bababa);
+  background-image: -o-linear-gradient(top, #e5e5e5, #bababa);
+  background-image: linear-gradient(top, #e5e5e5, #bababa);
   -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   -moz-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -4457,6 +4465,13 @@ form#order_and_line_item_form input.token-input-field.focused, form#order_form i
   -webkit-animation: progress-bar-stripes 2s linear infinite;
   -moz-animation: progress-bar-stripes 2s linear infinite;
   animation: progress-bar-stripes 2s linear infinite; }
+
+#progress-bar-text {
+  position: absolute;
+  text-align: center;
+  left: -3px;
+  right: 0px;
+  top: 5px; }
 
 .progress-danger .bar {
   background-color: #dd514b;

@@ -16,40 +16,42 @@
 
 {% block content %}
 <form id="order_and_line_item_form" method="post">
-  {% if order %}
-    <h2>Order Details</h2>
-    <fieldset id="order_fieldset">  
-      <ul class="form_fields">
-        <li>
-          <label>Name:</label>
-          <div>
-            {{ order.name }}
-          </div>
-        </li>
-        <li>
-          <label>Advertiser:</label>
-          <div>
-            {{ order.advertiser }}
-          </div>
-        </li>
-        <li>
-          <label>Description:</label>
-          <div>
-            {{ order.description }}
-          </div>
-        </li>
-      </ul>
-    </fieldset>
-  {% else %}
-    {% include 'forms/order_form.html' %}
-  {% endif %}
+    {% if order %}
+        <fieldset id="order_fieldset">
+            <legend>
+                <h2 id="order_header">Order tails</h2>
+            </legend>
 
-  <br />
-  
-  <h2>Line Item Details</h2>
-  <fieldset id="line_item_fieldset">
-
-    <p>Each Order has one or more Line Items.  A Line Item is a set of creatives and targeting parameters that runs with a specific budget.</p>
+            <ul class="form_fields">
+                <li>
+                    <label>Name:</label>
+                    <div>
+                        {{ order.name }}
+                    </div>
+                </li>
+                <li>
+                    <label>Advertiser:</label>
+                    <div>
+                        {{ order.advertiser }}
+                    </div>
+                </li>
+                <li>
+                    <label>Description:</label>
+                    <div>
+                        {{ order.description }}
+                    </div>
+                </li>
+            </ul>
+        </fieldset>
+    {% else %}
+        {% include 'forms/order_form.html' %}
+    {% endif %}
+    <div>&nbsp;</div>
+    <fieldset id="line_item_fieldset">
+        <legend>
+            <h2>Line Item Details</h2>
+            <p>Each Order has one or more Line Items.  A Line Item is a set of creatives and targeting parameters that runs with a specific budget.</p>
+        </legend>
     
         <ul class="form_fields">
           <li>

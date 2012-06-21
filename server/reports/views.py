@@ -38,80 +38,72 @@ class ReportIndexHandler(RequestHandler):
 
         for report in scheduled:
             report.form = ReportForm(instance=report,
-                                     prefix=str(report.key()),
-                                     save_as=True)
+                                     prefix=str(report.key()))
 
         reports = sorted(reports, key=lambda report: report.completed_at if isinstance(report,
             Report) else report.last_run)
 
         new_report_form = ReportForm(initial={'recipients': self.request.user.email},
                                      prefix='new')
-        return render_to_response(self.request, 'reports/report_index.html',
+        return render_to_response(self.request, 'reports/reports_index.html',
                                  {'reports': reports,
                                   'scheduled': scheduled,
                                   'new_report_form': new_report_form, })
 
 @login_required
-def report_index(request, *args, **kwargs):
+def reports_index(request, *args, **kwargs):
     return ReportIndexHandler()(request, *args, **kwargs)
 
 
-class AddReportHandler(RequestHandler):
-    def post(self, d1, end, days=None, start=None, d2=None, d3=None,
-                            name=None, saved=False, interval=None,
-                            sched_interval=None, recipients=None, report_key=None):
-        if not d2:
-            d2 = None
-        if not d3:
-            d3 = None
+class EditReportHandler(RequestHandler):
+    def post(self, report_key=None):
+        """
+        Create a new ScheduledReport or edit an existing one
+        """
+        prefix = report_key or 'new'
 
-        end = datetime.datetime.strptime(end, '%m/%d/%Y').date() if end else None
-        if start:
-            start = datetime.datetime.strptime(start, '%m/%d/%Y').date()
-            days = (end - start).days
-            if days > 92:
-                self.request.flash['error'] = 'Please limit reports to three months.'
-                return HttpResponseRedirect('/reports/')
-        edit = False
-        manager = ReportQueryManager(self.account)
+        # TODO: refactor reports query managers and move there
+        report = db.get(report_key)
 
-        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else []
-        recipients = filter(None, recipients)
+        report_form = ReportForm(self.request.POST,
+                                 instance=report,
+                                 prefix=prefix)
 
-        if report_key is not None:
-            logging.info("there is a report key")
-            edit = True
-            report = manager.get_report_data_by_key(report_key)
-            if d1 == report.d1 and d2 == report.d2 and d3 == report.d3 and start == report.start and end == report.end:
-                # All the actual data dims are the same, edit the sched settings
-                sched = report.schedule
-                sched.name = name
-                sched.sched_interval = sched_interval
-                sched.recipients = recipients
-                sched.put()
-                return HttpResponseRedirect('/reports/view/%s/' % sched.key())
+        logging.info(report_form.__dict__)
 
-        saved = True
-        report = manager.add_report(d1,
-                                d2,
-                                d3,
-                                end,
-                                days,
-                                name = name,
-                                saved = saved,
-                                interval = interval,
-                                sched_interval = sched_interval,
-                                recipients = recipients,
-                                )
-        if edit:
-            self.request.flash['report_edit'] = 'The requested edit requires the report to be re-run.  The request has been submitted and you will be notified via email when it has completed'
+        if report_form.is_valid():
+            # TODO: move coercing form to model from query manager to form
+            report_form.save()
+
+            if report_key:
+                self.request.flash['report_edit'] = "The requested edit requires " \
+                        "the report to be re-run.  The request has been submitted " \
+                        "and you will be notified via email when it has completed"
+            else:
+                self.request.flash['report_success'] = 'Your report has been " \
+                        "successfully submitted, you will be notified via email " \
+                        "when it has completed!'
+
+            return JSONResponse({
+                'success': True,
+                'redirect': reverse('reports_index')})
         else:
-            self.request.flash['report_success'] = 'Your report has been successfully submitted, you will be notified via email when it has completed!'
-        return HttpResponseRedirect('/reports/')
+            errors = {}
+            for key, value in report_form.errors.items():
+                key = report_form.prefix + '-' + key
+                errors[key] = ' '.join([error for error in value])
+
+        logging.info('Errors')
+        logging.info(errors)
+        return JSONResponse({
+            'errors': errors,
+            'success': False,
+        })
+
 
 @login_required
-def add_report(request, *args, **kwargs):
-    return AddReportHandler()(request, *args, **kwargs)
+def edit_report(request, *args, **kwargs):
+    return EditReportHandler()(request, *args, **kwargs)
 
 
 class RequestReportHandler(RequestHandler):
@@ -149,20 +141,6 @@ class CheckReportHandler(RequestHandler):
 def check_report(request, *args, **kwargs):
     return CheckReportHandler()(request, use_cache=False, *args, **kwargs)
 
-#Only scheduled reports get viewed
-class ViewReportHandler(RequestHandler):
-    def get(self, report_key, *args, **kwargs):
-        man = ReportQueryManager(self.account)
-        report = man.get_report_by_key(report_key)
-        report_frag = ReportForm(instance=report, save_as=True)
-        return render_to_response(self.request, 'reports/view_report.html',
-                dict(report=report.most_recent,
-                     report_fragment = report_frag,))
-
-@login_required
-def view_report(request, *args, **kwargs):
-    return ViewReportHandler()(request, *args, **kwargs)
-
 
 class SaveReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
@@ -183,7 +161,7 @@ class RunReportHandler(RequestHandler):
         man = ReportQueryManager(self.account)
         sched = man.get_report_data_by_key(report_key).schedule
         report = man.new_report(sched)
-        return HttpResponseRedirect('/reports/view/'+str(report.schedule.key()))
+        return HttpResponseRedirect('/reports/')
 
 @login_required
 def run_report(request, *args, **kwargs):

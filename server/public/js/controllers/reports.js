@@ -145,64 +145,111 @@
                             $(row).mouseenter(function(e) {
                                 $('#' + key + '-edit-link').show();
                             })
-                        $(row).mouseleave(function(e) {
-                            $('#' + key + '-edit-link').hide();
-                        })
+                            $(row).mouseleave(function(e) {
+                                $('#' + key + '-edit-link').hide();
+                            })
 
-                        // when wrench is clicked open an edit report form dialog
-                        $('#' + key + '-edit-link')
-                            .click(function(e) {
-                                e.preventDefault();
-                                $('#' + key + '-saveAs').val('False');
-                                $('#' + key + '-reportCreateForm-save').button({label: 'Save'});
-                                var report_form = $('#' + key + '-reportForm-container');
-                                report_form.dialog({width:750});
-                            });
-
-                        // close dialog
-                        $('#' + key + '-reportCreateForm-cancel')
-                            .click(function(e) {
-                                e.preventDefault();
-                                $('.dim-selectmenu').selectmenu('enable');
-                                $('#interval').selectmenu('enable');
-                                $('#start-input').xdatepicker('enable');
-                                $('#end-input').xdatepicker('enable');
-                                // TODO
-                                //revert_state(form_state);
-                                $('#' + key + '-reportForm-container').dialog('close');
-                            });
-
-                        // TODO
-                        $(row).find('.update-button')
-                            .change(function(e) {
-                                e.preventDefault();
-                                if (!obj_equals(form_state, get_form_state())) {
-                                    $('#' + key + 'reportCreateForm-save').button({label:'Save and Run'});
-                                }
-                                else {
-                                    $('#' + key + 'reportCreateForm-save').button({label:'Save'});
-                                }
-                            }).change();
-
-                        // based on d1's selection, modify options for d2 and d3 
-                        $('#id_' + key + '-d1').change(
-                                function(e) {
-                                    // TODO error?
-                                    if ($(this).val() != '') {
-                                        $('#d1Error').hide();
-                                    }
+                            // when wrench is clicked open an edit report form dialog
+                            $('#' + key + '-edit-link')
+                                .click(function(e) {
                                     e.preventDefault();
-                                    d1_validate(key);
-                                    d2_validate(key);
-                                }).change();
-
-                        // based on d2's selection, modify options for d3 
-                        $('#id_' + key + '-d2').change(
-                                function(e) {
-                                    e.preventDefault();
-                                    d2_validate(key);
+                                    $('#' + key + '-saveAs').val('False');
+                                    $('#' + key + '-reportCreateForm-save').button({label: 'Save'});
+                                    var report_form = $('#' + key + '-reportForm-container');
+                                    report_form.dialog({width:750});
                                 });
 
+                            // close dialog
+                            $('#' + key + '-reportCreateForm-cancel')
+                                .click(function(e) {
+                                    e.preventDefault();
+                                    $('.dim-selectmenu').selectmenu('enable');
+                                    $('#interval').selectmenu('enable');
+                                    $('#start-input').xdatepicker('enable');
+                                    $('#end-input').xdatepicker('enable');
+                                    // TODO
+                                    //revert_state(form_state);
+                                    $('#' + key + '-reportForm-container').dialog('close');
+                                });
+
+                            // TODO
+                            $(row).find('.update-button')
+                                .change(function(e) {
+                                    e.preventDefault();
+                                    if (!obj_equals(form_state, get_form_state())) {
+                                        $('#' + key + 'reportCreateForm-save').button({label:'Save and Run'});
+                                    }
+                                    else {
+                                        $('#' + key + '-reportCreateForm-save').button({label:'Save'});
+                                    }
+                                }).change();
+
+                            // TODO combined this with new form
+                            //
+                            // based on d1's selection, modify options for d2 and d3 
+                            $('#id_' + key + '-d1').change(
+                                    function(e) {
+                                        // TODO error?
+                                        if ($(this).val() != '') {
+                                            $('#d1Error').hide();
+                                        }
+                                        e.preventDefault();
+                                        d1_validate(key);
+                                        d2_validate(key);
+                                    }).change();
+
+                            // based on d2's selection, modify options for d3 
+                            $('#id_' + key + '-d2').change(
+                                    function(e) {
+                                        e.preventDefault();
+                                        d2_validate(key);
+                                    });
+
+                            // Validate report forms
+                            var validator = $('#' + key + '-reportEditForm').validate({
+                                errorPlacement: function(error, element) {
+                                                    element.parents('div').not(':hidden').first().append(error);
+                                                },
+                                submitHandler: function(form) {
+                                                   $(form).ajaxSubmit({
+                                                       data: {ajax: true},
+                                                       dataType: 'json',
+                                                       success: function(jsonData, statusText, xhr, $form) {
+                                                           window.location = jsonData.redirect;
+                                                           if(jsonData.success) {
+                                                               $('#' + key + '-reportCreateForm-save').button({
+                                                                   label: 'Success...',
+                                                                   disabled: true
+                                                               });
+                                                           } else {
+                                                               console.log(jsonData.errors);
+                                                               validator.showErrors(jsonData.errors);
+                                                               $('#' + key + '-reportCreateForm-save').button({
+                                                                   label: 'Try Again',
+                                                                   disabled: false
+                                                               });
+                                                           }
+                                                       },
+                                                       error: function(jqXHR, textStatus, errorThrown) {
+                                                           $('#' + key + '-reportCreateForm-save').button({
+                                                               label: 'Try Again',
+                                                               disabled: false
+                                                               });
+                                                           },
+                                                       beforeSubmit: function(arr, $form, options) {
+                                                           $('#' + key + '-reportCreateForm-save').button({label: 'Submitting...',
+                                                           disabled: true});
+                                                           }
+                                                    });
+                                               }
+                            });
+
+                            // Submit form
+                            $('#' + key + '-reportCreateForm-save')
+                                .click(function(e) {
+                                    e.preventDefault();
+                                    $('#' + key + '-reportEditForm').submit();
+                                });
                         });
 
                         /* Delete report */
@@ -211,6 +258,7 @@
                                 e.preventDefault();
                                 $('#reportStateChangeForm').find('#action').val('delete').end().submit();
                             });
+
 
                     }
     }

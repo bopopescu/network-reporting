@@ -1,5 +1,6 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, \
+        datetime
 
 from django import forms
 from reports.models import ScheduledReport
@@ -32,9 +33,11 @@ class ReportForm(forms.ModelForm):
                            label='Report Breakdown:',
                            widget=forms.Select(attrs={'class': 'chzn-select'}))
     d2 = forms.ChoiceField(choices=DIMENSIONS,
+                           required=False,
                            label='>',
                            widget=forms.Select(attrs={'class': 'chzn-select'}))
     d3 = forms.ChoiceField(choices=DIMENSIONS,
+                           required=False,
                            label='>',
                            widget=forms.Select(attrs={'class': 'chzn-select'}))
     interval = forms.ChoiceField(choices=(('yesterday', 'Yesterday'),
@@ -43,16 +46,16 @@ class ReportForm(forms.ModelForm):
                                           ('custom', 'Custom')),
                                  label='Dates:',
                                  widget=forms.Select(attrs={'class': 'chzn-select'}))
-    start = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
-                                required=False,
-                                widget=forms.DateInput(attrs={'class': 'date',
-                                                              'placeholder': 'MM/DD/YYYY'},
-                                                       format='%m/%d/%Y',))
-    end = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
-                              required=False,
-                              widget=forms.DateInput(attrs={'class': 'date',
-                                                            'placeholder': 'MM/DD/YYYY'},
-                                                     format='%m/%d/%Y',))
+    start = forms.DateField(input_formats=('%m/%d/%Y',),
+                            widget=forms.DateInput(attrs={'class': 'date',
+                                                          'placeholder': 'MM/DD/YYYY'},
+                                                   format='%m/%d/%Y',))
+    end = forms.DateField(input_formats=('%m/%d/%Y',),
+                          widget=forms.DateInput(attrs={'class': 'date',
+                                                        'placeholder': 'MM/DD/YYYY'},
+                                                 format='%m/%d/%Y',))
+    # NOTE: days doesn't get rendered
+    days = forms.IntegerField(required=False)
     recipients = forms.CharField(label='Recipients:',
                                  widget=forms.Textarea(attrs={'cols': 50,
                                                               'rows': 3,
@@ -65,10 +68,9 @@ class ReportForm(forms.ModelForm):
                                        label='Schedule:',
                                        widget=forms.Select(attrs={'class': 'chzn-select'}))
 
-    def __init__(self, save_as=False,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
         initial = kwargs.get('initial', {})
-        self.save_as = save_as
         #Initially was just a check, making it an int check since
         #0 is a valid property, but evals to false
         if instance and (instance.days or instance.days == 0):
@@ -80,17 +82,32 @@ class ReportForm(forms.ModelForm):
             kwargs.update(initial = initial)
         super(ReportForm, self).__init__(*args, **kwargs)
 
+    def clean_start(self):
+        """
+        Reports must be limited to three months
+        """
+        start = self.initial.get('start', None)
+        end = self.initial.get('end', None)
+        if start and end:
+            days = (end - start).days
+            if days > 92:
+                raise forms.ValidationError('Please limit reports to three months.')
+        logging.info('START')
+        logging.info(start)
+        return start
 
-    def save(self, commit=True):
-        obj = super(ReportForm, self).save(commit=False)
-        if obj:
-            logging.info("\n\n\n\n\n:%s"%self.cleaned_data)
-            start = self.cleaned_data['start']
-            obj.days = obj.end - start
-        if commit:
-            obj.put()
-        return obj
+    def clean_days(self):
+        start = self.initial.get('start', None)
+        end = self.initial.get('end', None)
 
+        return (end - start).days
+
+    def clean_recipients(self):
+        recipients = self.initial.get('recipients', None)
+        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n'). \
+                split('\n') if r] if recipients else []
+        recipients = filter(None, recipients)
+        return recipients
 
     class Meta:
         model = ScheduledReport

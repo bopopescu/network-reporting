@@ -21,9 +21,9 @@
             <div class='clear'></div>
             <div class='form-submit'>
                 <span id='reportCreateForm-success' class='hidden'>Success!</span>
-                <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-run'>Run Report</a></span>
-                <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-save'>Run and Save</a></span>
-                <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-cancel'>Cancel</a></span>
+                <a href='#' class='button' id='reportCreateForm-run'>Run Report</a>
+                <a href='#' class='button' id='reportCreateForm-save'>Run and Save</a>
+                <a href='#' class='button' id='reportCreateForm-cancel'>Cancel</a>
             </div>
         </fieldset>
     </form>
@@ -99,7 +99,7 @@
 
 {% for report in scheduled %}
 <div id='{{ report.key }}-reportForm-container' style='display: none;'>
-    <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
+    <form action="{% url edit_report report_key=report.key %}" method="POST" accept-charset="utf-8" id="{{ report.key }}-reportEditForm">
         <fieldset id="reportAddForm-details" class="alt">
             <div id="reportAddForm-fragment" class="reportAddForm-fragment">
                 {% with report.form as report_form %}
@@ -111,8 +111,8 @@
             <div class='clear'></div>
             <div class='form-submit'>
                 <span id='reportCreateForm-success' class='hidden'>Success!</span>
-                <span class='buttonWrap'><a href='#' class='button' id='{{ report.key }}-reportCreateForm-save'>Save</a></span>
-                <span class='buttonWrap'><a href='#' class='button' id='{{ report.key }}-reportCreateForm-cancel'>Cancel</a></span>
+                <a href='#' class='button' id='{{ report.key }}-reportCreateForm-save'>Save</a>
+                <a href='#' class='button' id='{{ report.key }}-reportCreateForm-cancel'>Cancel</a>
             </div>
         </fieldset>
     </form>

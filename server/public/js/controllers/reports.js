@@ -1,82 +1,7 @@
 (function($, _) {
-
-
-    function addPlaceholder() {
-        $('.reportData-placeholder').hide();
-        $('table').each(function() {
-            visible = $(this).find('.reportData:visible');
-            if (visible.length === 0) {
-                $(this).find('.reportData-placeholder').show();
-            }
-        });
-    }
-    addPlaceholder();
-
-    $('input[name="start"]').xdatepicker().change(function (e) {
-        var dte = new Date($(this).val());
-        $('input[name="end"]').xdatepicker('option', 'minDate', dte);
-    });
-
-    $('input[name="end"]').xdatepicker({maxDate: new Date()}).change(function (e) {
-        var dte = new Date($(this).val());
-        $('input[name="start"]').xdatepicker('option', 'maxDate', dte);
-    });
-
-    function rep_validate(form) {
-        /* Check a form for selectmenu-required selectmenus
-         * check for date-requireds
-         * If any invalid, flag as invalid (with the pretty red colors)
-         * and return False
-         * if nothing invalid, return True
-         */
-        var success = true;
-        $('#d1Error').hide();
-        $('#dateError').hide();
-        $('select.selectmenu-required').each(function() {
-            if ($(this).val() == '') {
-                $('#d1Error').show();
-                success = false;
-            }
-        });
-        $('.date-required').each(function() {
-            $(this).removeClass('form-error');
-            if ($(this).val() == '') {
-                $(this).addClass('form-error');
-                $('#dateError').show();
-                success = false;
-            }
-        });
-        return success;
-    }
-
-    function ajaxSave() {
-        $.ajax({
-            url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/',
-        success: function() {
-            $('#reports-view-toIndex').click();
-        }
-        });
-    }
-
-    $('#reports-view-saveAsButton').button({icons: {secondary: 'ui-icon-check'}})
-        .click(function(e) {
-            e.preventDefault();
-            $('#saveAs').val('True');
-            $('#reportName-input').val('Copy of '+ $('#reportName-input').val());
-            $('.dim-selectmenu').selectmenu('disable');
-            $('#interval').selectmenu('disable');
-            $('#start-input').xdatepicker('disable');
-            $('#end-input').xdatepicker('disable');
-            $('#reportEditForm-submit').button({label: 'Save As'});
-            $('#sched_interval').selectmenu('index', 0).change();
-            $('#reportForm-container').dialog({width:750});
-        });
-
-
     var ReportIndexController = {
         initialize: function(bootstrapping_data) {
                         var report_keys = bootstrapping_data.report_keys;
-
 
                         /* Add a new report UI */
                         // Show new report form
@@ -184,154 +109,7 @@
     }
 
 
-    function fix_date(dte) {
-        if (dte < 10) {
-            return '0' + dte;
-        }
-        return dte;
-    }
-
-    function format_date(dte) {
-        return fix_date(dte.getMonth() + 1) + '/' + fix_date(dte.getDate()) + '/' + dte.getFullYear();
-    }
-
-
-    var update = true;
-    $('#interval')
-        .change(function(e) {
-            update = false;
-            var val = $(this).val();
-            var today = new Date();
-            if (val != 'custom') {
-                $('#interval-toggle').val(2);
-                var one_day = 1000*60*60*24
-            switch (val) {
-                case 'yesterday':
-                    today.setTime(today.getTime() - one_day);
-                    var dte = format_date(today);
-                    $('#end-input').val(dte).change();
-                    $('#start-input').val(dte).change();
-                    break;
-                case '7days':
-                    var dte = format_date(today);
-                    $('#end-input').val(dte).change();
-                    today.setTime(today.getTime() - (7*one_day));
-                    dte = format_date(today);
-                    $('#start-input').val(dte).change();
-                    break;
-                case 'lmonth':
-                    var this_mo = today.getMonth();
-                    while (today.getMonth() == this_mo) {
-                        today.setTime(today.getTime() - one_day);
-                    }
-                    var dte = format_date(today);
-                    $('#end-input').val(dte).change();
-                    today.setDate(1);
-                    dte = format_date(today);
-                    $('#start-input').val(dte).change();
-                    break;
-            }
-            }
-            else {
-                return;
-            }
-        }).change();
-
-    $('.date-field')
-        .change(function(e) {
-            var inter_val = $('#interval-toggle').val()
-            if ($('#interval-toggle').val() == 0) {
-                $('#interval').selectmenu('index', 3);
-            }
-            else {
-                $('#interval-toggle').val(inter_val - 1);
-            }
-        });
-
-    function revert_state(state) {
-        d1_sel.selectmenu('index', state.d1);
-        d1_validate($('#d1'));
-        d2_sel.selectmenu('index', state.d2);
-        d2_validate($('#d2'));
-        d3_sel.selectmenu('index', state.d3);
-        $('#end-input').val(state.end);
-        $('#start-input').val(state.start);
-        $('#interval').selectmenu('index', state.interv);
-        $('#sched_interval').selectmenu('index', state.sched_interv);
-        // Trigger those on change events what whatttt
-        $('#interval').change();
-        $('#sched_interval').change();
-        $("#reportName-input").val(state.name);
-        if (state.email) {
-            $('#email-input-checkbox').attr('checked');
-        }
-        else {
-            $('#email-input-checkbox').removeAttr('checked');
-        }
-    }
-
-    function get_form_state(d1_sel, d2_sel, d3_sel) {
-        return build_state( sel_state(d1_sel),
-                sel_state(d2_sel),
-                sel_state(d3_sel),
-                sel_state($('#interval')),
-                sel_state($('#sched_interval')),
-                $('#end-input').val(),
-                $('#start-input').val(),
-                $('#reportName-input').val(),
-                $('#email-input-checkbox')
-                );
-    }
-    function build_state(d1, d2, d3, interv, sched_interv, end, start, name, email) {
-        return {
-            d1: d1,
-            d2: d2,
-            d3: d3,
-            interv: interv,
-            sched_interv: sched_interv,
-            end: end,
-            start: start,
-            name: name,
-            email:email.is(':checked'),
-        };
-    }
-    function sel_state(obj) {
-        return obj.selectmenu('index');
-    }
-
-
-
-
-
-
-    function obj_equals(x, y) {
-        for(p in y) {
-            if(typeof(x[p])=='undefined') {return false;}
-        }
-        for(p in y) {
-            if (y[p]) {
-                switch(typeof(y[p])) {
-                    case 'object':
-                        if (!y[p].equals(x[p])) { return false }; break;
-                    case 'function':
-                        if (typeof(x[p])=='undefined' || (p != 'equals' && y[p].toString() != x[p].toString())) { return false; }; break;
-                    default:
-                        if (y[p] != x[p]) { return false; }
-                }
-            }
-            else {
-                if (x[p]) {
-                    return false;
-                }
-            }
-        }
-        for(p in x){
-            if(typeof(y[p])=='undefined') {return false;}
-        }
-        return true;
-    }
-
-
+    var ONE_DAY = 1000*60*60*24
     /* set up the js for a ReportForm */
     function set_up_form(prefix) {
         // based on d1's selection, modify options for d2 and d3 
@@ -352,6 +130,55 @@
                     e.preventDefault();
                     d2_validate(prefix);
                 });
+
+        // set date fields based on selected interval
+        $('#id_' + prefix + '-interval')
+            .change(function(e) {
+                if(val != 'custom') {
+                    var val = $(this).val();
+                    // date initialized as today
+                    var date = new Date();
+                    switch (val) {
+                        case 'yesterday':
+                            date.setTime(date.getTime() - ONE_DAY);
+                            var start = date.format("m/dd/yyyy");
+                            var end = start;
+                            break;
+                        case '7days':
+                            var end = date.format("m/dd/yyyy");
+                            date.setTime(date.getTime() - (7 * ONE_DAY));
+                            var start= date.format("m/dd/yyyy");
+                            break;
+                        case 'lmonth':
+                            var this_mo = date.getMonth();
+                            while (date.getMonth() == this_mo) {
+                                date.setTime(date.getTime() - ONE_DAY);
+                            }
+                            var end = date.format("m/dd/yyyy");
+                            date.setDate(1);
+                            var start = date.format("m/dd/yyyy");
+                            break;
+                    }
+                    $('#id_' + prefix + '-start').val(start);
+                    $('#id_' + prefix + '-end').val(end);
+                }
+            }).change();
+
+        // change interval to custom if user enters anything in a date field
+        $('.date')
+            .change(function(e) {
+                $('#id_' + prefix + '-interval').val('custom');
+                $('#id_' + prefix + '-interval').trigger("liszt:updated");
+            });
+
+        // change help text for scheduled interval
+        $('#id_' + prefix + '-sched_interval')
+            .change(function(e) {
+                // hide all shceduled helps
+                $('#id_' + prefix + '-schedule-help').hide();
+                // show help for value
+                $('#id_' + prefix + '-schedule-help-' + $(this).val()).show();
+            }).change();
 
         // Validate report forms
         var validator = $('#' + prefix + '-reportEditForm').validate({
@@ -508,12 +335,6 @@
         });
     }
 
-
-    $("#sched_interval")
-        .change(function(e) {
-            $('.schedule-help').hide();
-            $('.schedule-help.'+$(this).val()).show();
-        }).change();
-
     window.ReportIndexController = ReportIndexController;
+
 })(window.jQuery, window._);

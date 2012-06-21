@@ -86,19 +86,22 @@ class ReportForm(forms.ModelForm):
         """
         Reports must be limited to three months
         """
-        start = self.initial.get('start', None)
-        end = self.initial.get('end', None)
+        start = self.cleaned_data.get('start', None)
+        end = self.cleaned_data.get('end', None)
         if start and end:
             days = (end - start).days
             if days > 92:
                 raise forms.ValidationError('Please limit reports to three months.')
-        logging.info('START')
-        logging.info(start)
+        else:
+            raise forms.ValidationError('Start and end dates are required.')
         return start
 
     def clean_days(self):
-        start = self.initial.get('start', None)
-        end = self.initial.get('end', None)
+        start = datetime.strptime(self.data.get(self.prefix + '-start', None),
+                '%m/%d/%Y').date()
+        end = self.cleaned_data.get('end', None)
+        if not start or not end:
+            raise forms.ValidationError('Start and end dates are required.')
 
         return (end - start).days
 

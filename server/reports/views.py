@@ -63,7 +63,7 @@ class EditReportHandler(RequestHandler):
         prefix = report_key or 'new'
 
         # TODO: refactor reports query managers and move there
-        report = db.get(report_key)
+        report = db.get(report_key) if report_key else None
 
         report_form = ReportForm(self.request.POST,
                                  instance=report,

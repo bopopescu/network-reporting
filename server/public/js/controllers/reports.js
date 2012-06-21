@@ -67,7 +67,7 @@
             $('#interval').selectmenu('disable');
             $('#start-input').xdatepicker('disable');
             $('#end-input').xdatepicker('disable');
-            $('#reportCreateForm-submit').button({label: 'Save As'});
+            $('#reportEditForm-submit').button({label: 'Save As'});
             $('#sched_interval').selectmenu('index', 0).change();
             $('#reportForm-container').dialog({width:750});
         });
@@ -95,32 +95,16 @@
 
                         // Set up d1 selection for creating new scheduled reports
                         // based on d1's selection, modify options for d2 and d3 
-                        $('#id_new-d1').change(
-                                function(e) {
-                                    // TODO error?
-                                    if ($(this).val() != '') {
-                                        $('#d1Error').hide();
-                                    }
-                                    e.preventDefault();
-                                    d1_validate('new');
-                                    d2_validate('new');
-                                }).change();
+                        set_up_form('new');
 
-                        // Set up d2 selection for creating new scheduled reports
-                        // based on d2's selection, modify options for d3 
-                        $('#id_new-d2').change(
-                                function(e) {
-                                    e.preventDefault();
-                                    d2_validate('new');
-                                });
                         // Create new report
-                        $('#reportCreateForm-run')
+                        $('#new-reportEditForm-run')
                             .button({label: 'Run',
                                 icons: {secondary: 'ui-icon-circle-triangle-e' }})
                             .click(function(e) {
                                 e.preventDefault();
-                                if (rep_validate($('#reportCreateForm'))) {
-                                    $('#reportCreateForm').submit();
+                                if (rep_validate($('#new-reportEditForm'))) {
+                                    $('#new-reportEditForm').submit();
                                 }
                                 else {
                                     $('#formError').show();
@@ -128,7 +112,7 @@
                             });
 
                         // Cancel new report form
-                        $('#reportCreateForm-cancel').button()
+                        $('#new-reportEditForm-cancel').button()
                             .click(function(e) {
                                 e.preventDefault();
                                 $('#reports-reportAddForm').slideUp('fast');
@@ -154,13 +138,13 @@
                                 .click(function(e) {
                                     e.preventDefault();
                                     $('#' + key + '-saveAs').val('False');
-                                    $('#' + key + '-reportCreateForm-save').button({label: 'Save'});
+                                    $('#' + key + '-reportEditForm-save').button({label: 'Save'});
                                     var report_form = $('#' + key + '-reportForm-container');
                                     report_form.dialog({width:750});
                                 });
 
                             // close dialog
-                            $('#' + key + '-reportCreateForm-cancel')
+                            $('#' + key + '-reportEditForm-cancel')
                                 .click(function(e) {
                                     e.preventDefault();
                                     $('.dim-selectmenu').selectmenu('enable');
@@ -177,79 +161,15 @@
                                 .change(function(e) {
                                     e.preventDefault();
                                     if (!obj_equals(form_state, get_form_state())) {
-                                        $('#' + key + 'reportCreateForm-save').button({label:'Save and Run'});
+                                        $('#' + key + 'reportEditForm-save').button({label:'Save and Run'});
                                     }
                                     else {
-                                        $('#' + key + '-reportCreateForm-save').button({label:'Save'});
+                                        $('#' + key + '-reportEditForm-save').button({label:'Save'});
                                     }
                                 }).change();
 
-                            // TODO combined this with new form
-                            //
-                            // based on d1's selection, modify options for d2 and d3 
-                            $('#id_' + key + '-d1').change(
-                                    function(e) {
-                                        // TODO error?
-                                        if ($(this).val() != '') {
-                                            $('#d1Error').hide();
-                                        }
-                                        e.preventDefault();
-                                        d1_validate(key);
-                                        d2_validate(key);
-                                    }).change();
+                            set_up_form(key);
 
-                            // based on d2's selection, modify options for d3 
-                            $('#id_' + key + '-d2').change(
-                                    function(e) {
-                                        e.preventDefault();
-                                        d2_validate(key);
-                                    });
-
-                            // Validate report forms
-                            var validator = $('#' + key + '-reportEditForm').validate({
-                                errorPlacement: function(error, element) {
-                                                    element.parents('div').not(':hidden').first().append(error);
-                                                },
-                                submitHandler: function(form) {
-                                                   $(form).ajaxSubmit({
-                                                       data: {ajax: true},
-                                                       dataType: 'json',
-                                                       success: function(jsonData, statusText, xhr, $form) {
-                                                           window.location = jsonData.redirect;
-                                                           if(jsonData.success) {
-                                                               $('#' + key + '-reportCreateForm-save').button({
-                                                                   label: 'Success...',
-                                                                   disabled: true
-                                                               });
-                                                           } else {
-                                                               console.log(jsonData.errors);
-                                                               validator.showErrors(jsonData.errors);
-                                                               $('#' + key + '-reportCreateForm-save').button({
-                                                                   label: 'Try Again',
-                                                                   disabled: false
-                                                               });
-                                                           }
-                                                       },
-                                                       error: function(jqXHR, textStatus, errorThrown) {
-                                                           $('#' + key + '-reportCreateForm-save').button({
-                                                               label: 'Try Again',
-                                                               disabled: false
-                                                               });
-                                                           },
-                                                       beforeSubmit: function(arr, $form, options) {
-                                                           $('#' + key + '-reportCreateForm-save').button({label: 'Submitting...',
-                                                           disabled: true});
-                                                           }
-                                                    });
-                                               }
-                            });
-
-                            // Submit form
-                            $('#' + key + '-reportCreateForm-save')
-                                .click(function(e) {
-                                    e.preventDefault();
-                                    $('#' + key + '-reportEditForm').submit();
-                                });
                         });
 
                         /* Delete report */
@@ -412,6 +332,73 @@
     }
 
 
+    /* set up the js for a ReportForm */
+    function set_up_form(prefix) {
+        // based on d1's selection, modify options for d2 and d3 
+        $('#id_' + prefix + '-d1').change(
+                function(e) {
+                    // TODO error?
+                    if ($(this).val() != '') {
+                        $('#d1Error').hide();
+                    }
+                    e.preventDefault();
+                    d1_validate(prefix);
+                    d2_validate(prefix);
+                }).change();
+
+        // based on d2's selection, modify options for d3 
+        $('#id_' + prefix + '-d2').change(
+                function(e) {
+                    e.preventDefault();
+                    d2_validate(prefix);
+                });
+
+        // Validate report forms
+        var validator = $('#' + prefix + '-reportEditForm').validate({
+            errorPlacement: function(error, element) {
+                                element.parents('div').not(':hidden').first().append(error);
+                            },
+            submitHandler: function(form) {
+                               $(form).ajaxSubmit({
+                                   data: {ajax: true},
+                                   dataType: 'json',
+                                   success: function(jsonData, statusText, xhr, $form) {
+                                       window.location = jsonData.redirect;
+                                       if(jsonData.success) {
+                                           $('#' + prefix + '-reportEditForm-save').button({
+                                               label: 'Success...',
+                                               disabled: true
+                                           });
+                                       } else {
+                                           console.log(jsonData.errors);
+                                           validator.showErrors(jsonData.errors);
+                                           $('#' + prefix + '-reportEditForm-save').button({
+                                               label: 'Try Again',
+                                               disabled: false
+                                           });
+                                       }
+                                   },
+                                   error: function(jqXHR, textStatus, errorThrown) {
+                                       $('#' + prefix + '-reportEditForm-save').button({
+                                           label: 'Try Again',
+                                           disabled: false
+                                           });
+                                       },
+                                   beforeSubmit: function(arr, $form, options) {
+                                       $('#' + prefix + '-reportEditForm-save').button({label: 'Submitting...',
+                                       disabled: true});
+                                       }
+                                });
+                           }
+        });
+
+        // Submit form
+        $('#' + prefix + '-reportEditForm-save')
+            .click(function(e) {
+                e.preventDefault();
+                $('#' + prefix + '-reportEditForm').submit();
+            });
+    }
 
     /* Based on d1's selection change what options are shown for d2 and d3 */
     function d1_validate(prefix) {

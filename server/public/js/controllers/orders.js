@@ -359,7 +359,12 @@
                         + '&endpoint=direct';
                 };
 
+                adunit.parse = function (response) {
+                    return response;
+                }
+
                 adunit.bind('change', function(current_adunit){
+                    console.log(current_adunit.get('id'));
                     renderAdUnit(current_adunit);
                 });
 

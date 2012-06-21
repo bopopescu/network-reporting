@@ -17,33 +17,36 @@
     <tbody id="appData-totals">
       <tr>
         <th class="dataTable-name big">Totals</th>
-        <td class="dataTable-data numeric"><b>0</b></td>
-        <td class="dataTable-data numeric"><b>0</b></td>
-        <td class="dataTable-data numeric"><b>0.00%</b></td>
-        <td class="dataTable-data numeric"><b>0</b></td>
-        <td class="dataTable-data numeric"><b>0.00%</b></td>
-        <td class="dataTable-data numeric"><b>0</b></td>
+        <td class="dataTable-data numeric"><strong><%= total_stats.req %></strong></td>
+        <td class="dataTable-data numeric"><strong><%= total_stats.imp %></strong></td>
+        <td class="dataTable-data numeric"><strong><%= total_stats.fill_rate %></strong></td>
+        <td class="dataTable-data numeric"><strong><%= total_stats.clk %></strong></td>
+        <td class="dataTable-data numeric"><strong><%= total_stats.ctr %></strong></td>
+        <td class="dataTable-data numeric"><strong><%= total_stats.conv %></strong></td>
       </tr>
     </tbody>
     
-    <tbody id="appData-individual">
+    <tbody id="appData-individual" class="hidden">
       <% _.each(daily_stats, function (day) { %> 
       <tr class="appData-details-inner hide">
-        <th class="dataTable-name"> (get) </th>
+        <th class="dataTable-name"> <%= day.date %> </th>
         <td class="dataTable-data numeric"> <%= day.req %> </td>
         <td class="dataTable-data numeric"> <%= day.imp %> </td>
-        <td class="dataTable-data numeric"> (calc) </td>
+        <td class="dataTable-data numeric"> <%= day.fill_rate %> </td>
         <td class="dataTable-data numeric"> <%= day.clk %> </td>
-        <td class="dataTable-data numeric"> (calc) </td>
-        <td class="dataTable-data numeric"> (get) </td>
+        <td class="dataTable-data numeric"> <%= day.ctr %> </td>
+        <td class="dataTable-data numeric"> <%= day.conv %> </td>
       </tr>
       <% }); %>
     </tbody>
   </table>
-
-  <a class="btn" href="#">
-    <i class="icon-eye-open"></i>
-    Show details
+  
+  <a id="daily-totals-toggle" class="btn" href="#">
+    <i class="icon-eye-open toggle-on-click"></i>
+    <i class="icon-eye-close toggle-on-click hidden"></i>
+    <span class="toggle-on-click">Show</span>
+    <span class="toggle-on-click hidden">Hide</span>
+    Daily Totals
   </a>
   
 </div>

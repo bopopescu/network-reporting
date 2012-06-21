@@ -4,7 +4,7 @@
 
 {% block pageTitle %}
   <h1>
-    <a href="{% url publisher_app_show app_key=adunit.app_key.key %}">
+    <a href="{% url publisher_app_show app_key=adunit.app.key %}">
       AdUnits
     </a>
     / {{ adunit.name }}
@@ -12,17 +12,13 @@
 {% endblock pageTitle %}
 
 
-{% block dateButtons %}{% endblock dateButtons %}
-
 {% block titleBarRight %}
-
   {% include "partials/datecontrols.html" %}
-  
 {% endblock titleBarRight %}
   
 {% block content %}
 
-  {% if not adunit.adgroups %}
+  {% if not adgroups %}
     <div class="alert-message block-message">
       There are no ad sources targeting this ad unit.
       To show ads here, set up a new ad campaign or
@@ -31,7 +27,7 @@
     </div>
   {% endif %}
   
-  <section id="dashboard-adunitEditForm" class="hidden">
+  <div id="dashboard-adunitEditForm" class="hidden">
     <div>
       <a name="adunitForm" class="hidden">anchor</a>
       <form action="{% url publisher_adunit_update_ajax %}"
@@ -60,53 +56,34 @@
         </fieldset>
       </form>
     </div>
-  </section>
+  </div>
 
   {% chart_placeholder start_date end_date %}
+
+  <br />
   
-  <section id="dashboard-apps">
-    <div class="right">
-      <a class="btn" id="advertisers-testAdServer" href="#">
-        {% button_icon "tasks" %}
-        Test Ad
-      </a>
-      <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
-        {% button_icon "pencil" %}
-        Edit ad unit settings
-      </a>      
+  <div id="app-ad-sources">
+    <div class="clearfix">
+      <h2 class="left">Ad sources for {{adunit.name}}</h2>
+      <div class="right">
+        <a class="btn" id="advertisers-testAdServer" href="#">
+          {% button_icon "tasks" %}
+          Test Ad
+        </a>
+        <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
+          {% button_icon "pencil" %}
+          Edit ad unit settings
+        </a>      
+      </div>
     </div>
 
-    <div id="adserverTest" style="display:none;">
-      <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
-      </iframe>
-    </div>
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
 
-    {% inventory_table adunit.app %}
-    
-  </section>
-
-  
-  <section>
-    <h2>Ad sources targeting this adunit</h2>
-    <br />
-    <a class="btn" href="#">
-      {% button_icon "eye-open" %}
-      Show details
-    </a>
-    <div id="daily_counts"></div>
-  </section>
-  
-  
-  <section>
+  <div id="daily-counts">
     <h2>Daily Counts</h2>
-    <br />
-    <a class="btn" href="#">
-      {% button_icon "eye-open" %}
-      Show details
-    </a>
-    <div id="daily_counts"></div>
-  </section>
-
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
   
   <form method="post"
         id="dashboard-deleteForm"
@@ -126,6 +103,7 @@
 
 {% block extraScripts %}
   {% include_template "chart" %}
+  {% include_template "daily-counts" %}
   
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
@@ -134,8 +112,8 @@
     $(function() {
         DashboardController.initializeAdunitDetail({
             start_date: {{ start_date|js_date }},
-            app_key: "{{app.key}}",
-            adunit_key: "{{adunit.key}}"
+            app_key: "{{ adunit.app.key }}",
+            adunit_key: "{{ adunit.key }}"
         });
     });
   </script>

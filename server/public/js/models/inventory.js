@@ -126,6 +126,15 @@ var mopub = mopub || {};
      * Helpful utilities for fetching and formatting stats.
      */
     var StatsMixin = {
+
+        /*
+         * `get_stat`
+         * Gets the raw stat value from a model. Calculates
+         * derivative (fill_rate/ctr/cpm/conv_rate) stats from
+         * other raw stats. 
+         * 
+         * Works for models only.
+         */
         get_stat: function(stat) {
             switch(stat) {
                 case 'ctr':
@@ -156,6 +165,15 @@ var mopub = mopub || {};
             return format_stat(stat, this.get_stat(stat));
         },
 
+        /*
+         * `get_formatted_stat_sum`
+         * Returns the summed (or averaged, for some derivative stats)
+         * stat total, and formats it accordingly.
+         * 
+         * e.g. get_formatted_stat_sum('rev')  // "$1,402.53"
+         * 
+         * Works for both models and collections.
+         */
         get_formatted_stat_sum: function(stat) {
             var sum = _.reduce(this, function(memo, num){
                 return memo + this.get(stat);
@@ -164,7 +182,59 @@ var mopub = mopub || {};
             return format_stat(stat, sum);
         },
 
-        get_formatted_stat_series: function(stat) {
+        /*
+         * `get_formatted_daily_stats`
+         * Returns an object with formatted stats for each day
+         * in daily_stats. So, if daily_stats contains 14 days
+         * of data, this will return an object like this:
+         * 
+         * {
+         *    clk: "0",
+         *    conv: "0",
+         *    conv_rate: "0.00%",
+         *    cpm: "$0.00",
+         *    ctr: "0.00%",
+         *    date: "Thursday, Jun 7, 2012",
+         *    fill_rate: "0.00%",
+         *    imp: "0",
+         *    req: "0",
+         *    rev: "$0.00",
+         * }
+         * 
+         * for each of the 14 days.
+         * 
+         * Works for models only (not for collections).
+         */
+        get_formatted_daily_stats: function () {
+            return _.map(this.get('daily_stats'), function (day) {
+
+                // Calculate derivative values
+                day.fill_rate = calculate_fill_rate(day.req, day.imp);
+                day.ctr = calculate_ctr(day.imp, day.clk);
+                day.cpm = calculate_cpm(day.imp, day.rev);
+                day.conv = day.conv || 0;
+                day.conv_rate = calculate_conv_rate(day.conv, day.clk);
+                
+                // Format each of them
+                _.each(_.keys(day), function (key) {
+                    if (key !== 'date') {
+                        day[key] = format_stat(key, day[key]);
+                    } else {
+                        day[key] = moment(day[key], "YYYY-MM-DD").format("dddd, MMM D, YYYY");
+                    }
+                });
+                
+                return day;
+            });
+        },
+
+        /*
+         * `get_formatted_stat_series`
+         * For each model in a collection, and for each day in each model's
+         * daily_stats, returns the raw value for the stat. Useful for
+         * putting together graphs.
+         */
+        get_full_stat_series: function(stat) {
 
             var stat_series = this.map(function(model) {
                 var daily_stats = model.get('daily_stats');
@@ -250,7 +320,9 @@ var mopub = mopub || {};
                 params.data = params.data ? {model : params.data} : {};
             }
 
-            // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
+            // For older servers, emulate HTTP by mimicking the HTTP method 
+            // with `_method`
+
             // And an `X-HTTP-Method-Override` header.
             if (Backbone.emulateHTTP) {
                 if (type === 'PUT' || type === 'DELETE') {
@@ -642,7 +714,8 @@ var mopub = mopub || {};
                 + stats_endpoint;
         },
         parse: function(response) {
-            return response;
+            console.log(response[0]);
+            return response[0];
         }
     });
 
@@ -931,6 +1004,8 @@ var mopub = mopub || {};
     window.Campaign = Campaign;
     window.Campaigns = Campaigns;
     window.ModelHelpers = ModelHelpers;
+
+    window.StatsMixin = StatsMixin;
 
     window.Order = Order;
     window.LineItem = LineItem;

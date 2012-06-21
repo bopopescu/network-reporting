@@ -59,6 +59,8 @@ class AbstractStatsFetcher(object):
         return stat_totals
 
     def format_daily_stats(self, all_stats):
+        logging.warn('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+        logging.warn(all_stats)
         stats_dict = {
             'sum': {
                 'rev': sum([stats.revenue for stats in all_stats]),
@@ -69,8 +71,9 @@ class AbstractStatsFetcher(object):
             'daily_stats': [{'rev': stats.revenue,
                              'imp': stats.impression_count,
                              'clk': stats.click_count,
-                             'req': stats.request_count,} for
-                            stats in all_stats],
+                             'req': stats.request_count,
+                             'date': stats.date.strftime("%Y-%m-%d")} \
+                            for stats in all_stats],
         }
         return stats_dict
 

@@ -252,12 +252,6 @@ class AdUnitDetailHandler(RequestHandler):
         if adunit.account.key() != self.account.key():
             raise Http404
 
-        # HACK: the inventory table expects to take a list of apps,
-        # where each app has as an attribute a list of its adunits.
-        # set that attribute manually so the inventory table works
-        app = adunit.app
-        app.adunits = [adunit]
-
         # get the form to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
@@ -265,7 +259,6 @@ class AdUnitDetailHandler(RequestHandler):
             'site': adunit,
             'adunit': adunit,
             'adunit_form_fragment': adunit_form_fragment,
-            'app': app
         }
 
 

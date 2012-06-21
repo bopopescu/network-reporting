@@ -51,6 +51,21 @@ def order_row(order, show_status=True):
         'show_status': show_status,
     }
 
+@register.inclusion_tag("common/partials/app_row.html")
+def app_row(app, singular=False):
+    return {
+        'app': app,
+        'singular': singular
+    }
+
+    
+@register.inclusion_tag("common/partials/adunit_row.html")
+def adunit_row(adunit, include_icon_placeholder=True):
+    return {
+        'adunit': adunit,
+        'include_icon_placeholder': include_icon_placeholder
+    }
+
 
 @register.inclusion_tag("common/partials/line_item_table.html")
 def line_item_table(line_items, show_status=True):

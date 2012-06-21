@@ -19,7 +19,7 @@
     {% if not app.deleted %}
       <tbody class="app {% cycle "alt" "primary" %}">
 
-        {% app_row app singluar %}
+        {% app_row app singular %}
         
         {% for adunit in app.adunits %}
           {% if not adunit.deleted %}

@@ -1,0 +1,26 @@
+<tr class="main app-row" id="app-{{ app.key }}">
+  <td class="icon">
+    <div>
+      <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" />
+    </div>
+  </td>
+  <td class="name">
+    {% if singular %}
+      Totals
+    {% else %}
+      <a href="{% url publisher_app_show app_key=app.key %}">
+        {{ app.name }}
+      </a>
+      <span class="muted unbold">({{ app.type }})</span>
+    {% endif %}
+    <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif" />
+  </td>
+  <td></td>
+  {# these stats will be loaded over ajax #}
+  <td class="req stat">--</td>
+  <td class="imp stat">--</td>
+  <td class="fill_rate stat">--</td>
+  <td class="clk stat">--</td>
+  <td class="ctr stat">--</td>
+  <td class="conv stat">--</td>
+</tr>

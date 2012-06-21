@@ -4,7 +4,7 @@
 
 {% block pageTitle %}
   <h1>
-    <a href="{% url publisher_app_show app_key=adunit.app_key.key %}">
+    <a href="{% url publisher_app_show app_key=adunit.app.key %}">
       AdUnits
     </a>
     / {{ adunit.name }}
@@ -12,17 +12,13 @@
 {% endblock pageTitle %}
 
 
-{% block dateButtons %}{% endblock dateButtons %}
-
 {% block titleBarRight %}
-
   {% include "partials/datecontrols.html" %}
-  
 {% endblock titleBarRight %}
   
 {% block content %}
 
-  {% if not adunit.adgroups %}
+  {% if not adgroups %}
     <div class="alert-message block-message">
       There are no ad sources targeting this ad unit.
       To show ads here, set up a new ad campaign or
@@ -64,47 +60,21 @@
 
   {% chart_placeholder start_date end_date %}
 
-  <div id="dashboard-apps">
-    <h2> Adunit Stats </h2>
-
-    <div id="adserverTest" style="display:none;">
-      <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
-      </iframe>
-    </div>
-
-    <table class="inventory_table">
-      <thead>
-        <tr>
-          <td class="name" style="width:350px;"></td>
-          <td class="adid"></td>
-          <td class="stat">Requests</td>
-          <td class="stat">Impressions</td>
-          <td class="stat">Fill Rate</td>
-          <td class="stat">Clicks</td>
-          <td class="stat">CTR</td>
-          <td class="stat">Conv</td>
-        </tr>
-      </thead>
-      <tbody class="app alt">
-        {% adunit_row adunit False %}
-      </tbody>
-    </table>
-    
-  </div>
-
   <br />
-
+  
   <div id="app-ad-sources">
-    <h2>Ad sources for {{adunit.name}}</h2>
-    <div class="right">
-      <a class="btn" id="advertisers-testAdServer" href="#">
-        {% button_icon "tasks" %}
-        Test Ad
-      </a>
-      <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
-        {% button_icon "pencil" %}
-        Edit ad unit settings
-      </a>      
+    <div class="clearfix">
+      <h2 class="left">Ad sources for {{adunit.name}}</h2>
+      <div class="right">
+        <a class="btn" id="advertisers-testAdServer" href="#">
+          {% button_icon "tasks" %}
+          Test Ad
+        </a>
+        <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
+          {% button_icon "pencil" %}
+          Edit ad unit settings
+        </a>      
+      </div>
     </div>
 
     <img src="/images/loading2.gif" style='margin-left:450px' />
@@ -142,8 +112,8 @@
     $(function() {
         DashboardController.initializeAdunitDetail({
             start_date: {{ start_date|js_date }},
-            app_key: "{{app.key}}",
-            adunit_key: "{{adunit.key}}"
+            app_key: "{{ adunit.app.key }}",
+            adunit_key: "{{ adunit.key }}"
         });
     });
   </script>

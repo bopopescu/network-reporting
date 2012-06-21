@@ -783,20 +783,11 @@ var mopub = mopub || {};
             adunit.app_id = bootstrapping_data.app_key;
             
             adunit.bind('change', function () {
-                console.log(adunit);
-                window.badunit = adunit;
 
                 // fuck you
                 var adunits = new AdUnitCollection();                
                 adunits.add(adunit);
                 _.extend(AdUnitCollection.prototype, StatsMixin);
-
-                // Render the adunit stats
-                var adunitView = new AdUnitView({ 
-                    model: adunit, 
-                    el: '#dashboard-apps' 
-                });
-                adunitView.renderInline();
 
                 // Render the chart
                 var chart_view = new CollectionChartView({

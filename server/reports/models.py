@@ -207,6 +207,16 @@ class ScheduledReport(db.Model):
         else:
             return self.most_recent.status
 
+    def __init__(self, *args, **kwargs):
+        if 'next_sched_date' not in kwargs and 'sched_interval' in kwargs:
+            sched_interval = kwargs.get('sched_interval')
+            if sched_interval != 'none':
+                kwargs['next_sched_date'] =  date_magic.get_next_day(sched_interval)
+            else:
+                kwargs['next_sched_date'] = datetime.now().date()
+
+        super(ScheduledReport, self).__init__(*args, **kwargs)
+
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')

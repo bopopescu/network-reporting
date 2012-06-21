@@ -72,17 +72,18 @@ class EditReportHandler(RequestHandler):
         logging.info(report_form.__dict__)
 
         if report_form.is_valid():
-            # TODO: move coercing form to model from query manager to form
-            report_form.save()
+            scheduled_report = report_form.save()
+            manager = ReportQueryManager(self.account)
+            manager.add_report(scheduled_report)
 
             if report_key:
                 self.request.flash['report_edit'] = "The requested edit requires " \
                         "the report to be re-run.  The request has been submitted " \
                         "and you will be notified via email when it has completed"
             else:
-                self.request.flash['report_success'] = 'Your report has been " \
+                self.request.flash['report_success'] = "Your report has been " \
                         "successfully submitted, you will be notified via email " \
-                        "when it has completed!'
+                        "when it has completed!"
 
             return JSONResponse({
                 'success': True,

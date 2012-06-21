@@ -42,10 +42,11 @@ class ReportIndexHandler(RequestHandler):
             report.form = ReportForm(instance=report,
                                      prefix=str(report.key()))
 
-        reports = sorted(reports, key=lambda report: report.completed_at if isinstance(report,
-            Report) else report.last_run)
+        reports = sorted(reports, key=lambda report: report.completed_at if
+                isinstance(report, Report) else report.last_run)
 
-        new_report_form = ReportForm(initial={'recipients': self.request.user.email},
+        new_report_form = ReportForm(initial={'recipients':
+                                        self.request.user.email},
                                      prefix='new')
         return render_to_response(self.request, 'reports/reports_index.html',
                                  {'reports': reports,

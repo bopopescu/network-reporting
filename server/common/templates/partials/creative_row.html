@@ -8,8 +8,14 @@
     </td>
     <td class="name">
         {{ creative.name }}
-        <a class="btn" href="#" id="creative_preview_button">Preview</button>
-        <a class="btn edit_creative_button">Edit</button>
+        <button class="btn btn-small" href="#" id="creative_preview_button">
+          <i class="icon-picture"></i>
+          Preview
+        </button>
+        <button class="btn edit_creative_button">
+          <i class="icon-pencil"></i>
+          Edit
+        </button>
         <form action="{% url advertiser_creative_form_edit creative.key %}" class="edit_creative_form hidden" enctype="multipart/form-data" method="post">
             {% creative_form creative %}
             <button class="btn right submit">Continue</button>

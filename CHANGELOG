@@ -1,11 +1,19 @@
+# Deployed Thursday, June 21, 2012 at 10:33PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-140
+### Bugs Fixed: []
+### Included Commits: 
+ * 46651a8 moved updating budget to adgroup put
+ * 1227c60 Deployed without finding any bug fixes.
+ 
 # Deployed Thursday, June 21, 2012 at 08:22PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-139
 ### Bugs Fixed: []
-### Included Commits: 
- * f624b3e added logging for budget fetch where campaign has no adgroup
- * 321b22f Deployed without finding any bug fixes.
- 
+### Included Commits:
+* f624b3e added logging for budget fetch where campaign has no adgroup
+* 321b22f Deployed without finding any bug fixes.
+
 # Deployed Thursday, June 21, 2012 at 07:20AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-138

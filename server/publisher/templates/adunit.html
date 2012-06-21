@@ -31,7 +31,7 @@
     </div>
   {% endif %}
   
-  <section id="dashboard-adunitEditForm" class="hidden">
+  <div id="dashboard-adunitEditForm" class="hidden">
     <div>
       <a name="adunitForm" class="hidden">anchor</a>
       <form action="{% url publisher_adunit_update_ajax %}"
@@ -60,11 +60,42 @@
         </fieldset>
       </form>
     </div>
-  </section>
+  </div>
 
   {% chart_placeholder start_date end_date %}
-  
-  <section id="dashboard-apps">
+
+  <div id="dashboard-apps">
+    <h2> Adunit Stats </h2>
+
+    <div id="adserverTest" style="display:none;">
+      <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
+      </iframe>
+    </div>
+
+    <table class="inventory_table">
+      <thead>
+        <tr>
+          <td class="name" style="width:350px;"></td>
+          <td class="adid"></td>
+          <td class="stat">Requests</td>
+          <td class="stat">Impressions</td>
+          <td class="stat">Fill Rate</td>
+          <td class="stat">Clicks</td>
+          <td class="stat">CTR</td>
+          <td class="stat">Conv</td>
+        </tr>
+      </thead>
+      <tbody class="app alt">
+        {% adunit_row adunit False %}
+      </tbody>
+    </table>
+    
+  </div>
+
+  <br />
+
+  <div id="app-ad-sources">
+    <h2>Ad sources for {{adunit.name}}</h2>
     <div class="right">
       <a class="btn" id="advertisers-testAdServer" href="#">
         {% button_icon "tasks" %}
@@ -76,37 +107,13 @@
       </a>      
     </div>
 
-    <div id="adserverTest" style="display:none;">
-      <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
-      </iframe>
-    </div>
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
 
-    {% inventory_table adunit.app %}
-    
-  </section>
-
-  
-  <section>
-    <h2>Ad sources targeting this adunit</h2>
-    <br />
-    <a class="btn" href="#">
-      {% button_icon "eye-open" %}
-      Show details
-    </a>
-    <div id="daily_counts"></div>
-  </section>
-  
-  
-  <section>
+  <div id="daily-counts">
     <h2>Daily Counts</h2>
-    <br />
-    <a class="btn" href="#">
-      {% button_icon "eye-open" %}
-      Show details
-    </a>
-    <div id="daily_counts"></div>
-  </section>
-
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
   
   <form method="post"
         id="dashboard-deleteForm"
@@ -126,6 +133,7 @@
 
 {% block extraScripts %}
   {% include_template "chart" %}
+  {% include_template "daily-counts" %}
   
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}

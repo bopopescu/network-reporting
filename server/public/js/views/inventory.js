@@ -333,6 +333,7 @@ var mopub = window.mopub || {};
             /*jslint maxlen: 200 */
             var current_model = this.model;
             var adunit_row = $('#adunit-' + this.model.id);
+            console.log(adunit_row);
             var metrics = [
                 'rev', 
                 'cpm', 

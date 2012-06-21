@@ -155,8 +155,6 @@ class AdUnitService(RequestHandler):
                 adunit_stats.update({'app_id': str(adunit['app_key'])})
                 adunit.update(adunit_stats)
 
-            if adunit_key:
-                return JSONResponse(response[0])
             else:
                 return JSONResponse(response)
             

@@ -714,7 +714,8 @@ var mopub = mopub || {};
                 + stats_endpoint;
         },
         parse: function(response) {
-            return response;
+            console.log(response[0]);
+            return response[0];
         }
     });
 
@@ -1003,6 +1004,8 @@ var mopub = mopub || {};
     window.Campaign = Campaign;
     window.Campaigns = Campaigns;
     window.ModelHelpers = ModelHelpers;
+
+    window.StatsMixin = StatsMixin;
 
     window.Order = Order;
     window.LineItem = LineItem;

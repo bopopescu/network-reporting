@@ -1,4 +1,5 @@
 {% load filters %}
+{% load elements %}
 
 <table class="inventory_table">
   <thead>
@@ -17,56 +18,14 @@
   {% for app in inventory %}
     {% if not app.deleted %}
       <tbody class="app {% cycle "alt" "primary" %}">
-        <tr class="main app-row" id="app-{{ app.key }}">
-          <td class="icon">
-            <div>
-              <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" />
-            </div>
-          </td>
-          <td class="name">
-            {% if singular %}
-              Totals
-            {% else %}
-              <a href="{% url publisher_app_show app_key=app.key %}">
-                {{ app.name }}
-              </a>
-              <span class="muted unbold">({{ app.type }})</span>
-            {% endif %}
-            <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif" />
-          </td>
-          <td></td>
-          {# these stats will be loaded over ajax #}
-          <td class="req stat">--</td>
-          <td class="imp stat">--</td>
-          <td class="fill_rate stat">--</td>
-          <td class="clk stat">--</td>
-          <td class="ctr stat">--</td>
-          <td class="conv stat">--</td>
-        </tr>
+
+        {% app_row app singluar %}
+        
         {% for adunit in app.adunits %}
           {% if not adunit.deleted %}
-            <tr class="sub adunit-row" id="adunit-{{ adunit.key }}">
-              <td class="icon"></td>
-              <td class="name">
-                <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">
-                  {{ adunit.name }}
-                </a>
-              </td>
-              <td>
-                {% comment %}
-                <span class="appData-id muted unbold hidden">
-                  AdUnit ID: {{ adunit.key }}
-                </span>
-                {% endcomment %}
-              </td>
-              {# these stats will be loaded over ajax #}
-              <td class="req stat">--</td>
-              <td class="imp stat">--</td>
-              <td class="fill_rate stat">--</td>
-              <td class="clk stat">--</td>
-              <td class="ctr stat">--</td>
-              <td class="conv stat">--</td>
-            </tr>
+            
+            {% adunit_row adunit %}
+            
           {% endif %}
         {% endfor %}
       </tbody>

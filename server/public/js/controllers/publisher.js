@@ -759,6 +759,11 @@ var mopub = mopub || {};
             initializeCommon();
             initializeDeleteForm();
             initializeEditAdunitForm();
+            
+            // This usually happens in the model. We're doing it here
+            // so as not to step on other people's feet. This eventually
+            // should be changed to enforce some consistency.
+            _.extend(AdUnit.prototype, StatsMixin);
 
             $('#advertisers-testAdServer').click(function(e) {
                 e.preventDefault();
@@ -773,29 +778,43 @@ var mopub = mopub || {};
                     .attr('src', $('#adserverTest-iFrame-src').text());
             });
 
+            var adunit = new AdUnit();
+            adunit.id = bootstrapping_data.adunit_key;
+            adunit.app_id = bootstrapping_data.app_key;
             
-            // Fetch the adunit and its app over ajax. We then use
-            // the app collection (which just has the one app) to fill
-            // in the chart.
-            var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
-            fetchAdUnitsFromAppKeys(bootstrapping_data.app_key);
+            adunit.bind('change', function () {
+                console.log(adunit);
+                window.badunit = adunit;
 
-            apps.bind('loaded', function(current_app) {
+                // fuck you
+                var adunits = new AdUnitCollection();                
+                adunits.add(adunit);
+                _.extend(AdUnitCollection.prototype, StatsMixin);
+
+                // Render the adunit stats
+                var adunitView = new AdUnitView({ 
+                    model: adunit, 
+                    el: '#dashboard-apps' 
+                });
+                adunitView.renderInline();
+
+                // Render the chart
                 var chart_view = new CollectionChartView({
-                    collection: apps,
+                    collection: adunits,
                     start_date: bootstrapping_data.start_date,
                     display_values: ['rev', 'imp', 'cpm' ] 
                 });
                 chart_view.render();
 
-                // Load the daily counts
+                // Render the daily counts
                 var daily_counts_view = new DailyCountsView({
-                    model: apps.models[0],
+                    model: adunit
                 });
                 daily_counts_view.render();
 
             });
 
+            adunit.fetch();            
 
         },
 

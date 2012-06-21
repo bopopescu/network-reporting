@@ -32,7 +32,7 @@ from simple_models import (SimpleAdGroup,
                            SimpleDummyFailureCreative,
                            SimpleDummySuccessCreative,
                            )
-
+from budget.memcache_budget import total_spent
 
 class NetworkStates:
     """
@@ -378,7 +378,6 @@ class AdGroup(db.Model):
     @property
     def pace(self):
         try:
-            logging.warn(self.budget_obj.last_slice_log.pace)
             return self.budget_obj.last_slice_log.pace
         except:
             return None

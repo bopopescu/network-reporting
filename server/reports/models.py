@@ -124,7 +124,7 @@ class ScheduledReport(db.Model):
     created_at = db.DateTimeProperty(auto_now_add=True)
 
     name = db.StringProperty()
-    saved = db.BooleanProperty()
+    saved = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
     last_run = db.DateTimeProperty()
     default = db.BooleanProperty(default=False)

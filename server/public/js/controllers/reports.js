@@ -72,12 +72,6 @@
                             $('#' + key + '-reportEditForm-cancel')
                                 .click(function(e) {
                                     e.preventDefault();
-                                    $('.dim-selectmenu').selectmenu('enable');
-                                    $('#interval').selectmenu('enable');
-                                    $('#start-input').xdatepicker('enable');
-                                    $('#end-input').xdatepicker('enable');
-                                    // TODO
-                                    //revert_state(form_state);
                                     $('#' + key + '-reportForm-container').dialog('close');
                                 });
 
@@ -115,10 +109,6 @@
         // based on d1's selection, modify options for d2 and d3 
         $('#id_' + prefix + '-d1').change(
                 function(e) {
-                    // TODO error?
-                    if ($(this).val() != '') {
-                        $('#d1Error').hide();
-                    }
                     e.preventDefault();
                     d1_validate(prefix);
                     d2_validate(prefix);

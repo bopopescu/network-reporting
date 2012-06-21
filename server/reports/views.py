@@ -13,7 +13,9 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import template, blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-from common.ragendja.template import render_to_response, render_to_string, JSONResponse
+from common.ragendja.template import render_to_response, \
+        render_to_string, \
+        JSONResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 from mail.mails import REPORT_FINISHED_SIMPLE
@@ -72,7 +74,11 @@ class EditReportHandler(RequestHandler):
         logging.info(report_form.__dict__)
 
         if report_form.is_valid():
-            scheduled_report = report_form.save()
+            scheduled_report = report_form.save(commit=False)
+            scheduled_report.account = self.account
+            # TODO: refactor query managers to handle put
+            scheduled_report.put()
+
             manager = ReportQueryManager(self.account)
             manager.add_report(scheduled_report)
 

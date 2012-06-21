@@ -259,15 +259,6 @@ class CampaignQueryManager(QueryManager):
         # Save campaigns.
         put_response = db.put(campaigns)
 
-        # Update campaign budgets asynchronously using a Task Queue.
-        campaign_keys = [campaign.key() for campaign in campaigns]
-        queue = taskqueue.Queue()
-        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
-                              method='POST',
-                              url='/fetch_api/budget/update_or_create'
-                              )
-        queue.add(task)
-
         # Clear cache
         adunits = []
         affected_account_keys = set()
@@ -489,6 +480,15 @@ class AdGroupQueryManager(QueryManager):
     @wraps_first_arg
     def put(self, adgroups):
         put_response = db.put(adgroups)
+
+        # Update campaign budgets asynchronously using a Task Queue.
+        campaign_keys = set([adgroup.campaign.key() for adgroup in adgroups])
+        queue = taskqueue.Queue()
+        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
+                              method='POST',
+                              url='/fetch_api/budget/update_or_create'
+                              )
+        queue.add(task)
 
         # Clear cache
         adunits = []

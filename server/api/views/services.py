@@ -338,8 +338,8 @@ class AdGroupService(RequestHandler):
             else:
                 summed_stats.cpm = adgroup.cpm
 
-            api_dict = dict(key = str(adgroup.campaign.key()),
-                            key_type = 'campaign',
+            api_dict = dict(key = str(adgroup.key()),
+                            key_type = 'adgroup',
                             )
             qs = urllib.urlencode(api_dict)
 

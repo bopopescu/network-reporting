@@ -577,7 +577,7 @@
 
             /* EDIT CREATIVE FORMS */
             // creative preview button
-            $('a#creative_preview_button').click(function(e) {
+            $('#creative_preview_button').click(function(e) {
                 e.preventDefault();
                 var modal = $(this).siblings('div#creative_preview');
                 var preview = modal.children('div.modal-body');

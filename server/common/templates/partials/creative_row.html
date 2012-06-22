@@ -2,36 +2,40 @@
 {% load filters %}
 
 <tr class="sub">
-    <td class="controls">
-        <input class="status_change_control" id="{{ creative.key }}" type="checkbox" />
-        {% status_icon creative %}
-    </td>
-    <td class="name">
-        {{ creative.name }}
-        <button class="btn btn-small" href="#" id="creative_preview_button">
-          <i class="icon-picture"></i>
-          Preview
-        </button>
-        <button class="btn edit_creative_button">
-          <i class="icon-pencil"></i>
-          Edit
-        </button>
-        <form action="{% url advertiser_creative_form_edit creative.key %}" class="edit_creative_form hidden" enctype="multipart/form-data" method="post">
-            {% creative_form creative %}
-            <button class="btn right submit">Continue</button>
-            <button class="btn right cancel">Cancel</button>
-            <div class="clear"></div>
-        </form>
-        {% creative_preview creative %}
-    </td>
-    <td class="impressions stat">{{ c.stats.impression_count|withsep }}</td>
-    <td class="clicks stat">{{ c.stats.click_count|withsep }}</td>
-    <td class="ctr stat">{{ c.stats.ctr|percentage }}</td>
-    <td class="{% if line_item.gtee %}revenue{% else %}conversions{% endif %} stat">
-        {% if creative.gtee %}
-            {{ c.stats.revenue|currency }}
-        {% else %}
-            {{c.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})
-        {% endif %}
-    </td>
+  <td class="controls">
+    <input class="status_change_control" id="{{ creative.key }}" type="checkbox" />
+    {% status_icon creative %}
+  </td>
+  <td class="name">
+    {{ creative.name }}
+    <button class="btn btn-small" href="#" id="creative_preview_button">
+      <i class="icon-picture"></i>
+      Preview
+    </button>
+    <button class="btn edit_creative_button">
+      <i class="icon-pencil"></i>
+      Edit
+    </button>
+    <form action="{% url advertiser_creative_form_edit creative.key %}"
+          class="edit_creative_form "
+          enctype="multipart/form-data"
+          method="post">
+      
+      {% creative_form creative %}
+        <button class="btn right submit">Continue</button>
+        <button class="btn right cancel">Cancel</button>
+        <div class="clear"></div>
+    </form>
+    {% creative_preview creative %}
+  </td>
+  <td class="impressions stat">{{ c.stats.impression_count|withsep }}</td>
+  <td class="clicks stat">{{ c.stats.click_count|withsep }}</td>
+  <td class="ctr stat">{{ c.stats.ctr|percentage }}</td>
+  <td class="{% if line_item.gtee %}revenue{% else %}conversions{% endif %} stat">
+    {% if creative.gtee %}
+      {{ c.stats.revenue|currency }}
+    {% else %}
+      {{c.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})
+    {% endif %}
+  </td>
 </tr>

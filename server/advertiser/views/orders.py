@@ -47,10 +47,12 @@ class OrderIndexHandler(RequestHandler):
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
                                                         orders=orders)
-        # Filter out archived
-        orders = [order for order in orders if order.active]
+
+        # Filter out archived and deleted orders and line items
+        orders = [order for order in orders if not (order.archived or order.deleted)]
         line_items = [line_item for line_item in line_items \
-                      if line_item.active and line_item.campaign.active]
+                      if not (line_item.archived or line_item.deleted) and
+                      not (line_item.campaign.archived or line_item.campaign.deleted)]
         
         return {
             'orders': orders,

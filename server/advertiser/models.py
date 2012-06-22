@@ -114,7 +114,6 @@ class Campaign(db.Model):
         return "Campaign: %s, owned by %s, for %s" % (self.name,
                                                       self.account,
                                                       self.advertiser)
-
     @property
     def owner_key(self):
         return None
@@ -141,7 +140,19 @@ class Campaign(db.Model):
             'deleted': self.deleted,
             'key': str(self.key())
         }
+        
+    @property
+    def status_icon_url(self):
+        if self.deleted:
+            return "/images/deleted.gif"
+        if self.active:
+            return "/images/active.gif"
+        if self.archived:
+            return "/images/archived.gif"
+            
+        return "/images/paused.gif"
 
+        
 Order = Campaign
 
 
@@ -842,6 +853,16 @@ class AdGroup(db.Model):
     # /end moved from campaign class #
     ##################################
 
+    @property
+    def status_icon_url(self):
+        if self.deleted:
+            return "/images/deleted.gif"
+        if self.active and self.campaign.active:
+            return "/images/active.gif"
+        if self.archived or self.campaign.archived:
+            return "/images/archived.gif"
+            
+        return "/images/paused.gif"
 
 LineItem = AdGroup
 

@@ -7,7 +7,7 @@
       <input class="status_change_control"
              id="{{line_item.key}}"
              type="checkbox"></input>
-      {% status_icon line_item %}
+      <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
     </td>
   {% else %}
     <td></td>

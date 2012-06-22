@@ -10,6 +10,6 @@
   <img id="status-{{ adgroup.key }}" src="/images/paused.gif" height=9 width=9  style="margin-top:4px"/>
 {% endif %}
 
-{% if adgroup.archived %}
+{% if adgroup.archived or adgroup.campaign.archived %}
   <img id="status-{{ adgroup.key }}" src="/images/archived.gif" height=9 width=9  style="margin-top:4px"/>
 {% endif %}

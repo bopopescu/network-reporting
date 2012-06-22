@@ -148,10 +148,6 @@ class CreateAppHandler(RequestHandler):
         # If there are validation errors in either the app_form or adunit_form,
         # fail by returning the page rendered with the invalid forms.
         if not app_form.is_valid() or not adunit_form.is_valid():
-            logging.warn('\n\n\n\n\n\n')
-            logging.warn(app_form.errors)
-            logging.warn('\n\n\n\n\n\n')
-            logging.warn(adunit_form.errors)
             return render_to_response(self.request, self.template, {
                 'app_form': app_form,
                 'adunit_form': adunit_form

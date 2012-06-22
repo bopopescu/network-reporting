@@ -11,7 +11,7 @@
   {% if show_status %}
     <td class="controls">
       <input class="status_change_control" id="{{order.key}}" type="checkbox" />
-      {% status_icon order %}
+      <img id="status-{{ order.key }}" src="{{ order.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
     </td>
   {% else %}
     <td></td>

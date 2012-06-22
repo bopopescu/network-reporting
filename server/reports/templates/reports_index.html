@@ -59,7 +59,7 @@
                     {% if report in scheduled %}
                     <div id="{{ report.key }}-edit-link" class="edit-link hidden">
                         {% else %}
-                        <div id="{{ report.schedule.key }}-edit-link" class="edit-link hidden">
+                        <div id="{{ report.key }}-edit-link" class="edit-link hidden">
                             {% endif %}
                             <span class="ui-icon ui-icon-wrench"></span>
                         </div>
@@ -124,7 +124,10 @@
 <script>
     $(function () {
         ReportIndexController.initialize({
-            report_keys: [{% for report in scheduled %}'{{ report.key }}',{% endfor %}],
+            report_keys: [{% for report in reports %}
+                ['{{ report.key }}',
+                    {% if report in scheduled %}'{{ report.key }}'{% else %}'{{ report.schedule.key }}'{% endif %}],
+                {% endfor %}],
         });
     });
 </script>

@@ -1,5 +1,7 @@
 {% load filters %}
 
+{# saved is hidden and only set by js on submit #}
+{{ report_form.saved }}
 <dl class='formFields'>
     <dt>{{ report_form.name.label_tag }}</dt>
     <dd>{{ report_form.name }}</dd>

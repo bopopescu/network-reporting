@@ -158,21 +158,17 @@ class ReportQueryManager(CachedQueryManager):
         else:
             return None
 
-    def get_saved(self, page=0, page_limit=100):
-        '''Returns (page_limit) reports starting on 'page'
-        '''
-        report_q = Report.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False)
-        reports = report_q.fetch(limit=page_limit,offset=page_limit*page)
-        return reports
-
-    def get_history(self, page=0, page_limit=100):
-        '''Gives a history of ALL reports (saved and unsaved) for the user
-        in order of most recently viewed'''
-        #Not implemented
-        return None
-
-    def get_scheduled(self, to_fetch=50):
-        report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False).filter('default =', False)
+    def get_scheduled(self, saved=True, deleted=False, default=False,
+            not_sched_interval=None, to_fetch=50):
+        report_q = ScheduledReport.all().filter('account =', self.account)
+        if saved:
+            report_q.filter('saved =', saved)
+        if deleted:
+            report_q.filter('deleted =', deleted)
+        if default:
+            report_q.filter('default =', default)
+        if not_sched_interval:
+            report_q.filter('sched_interval !=', not_sched_interval)
         return report_q.fetch(to_fetch)
 
     def new_report(self, report, now=None, testing=False):

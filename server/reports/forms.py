@@ -67,6 +67,9 @@ class ReportForm(forms.ModelForm):
                                                 ('quarterly', 'Quarterly')),
                                        label='Schedule:',
                                        widget=forms.Select(attrs={'class': 'chzn-select'}))
+    # NOTE: saved is a hidden field set by the js on form submission
+    saved = forms.BooleanField(widget=forms.CheckboxInput(attrs={'class':
+        'hidden'}))
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
@@ -114,5 +117,6 @@ class ReportForm(forms.ModelForm):
 
     class Meta:
         model = ScheduledReport
-        fields = ('name', 'd1', 'd2', 'd3', 'start', 'end', 'days', 'name', 'interval', 'sched_interval', 'recipients')
+        fields = ('name', 'd1', 'd2', 'd3', 'start', 'end', 'days', 'name',
+                'interval', 'sched_interval', 'recipients', 'saved')
 

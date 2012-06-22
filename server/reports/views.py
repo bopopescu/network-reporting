@@ -1,7 +1,9 @@
-import logging, datetime
+import logging
 
 from urllib import urlencode
+from datetime import datetime
 import urllib
+
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -33,24 +35,39 @@ from reports.forms import ReportForm
 class ReportIndexHandler(RequestHandler):
     def get(self):
         manager = ReportQueryManager(self.account)
-        scheduled = manager.get_scheduled()
+        all_saved_scheduled = manager.get_scheduled()
 
-        saved_reports = manager.get_saved()
-        reports = scheduled + saved_reports
+        saved_reports = []
+        for scheduled_report in all_saved_scheduled:
+            saved_reports += list(scheduled_report.reports.filter('deleted =',
+                False))
+            scheduled_report.form = ReportForm(instance=scheduled_report,
+                                               prefix=str(scheduled_report.key()))
 
-        for report in scheduled:
-            report.form = ReportForm(instance=report,
-                                     prefix=str(report.key()))
+        all_unsaved_scheduled = manager.get_scheduled(saved=False,
+                not_sched_interval='none')
+        reports = all_saved_scheduled + all_unsaved_scheduled + saved_reports
 
-        reports = sorted(reports, key=lambda report: report.completed_at if
-                isinstance(report, Report) else report.last_run)
+        def sort_reports_key(report):
+            if isinstance(report, Report):
+                dt = report.completed_at
+            else:
+                dt = report.last_run
+
+            if dt:
+                return dt
+            else:
+                return datetime.min
+
+        reports = sorted(reports, key=sort_reports_key)
 
         new_report_form = ReportForm(initial={'recipients':
                                         self.request.user.email},
                                      prefix='new')
         return render_to_response(self.request, 'reports/reports_index.html',
                                  {'reports': reports,
-                                  'scheduled': scheduled,
+                                  'scheduled': all_saved_scheduled + \
+                                    all_unsaved_scheduled,
                                   'new_report_form': new_report_form, })
 
 @login_required
@@ -71,8 +88,6 @@ class EditReportHandler(RequestHandler):
         report_form = ReportForm(self.request.POST,
                                  instance=report,
                                  prefix=prefix)
-
-        logging.info(report_form.__dict__)
 
         if report_form.is_valid():
             scheduled_report = report_form.save(commit=False)
@@ -101,8 +116,6 @@ class EditReportHandler(RequestHandler):
                 key = report_form.prefix + '-' + key
                 errors[key] = ' '.join([error for error in value])
 
-        logging.info('Errors')
-        logging.info(errors)
         return JSONResponse({
             'errors': errors,
             'success': False,
@@ -180,9 +193,9 @@ class ScheduledRunner(RequestHandler):
     def get(self, now=None):
         man = ReportQueryManager()
         if now is None:
-            now = datetime.datetime.now().date()
+            now = datetime.now().date()
         else:
-            now = datetime.datetime.strptime(now, '%y%m%d')
+            now = datetime.strptime(now, '%y%m%d')
         scheds = ScheduledReport.all().filter('next_sched_date =', now)
         for sched in scheds:
             man.new_report(sched)
@@ -207,7 +220,8 @@ class ReportStateUpdater(RequestHandler):
         logging.warning(keys)
         if keys:
             qm = ReportQueryManager()
-            reports = [qm.get_report_by_key(key) for key in keys]
+            # TODO: refactor qm to avoid db.get
+            reports = [db.get(key) for key in keys]
             reports = [update_report(report, action) for report in reports]
             qm.put_report(reports)
         return HttpResponseRedirect(reverse('reports_index'))

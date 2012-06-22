@@ -124,7 +124,7 @@ class ScheduledReport(db.Model):
     created_at = db.DateTimeProperty(auto_now_add=True)
 
     name = db.StringProperty()
-    saved = db.BooleanProperty(default=True)
+    saved = db.BooleanProperty(default=False)
     deleted = db.BooleanProperty(default=False)
     last_run = db.DateTimeProperty()
     default = db.BooleanProperty(default=False)
@@ -221,6 +221,7 @@ class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
     created_at = db.DateTimeProperty(auto_now_add=True)
+    deleted = db.BooleanProperty(default=False)
 
     #scheduled report
     schedule = db.ReferenceProperty(ScheduledReport, collection_name='reports')

@@ -3,6 +3,8 @@
         initialize: function(bootstrapping_data) {
                         var report_keys = bootstrapping_data.report_keys;
 
+                        var submit_button;
+
                         /* Add a new report UI */
                         // Show new report form
                         $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
@@ -18,8 +20,7 @@
                             });
 
 
-                        // Set up d1 selection for creating new scheduled reports
-                        // based on d1's selection, modify options for d2 and d3 
+                        // set up form fields for the new report form
                         set_up_form('new');
 
                         // Create new report
@@ -28,12 +29,8 @@
                                 icons: {secondary: 'ui-icon-circle-triangle-e' }})
                             .click(function(e) {
                                 e.preventDefault();
-                                if (rep_validate($('#new-reportEditForm'))) {
-                                    $('#new-reportEditForm').submit();
-                                }
-                                else {
-                                    $('#formError').show();
-                                }
+                                submit_button = $(this);
+                                $('#new-reportEditForm').submit();
                             });
 
                         // Cancel new report form
@@ -47,7 +44,12 @@
                         $('.chzn-select').chosen();
 
                         /* Edit existing saved and scheduled reports */
-                        _.each(report_keys, function(key) {
+                        _.each(report_keys, function(report_key) {
+                            // reports use the same form as their scheduled
+                            // report
+                            var key = report_key[0];
+                            var scheduled_key = report_key[1];
+
                             var row = $('#' + key + '-row')
 
                             // hide / show wrench edit icon
@@ -62,32 +64,22 @@
                             $('#' + key + '-edit-link')
                                 .click(function(e) {
                                     e.preventDefault();
-                                    $('#' + key + '-saveAs').val('False');
-                                    $('#' + key + '-reportEditForm-save').button({label: 'Save'});
-                                    var report_form = $('#' + key + '-reportForm-container');
+                                    var report_form = $('#' + scheduled_key + '-reportForm-container');
                                     report_form.dialog({width:750});
                                 });
 
-                            // close dialog
-                            $('#' + key + '-reportEditForm-cancel')
-                                .click(function(e) {
-                                    e.preventDefault();
-                                    $('#' + key + '-reportForm-container').dialog('close');
-                                });
+                            if (scheduled_key == key) {
+                                // close dialog
+                                $('#' + scheduled_key + '-reportEditForm-cancel')
+                                    .click(function(e) {
+                                        e.preventDefault();
+                                        $('#' + scheduled_key + '-reportForm-container').dialog('close');
+                                    });
 
-                            // TODO
-                            $(row).find('.update-button')
-                                .change(function(e) {
-                                    e.preventDefault();
-                                    if (!obj_equals(form_state, get_form_state())) {
-                                        $('#' + key + 'reportEditForm-save').button({label:'Save and Run'});
-                                    }
-                                    else {
-                                        $('#' + key + '-reportEditForm-save').button({label:'Save'});
-                                    }
-                                }).change();
 
-                            set_up_form(key);
+                                // set up form fields
+                                set_up_form(scheduled_key);
+                            }
 
                         });
 
@@ -182,28 +174,38 @@
                                    success: function(jsonData, statusText, xhr, $form) {
                                        window.location = jsonData.redirect;
                                        if(jsonData.success) {
-                                           $('#' + prefix + '-reportEditForm-save').button({
-                                               label: 'Success...',
+                                           $('#' + prefix + '-reportEditForm.button').button({
                                                disabled: true
+                                           });
+                                           submit_button.button({
+                                               label: 'Success...'
                                            });
                                        } else {
                                            console.log(jsonData.errors);
                                            validator.showErrors(jsonData.errors);
-                                           $('#' + prefix + '-reportEditForm-save').button({
-                                               label: 'Try Again',
+                                           $('#' + prefix + '-reportEditForm.button').button({
                                                disabled: false
+                                           });
+                                           submit_button.button({
+                                               label: 'Try Again'
                                            });
                                        }
                                    },
                                    error: function(jqXHR, textStatus, errorThrown) {
-                                       $('#' + prefix + '-reportEditForm-save').button({
-                                           label: 'Try Again',
+                                       $('#' + prefix + '-reportEditForm.button').button({
                                            disabled: false
+                                           });
+                                       submit_button.button({
+                                           label: 'Try Again'
                                            });
                                        },
                                    beforeSubmit: function(arr, $form, options) {
-                                       $('#' + prefix + '-reportEditForm-save').button({label: 'Submitting...',
-                                       disabled: true});
+                                       $('#' + prefix + '-reportEditForm.button').button({
+                                           disabled: true
+                                           });
+                                       submit_button.button({
+                                           label: 'Submitting...'
+                                           });
                                        }
                                 });
                            }
@@ -213,6 +215,8 @@
         $('#' + prefix + '-reportEditForm-save')
             .click(function(e) {
                 e.preventDefault();
+                submit_button = $(this);
+                $('#id_' + prefix + '-saved').attr('checked', true);
                 $('#' + prefix + '-reportEditForm').submit();
             });
     }

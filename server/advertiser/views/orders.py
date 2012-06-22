@@ -322,8 +322,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
 
     def post(self, order_key=None, line_item_key=None):
-
-        logging.warn('here?')
         if not self.request.is_ajax():
             raise Http404
 
@@ -356,14 +354,15 @@ class OrderAndLineItemFormHandler(RequestHandler):
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
         line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
 
-        order_form_is_valid = order_form.is_valid()
+        order_form_is_valid = order_form.is_valid() if not order else True
         line_item_form_is_valid = line_item_form.is_valid()
-        if order_form_is_valid and line_item_form_is_valid:            
-            order = order_form.save()
-            order.account = self.account
-            order.campaign_type = 'order'
-            order.save()
-            CampaignQueryManager.put(order)
+        if order_form_is_valid and line_item_form_is_valid:
+            if not order:     
+                order = order_form.save()
+                order.account = self.account
+                order.campaign_type = 'order'
+                order.save()
+                CampaignQueryManager.put(order)
 
             line_item = line_item_form.save()
             line_item.account = self.account
@@ -384,6 +383,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
         
         errors = {}
         if not line_item_form_is_valid:
+            logging.warn('line')
             for key, value in line_item_form.errors.items():
                 # TODO: find a less hacky way to get jQuery validator's
                 # showErrors function to work with the SplitDateTimeWidget
@@ -398,6 +398,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             # TODO: dict comprehension?
             for key, value in order_form.errors.items():
                 # TODO: just join value?
+                logging.warn(key)
                 errors[key] = ' '.join([error for error in value])
 
         return JSONResponse({

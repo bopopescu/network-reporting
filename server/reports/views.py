@@ -90,6 +90,8 @@ class EditReportHandler(RequestHandler):
                                  prefix=prefix)
 
         if report_form.is_valid():
+            logging.info("Report form is valid")
+
             scheduled_report = report_form.save(commit=False)
             scheduled_report.account = self.account
             # TODO: refactor query managers to handle put
@@ -115,6 +117,7 @@ class EditReportHandler(RequestHandler):
             for key, value in report_form.errors.items():
                 key = report_form.prefix + '-' + key
                 errors[key] = ' '.join([error for error in value])
+            logging.info("Report form is invalid.\nErrors: %s" % errors)
 
         return JSONResponse({
             'errors': errors,

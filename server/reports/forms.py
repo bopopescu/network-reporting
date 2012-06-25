@@ -68,8 +68,9 @@ class ReportForm(forms.ModelForm):
                                        label='Schedule:',
                                        widget=forms.Select(attrs={'class': 'chzn-select'}))
     # NOTE: saved is a hidden field set by the js on form submission
-    saved = forms.BooleanField(widget=forms.CheckboxInput(attrs={'class':
-        'hidden'}))
+    saved = forms.BooleanField(required=False,
+                               widget=forms.CheckboxInput(attrs={'class':
+                                   'hidden'}))
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)

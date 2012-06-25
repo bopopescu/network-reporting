@@ -1,9 +1,10 @@
 (function($, _) {
+    var submit_button;
+
     var ReportIndexController = {
         initialize: function(bootstrapping_data) {
                         var report_keys = bootstrapping_data.report_keys;
 
-                        var submit_button;
 
                         /* Add a new report UI */
                         // Show new report form
@@ -174,7 +175,7 @@
                                    success: function(jsonData, statusText, xhr, $form) {
                                        window.location = jsonData.redirect;
                                        if(jsonData.success) {
-                                           $('#' + prefix + '-reportEditForm.button').button({
+                                           $('#' + prefix + '-reportEditForm-run, #' + prefix + '-reportEditForm-save').button({
                                                disabled: true
                                            });
                                            submit_button.button({
@@ -183,7 +184,7 @@
                                        } else {
                                            console.log(jsonData.errors);
                                            validator.showErrors(jsonData.errors);
-                                           $('#' + prefix + '-reportEditForm.button').button({
+                                           $('#' + prefix + '-reportEditForm-run, #' + prefix + '-reportEditForm-save').button({
                                                disabled: false
                                            });
                                            submit_button.button({
@@ -192,7 +193,7 @@
                                        }
                                    },
                                    error: function(jqXHR, textStatus, errorThrown) {
-                                       $('#' + prefix + '-reportEditForm.button').button({
+                                       $('#' + prefix + '-reportEditForm-run, #' + prefix + '-reportEditForm-save').button({
                                            disabled: false
                                            });
                                        submit_button.button({
@@ -200,7 +201,7 @@
                                            });
                                        },
                                    beforeSubmit: function(arr, $form, options) {
-                                       $('#' + prefix + '-reportEditForm.button').button({
+                                       $('#' + prefix + '-reportEditForm-run, #' + prefix + '-reportEditForm-save').button({
                                            disabled: true
                                            });
                                        submit_button.button({

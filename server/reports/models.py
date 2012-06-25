@@ -379,17 +379,16 @@ class Report(db.Model):
             data = list(names)
             data.append(value['name'])
 
-            for i in range(level_total - level):
-                data.append('ALL')
+            if level_total == level:
+                if isinstance(value['stats'], dict):
+                    impressions = float(value['stats']['impression_count'])
+                    ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
+                    data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
+                else:
+                    data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
 
-            if isinstance(value['stats'], dict):
-                impressions = float(value['stats']['impression_count'])
-                ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
-                data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
-            else:
-                data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
+                data_list.append(data)
 
-            data_list.append(data)
             if 'sub_stats' in value:
                 temp_names = list(names)
                 temp_names.append(value['name'])

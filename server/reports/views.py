@@ -35,17 +35,22 @@ from reports.forms import ReportForm
 class ReportIndexHandler(RequestHandler):
     def get(self):
         manager = ReportQueryManager(self.account)
-        all_saved_scheduled = manager.get_scheduled()
+        all_saved_scheduled = manager.get_scheduled(limit=None)
 
         saved_reports = []
         for scheduled_report in all_saved_scheduled:
             saved_reports += list(scheduled_report.reports.filter('deleted =',
-                False))
+                False).run(batch_size=300))
             scheduled_report.form = ReportForm(instance=scheduled_report,
                                                prefix=str(scheduled_report.key()))
 
-        all_unsaved_scheduled = manager.get_scheduled(saved=False,
-                not_sched_interval='none')
+        # awaiting index construction...
+#        all_unsaved_scheduled = manager.get_scheduled(saved=False,
+#                not_sched_interval='none')
+        all_unsaved_scheduled = [report for report in
+                manager.get_scheduled(limit=None, saved=False) if
+                report.sched_interval != 'none']
+
         reports = all_saved_scheduled + all_unsaved_scheduled + saved_reports
 
         def sort_reports_key(report):
@@ -59,7 +64,7 @@ class ReportIndexHandler(RequestHandler):
             else:
                 return datetime.min
 
-        reports = sorted(reports, key=sort_reports_key)
+        reports = sorted(reports, key=sort_reports_key, reverse=True)
 
         new_report_form = ReportForm(initial={'recipients':
                                         self.request.user.email},
@@ -210,7 +215,10 @@ def sched_runner(request, *args, **kwargs):
 
 
 class ReportExporter(RequestHandler):
-    def get(self, report_key, *args, **kwargs):
+    def get(self, report_key):
+        if db.Key(report_key).kind() == 'ScheduledReport':
+            manager = ReportQueryManager(self.account)
+            report_key = str(manager.get_report_data_by_sched_key(report_key).key())
         return sswriter.write_report('csv', report_key, self.account.key())
 
 def exporter(request, *args, **kwargs):

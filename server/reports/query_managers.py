@@ -159,17 +159,17 @@ class ReportQueryManager(CachedQueryManager):
             return None
 
     def get_scheduled(self, saved=True, deleted=False, default=False,
-            not_sched_interval=None, to_fetch=50):
+            not_sched_interval=None, limit=50):
         report_q = ScheduledReport.all().filter('account =', self.account)
-        if saved:
+        if saved != None:
             report_q.filter('saved =', saved)
-        if deleted:
+        if deleted != None:
             report_q.filter('deleted =', deleted)
-        if default:
+        if default != None:
             report_q.filter('default =', default)
         if not_sched_interval:
             report_q.filter('sched_interval !=', not_sched_interval)
-        return report_q.fetch(to_fetch)
+        return list(report_q.run(batch_size=300, limit=limit))
 
     def new_report(self, report, now=None, testing=False):
         if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):

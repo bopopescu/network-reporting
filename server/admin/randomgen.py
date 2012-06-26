@@ -2,12 +2,13 @@ import copy
 import string
 import random
 import datetime
-import uuid
 
 from account.query_managers import AccountQueryManager
+from advertiser.query_managers import AdGroupQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
-
+#
+## TODO: make imports explicit
 from registration.models import *
 from advertiser.models import *
 from publisher.models import *
@@ -15,9 +16,26 @@ from account.models import *
 from budget.models import *
 from reporting.models import *
 
-from google.appengine.api import files
+#
+## Imports to generate networks page data
+from common.constants import REPORTING_NETWORKS, \
+        NETWORKS_WITHOUT_REPORTING, \
+        NETWORKS, \
+        NETWORK_ADGROUP_TRANSLATION
+from advertiser.query_managers import CampaignQueryManager
 
-ceiling = lambda x, y: x if x < y else y
+from ad_network_reports.models import AdNetworkLoginCredentials, \
+     AdNetworkAppMapper, \
+     AdNetworkStats, \
+     AdNetworkScrapeStats, \
+     AdNetworkNetworkStats, \
+     AdNetworkAppStats, \
+     LoginStates
+
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkStatsManager
+
+from common.utils import date_magic
 
 ####
 #Configuration Parameters for data generation
@@ -26,15 +44,14 @@ ceiling = lambda x, y: x if x < y else y
 USERNAME = "test@mopub.com"
 PASSWORD = "test"
 
-NUM_ACCOUNTS = 1
+NUM_ACCOUNTS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
 NUM_APPS = 2
-NUM_CAMPAIGNS_PER_APP = 2
-NUM_CREATIVES_PER_ADGROUP = 2
-NUM_ADUNITS_PER_APP = 3
-NUM_ADGROUPS_PER_CAMPAIGN = 2
+NUM_CAMPAIGNS_PER_APP = 1
+NUM_CREATIVES_PER_ADGROUP = 1
+NUM_ADUNITS_PER_APP = 2
 
+NETWORKS_TO_USE = ['admob', 'admob', 'millennial']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
-
 
 ### End configuration parameters
 
@@ -50,14 +67,17 @@ CREATIVE_INDEX = 0
 ADGROUP_INDEX= 0
 APP_TYPES = ['iphone','android','ipad','mweb']
 COLOR_ALPH = string.digits + "ABCDEF"
-CAMPAIGN_TYPES = ['gtee',
-                  'gtee_high',
-                  'gtee_low',
-                  'promo',
-                  'network',
-                  'backfill_promo',
-                  'marketplace',
-                  'backfill_marketplace']
+
+CAMPAIGN_TYPES = ['order', 'marketplace', 'network']
+
+ADGROUP_TYPES = ['gtee',
+                 'gtee_high',
+                 'gtee_low',
+                 'promo',
+                 'network',
+                 'backfill_promo',
+                 'marketplace',]
+                 
 NETWORK_TYPES = ["adsense",
                  "iAd",
                  "admob",
@@ -74,7 +94,6 @@ NETWORK_TYPES = ["adsense",
                  "custom_native",
                  "admob_native",
                  "millennial_native"]
-
 BID_STRATEGIES = ['cpc','cpm','cpa']
 
 NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
@@ -95,29 +114,19 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
 #Helper Methods
 ####
 
-def get_adgroup_name():
-    adgroup_index = str(uuid.uuid1()).split('-')[0]
-    return "Wow! Line item %s" % adgroup_index
-
-
-def get_creative_name():
-    creative_index = str(uuid.uuid1()).split('-')[0]
-    return "Creative %s" % creative_index
-
-def get_app_name():
-    app_index = str(uuid.uuid1()).split('-')[0]
-    return "Your Great App %s" % app_index
-
-def get_adunit_name():
-    adunit_index = str(uuid.uuid1()).split('-')[0]
-    return "Your Well Performing AdUnit %s" % adunit_index
-
-def get_campaign_name():
-    campaign_index = str(uuid.uuid1()).split('-')[0]
-    return "Super Order %s" % campaign_index
+def get_random_name():
+    return 'Object ' + str(uuid.uuid4())
 
 def get_random_color():
-    return "".join([select_rand(COLOR_ALPH) for i in xrange(5)])
+    return "".join([select_rand(COLOR_ALPH) for i in range(5)])
+
+def get_keys(objs, as_str=False):
+    keys = [obj.key() for obj in objs]
+    if as_str:
+        return [str(k) for k in keys]
+    return keys
+
+
 
 def select_rand(array):
     return array[random.randint(0,len(array)-1)]
@@ -128,6 +137,14 @@ def select_rand_subset(array):
     random.shuffle(cloned)
     return cloned[:num_elements]
 
+
+def get_random_date():
+    today = datetime.date.today()
+    year = 2012
+    month = random.randint(1,today.month)
+    day = random.randint(1,28 if today.month!= month else random.randint(1,month))
+    return datetime.date(year,month,day)
+
 def get_random_datetime():
     today = datetime.datetime.now()
     year = 2012
@@ -135,34 +152,21 @@ def get_random_datetime():
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
     return datetime.datetime(year,month,day)
 
-def get_random_datetime_pair():
-    """
-    Generates a pair of datetimes, returned in order of time.
-    Good for generating start and end dates, because start
-    will always be before end.
-    e.g.:
-        start, end = get_random_datetime_pair()
-    """
-    start, end = get_random_datetime(), get_random_datetime()
-    if start > end:
-        start, end = end, start
-    return start, end
-
 
 ####
 #Generation methods
 ####
 
+
 def generate_app(account):
     app = App(name=get_app_name(),
               app_type=select_rand(APP_TYPES),
-              account = account,
-              deleted=False)
+              account = account)
     app.put()
     return app
 
 
-def generate_adunit(app,account):
+def generate_adunit(app, account):
     adunit = AdUnit(app_key = app,
                     account = account,
                     name = get_adunit_name(),
@@ -174,116 +178,160 @@ def generate_adunit(app,account):
     adunit.put()
     return adunit
 
-
 def generate_budget():
-    start_date, end_date = get_random_datetime_pair()
+    start_date = get_random_datetime()
+    end_date = get_random_datetime()
+    if start_date > end_date:
+        temp = start_date
+        start_date = end_date
+        end_date = temp
     budget = Budget(start_datetime=start_date,
                     end_datetime = end_date,
                     static_total_budget = float(random.randint(100,1000)),
                     static_slice_budget = float(random.randint(100,1000)))
+
     budget.put()
     return budget
 
 
-def generate_adgroup(campaign, site_keys, account, adgroup_type):
-    if adgroup_type=="network":
-        rand_network_type = select_rand(NETWORK_TYPES)
-    else:
-        rand_network_type = None
+def generate_order(account, budget=None):
 
-    start, end = get_random_datetime_pair()
+    name = get_random_name()
+    order = Campaign(name=name,
+                        budget_obj = budget,
+                        campaign_type = 'order',
+                        account = account,
+                        start_date = start_date,
+                        end_date = end_date)
+    campaign.put()
+    return order
 
-    adgroup = AdGroup(campaign=campaign,
-                      adgroup_type = adgroup_type,
-                      network_type=rand_network_type,
+
+def generate_line_item(account, order, site_keys,
+                       start_date=None, end_date=None, budget=None):
+    
+    if not start_date:
+        start_date = get_random_date()
+        
+    if not end_date:
+        end_date = get_random_date()
+
+    if start_date> end_date:
+        temp = start_date
+        start_date = end_date
+        end_date = temp
+
+    line_item = AdGroup(campaign=order,
+                        name = get_random_name(),
+                        site_keys = site_keys,
+                        account = account)
+    line_item.put()
+    return line_item
+                        
+    
+def generate_adgroup(site_keys,account,campaign=None,network=None):
+    if campaign:
+        if campaign.campaign_type=="network":
+            if network:
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                        site_keys[0], account.key())
+                adgroup.put()
+                return adgroup
+            else:
+                network = select_rand(NETWORK_TYPES)
+
+            # Need to update account's network configuration if we add
+            # a network adgroup
+            if network in NETWORK_TYPE_TO_PUB_ID_ATTR.keys():
+                network_config = account.network_config
+                setattr(network_config,NETWORK_TYPE_TO_PUB_ID_ATTR[network],"fillerid")
+                a = AccountQueryManager()
+                a.update_config_and_put(account,network_config)
+
+        adgroup = AdGroup(campaign=campaign,
+                      network_type=network if campaign.campaign_type=="network" else None,
                       bid_strategy=select_rand(BID_STRATEGIES),
                       account=account,
                       site_keys=site_keys,
-                      name=get_adgroup_name(),
-                      start_datetime=start,
-                      end_datetime=end)
+                      name=get_adgroup_name())
+
+    else:
+        adgroup = AdGroup(network_type=network,
+                          bid_strategy='cpm',
+                          account=account,
+                          site_keys=site_keys,
+                          name=get_adgroup_name())
     adgroup.put()
-
-
-    # If we've added a network adgroup, then we need to make sure to
-    # update the account's NetworkConfig object as well, so that ad
-    # network configuration is set properly.
-    if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys() \
-       and adgroup.adgroup_type=="network":
-        network_config = account.network_config
-        setattr(network_config,
-                NETWORK_TYPE_TO_PUB_ID_ATTR[rand_network_type],
-                "fillerid")
-        a = AccountQueryManager()
-        a.update_config_and_put(account,network_config)
 
     return adgroup
 
 
-def generate_campaign(account, *args, **kwargs):
-    campaign_type = kwargs.get('campaign_type')
 
-    advertiser = kwargs.get('advertiser', "John's Hat Co, Inc.")
-    campaign = Campaign(name=get_campaign_name(),
-                        account = account,
-                        advertiser = advertiser,
-                        is_order=is_order)
+def generate_campaign(account, budget=None, campaign_type=None):
+
+    if not campaign_type:
+        campaign_type = 'order'
+        
+    if campaign_type == 'marketplace':
+        campaign_name = 'Marketplace'
+        campaign = CampaignQueryManager.get_marketplace(account)
+        
+    else:
+        start_date = get_random_date()
+        end_date = get_random_date()
+        name = get_campaign_name()
+        if start_date> end_date:
+            temp = start_date
+            start_date = end_date
+            end_date = temp
+        campaign = Campaign(name=campaign_name,
+                            budget_obj = budget,
+                            campaign_type = campaign_type,
+                            account = account,
+                            start_date = start_date,
+                            end_date = end_date)
     campaign.put()
     return campaign
 
 
-def generate_marketplace_campaign(account):
-    campaign = Campaign(name=get_campaign_name(),
-                        account = account,
-                        advertiser = "marketplace",
-                        is_marketplace=True)
-    campaign.put()
-    return campaign
 
-
-# HACK: we had noticed some issues with how the email function parameter
-# was being used (it didnt always match up with username, which it should).
-# We fixed this problem in our branch, but since randomgen is different in
-# other branches, we still allow you to pass in the email parameter (we
-# just override it in our function), so that other libraries don't have
-# to change. This will be resolved when randomgen is merged back in
-# to master (this comment was made in the adgroups branch).
 def generate_account(username=USERNAME,
                      password=PASSWORD,
-                     email=None,
+                     email=USERNAME,                     
                      marketplace_config=None,
                      network_config=None,
-                     *args, **kwargs):
-    email = username
+                     display_new_networks=False):
+
+    # Create a marketplace config if it doesnt exist
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
         marketplace_config.put()
+
+    # Create a network config if it doesnt exist
     if not network_config:
         network_config = NetworkConfig()
         network_config.put()
 
+    # Register a new user
     manager = RegistrationManager()
-    user = manager.create_active_user(send_email=False,
-                                      username=username,
-                                      password=password,
-                                      email=email)
+    user = manager.create_active_user(send_email=False,username=username,
+                                      password=password,email=email)
     manager.create_profile(user)
 
-
+    # Create a new account object for the user
     account = AccountQueryManager().get_current_account(user=user)
     account.active = True
     account.marketplace_config = marketplace_config
     account.network_config = network_config
-
+    account.display_new_networks = display_new_networks
     account.put()
+    
     return account
 
-
-def generate_networkconfig():
+def generate_network_config():
     networkconfig = NetworkConfig()
     networkconfig.put()
     return networkconfig
-
 
 def generate_marketplace_config():
     marketplace_config = MarketPlaceConfig()
@@ -291,18 +339,18 @@ def generate_marketplace_config():
     return marketplace_config
 
 
-def generate_stats_model(publisher,advertiser,account,date):
-    # This logic is in place to make the stats more realistic
+def generate_stats_model(publisher, advertiser, account, date):
+    #This logic is in place to make the stats more realistic
     request_count = random.randint(0,10000)
     impression_count = int(random.random()*request_count)
-    click_count = int(random.random() *.1* impression_count)
-    conversion_count = int(random.random() *.1* click_count)
-    revenue = click_count*.5
+    click_count = int(random.random()*impression_count)
+    conversion_count = int(random.random()*click_count)
+    revenue = click_count*.002
 
     user_count = int(request_count*.75)
     request_user_count = user_count
-    impression_user_count =int(request_user_count*random.random())
-    click_user_count = int(impression_user_count *random.random())
+    impression_user_count =int(request_user_count * random.random())
+    click_user_count = int(impression_user_count * random.random())
 
     stats_model = StatsModel(publisher = publisher,
                              advertiser = advertiser,
@@ -321,99 +369,59 @@ def generate_stats_model(publisher,advertiser,account,date):
     return stats_model
 
 
-def generate_creative(account, adgroup, *args, **kwargs):
+def generate_creative(account, adgroup):
     creative_name = get_creative_name()
 
-    ad_types = {
-        'html': HtmlCreative,
-        'text_icon': TextAndTileCreative,
-        'image': ImageCreative
-    }
-
-    constructor_class = ad_types[kwargs.get('ad_type', 'html')]
-
     #For now, test data generation will only create basic text creatives
-    creative = constructor_class(active=True,
-                                 account = account,
-                                 ad_group = adgroup,
-                                 ad_type = kwargs.get('ad_type', None) or "html",
-                                 headline = "%s %s" % (creative_name,"headline"),
-                                 line1 = "%s %s" % (creative_name,"line1"),
-                                 line2 = "%s %s" % (creative_name,"line2"),
-                                 name=creative_name)
-
-    # see forms.py line 564 to see how to do this
-    # if constructor_class in (TextAndTileCreative, ImageCreative):
-    #     creative.image_blob =
-
+    creative = TextCreative(active=True,
+                            account = account,
+                            ad_group = adgroup,
+                            ad_type = "text",
+                            headline = "%s %s" % (creative_name,"headline"),
+                            line1 = "%s %s" % (creative_name,"line1"),
+                            line2 = "%s %s" % (creative_name,"line2"),
+                            name=creative_name)
     creative.put()
     return creative
 
 
-#Example Method to generate data. See top configuration contants for customizing result
+
+        
 def main():
-    account = generate_account()
+    account = generate_account(USERNAME,
+                               PASSWORD,
+                               USERNAME,
+                               display_new_networks=True)
 
-    apps = [generate_app(account) for app in xrange(NUM_APPS)]
+    # generate inventory
+    apps = [generate_app(account) for i in range(5)]
+    adunits = [(generate_adunit(app, account), generate_adunit(app, account)) for app in apps]
 
-    adunits_per_app = dict([(app,[]) for app in apps])
-    campaigns_per_app = dict([(app,[]) for app in apps])
-    creatives_per_adgroup = {}
+    # generate advertiser models
+    orders = [generate_order(account) for i in range(5)]    
+    line_items = [generate_line_item(account, order, get_keys(site_keys)) \
+                  for order, site_keys in zip(orders, adunits)]
+    creatives = [generate_creative(account, line_item) for line_item in line_items]
 
-    for app in apps:
-        for i in xrange(NUM_ADUNITS_PER_APP):
-            adunits_per_app[app].append(generate_adunit(app,account))
-
-        all_site_keys = [a.key() for a in AdUnit.all() if a._account == account.key()]
-
-        for i in xrange(NUM_CAMPAIGNS_PER_APP):
-            budget = generate_budget()
-
-            campaign = generate_campaign(account, budget)
-
-            campaigns_per_app[app].append(campaign)
-
-            for i in xrange(NUM_ADGROUPS_PER_CAMPAIGN):
-                adgroup_type = 'gtee' if i%2==0 else 'promo'
-                adgroup = generate_adgroup(campaign,
-                                           select_rand_subset(all_site_keys),
-                                           account,
-                                           adgroup_type)
-                creatives_per_adgroup[str(adgroup)] = []
-                for i in xrange(NUM_CREATIVES_PER_ADGROUP):
-                    creatives_per_adgroup[str(adgroup)].append(generate_creative(account, adgroup))
-
-
-    print creatives_per_adgroup
-    cur_date = APP_STATS_SINCE
+    # Generate the date range
     today = datetime.datetime.now()
-    day = datetime.timedelta(days=1)
+    month_ago = today - datetime.timedelta(30)
+    days = date_magic.gen_days(today, month_ago)
 
-    s = StatsModelQueryManager(account=account)
+    # Generate stats for each creative + adunit pair
+    stats_manager = StatsModelQueryManager(account=account)
+    for creative in creatives:
+        for day in days:
+            for site_key in creative.ad_group.site_keys:
+                adunit = AdUnitQueryManager.get(site_key)
+                stats = generate_stats_model(adunit, creative, account, day)
 
-    for app in apps:
-        cur_date = APP_STATS_SINCE
-        while cur_date <= today:
-            for campaign in campaigns_per_app[app]:
-                for adgroup in campaign.adgroups:
-                    stats= [generate_stats_model(adunit,
-                                             creative,
-                                             account,
-                                             cur_date)
-                            for creative in creatives_per_adgroup[str(adgroup)]
-                            for adunit in adunits_per_app[app] if adunit.key() in adgroup.site_keys]
-
-                    req_stats = [generate_stats_model(adunit, None, account, cur_date) \
-                                 for adunit in adunits_per_app[app]]
-                    for stat in req_stats:
-                        stat.impression_count = 0
-                        stat.click_count = 0
-                        stat.conversion_count = 0
-
-                    s.put_stats(stats=stats+req_stats)
-
-            cur_date+=day
-
-
+                # Generate some stats for requests that didn't fill
+                req_stats = generate_stats_model(adunit,None,account,cur_date)
+                req_stats.impression_count = req_stats.click_count = req_stats.conversion_count = 0
+                
+                stats_manager.put_stats(stats=stats+req_stats)            
+        
 if __name__=="__main__":
     main()
+

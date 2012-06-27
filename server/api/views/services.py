@@ -168,7 +168,10 @@ class AdUnitService(RequestHandler):
             if campaign.account.key() != self.account.key():
                 raise Http404
 
-            adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
+            if adunit_key:
+                adunits = [AdUnitQueryManager.get(adunit_key)]
+            else:                
+                adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
             response = [adunit.toJSON() for adunit in adunits]
 
             # Update each app with stats from the selected endpoint

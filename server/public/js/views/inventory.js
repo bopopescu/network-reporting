@@ -211,25 +211,19 @@ var mopub = window.mopub || {};
 
             var this_view = this;
             var this_model = this_view.options.model;
-            var daily_stats = this_model.get_formatted_daily_stats();
 
-            var total_stats = {
-                rev: this_model.get_formatted_stat('rev'),
-                req: this_model.get_formatted_stat('req'),
-                imp: this_model.get_formatted_stat('imp'),
-                clk: this_model.get_formatted_stat('clk'),
-                att: this_model.get_formatted_stat('att'),
-                cpm: this_model.get_formatted_stat('cpm'),
-                fill_rate: this_model.get_formatted_stat('fill_rate'),
-                ctr: this_model.get_formatted_stat('ctr'),
-                conv: this_model.get_formatted_stat('conv')
-            };
-
+            var display_fields = ['rev', 'req', 'imp', 'clk', 'att',
+                                  'cpm', 'fill_rate', 'ctr', 'conv'];
             var template_values = {
-                daily_stats: daily_stats,
-                total_stats: total_stats
-            };
-            
+                daily_stats: this_model.get_formatted_daily_stats().reverse(),
+                total_stats: {}
+            };            
+
+            // Fill in the total stats 
+            _.each(display_fields, function (field) {
+                template_values.total_stats[field] = this_model.get_formatted_stat(field);
+            })
+                                    
             // Expose yourself
             $(this_view.el).html(this_view.template(template_values));
 
@@ -333,7 +327,6 @@ var mopub = window.mopub || {};
             /*jslint maxlen: 200 */
             var current_model = this.model;
             var adunit_row = $('#adunit-' + this.model.id);
-            console.log(adunit_row);
             var metrics = [
                 'rev', 
                 'cpm', 
@@ -799,9 +792,7 @@ var mopub = window.mopub || {};
             });
 
             var popover_template = _.template($("#popover-template").html());
-            var popover_content = popover_template(current_model.toJSON());
-            
-            console.log(current_model);
+            var popover_content = popover_template(current_model.toJSON());            
 
             $(".moreinfo", row).popover({
                 placement: 'bottom',

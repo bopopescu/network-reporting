@@ -115,7 +115,7 @@ var mopub = mopub || {};
     // use.
     function record_metric (name, args) {
         try {
-            mixpanel.track(name, args);
+            //mixpanel.track(name, args);
         } catch (x) {
             console.log(x);
         }
@@ -155,7 +155,11 @@ var mopub = mopub || {};
                 case 'req':
                 case 'att':
                 case 'rev':
-                    return this.get(stat);
+                    var stat_val = this.get("sum")[stat];
+                    if (stat_val)
+                        return stat_val
+                    else
+                        return 0
                 default:
                     throw 'Unsupported stat "' + stat + '".';
             }
@@ -175,10 +179,10 @@ var mopub = mopub || {};
          * Works for both models and collections.
          */
         get_formatted_stat_sum: function(stat) {
-            var sum = _.reduce(this, function(memo, num){
-                return memo + this.get(stat);
+            var sum = this.models.reduce(function(memo, model){
+                return memo + model.get_stat(stat);
             }, 0);
-
+            
             return format_stat(stat, sum);
         },
 
@@ -418,7 +422,11 @@ var mopub = mopub || {};
                 case 'rev':
                 case 'goal':
                 case 'pace':
-                    return this.get(stat);
+                    var stat_val = this.get("sum")[stat];
+                    if (stat_val)
+                        return stat_val
+                    else
+                        return 0
                 default:
                     throw 'Unsupported stat "' + stat + '".';
             }
@@ -714,7 +722,6 @@ var mopub = mopub || {};
                 + stats_endpoint;
         },
         parse: function(response) {
-            console.log(response[0]);
             return response[0];
         }
     });

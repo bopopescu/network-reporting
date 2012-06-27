@@ -48,25 +48,28 @@ class AbstractStatsFetcher(object):
 
     def format_stats(self, stats):
         stat_totals = {
-            'rev': sum([stat.revenue for stat in stats]),
-            'imp': sum([stat.impression_count for stat in stats]),
-            'clk': sum([stat.click_count for stat in stats]),
-            'req': sum([stat.request_count for stat in stats]),
-            'conv': sum([stat.conversion_count for stat in stats]),
-            'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+            'sum': {
+                'rev': sum([stat.revenue for stat in stats]),
+                'imp': sum([stat.impression_count for stat in stats]),
+                'clk': sum([stat.click_count for stat in stats]),
+                'req': sum([stat.request_count for stat in stats]),
+                'conv': sum([stat.conversion_count for stat in stats]),
+                'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+            }
         }
 
         return stat_totals
 
     def format_daily_stats(self, all_stats):
-        logging.warn('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
-        logging.warn(all_stats)
+
         stats_dict = {
             'sum': {
                 'rev': sum([stats.revenue for stats in all_stats]),
                 'imp': sum([stats.impression_count for stats in all_stats]),
                 'clk': sum([stats.click_count for stats in all_stats]),
                 'req': sum([stats.request_count for stats in all_stats]),
+                'conv': sum([stat.conversion_count for stat in all_stats]),
+                'conv_rate': sum([stat.conv_rate for stat in all_stats])/len(all_stats),
             },
             'daily_stats': [{'rev': stats.revenue,
                              'imp': stats.impression_count,
@@ -136,13 +139,18 @@ class SummedStatsFetcher(AbstractStatsFetcher):
             return self.format_stats(all_stats)
             
     def _get_advertiser_stats(self, advertiser, start, end,
-                              publisher=None, *args, **kwargs):
+                              publisher=None, daily=True,
+                              *args, **kwargs):
         days = date_magic.gen_days(start, end)
         query_manager = StatsModelQueryManager(advertiser.account)
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=advertiser,
                                                  days=days)
-        return self.format_stats(stats)
+        if daily:
+            return self.format_daily_stats(stats)
+        else:
+            return self.format_stats(stats)
+
             
     def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
         
@@ -424,7 +432,7 @@ class MarketplaceStatsFetcher(object):
              end)
         response_dict = _fetch_and_decode(url)
         stats_sum = response_dict['sum']
-        counts = _transform_stats(stats_sum)
+        counts = {'sum': _transform_stats(stats_sum)}
 
         if daily:
             # append daily breakdown of stats

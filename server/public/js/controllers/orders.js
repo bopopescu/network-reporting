@@ -359,12 +359,8 @@
                         + '&endpoint=direct';
                 };
 
-                adunit.parse = function (response) {
-                    return response;
-                }
-
-                adunit.bind('change', function(current_adunit){
-                    console.log(current_adunit.get('id'));
+                adunit.bind('change', function(current_adunit){                    
+                    console.log(current_adunit);
                     renderAdUnit(current_adunit);
                 });
 
@@ -587,12 +583,15 @@
                 var width = parseInt(iframe.attr("width"));
                 var height = parseInt(iframe.attr("height"));
                 modal.css({
-                                'width': 'auto',
-                                'height': 'auto',
-                                'margin-left': function () {
-                                                return -($(this).width() / 2);},
-                                'margin-top': function () {
-                                                return -($(this).height() / 2);}});
+                    'width': 'auto',
+                    'height': 'auto',
+                    'margin-left': function () {
+                        return -($(this).width() / 2);
+                    },
+                    'margin-top': function () {
+                        return -($(this).height() / 2);
+                    }
+                });
                 modal.modal('show');
             });
 

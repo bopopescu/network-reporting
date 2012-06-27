@@ -278,7 +278,9 @@ class Site(db.Model):
         return hash(str(self.key()))
 
     def __eq__(self, other):
-        return self.key() == other.key()
+        if type(other) == Site:
+            return self.key() == other.key()
+        return False
         
     
     def simplify(self):

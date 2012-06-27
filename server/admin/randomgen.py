@@ -2,6 +2,7 @@ import copy
 import string
 import random
 import datetime
+import uuid
 
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import AdGroupQueryManager
@@ -16,24 +17,9 @@ from account.models import *
 from budget.models import *
 from reporting.models import *
 
-#
-## Imports to generate networks page data
-from common.constants import REPORTING_NETWORKS, \
-        NETWORKS_WITHOUT_REPORTING, \
-        NETWORKS, \
-        NETWORK_ADGROUP_TRANSLATION
+
 from advertiser.query_managers import CampaignQueryManager
-
-from ad_network_reports.models import AdNetworkLoginCredentials, \
-     AdNetworkAppMapper, \
-     AdNetworkStats, \
-     AdNetworkScrapeStats, \
-     AdNetworkNetworkStats, \
-     AdNetworkAppStats, \
-     LoginStates
-
-from ad_network_reports.query_managers import AdNetworkMapperManager, \
-        AdNetworkStatsManager
+from publisher.query_managers import AdUnitQueryManager
 
 from common.utils import date_magic
 
@@ -66,7 +52,6 @@ CAMPAIGN_INDEX = 0
 CREATIVE_INDEX = 0
 ADGROUP_INDEX= 0
 APP_TYPES = ['iphone','android','ipad','mweb']
-COLOR_ALPH = string.digits + "ABCDEF"
 
 CAMPAIGN_TYPES = ['order', 'marketplace', 'network']
 
@@ -94,6 +79,7 @@ NETWORK_TYPES = ["adsense",
                  "custom_native",
                  "admob_native",
                  "millennial_native"]
+
 BID_STRATEGIES = ['cpc','cpm','cpa']
 
 NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
@@ -113,39 +99,60 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
 ####
 #Helper Methods
 ####
+def select_rand(array):
+    """
+    Selects a random member of an array.
+    """
+    return array[random.randint(0,len(array)-1)]
 
-def get_random_name():
-    return 'Object ' + str(uuid.uuid4())
+def select_rand_subset(array):
+    """
+    Selects a random subset array from an array.
+    """
+    num_elements = random.randint(1,len(array)-1)
+    cloned = copy.copy(array)
+    random.shuffle(cloned)
+    return cloned[:num_elements]
+
+def get_random_name(kind=None):
+    """
+    Generates a random string for a name.
+    """
+    if not kind:
+        kind = 'Object'
+    return '%s %s' + (kind, str(uuid.uuid4())[:4])
 
 def get_random_color():
-    return "".join([select_rand(COLOR_ALPH) for i in range(5)])
+    """
+    Generates a random 6 digit hex color
+    """
+    color_alphas = string.digits + "ABCDEF"
+    return "".join([select_rand(color_alphas) for i in range(5)])
 
 def get_keys(objs, as_str=False):
+    """
+    Gets a list of keys for each object in a list of objects.
+    """
     keys = [obj.key() for obj in objs]
     if as_str:
         return [str(k) for k in keys]
     return keys
 
 
-
-def select_rand(array):
-    return array[random.randint(0,len(array)-1)]
-
-def select_rand_subset(array):
-    num_elements = random.randint(1,len(array)-1)
-    cloned = copy.copy(array)
-    random.shuffle(cloned)
-    return cloned[:num_elements]
-
-
 def get_random_date():
+    """
+    Gets a random date between the start of the year and today.
+    """
     today = datetime.date.today()
-    year = 2012
+    year = today.year
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
     return datetime.date(year,month,day)
 
 def get_random_datetime():
+    """
+    Gets a random datetime between the start of the year and today.
+    """
     today = datetime.datetime.now()
     year = 2012
     month = random.randint(1,today.month)
@@ -159,7 +166,7 @@ def get_random_datetime():
 
 
 def generate_app(account):
-    app = App(name=get_app_name(),
+    app = App(name=get_random_name(),
               app_type=select_rand(APP_TYPES),
               account = account)
     app.put()
@@ -169,7 +176,7 @@ def generate_app(account):
 def generate_adunit(app, account):
     adunit = AdUnit(app_key = app,
                     account = account,
-                    name = get_adunit_name(),
+                    name = get_random_name(),
                     color_border = get_random_color(),
                     color_bg = get_random_color(),
                     color_link = get_random_color(),
@@ -198,17 +205,16 @@ def generate_order(account, budget=None):
 
     name = get_random_name()
     order = Campaign(name=name,
-                        budget_obj = budget,
-                        campaign_type = 'order',
-                        account = account,
-                        start_date = start_date,
-                        end_date = end_date)
-    campaign.put()
+                     budget_obj = budget,
+                     campaign_type = 'order',
+                     account = account)
+    order.put()
     return order
 
 
 def generate_line_item(account, order, site_keys,
-                       start_date=None, end_date=None, budget=None):
+                       start_date=None, end_date=None,
+                       budget=None):
     
     if not start_date:
         start_date = get_random_date()
@@ -222,117 +228,62 @@ def generate_line_item(account, order, site_keys,
         end_date = temp
 
     line_item = AdGroup(campaign=order,
+                        adgroup_type='gtee',
                         name = get_random_name(),
                         site_keys = site_keys,
                         account = account)
     line_item.put()
     return line_item
-                        
+
     
-def generate_adgroup(site_keys,account,campaign=None,network=None):
-    if campaign:
-        if campaign.campaign_type=="network":
-            if network:
-                adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
-                        site_keys[0], account.key())
-                adgroup.put()
-                return adgroup
-            else:
-                network = select_rand(NETWORK_TYPES)
+def generate_marketplace(account):
+    pass
 
-            # Need to update account's network configuration if we add
-            # a network adgroup
-            if network in NETWORK_TYPE_TO_PUB_ID_ATTR.keys():
-                network_config = account.network_config
-                setattr(network_config,NETWORK_TYPE_TO_PUB_ID_ATTR[network],"fillerid")
-                a = AccountQueryManager()
-                a.update_config_and_put(account,network_config)
+    
+def generate_network(account, network_type):
+    pass
 
-        adgroup = AdGroup(campaign=campaign,
-                      network_type=network if campaign.campaign_type=="network" else None,
-                      bid_strategy=select_rand(BID_STRATEGIES),
-                      account=account,
-                      site_keys=site_keys,
-                      name=get_adgroup_name())
-
-    else:
-        adgroup = AdGroup(network_type=network,
-                          bid_strategy='cpm',
-                          account=account,
-                          site_keys=site_keys,
-                          name=get_adgroup_name())
-    adgroup.put()
-
-    return adgroup
-
-
-
-def generate_campaign(account, budget=None, campaign_type=None):
-
-    if not campaign_type:
-        campaign_type = 'order'
-        
-    if campaign_type == 'marketplace':
-        campaign_name = 'Marketplace'
-        campaign = CampaignQueryManager.get_marketplace(account)
-        
-    else:
-        start_date = get_random_date()
-        end_date = get_random_date()
-        name = get_campaign_name()
-        if start_date> end_date:
-            temp = start_date
-            start_date = end_date
-            end_date = temp
-        campaign = Campaign(name=campaign_name,
-                            budget_obj = budget,
-                            campaign_type = campaign_type,
-                            account = account,
-                            start_date = start_date,
-                            end_date = end_date)
-    campaign.put()
-    return campaign
-
-
-
-def generate_account(username=USERNAME,
-                     password=PASSWORD,
-                     email=USERNAME,                     
-                     marketplace_config=None,
-                     network_config=None,
-                     display_new_networks=False):
-
-    # Create a marketplace config if it doesnt exist
-    if not marketplace_config:
-        marketplace_config = MarketPlaceConfig()
-        marketplace_config.put()
-
-    # Create a network config if it doesnt exist
-    if not network_config:
-        network_config = NetworkConfig()
-        network_config.put()
-
-    # Register a new user
+    
+def generate_account(username, password):
+    # Create a user and profile based on passed-in credentials.
     manager = RegistrationManager()
-    user = manager.create_active_user(send_email=False,username=username,
-                                      password=password,email=email)
+    user = manager.create_active_user(send_email=False, username=username,
+                                      password=password, email=username)
     manager.create_profile(user)
 
-    # Create a new account object for the user
+    # Create an account for this user. Mark it as active and as using new-style
+    # networks.
     account = AccountQueryManager().get_current_account(user=user)
     account.active = True
-    account.marketplace_config = marketplace_config
-    account.network_config = network_config
-    account.display_new_networks = display_new_networks
+    account.display_new_networks = True
+
     account.put()
-    
+
+    # Since this is a new account, it needs marketplace and network configs.
+    marketplace_config = MarketPlaceConfig()
+    marketplace_config.put()
+    account.marketplace_config = marketplace_config
+
+    network_config = NetworkConfig(account=account)
+    network_config.put()
+    account.network_config = network_config
+
+    # This account also needs a default marketplace campaign.
+    marketplace_campaign = CampaignQueryManager.get_marketplace(account)
+    marketplace_campaign.put()
+
+    account.put()
+
     return account
+
+    
 
 def generate_network_config():
     networkconfig = NetworkConfig()
     networkconfig.put()
     return networkconfig
 
+    
 def generate_marketplace_config():
     marketplace_config = MarketPlaceConfig()
     marketplace_config.put()
@@ -370,13 +321,13 @@ def generate_stats_model(publisher, advertiser, account, date):
 
 
 def generate_creative(account, adgroup):
-    creative_name = get_creative_name()
+    creative_name = get_random_name()
 
     #For now, test data generation will only create basic text creatives
-    creative = TextCreative(active=True,
+    creative = HtmlCreative(active=True,
                             account = account,
                             ad_group = adgroup,
-                            ad_type = "text",
+                            ad_type = "html",
                             headline = "%s %s" % (creative_name,"headline"),
                             line1 = "%s %s" % (creative_name,"line1"),
                             line2 = "%s %s" % (creative_name,"line2"),
@@ -388,39 +339,35 @@ def generate_creative(account, adgroup):
 
         
 def main():
-    account = generate_account(USERNAME,
-                               PASSWORD,
-                               USERNAME,
-                               display_new_networks=True)
+    
+    account = generate_account('test@mopub.com', 'test')
+    account.put()
 
     # generate inventory
     apps = [generate_app(account) for i in range(5)]
-    adunits = [(generate_adunit(app, account), generate_adunit(app, account)) for app in apps]
+    # generate two adunits per app and keep them grouped together for later
+    adunits = [(generate_adunit(app, account),
+                generate_adunit(app, account)) for app in apps]
 
     # generate advertiser models
-    orders = [generate_order(account) for i in range(5)]    
+    orders = [generate_order(account) for i in range(5)]
     line_items = [generate_line_item(account, order, get_keys(site_keys)) \
                   for order, site_keys in zip(orders, adunits)]
     creatives = [generate_creative(account, line_item) for line_item in line_items]
-
+    
     # Generate the date range
     today = datetime.datetime.now()
-    month_ago = today - datetime.timedelta(30)
-    days = date_magic.gen_days(today, month_ago)
-
+    month_ago = today - datetime.timedelta(14)
+    days = date_magic.gen_days(month_ago, today)
+    
     # Generate stats for each creative + adunit pair
     stats_manager = StatsModelQueryManager(account=account)
     for creative in creatives:
         for day in days:
-            for site_key in creative.ad_group.site_keys:
-                adunit = AdUnitQueryManager.get(site_key)
+            for site_key in creative.ad_group.site_keys:                
+                adunit = AdUnitQueryManager.get(site_key)                             
                 stats = generate_stats_model(adunit, creative, account, day)
-
-                # Generate some stats for requests that didn't fill
-                req_stats = generate_stats_model(adunit,None,account,cur_date)
-                req_stats.impression_count = req_stats.click_count = req_stats.conversion_count = 0
-                
-                stats_manager.put_stats(stats=stats+req_stats)            
+                stats_manager.put_stats(stats=stats)
         
 if __name__=="__main__":
     main()

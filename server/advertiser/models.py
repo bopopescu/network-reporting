@@ -140,7 +140,7 @@ class Campaign(db.Model):
             'deleted': self.deleted,
             'key': str(self.key())
         }
-        
+
     @property
     def status_icon_url(self):
         if self.deleted:
@@ -149,10 +149,10 @@ class Campaign(db.Model):
             return "/images/active.gif"
         if self.archived:
             return "/images/archived.gif"
-            
+
         return "/images/paused.gif"
 
-        
+
 Order = Campaign
 
 
@@ -402,7 +402,7 @@ class AdGroup(db.Model):
             return 'pace-warning'
         else:
             return 'pace-failure'
-        
+
     @property
     def progress(self):
         """ Get the % of the budget that has been delivered """
@@ -455,14 +455,8 @@ class AdGroup(db.Model):
                              campaign = self.campaign,
                              account = self.account,
                              name = self.name,
-                             adgroup_type = self.campaign.campaign_type,
                              bid = self.bid,
                              bid_strategy = self.bid_strategy,
-                             full_budget=self.campaign.full_budget,
-                             daily_budget=self.campaign.budget,
-                             budget_type=self.campaign.budget_type,
-                             start_datetime=self.campaign.start_datetime,
-                             end_datetime=self.campaign.end_datetime,
                              active = self.active,
                              deleted = self.deleted,
                              minute_frequency_cap= self.minute_frequency_cap,
@@ -495,7 +489,7 @@ class AdGroup(db.Model):
                              start_datetime=start_datetime,
                              end_datetime=end_datetime,
                              full_budget=self.full_budget,
-                             daily_budget=self.budget,
+                             daily_budget=self.daily_budget,
                              budget_type=self.budget_type
                              )
 
@@ -726,7 +720,7 @@ class AdGroup(db.Model):
     def frequency_cap_display(self):
 
         display = []
-        
+
         if self.minute_frequency_cap:
             display.append(str(self.minute_frequency_cap) + "/minute")
         if self.hourly_frequency_cap:
@@ -739,7 +733,7 @@ class AdGroup(db.Model):
             display.append(str(self.monthly_frequency_cap) + "/month")
         if self.lifetime_frequency_cap:
             display.append(str(self.lifetime_frequency_cap) + " total")
-        
+
         if not display:
             return "No frequency caps"
         else:
@@ -775,7 +769,7 @@ class AdGroup(db.Model):
                 ios_display.append("iPad")
             if self.target_ipod:
                 ios_display.append("iPod")
-                
+
             if ios_display:
                 ios_display_all = ", ".join(ios_display) + \
                                   " (iOS version " + self.ios_version_min + \
@@ -796,7 +790,7 @@ class AdGroup(db.Model):
                 return display
 
         return ["All devices"]
-        
+
     def toJSON(self):
         d = {
             'key': str(self.key()),
@@ -867,7 +861,7 @@ class AdGroup(db.Model):
             return "/images/active.gif"
         if self.archived or self.campaign.archived:
             return "/images/archived.gif"
-            
+
         return "/images/paused.gif"
 
 LineItem = AdGroup

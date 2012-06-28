@@ -24,6 +24,9 @@
                         // set up form fields for the new report form
                         set_up_form('new');
 
+                        // initialize the interval
+                        $('#id_new-interval').change();
+
                         // Hide / Show run button based on sched interval
                         // selection
                         $('#id_new-sched_interval')
@@ -109,7 +112,7 @@
         $('#id_' + prefix + '-d1').change(
                 function(e) {
                     e.preventDefault();
-                    d1_validate(prefix, true);
+                    d1_validate(prefix, true, true);
                     d2_validate(prefix);
                 });
 
@@ -117,11 +120,12 @@
         $('#id_' + prefix + '-d2').change(
                 function(e) {
                     e.preventDefault();
+                    d1_validate(prefix, false, true);
                     d2_validate(prefix);
                 });
 
         // setup initial state for d2 and d3
-        d1_validate(prefix, false);
+        d1_validate(prefix, false, false);
         d2_validate(prefix);
 
         // set date fields based on selected interval
@@ -235,15 +239,18 @@
     }
 
     /* Based on d1's selection change what options are shown for d2 and d3 */
-    function d1_validate(prefix, reset) {
+    function d1_validate(prefix, reset_d2, reset_d3) {
         var d1_sel = $('#id_' + prefix + '-d1');
         var d2_sel = $('#id_' + prefix + '-d2');
         var d3_sel = $('#id_' + prefix + '-d3');
 
         //start with everything
-        if(reset) {
+        if(reset_d2) {
             reset_dimensions(d2_sel);
+        }
+        if(reset_d3) {
             reset_dimensions(d3_sel);
+            $('#' + prefix + '-d3-show').hide();
         }
 
         if(d1_sel.val() == '') {

@@ -171,9 +171,11 @@
         $('#id_' + prefix + '-sched_interval')
             .change(function(e) {
                 // hide all shceduled helps
-                $('#id_' + prefix + '-schedule-help').hide();
+                _.each(['daily', 'weekly', 'monthly', 'quarterly'], function(interval) {
+                    $('#' + prefix + '-schedule-help-' + interval).hide();
+                });
                 // show help for value
-                $('#id_' + prefix + '-schedule-help-' + $(this).val()).show();
+                $('#' + prefix + '-schedule-help-' + $(this).val()).show();
             }).change();
 
         // Validate report forms

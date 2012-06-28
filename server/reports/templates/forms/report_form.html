@@ -25,5 +25,19 @@
     <dt>{{ report_form.recipients.label_tag }}</dt>
     <dd>{{ report_form.recipients }}</dd>
     <dt>{{ report_form.sched_interval.label_tag }}</dt>
-    <dd>{{ report_form.sched_interval }}</dd>
+    <dd>
+        {{ report_form.sched_interval }}
+        <span id='{{ prefix }}-schedule-help-daily'>
+            (Run every day, 12:00 AM GMT.)
+        </span>
+        <span id='{{ prefix }}-schedule-help-weekly'>
+            (Run every Monday, 12:00 AM GMT.)
+        </span>
+        <span id='{{ prefix }}-schedule-help-monthly'>
+            (Run on the first of every month, 12:00 AM GMT.)
+        </span>
+        <span id='{{ prefix }}-schedule-help-quarterly'>
+            (Run at the start of every quarter, 12:00 AM GMT.)
+        </span>
+    </dd>
 </dl>

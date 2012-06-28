@@ -46,7 +46,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for report in reports %}
+            {% for report in scheduled %}
             <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='{{ report.key }}-row'>
                 <td class='reportData-icon'>
                     <input type='checkbox' name='reportChangeStateForm-key' value='{{report.key}}'/>
@@ -58,24 +58,15 @@
                     <div class="report-name">
                         {{ report.name }}
                     </div>
-                    {% if report in scheduled %}
                     <div id="{{ report.key }}-edit-link" class="edit-link hidden">
-                        {% else %}
-                        <div id="{{ report.key }}-edit-link" class="edit-link hidden">
-                            {% endif %}
-                            <span class="ui-icon ui-icon-wrench"></span>
-                        </div>
+                        <span class="ui-icon ui-icon-wrench"></span>
                     </div>
 
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
                 <td id='{{report.key}}-status' class='dataTable-date'>
                     {% if report.status == 'Completed' %}
-                    {% if report in scheduled %}
                     {{ report.last_run|date:'N j, Y \<\b\r /\> f a'|safe }}
-                    {% else %}
-                    {{ report.completed_at|date:'N j, Y \<\b\r /\> f a'|safe }}
-                    {% endif %}
                     {% endif %}
                 </td>
                 <td class='dataTable-data'>{% if report.sched_interval and report.sched_interval != 'none' %}{{ report.sched_interval|capfirst }}{% endif %}</td>
@@ -126,10 +117,7 @@
 <script>
     $(function () {
         ReportIndexController.initialize({
-            report_keys: [{% for report in reports %}
-                ['{{ report.key }}',
-                    {% if report in scheduled %}'{{ report.key }}'{% else %}'{{ report.schedule.key }}'{% endif %}],
-                {% endfor %}],
+            report_keys: [{% for report in scheduled %} '{{ report.key }}', {% endfor %}],
         });
     });
 </script>

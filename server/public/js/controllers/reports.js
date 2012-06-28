@@ -58,12 +58,7 @@
                         $('.chzn-select').chosen();
 
                         /* Edit existing saved and scheduled reports */
-                        _.each(report_keys, function(report_key) {
-                            // reports use the same form as their scheduled
-                            // report
-                            var key = report_key[0];
-                            var scheduled_key = report_key[1];
-
+                        _.each(report_keys, function(key) {
                             var row = $('#' + key + '-row')
 
                             // hide / show wrench edit icon
@@ -78,22 +73,20 @@
                             $('#' + key + '-edit-link')
                                 .click(function(e) {
                                     e.preventDefault();
-                                    var report_form = $('#' + scheduled_key + '-reportForm-container');
+                                    var report_form = $('#' + key + '-reportForm-container');
                                     report_form.dialog({width:750});
                                 });
 
-                            if (scheduled_key == key) {
-                                // close dialog
-                                $('#' + scheduled_key + '-reportEditForm-cancel')
-                                    .click(function(e) {
-                                        e.preventDefault();
-                                        $('#' + scheduled_key + '-reportForm-container').dialog('close');
-                                    });
+                            // close dialog
+                            $('#' + key + '-reportEditForm-cancel')
+                                .click(function(e) {
+                                    e.preventDefault();
+                                    $('#' + key + '-reportForm-container').dialog('close');
+                                });
 
 
-                                // set up form fields
-                                set_up_form(scheduled_key);
-                            }
+                            // set up form fields
+                            set_up_form(key);
 
                         });
 
@@ -116,7 +109,7 @@
         $('#id_' + prefix + '-d1').change(
                 function(e) {
                     e.preventDefault();
-                    d1_validate(prefix);
+                    d1_validate(prefix, true);
                     d2_validate(prefix);
                 });
 
@@ -126,6 +119,10 @@
                     e.preventDefault();
                     d2_validate(prefix);
                 });
+
+        // setup initial state for d2 and d3
+        d1_validate(prefix, false);
+        d2_validate(prefix);
 
         // set date fields based on selected interval
         $('#id_' + prefix + '-interval')
@@ -238,14 +235,16 @@
     }
 
     /* Based on d1's selection change what options are shown for d2 and d3 */
-    function d1_validate(prefix) {
+    function d1_validate(prefix, reset) {
         var d1_sel = $('#id_' + prefix + '-d1');
         var d2_sel = $('#id_' + prefix + '-d2');
         var d3_sel = $('#id_' + prefix + '-d3');
 
         //start with everything
-        reset_dimensions(d2_sel);
-        reset_dimensions(d3_sel);
+        if(reset) {
+            reset_dimensions(d2_sel);
+            reset_dimensions(d3_sel);
+        }
 
         if(d1_sel.val() == '') {
             d2_sel.children().first().select();

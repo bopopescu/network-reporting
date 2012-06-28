@@ -44,9 +44,9 @@ class ReportIndexHandler(RequestHandler):
                 manager.get_scheduled(limit=None, saved=False) if
                 report.sched_interval != 'none']
 
-        reports = all_saved_scheduled + all_unsaved_scheduled
+        scheduled = all_saved_scheduled + all_unsaved_scheduled
 
-        for report in reports:
+        for report in scheduled:
             report.form = ReportForm(instance=report,
                                      prefix=str(report.key()))
 
@@ -61,15 +61,13 @@ class ReportIndexHandler(RequestHandler):
             else:
                 return datetime.min
 
-        reports = sorted(reports, key=sort_reports_key, reverse=True)
+        scheduled = sorted(scheduled, key=sort_reports_key, reverse=True)
 
         new_report_form = ReportForm(initial={'recipients':
                                         self.request.user.email},
                                      prefix='new')
         return render_to_response(self.request, 'reports/reports_index.html',
-                                 {'reports': reports,
-                                  'scheduled': all_saved_scheduled + \
-                                    all_unsaved_scheduled,
+                                 {'scheduled': scheduled,
                                   'new_report_form': new_report_form, })
 
 @login_required

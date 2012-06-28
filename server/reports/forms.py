@@ -106,9 +106,12 @@ class ReportForm(forms.ModelForm):
         return start
 
     def clean_days(self):
-        start = datetime.strptime(self.data.get(self.prefix + '-start', None),
-                '%m/%d/%Y').date()
-        end = self.cleaned_data.get('end', None)
+        start = None
+        end = None
+        if self.data.get(self.prefix + '-start', None):
+            start = datetime.strptime(self.data.get(self.prefix + '-start', None),
+                    '%m/%d/%Y').date()
+            end = self.cleaned_data.get('end', None)
         if not start or not end:
             raise forms.ValidationError('Start and end dates are required.')
 

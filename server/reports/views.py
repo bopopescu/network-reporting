@@ -51,13 +51,8 @@ class ReportIndexHandler(RequestHandler):
                                      prefix=str(report.key()))
 
         def sort_reports_key(report):
-            if isinstance(report, Report):
-                dt = report.completed_at
-            else:
-                dt = report.last_run
-
-            if dt:
-                return dt
+            if report.last_run:
+                return report.last_run
             else:
                 return datetime.min
 

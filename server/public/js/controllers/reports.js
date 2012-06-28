@@ -155,7 +155,7 @@
                     $('#id_' + prefix + '-start').val(start);
                     $('#id_' + prefix + '-end').val(end);
                 }
-            }).change();
+            });
 
         // change interval to custom if user enters anything in a date field
         $('.date')

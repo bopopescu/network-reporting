@@ -35,16 +35,7 @@ from reports.forms import ReportForm
 class ReportIndexHandler(RequestHandler):
     def get(self):
         manager = ReportQueryManager(self.account)
-        all_saved_scheduled = manager.get_scheduled(limit=None)
-
-        # awaiting index construction...
-#        all_unsaved_scheduled = manager.get_scheduled(saved=False,
-#                not_sched_interval='none')
-        all_unsaved_scheduled = [report for report in
-                manager.get_scheduled(limit=None, saved=False) if
-                report.sched_interval != 'none']
-
-        scheduled = all_saved_scheduled + all_unsaved_scheduled
+        scheduled = manager.get_scheduled(limit=None)
 
         for report in scheduled:
             report.form = ReportForm(instance=report,

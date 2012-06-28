@@ -42,7 +42,6 @@
                 <th class='dataTable-date'>Last Run</th>
                 <th class='dataTable-data'>Scheduled</th>
                 <th class='dataTable-data'>Status</th>
-                <th class='dataTable-data numeric'></th>
             </tr>
         </thead>
         <tbody>
@@ -61,15 +60,19 @@
                     <div id="{{ report.key }}-edit-link" class="edit-link hidden">
                         <span class="ui-icon ui-icon-wrench"></span>
                     </div>
-
                 </th>
-                <td class='dataTable-name'>{{report.details|safe}}</td>
+
+                <td class='dataTable-name'>
+                    {{report.details|safe}}
+                </td>
                 <td id='{{report.key}}-status' class='dataTable-date'>
-                    {% if report.status == 'Completed' %}
                     {{ report.last_run|date:'N j, Y \<\b\r /\> f a'|safe }}
+                </td>
+                <td class='dataTable-data'>
+                    {% if report.sched_interval and report.sched_interval != 'none' %}
+                    {{ report.sched_interval|capfirst }}
                     {% endif %}
                 </td>
-                <td class='dataTable-data'>{% if report.sched_interval and report.sched_interval != 'none' %}{{ report.sched_interval|capfirst }}{% endif %}</td>
                 <td class='dataTable-name'>
                     {% if report.status == 'Completed' %}
                     <a href='{% url report_export report_key=report.key %}'>Export</a>
@@ -77,7 +80,6 @@
                     {{ report.status }}
                     {% endif %}
                 </td>
-                <td class='dataTable-data numeric'></td>
             </tr>
             {% endfor %}
         </tbody>

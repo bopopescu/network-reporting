@@ -20,7 +20,9 @@
             </div>
             <div class='clear'></div>
             <div class='form-submit'>
-                <a href='#' class='button' id='new-reportEditForm-run'>Run Report</a>
+                <span id='new-reportEditForm-runSpan'>
+                    <a href='#' class='button' id='new-reportEditForm-run'>Run Report</a>
+                </span>
                 <a href='#' class='button' id='new-reportEditForm-save'>Run and Save</a>
                 <a href='#' class='button' id='new-reportEditForm-cancel'>Cancel</a>
             </div>
@@ -97,7 +99,7 @@
 
 
 {% for report in scheduled %}
-<div id='{{ report.key }}-reportForm-container' style='display: none;'>
+<div id='{{ report.key }}-reportForm-container' style='display: none; overflow: visible;'>
     <form action="{% url edit_report report_key=report.key %}" method="POST" accept-charset="utf-8" id="{{ report.key }}-reportEditForm">
         <fieldset id="reportAddForm-details" class="alt">
             <div id="reportAddForm-fragment" class="reportAddForm-fragment">

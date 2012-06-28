@@ -77,13 +77,18 @@ class ReportForm(forms.ModelForm):
         initial = kwargs.get('initial', {})
         #Initially was just a check, making it an int check since
         #0 is a valid property, but evals to false
-        if instance and (instance.days or instance.days == 0):
-            dt = timedelta(days=instance.days)
-            initial.update(start=instance.end-dt)
-            kwargs.update(initial = initial)
-        if instance and not instance.interval:
-            initial.update(interval='custom')
-            kwargs.update(initial = initial)
+        if instance:
+            if (instance.days or instance.days == 0):
+                dt = timedelta(days=instance.days)
+                initial.update(start=instance.end-dt)
+                kwargs.update(initial=initial)
+            if not instance.interval:
+                initial.update(interval='custom')
+                kwargs.update(initial=initial)
+
+            initial.update(recipients=', '.join(instance.recipients))
+            kwargs.update(initial=initial)
+
         super(ReportForm, self).__init__(*args, **kwargs)
 
     def clean_start(self):
@@ -110,10 +115,11 @@ class ReportForm(forms.ModelForm):
         return (end - start).days
 
     def clean_recipients(self):
-        recipients = self.initial.get('recipients', None)
+        recipients = self.cleaned_data.get('recipients', None)
         recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n'). \
                 split('\n') if r] if recipients else []
         recipients = filter(None, recipients)
+        logging.info(recipients)
         return recipients
 
     class Meta:

@@ -8,10 +8,10 @@
     <dt>{{ report_form.d1.label_tag }}</dt>
     <dd>
     {{ report_form.d1 }}
-    <span id='{{ prefix }}-d2-show' class='hidden'>
+    <span id='{{ prefix }}-d2-show' {% if report.form.instance.d1 == None %}class='hidden'{% endif %}>
         {{ report_form.d2.label_tag }}
         {{ report_form.d2 }}
-        <span id='{{ prefix }}-d3-show' class='hidden'>
+        <span id='{{ prefix }}-d3-show' {% if report.form.instance.d2 == None %}class='hidden'{% endif %}>
             {{ report_form.d3.label_tag }}
             {{ report_form.d3 }}
         </span>

@@ -1754,7 +1754,8 @@ form#campaign_and_adgroup input.token-input-field.focused, form#network-login-fo
   border-radius: 0 3px 3px 0; }
 
 .chzn-select {
-  width: 120px; }
+  width: 120px;
+  z-index: 5; }
 
 /*
  * ## Colors

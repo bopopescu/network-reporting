@@ -37,13 +37,6 @@ class ReportIndexHandler(RequestHandler):
         manager = ReportQueryManager(self.account)
         all_saved_scheduled = manager.get_scheduled(limit=None)
 
-        saved_reports = []
-        for scheduled_report in all_saved_scheduled:
-            saved_reports += list(scheduled_report.reports.filter('deleted =',
-                False).run(batch_size=300))
-            scheduled_report.form = ReportForm(instance=scheduled_report,
-                                               prefix=str(scheduled_report.key()))
-
         # awaiting index construction...
 #        all_unsaved_scheduled = manager.get_scheduled(saved=False,
 #                not_sched_interval='none')
@@ -51,7 +44,11 @@ class ReportIndexHandler(RequestHandler):
                 manager.get_scheduled(limit=None, saved=False) if
                 report.sched_interval != 'none']
 
-        reports = all_saved_scheduled + all_unsaved_scheduled + saved_reports
+        reports = all_saved_scheduled + all_unsaved_scheduled
+
+        for report in reports:
+            report.form = ReportForm(instance=report,
+                                     prefix=str(report.key()))
 
         def sort_reports_key(report):
             if isinstance(report, Report):
@@ -120,8 +117,10 @@ class EditReportHandler(RequestHandler):
         else:
             errors = {}
             for key, value in report_form.errors.items():
-                key = report_form.prefix + '-' + key
-                errors[key] = ' '.join([error for error in value])
+                # days is a derived field in the form
+                if key != 'days':
+                    key = report_form.prefix + '-' + key
+                    errors[key] = ' '.join([error for error in value])
             logging.info("Report form is invalid.\nErrors: %s" % errors)
 
         return JSONResponse({

@@ -24,6 +24,19 @@
                         // set up form fields for the new report form
                         set_up_form('new');
 
+                        // Hide / Show run button based on sched interval
+                        // selection
+                        $('#id_new-sched_interval')
+                            .change(function(e) {
+                                if($(this).val() == 'none') {
+                                    // Show run button
+                                    $('#new-reportEditForm-runSpan').show()
+                                } else {
+                                    // Hide run button
+                                    $('#new-reportEditForm-runSpan').hide()
+                                }
+                            }).change();
+
                         // Create new report
                         $('#new-reportEditForm-run')
                             .button({label: 'Run',
@@ -105,7 +118,7 @@
                     e.preventDefault();
                     d1_validate(prefix);
                     d2_validate(prefix);
-                }).change();
+                });
 
         // based on d2's selection, modify options for d3 
         $('#id_' + prefix + '-d2').change(
@@ -166,15 +179,15 @@
         // Validate report forms
         var validator = $('#' + prefix + '-reportEditForm').validate({
             errorPlacement: function(error, element) {
-                                element.parents('div').not(':hidden').first().append(error);
+                                element.parents('dd').not(':hidden').first().append(error);
                             },
             submitHandler: function(form) {
                                $(form).ajaxSubmit({
                                    data: {ajax: true},
                                    dataType: 'json',
                                    success: function(jsonData, statusText, xhr, $form) {
-                                       window.location = jsonData.redirect;
                                        if(jsonData.success) {
+                                           window.location = jsonData.redirect;
                                            $('#' + prefix + '-reportEditForm-run, #' + prefix + '-reportEditForm-save').button({
                                                disabled: true
                                            });

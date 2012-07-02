@@ -1,7 +1,7 @@
 import logging
 
 from urllib import urlencode
-from datetime import datetime
+from datetime import datetime, date
 import urllib
 
 
@@ -52,9 +52,12 @@ class ReportIndexHandler(RequestHandler):
         new_report_form = ReportForm(initial={'recipients':
                                         self.request.user.email},
                                      prefix='new')
+
+        display_splash = date.today() < date(2012, 8, 1)
         return render_to_response(self.request, 'reports/reports_index.html',
                                  {'scheduled': scheduled,
-                                  'new_report_form': new_report_form, })
+                                  'new_report_form': new_report_form,
+                                  'display_splash': display_splash})
 
 @login_required
 def reports_index(request, *args, **kwargs):
@@ -89,7 +92,7 @@ class EditReportHandler(RequestHandler):
             if report_key:
                 self.request.flash['report_edit'] = "The requested edit requires " \
                         "the report to be re-run.  The request has been submitted " \
-                        "and you will be notified via email when it has completed"
+                        "and you will be notified via email when it has completed."
             else:
                 self.request.flash['report_success'] = "Your report has been " \
                         "successfully submitted, you will be notified via email " \

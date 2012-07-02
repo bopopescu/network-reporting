@@ -24,6 +24,18 @@
 {% endblock pageTitle %}
 
 {% block content %}
+    {% if apps_without_global_id %}
+        <div class="alert-message block-message error">
+            <p>Error: You must have a complete iTunes URL or Android package name for the app(s) that you are using for user targeting.  Access the apps below and add the iTunes URL or Android package name.</p>
+            <ul class="simple">
+                {% for app in apps_without_global_id %}
+                    <li><a href="{% url publisher_app_show app.key %}">{{ app.name }}</a></li>
+                {% endfor %}
+            </ul>
+            <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+        </div>
+    {% endif %}
+
     <form action="{% url advertiser_campaign_edit adgroup.key %}" id="campaign_and_adgroup" method="post">
         {% include 'advertiser/forms/campaign_and_adgroup.html' %}
     </form>

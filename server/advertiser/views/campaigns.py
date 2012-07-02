@@ -263,11 +263,13 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Keyword arguments:
         adgroup_key -- the key of the adgroup we want to edit (only used for editing, not creating)
         """
+
         adgroup_to_edit = AdGroupQueryManager.get(adgroup_key) if adgroup_key else None
         campaign_form = self._campaign_form(adgroup=adgroup_to_edit)
-        adgroup_form = self._adgroup_form(adgroup=adgroup_to_edit)
+        adgroup_form = self._adgroup_form(adgroup=adgroup_to_edit, apps_choices=get_apps_choices(self.account))
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
         apps = self._apps_with_network_config_forms_for_account(self.account)
+        apps_without_global_id = get_targeted_apps_without_global_id(adgroup_to_edit) if adgroup_to_edit else []
 
         if adgroup_to_edit:
             template = 'advertiser/edit_campaign_and_adgroup.html'
@@ -283,6 +285,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
                                       'adgroup_form': adgroup_form,
                                       'account_network_config_form': account_network_config_form,
                                       'apps': apps,
+                                      'apps_without_global_id': apps_without_global_id,
                                   })
 
     ### BEGIN helpers for get()
@@ -306,7 +309,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
                             is_staff=self.request.user.is_staff,
                             account=self.account)
 
-    def _adgroup_form(self, adgroup=None):
+    def _adgroup_form(self, adgroup=None, apps_choices=[]):
         """
         Returns a form that can create an adgroup. If an adgroup object is provided as an argument
         to this method, the adgroup will be used as the instance for the form.
@@ -314,7 +317,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Keyword arguments:
         adgroup -- an adgroup object used as the instance for the AdGroupForm (default None)
         """
-        return AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
+        return AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff, apps_choices=apps_choices)
 
     def _apps_with_network_config_forms_for_account(self, account):
         """
@@ -362,6 +365,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             self._flush_adunit_contexts_affected_by_adgroup(adgroup_to_edit)
 
         apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
+        apps_choices = get_apps_choices(self.account)
         adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
 
         # Construct the campaign and adgroup objects from the form data. Return an error response
@@ -375,7 +379,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             campaign.save()
 
             adgroup = self._adgroup_from_form_data_with_campaign_and_adunits(campaign, adunits,
-                    instance=adgroup_to_edit)
+                    instance=adgroup_to_edit, apps_choices=apps_choices)
         except self.MPFormValidationException, ex:
             errors = ex[0] if len(ex.args) > 0 else {}
             return self._json_failure_response_with_errors(errors)
@@ -445,7 +449,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         campaign.account = self.account
         return campaign
 
-    def _adgroup_from_form_data_with_campaign_and_adunits(self, campaign, adunits, instance=None):
+    def _adgroup_from_form_data_with_campaign_and_adunits(self, campaign, adunits, instance=None, apps_choices=[]):
         """
         Returns an adgroup object created using form data from self.request.POST. The adgroup's
         campaign property will point to the given campaign, and its site_keys will be some subset
@@ -464,8 +468,9 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Note: this method does not save the adgroup to the datastore; you must do it yourself.
         """
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-        form = AdGroupForm(self.request.POST, instance=instance, site_keys=site_keys,
-                           is_staff=self.request.user.is_staff)
+        form = AdGroupForm(
+            self.request.POST, instance=instance, site_keys=site_keys,
+            is_staff=self.request.user.is_staff, apps_choices=apps_choices)
 
         if not form.is_valid():
             errors = {}
@@ -669,9 +674,12 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
     ### END helper methods for post()
 
+
 @login_required
 def create_or_edit_campaign_and_adgroup(request, *args, **kwargs):
-    return CreateOrEditCampaignAndAdGroupHandler()(request, *args, **kwargs)
+    handler = CreateOrEditCampaignAndAdGroupHandler()
+    return handler(request, use_cache=False, *args, **kwargs)
+
 
 class AdGroupDetailHandler(RequestHandler):
     """
@@ -696,6 +704,8 @@ class AdGroupDetailHandler(RequestHandler):
         # Load the ad group
         # 1 GET
         adgroup = AdGroupQueryManager.get(adgroup_key)
+
+        apps_without_global_id = get_targeted_apps_without_global_id(adgroup)
 
         # Direct sold campaigns have a start date, and sometimes an end date.
         # Use those values if they both exist, otherwise set the range from
@@ -865,7 +875,8 @@ class AdGroupDetailHandler(RequestHandler):
                                       'end_date': self.end_date,
                                       'date_range': self.date_range,
                                       'creative_fragment': creative_fragment,
-                                      'message': message
+                                      'message': message,
+                                      'apps_without_global_id': apps_without_global_id,
                                   })
 
     def post(self, adgroup_key):
@@ -1286,3 +1297,20 @@ class CampaignExporter(RequestHandler):
 
 def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
+
+
+def get_apps_choices(account):
+    apps = PublisherQueryManager.get_apps_dict_for_account(account).values()
+    apps = [app for app in apps if app.app_type != 'mweb']
+    apps.sort(key=lambda app: app.name.lower())
+    return [(str(app.key()), "%s (%s)" % (app.name, app.type)) for app in apps]
+
+
+def get_targeted_apps_without_global_id(adgroup):
+    app_keys = list(adgroup.included_apps) + list(adgroup.excluded_apps)
+    apps_without_global_id = []
+    for app_key in app_keys:
+        app = AppQueryManager.get_app_by_key(app_key)
+        if not app.global_id:
+            apps_without_global_id.append(app)
+    return apps_without_global_id

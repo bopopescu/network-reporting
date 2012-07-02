@@ -1,11 +1,66 @@
+# Deployed Tuesday, June 26, 2012 at 11:09PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-146
+### Bugs Fixed: []
+### Included Commits: 
+ * 16ef5a1 Deployed without finding any bug fixes.
+ 
+# Deployed Friday, June 22, 2012 at 08:57PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-145
+### Bugs Fixed: []
+### Included Commits:
+* 8a91bbf Deployed without finding any bug fixes.
+
+# Deployed Friday, June 22, 2012 at 08:35PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-144
+### Bugs Fixed: []
+### Included Commits:
+* 2354acd Deployed without finding any bug fixes.
+
+# Deployed Friday, June 22, 2012 at 08:11PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-143
+### Bugs Fixed: []
+### Included Commits:
+* fb5a532 Deployed without finding any bug fixes.
+
+# Deployed Friday, June 22, 2012 at 07:46PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-142
+### Bugs Fixed: []
+### Included Commits:
+* d0a0c2e Merge branch 'negative-user-targeting' of github.com:mopub/mopub
+* 9ef7f49 Deployed without finding any bug fixes.
+* cf97f75 Merge branch 'master' of github.com:mopub/mopub into negative-user-targeting
+* fd69b65 updated error message and help text
+* 11e1d42 Merge branch 'master' of github.com:mopub/mopub into negative-user-targeting
+* 61573c1 Merge branch 'master' of github.com:mopub/mopub into negative-user-targeting
+* 9dea5f8 fixed app targeting global id methods
+* f2ce9a9 merged master
+* aa22cba don't show mweb apps as options to negative user target, help text moved, error messages added
+* 475fa19 removed caching from campaign/adgroup create/edit page
+* 7adeb3c changed to match Btyan's feedback on Jira
+* c1b77f4 removed nonexistant global_ids from included and excluded _apps
+* 5286945 fist stab at negative user targeting ui
+
+# Deployed Friday, June 22, 2012 at 06:46PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-141
+### Bugs Fixed: []
+### Included Commits:
+* c48e8e5 fixed pacing fetch
+* 94fce59 Deployed without finding any bug fixes.
+
 # Deployed Thursday, June 21, 2012 at 10:33PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-140
 ### Bugs Fixed: []
-### Included Commits: 
- * 46651a8 moved updating budget to adgroup put
- * 1227c60 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 46651a8 moved updating budget to adgroup put
+* 1227c60 Deployed without finding any bug fixes.
+
 # Deployed Thursday, June 21, 2012 at 08:22PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-139

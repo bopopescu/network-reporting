@@ -368,6 +368,28 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
+    # negative user targeting
+    included_apps = db.ListProperty(db.Key)
+    excluded_apps = db.ListProperty(db.Key)
+
+    @property
+    def included_apps_global_ids(self):
+        global_ids = []
+        for app_key in self.included_apps or []:
+            app = db.get(app_key)
+            if app.global_id:
+                global_ids.append(app.global_id)
+        return global_ids
+
+    @property
+    def excluded_apps_global_ids(self):
+        global_ids = []
+        for app_key in self.excluded_apps or []:
+            app = db.get(app_key)
+            if app.global_id:
+                global_ids.append(app.global_id)
+        return global_ids
+
     @property
     def calculated_cpm(self):
         """
@@ -418,6 +440,8 @@ class AdGroup(db.Model):
                              optimizable = self.optimizable,
                              default_cpm = self.default_cpm,
                              network_type = self.network_type,
+                             included_apps = self.included_apps_global_ids,
+                             excluded_apps = self.excluded_apps_global_ids,
                              )
 
     def default_creative(self, custom_html=None, key_name=None):

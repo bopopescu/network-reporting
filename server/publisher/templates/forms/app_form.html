@@ -67,42 +67,30 @@
     {% endfor %}
   </dd>
 
-  <dt class="appForm-platformDependent iphone">
+  <dt class="appForm-platformDependent">
     <label class="iphone" for="appForm-url">iTunes URL:</label>
     <label class="mweb" for="appForm-url">URL:</label>
     <label class="android" for="appForm-package">Package name:</label>
   </dt>
 
-  <dd class="appForm-platformDependent iphone mweb">
+  <dd>
     <input type="url"
-           class="input-text iphone {% if form.url.errors %}form-error{% endif %}"
+           class="input-text {% if form.url.errors %}form-error{% endif %}"
            name="{{form.url.name}}"
            value="{{form.url.value}}"
            id="appForm-url"
            placeholder="http://itunes.apple.com/yourapp" />
-
     {% for error in form.url.errors %}
       <div class="form-error-text">{{error}}</div>
     {% endfor %}
 
     <input type="text"
-           class="input-text android  {% if form.package.errors %}form-error{% endif %}"
+           class="input-text {% if form.package.errors %}form-error{% endif %}"
            name="{{form.package.name}}"
            value="{{form.package.value}}"
            id="appForm-package"
            placeholder="com.company.appname" />
     {% for error in form.package.errors %}
-      <div class="form-error-text">{{error}}</div>
-    {% endfor %}
-
-    <input type="url"
-           class="input-text mweb {% if form.url.errors %}form-error{% endif %}"
-           name="{{form.url.name}}"
-           value="{{form.url.value}}"
-           id="appForm-url"
-           placeholder="http://www.yourapp.com/" />
-
-    {% for error in form.url.errors %}
       <div class="form-error-text">{{error}}</div>
     {% endfor %}
 

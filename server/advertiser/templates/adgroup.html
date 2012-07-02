@@ -38,7 +38,7 @@
 {% block titleBarRight %}
 
   <span class="titlebar-right">
-    {% if not campaign.network or not account.display_new_networks %}
+    {% if is_staff or not campaign.network or not account.display_new_networks %}
     {% if adgroup.active %}
       <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
         <option value="play" selected="selected">Running</option>
@@ -70,7 +70,7 @@
     {% endif %}
     {% endif %}
     {% if campaign.network %}
-      {% if not account.display_new_networks %}
+      {% if is_staff or not account.display_new_networks %}
       <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
       {% endif %}
     {% else %}
@@ -102,6 +102,17 @@
       {{message|safe}}
     </div>
   {% endif %}
+    {% if apps_without_global_id %}
+        <div class="alert-message block-message error">
+            <p>Error: You must have a complete iTunes URL or Android package name for the app(s) that you are using for user targeting.  Access the apps below and add the iTunes URL or Android package name.</p>
+            <ul class="simple">
+                {% for app in apps_without_global_id %}
+                    <li><a href="{% url publisher_app_show app.key %}">{{ app.name }}</a></li>
+                {% endfor %}
+            </ul>
+            <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+        </div>
+    {% endif %}
 
   <div class="separated" id="chartWrapper">
     <section class="offset nomargin" id="dashboard-stats">

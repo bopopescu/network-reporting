@@ -307,8 +307,14 @@ class SimpleAdGroup(SimpleModel):
                  key=None,
                  campaign=None,
                  name=None,
+                 adgroup_type=None,
                  bid=None,
                  bid_strategy=None,
+                 full_budget=None,
+                 daily_budget=None,
+                 budget_type=None,
+                 start_datetime=None,
+                 end_datetime=None,
                  active=None,
                  deleted=None,
                  minute_frequency_cap=None,
@@ -337,6 +343,8 @@ class SimpleAdGroup(SimpleModel):
                  optimizable=None,
                  default_cpm=None,
                  network_type=None,
+                 included_apps=None,
+                 excluded_apps=None,
                  *args,
                  **kwargs
                  ):
@@ -344,8 +352,14 @@ class SimpleAdGroup(SimpleModel):
         self.campaign = campaign.simplify()
         self.account = account.simplify()
         self.name = name
+        self.adgroup_type = adgroup_type
         self.bid = bid
         self.bid_strategy = bid_strategy
+        self.full_budget = full_budget
+        self.daily_budget = daily_budget
+        self.budget_type = budget_type
+        self.start_datetime = start_datetime
+        self.end_datetime = end_datetime
         self.active = active
         self.deleted = deleted
         self.minute_frequency_cap = minute_frequency_cap
@@ -373,6 +387,8 @@ class SimpleAdGroup(SimpleModel):
         self.optimizable = optimizable
         self.default_cpm = default_cpm
         self.network_type = network_type
+        self.included_apps = included_apps
+        self.excluded_apps = excluded_apps
 
     def __str__(self):
         return self.__repr__()

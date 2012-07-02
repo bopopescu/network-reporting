@@ -1649,6 +1649,19 @@ form#campaign_and_adgroup input.token-input-field, form#network-login-form input
   width: 100px; }
 form#campaign_and_adgroup input.token-input-field.focused, form#network-login-form input.token-input-field.focused, fieldset.dialog input.token-input-field.focused {
   background-color: white; }
+form#campaign_and_adgroup select[name="included_apps"], form#campaign_and_adgroup select[name="excluded_apps"], form#network-login-form select[name="included_apps"], form#network-login-form select[name="excluded_apps"], fieldset.dialog select[name="included_apps"], fieldset.dialog select[name="excluded_apps"] {
+  width: 300px; }
+form#campaign_and_adgroup #id_included_apps_chzn, form#campaign_and_adgroup #id_excluded_apps_chzn, form#network-login-form #id_included_apps_chzn, form#network-login-form #id_excluded_apps_chzn, fieldset.dialog #id_included_apps_chzn, fieldset.dialog #id_excluded_apps_chzn {
+  margin-top: 5px; }
+  form#campaign_and_adgroup #id_included_apps_chzn ul.chzn-choices, form#campaign_and_adgroup #id_excluded_apps_chzn ul.chzn-choices, form#network-login-form #id_included_apps_chzn ul.chzn-choices, form#network-login-form #id_excluded_apps_chzn ul.chzn-choices, fieldset.dialog #id_included_apps_chzn ul.chzn-choices, fieldset.dialog #id_excluded_apps_chzn ul.chzn-choices {
+    border: 1px solid #eaeaea;
+    border-top-color: #b9b9b9;
+    background: #fafafa;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    padding: 1px 2px 2px 3px;
+    width: 290px; }
 
 .input-prepend,
 .input-append {
@@ -2299,6 +2312,10 @@ a.disabled {
       margin-right: 30px; }
     .alert-message.block-message ul {
       margin-bottom: 0; }
+      .alert-message.block-message ul.simple {
+        list-style-type: none;
+        margin-top: 15px;
+        margin-bottom: 15px; }
     .alert-message.block-message li {
       color: #444444; }
     .alert-message.block-message .alert-actions {

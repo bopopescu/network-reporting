@@ -1,5 +1,5 @@
-application: mopub-inc
-version: 38-fetch
+application: mopub-experimental
+version: 38
 
 runtime: python
 api_version: 1
@@ -54,7 +54,7 @@ handlers:
 
 - url: /placeholders
   static_dir: public/placeholders
-  
+
 ### END STATIC ASSETS ###
 
 ### BEGIN APP ENGINE BUILT-INS ###

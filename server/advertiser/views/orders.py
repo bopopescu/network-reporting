@@ -545,6 +545,22 @@ def creative_image(request, *args, **kwargs):
 def creative_html(request, *args, **kwargs):
     return DisplayCreativeHandler()(request, *args, **kwargs)
 
+
+class CopyLineItemHandler(RequestHandler):
+
+    def post(self):
+
+        line_item_key = self.request.POST.get('line_item', None)
+        order_key = self.request.POST.get('order', None)
+        copy_creatives = self.request.POST.get('copy_creatives', None)
+
+        if line_item_key: 
+            line_item = AdGroupQueryManager.get(line_item_key)
+
+
+            return JSONResponse({'success': 'Line item copied' })
+        else:
+            raise Http404
     
 #############
 # Exporters #

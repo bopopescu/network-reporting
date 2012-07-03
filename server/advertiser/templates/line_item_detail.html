@@ -4,7 +4,7 @@
 {% load elements %}
 
 {% block pageTitleTag %}
-{% comment %}TODO: title{% endcomment %}
+ MoPub -- Line Item Detail
 {% endblock %}
 
 {% block pageTitle %}
@@ -41,12 +41,42 @@
 <br />
 
 <section>
-  <h3 class="left">
-    Status for {{ line_item.name }}
-    (part of <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a>)
-  </h3>
+  <div class="clearfix">
+    <h3 class="left">
+      Status for {{ line_item.name }}
+      (part of <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a>)
+    </h3>
+  </div>
 
-  <a class="btn right" href="{% url advertiser_line_item_form_edit line_item.key %}">
+  <div class="btn-group" id="copy_line_item">
+    <a class="btn" href="#">
+      <i class="icon-share"></i>
+      Copy Line Item
+    </a>
+    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+      <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+      <li>
+        <a class="copy_option" href="#" data-toggle="copy_with">
+          Copy with creatives
+        </a>
+      </li>
+      <li>
+        <a class="copy_option" href="#" data-toggle="copy_without">
+          Copy without creatives
+        </a>
+      </li>
+      <li>
+        <a class="copy_option" href="#" data-toggle="copy_to_another">
+          Copy to another order
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  
+  <a class="right btn" href="{% url advertiser_line_item_form_edit line_item.key %}">
     {% button_icon "pencil" %}
     Edit Line Item
   </a>
@@ -141,6 +171,49 @@
     </div>
 </section>
 
+<div class="modal hidden" id="copy_modal" style='overflow: visible;'>
+  
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">×</a>
+    <h3> Copy Line Item </h3>
+  </div>
+  
+  <div class="modal-body" style='overflow: visible;'>
+    <ul style='list-style-type: none;'>
+      <li>
+        <input id="copy_with_creatives" type="radio" name="li_copy" value="with" checked="checked">
+          Copy this line item's creatives
+        </input>
+      </li>
+      <li>
+        <input id="copy_without_creatives" type="radio" name="li_copy" value="without">
+          Don't copy this line item's creatives
+        </input>
+      </li>
+    </ul>
+
+    <span style='margin-left: 40px;'>Copy to order:</span>
+    <select data-placeholder="Select an order"
+            style='float: right; width:200px;'
+            id="copy-to-order">
+      <option value=""></option>
+      {% for order in orders %}
+        {% if not order.deleted or order.archived %}
+          <option value="{{ order.key }}">
+            {{order.name}}
+          </option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+  
+  <div class="modal-footer">
+    <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
+    <a href="#" class="btn" data-dismiss="modal">Close</a>
+    <a id="copy-ok-button" href="#" class="btn btn-primary">Copy Line Item</a>
+  </div>
+  
+</div>
 
 {% endblock content %}
 

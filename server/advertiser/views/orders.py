@@ -115,13 +115,6 @@ class OrderDetailHandler(RequestHandler):
         # Set up the form
         order_form = OrderForm(instance=order)
 
-        logging.warn(order)
-        logging.warn(order)
-        logging.warn(order)
-        logging.warn(order)
-        logging.warn(order)
-        logging.warn(order)
-
         return {
             'order': order,
             'order_form': order_form,
@@ -153,8 +146,12 @@ class LineItemDetailHandler(RequestHandler):
         targeted_adunits = AdUnitQueryManager.get(line_item.site_keys)
         targeted_apps = get_targeted_apps(targeted_adunits)
 
+        # We need all the other orders for the copy line item functionality
+        orders = CampaignQueryManager.get_order_campaigns(account=self.account)
+        
         return {
             'order': line_item.campaign,
+            'orders': orders,
             'line_item': line_item,
             'creative_form': creative_form,
             'targeted_apps': targeted_apps.values(),
@@ -554,14 +551,58 @@ class CopyLineItemHandler(RequestHandler):
         order_key = self.request.POST.get('order', None)
         copy_creatives = self.request.POST.get('copy_creatives', None)
 
-        if line_item_key: 
-            line_item = AdGroupQueryManager.get(line_item_key)
+        if copy_creatives == 'true':
+            copy_creatives = True
 
+        if copy_creatives == 'false':
+            copy_creatives = False
 
-            return JSONResponse({'success': 'Line item copied' })
+        if line_item_key:            
+            
+            # Get the line item and copy it
+            try:
+                line_item = AdGroupQueryManager.get(line_item_key)
+            except Exception, error:
+                logging.warn(error)
+                return JSONResponse({'error': 'Could not fetch line item.'})
+
+            # If they've supplied an order key, we copy the line item
+            # to that order. If not, we just copy it to the same order.
+            if order_key:
+                try:
+                    order = CampaignQueryManager.get(order_key)
+                except Exception, error:
+                    logging.warn(error)
+                    return JSONResponse({'error': 'Could not fetch order.'})
+            else:
+                order = line_item.campaign                
+
+            # Copy, rename and save the new line item
+            copied_line_item = helpers.clone_entity(line_item,
+                                                    name=line_item.name + " (Copy)",
+                                                    campaign=order)
+            AdGroupQueryManager.put(copied_line_item)
+
+            # Copy all of the creatives if this was asked for
+            if copy_creatives:
+                for creative in line_item.creatives:
+                    copied_creative = helpers.clone_entity(creative)
+                    copied_creative.adgroup = copied_line_item
+                    CreativeQueryManager.put(copied_creative)
+            
+            return JSONResponse({
+                'success': 'Line item copied',
+                'new_key': str(copied_line_item.key()),
+                'url': reverse('advertiser_line_item_detail',
+                               kwargs={'line_item_key':copied_line_item.key()})
+            })
         else:
             raise Http404
-    
+
+def copy_line_item(request, *args, **kwargs):
+    return CopyLineItemHandler()(request, *args, **kwargs)            
+            
+            
 #############
 # Exporters #
 #############

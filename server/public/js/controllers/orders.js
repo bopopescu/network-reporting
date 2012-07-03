@@ -141,6 +141,51 @@
         });
     }
 
+
+    function copyLineItem(line_item_key, order_key, with_creatives) {
+
+        var error_message = "MoPub experienced an error "
+            + "trying to copy your line item. "
+            + "We apologize for this inconvenience. "
+            + "If this error persists, please contact "
+            + "support@mopub.com";
+        
+        // Hit the copy endpoint with our form data
+        var copy_promise = $.ajax({
+            url: '/advertise/line_item_copy/',
+            type: 'post',
+            data: {
+                order: order_key,
+                line_item: line_item_key,
+                copy_creatives: with_creatives
+            }
+        });
+        
+        // If we got a response, and there was a success message,
+        // let them know in a toast message that points to the new
+        // copied line item. Otherwise, show the error message.
+        copy_promise.success(function(response) {                            
+            if (response.success) {                                
+                var message = "Your line item was successfully copied."
+                    + "You can see your new line item <a href='" + response.url
+                    + "'>here</a>.";
+                Toast.success(message);
+            } else {
+                console.log(response);
+                Toast.error(error_message);
+            }
+            
+        });
+        
+        // We blew it.
+        copy_promise.error(function(response) {
+            console.log(response);
+            Toast.error(error_message);
+        });
+
+        return copy_promise;
+    }
+
     /*
      * Sets up the click handler for the status control button. This
      * is the button group that pauses, resumes, and archives
@@ -474,6 +519,67 @@
                 adunit.fetch();
             });
 
+            // Set up the handler for the copy button
+            var copy_modal = $("#copy_modal").modal({
+                show: false,
+                keyboard: false,
+                backdrop: true
+            });
+
+            $("#copy-to-order").chosen();
+
+            $("#copy_line_item .copy_option").click(function () {
+                
+                var $option = $(this),
+                    toggle = $option.data('toggle');
+                
+                // Quick copy with creatives. No need to show a modal.
+                if (toggle === 'copy_with') {
+                    var promise = copyLineItem(bootstrapping_data.line_item_key,
+                                               bootstrapping_data.order_key,
+                                               true);
+                    
+                // Quick copy with creatives. No need to show a modal.
+                } else if (toggle === 'copy_without') {
+                    var promise = copyLineItem(bootstrapping_data.line_item_key,
+                                               bootstrapping_data.order_key,
+                                               false);
+                    
+                    
+                } else if (toggle === 'copy_to_another') {
+                    // Copy with more options. Show a modal.
+
+                    // Set the default value for the order dropdown to
+                    // the line item's current order.
+                    $("#copy-to-order").val(bootstrapping_data.order_key);
+
+                    // Open the modal
+                    copy_modal.modal('show');
+
+                    // On submit, grab the form data and post it over ajax
+                    $("#copy-ok-button").click(function () {
+
+                        $("#modal-loading-img").removeClass('hidden');
+                        var order = $("#copy-to-order").val();
+                        var copy_creatives = $("#copy_with_creatives").is(":checked");
+
+                        console.log(copy_creatives);
+
+                        var promise = copyLineItem(bootstrapping_data.line_item_key,
+                                                   order,
+                                                   copy_creatives);
+                        
+                        promise.done(function () {
+                            $("#modal-loading-img").addClass('hidden');
+                        });
+                    });
+                    
+                } else {
+                    throw Error('malformed data toggle');
+                }
+                
+            });
+            
 
             /*
              * Click handlers for the creative form. These could be refactored.

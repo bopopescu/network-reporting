@@ -1039,7 +1039,7 @@ if (window.console === undefined) {
 (function($){
 
     var config = window.ToastjsConfig = {
-        defaultTimeOut: 3000,
+        defaultTimeOut: 5000,
         position: ["top", "right"],
         notificationStyles: {
             padding: "12px 18px",

@@ -66,6 +66,11 @@ urlpatterns = patterns(
         'ad_source_status_change',
         name='advertiser_ad_source_status_change'),
 
+    # Line Item Copy
+    url('^line_item_copy/$',
+        'copy_line_item',
+        name='advertiser_copy_line_item'),
+
     # Forms
     # Note: these need to come before the detail
     # pages, or else the wrong handler will be called.

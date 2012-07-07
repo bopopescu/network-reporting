@@ -1,7 +1,7 @@
 REPORT_FINISHED_SIMPLE = \
 """Your report for %(dim1)s - %(dim2)s - %(dim3)s for dates %(start)s to %(end)s is ready!  You can download your report in .csv format here:
 
-http://app.mopub.com/reports/export/%(report_key)/
+http://app.mopub.com/reports/export/%(report_key)s/
 """
 
 REPORT_FAILED_SIMPLE = \

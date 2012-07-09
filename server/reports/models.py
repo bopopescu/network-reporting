@@ -202,10 +202,10 @@ class ScheduledReport(db.Model):
 
     @property
     def status(self):
-        if self._status:
-            return self._status
-        else:
+        if self.most_recent:
             return self.most_recent.status
+        else:
+            return self.status
 
     def __init__(self, *args, **kwargs):
         if 'next_sched_date' not in kwargs and 'sched_interval' in kwargs:

@@ -643,3 +643,18 @@ div.editable {
 .editable:hover .caret {
   border-top: 4px solid #0090D9;
 }
+
+.report-name {
+    max-width: 170px;
+    margin: 0 5px 0 5px;
+    float: left;
+}
+
+.edit-link {
+    cursor: pointer;
+    float: left;
+}
+
+.ui-dialog {
+    overflow: visible;
+}

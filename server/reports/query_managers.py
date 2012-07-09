@@ -147,8 +147,6 @@ class ReportQueryManager(CachedQueryManager):
         if days:
             rep_q = rep_q.filter('days =', days)
         report = rep_q.get()
-        if report is None:
-            report = self.add_report(d1, d2, d3, end, days, name, deleted)
         return report
 
 
@@ -160,35 +158,18 @@ class ReportQueryManager(CachedQueryManager):
         else:
             return None
 
-    def get_saved(self, page=0, page_limit=100):
-        '''Returns (page_limit) reports starting on 'page'
-        '''
-        report_q = Report.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False)
-        reports = report_q.fetch(limit=page_limit,offset=page_limit*page)
-        return reports
-
-    def get_history(self, page=0, page_limit=100):
-        '''Gives a history of ALL reports (saved and unsaved) for the user
-        in order of most recently viewed'''
-        #Not implemented
-        return None
-
-    def get_scheduled(self, to_fetch=50):
-        report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False).filter('default =', False)
-        return report_q.fetch(to_fetch)
-
-    def get_default_reports(self, dont_add=False):
-        # There are three by default, so fetching three should yield three
-        reports = ScheduledReport.all().filter('account =', self.account).filter('deleted =', False).filter('default =', True).fetch(3)
-        adding_reps = False
-        if len(reports) != 3:
-            # Well shit
-            report_dim_names = [(str(report.d1), str(report.name)) for report in reports]
-            for (dim, name) in DEFAULT_REPORT_DIM_LIST:
-                if (dim, name) not in report_dim_names and not dont_add:
-                    adding_reps = True
-                    reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
-        return reports, adding_reps
+    def get_scheduled(self, saved=True, deleted=False, default=False,
+            not_sched_interval=None, limit=50):
+        report_q = ScheduledReport.all().filter('account =', self.account)
+        if saved != None:
+            report_q.filter('saved =', saved)
+        if deleted != None:
+            report_q.filter('deleted =', deleted)
+        if default != None:
+            report_q.filter('default =', default)
+        if not_sched_interval:
+            report_q.filter('sched_interval !=', not_sched_interval)
+        return list(report_q.run(batch_size=300, limit=limit))
 
     def new_report(self, report, now=None, testing=False):
         if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):
@@ -242,110 +223,25 @@ class ReportQueryManager(CachedQueryManager):
 
         return new_report
 
-    def add_report(self,
-                     d1,
-                     d2,
-                     d3,
-                     end,
-                     days,
-                     name=None,
-                     saved=False,
-                     interval=None,
-                     sched_interval=None,
-                     email=None,
-                     recipients = None,
-                     default=False,
-                     testing=False):
-        '''Create a new scheduled report with the given specs
-        and create a new report to run
+    def add_report(self, scheduled_report):
+        '''Create a new report given specs from it's scheduled_report
 
         If a Report object that is IDENTICAL to what this scheduler would create exists already, clone it and use that
         '''
-
-        #############
-        # Prep reports
-
-        if interval is None:
-            interval = 'custom'
-        if name is None:
-            dt = datetime.timedelta(days=days)
-            start = end - dt
-            name = d1
-            if d2:
-                name += " > " + d2
-            if d3:
-                name += " > " + d3
-            name += ' -'
-            if interval == 'custom':
-                name += ' ' + start.isoformat()
-                name += ' -- ' + end.isoformat()
-            elif interval == '7days':
-                name += ' Last 7 days'
-            elif interval == 'lmonth':
-                name += ' Last month'
-            else:
-                name += ' ' + interval.title()
-            name = name.title()
-        if d2 == '':
-            d2 = None
-        if d3 == '':
-            d3 = None
-        if not end:
-            end = datetime.datetime.now().date()
-        if sched_interval != 'none':
-            if testing:
-                next_sched_date =  date_magic.get_next_day(sched_interval, d = end)
-            else:
-                next_sched_date =  date_magic.get_next_day(sched_interval)
-        else:
-            if testing:
-                next_sched_date = end
-            else:
-                next_sched_date = datetime.datetime.now().date()
-
-        #########
-        # Create the reports
-        sched = ScheduledReport(d1=d1,
-                                d2=d2,
-                                d3=d3,
-                                end=end,
-                                days=days,
-                                interval=interval,
-                                sched_interval = sched_interval,
-                                next_sched_date = next_sched_date,
-                                account=self.account,
-                                name=name,
-                                saved=saved,
-                                default=default,
-                                email=email,
-                                recipients=recipients or [],
-                                )
-        sched.put()
-        dt = datetime.timedelta(days=days)
-        start = end - dt
-        end = end
-        #ACCOUNT IS ACCOUNT KEY
-        acct_key = str(self.account)
-
-        report = Report(start = start,
-                        end = end,
-                        account = self.account,
-                        schedule = sched,
-                        )
+        start = scheduled_report.end - datetime.timedelta(days=scheduled_report.days)
+        report = Report(start=start,
+                        end=scheduled_report.end,
+                        account=self.account,
+                        schedule=scheduled_report)
         report.put()
         # Update most recent
-        self.update_most_recent(sched, report)
-        report_key = str(report.key())
-        sched_key = str(sched.key())
+        self.update_most_recent(scheduled_report, report)
 
         #not cloned, we're going to run this report
-        sched.last_run = datetime.datetime.now()
-        sched.put()
+        scheduled_report.last_run = datetime.datetime.now()
+        scheduled_report.put()
 
         fire_report_sqs(report)
-
-        return sched
-
 
     def clone_report(self, report, sched=False):
         """ Does exactly what you think it will

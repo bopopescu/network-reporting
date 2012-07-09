@@ -1,10 +1,16 @@
+# Deployed Monday, July 02, 2012 at 10:36PM PST
+### Deployed by tiags
+### Tagged deploy-149
+### Bugs Fixed: []
+### Included Commits: 
+ 
 # Deployed Tuesday, June 26, 2012 at 11:09PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-146
 ### Bugs Fixed: []
-### Included Commits: 
- * 16ef5a1 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 16ef5a1 Deployed without finding any bug fixes.
+
 # Deployed Friday, June 22, 2012 at 08:57PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-145

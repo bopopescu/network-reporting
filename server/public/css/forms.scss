@@ -595,3 +595,8 @@ form#campaign_and_adgroup, form#network-login-form, fieldset.dialog {
   -moz-border-radius: 0 3px 3px 0;
   border-radius: 0 3px 3px 0;
 }
+
+.chzn-select {
+    width: 120px;
+    z-index: 5;
+}

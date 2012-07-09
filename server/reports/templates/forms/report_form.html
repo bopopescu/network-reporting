@@ -1,68 +1,43 @@
 {% load filters %}
 
+{# saved is hidden and only set by js on submit #}
+{{ report_form.saved }}
 <dl class='formFields'>
-    {% if form.save_as %}
-    <dt>Report Name:</dt>
+    <dt>{{ report_form.name.label_tag }}</dt>
+    <dd>{{ report_form.name }}</dd>
+    <dt>{{ report_form.d1.label_tag }}</dt>
     <dd>
-    <input id='reportName-input' type='text' name='name' value='{{form.name.value}}' size=60 placeholder='Report Name'></input></dd>
-    {% endif %}
-    <dt>Report Breakdown:</dt>
+    {{ report_form.d1 }}
+    <span id='{{ prefix }}-d2-show' {% if report.form.instance.d1 == None %}class='hidden'{% endif %}>
+        {{ report_form.d2.label_tag }}
+        {{ report_form.d2 }}
+        <span id='{{ prefix }}-d3-show' {% if report.form.instance.d2 == None %}class='hidden'{% endif %}>
+            {{ report_form.d3.label_tag }}
+            {{ report_form.d3 }}
+        </span>
+    </span>
+    </dd>
+    <dt>{{ report_form.interval.label_tag }}</dt>
     <dd>
-        {{ form.d1|attrs:'{"class":"selectmenu-required dim-selectmenu update-button","id":"d1"}'|raw }}
-        <span id='d1Error' style="display:none; color:red;">* Required</span>
-        <span id="d2-show" {% if not form.d2.value %}class='hidden'{% endif %}>
-            &nbsp;>&nbsp;
-            {{ form.d2|attrs:'{"class":"dim-selectmenu update-button","id":"d2"}'|raw }}
-            <span id='d3-show' {% if not form.d3.value %}class='hidden'{% endif %}>
-                &nbsp;>&nbsp;
-                {{ form.d3|attrs:'{"class":"dim-selectmenu update-button","id":"d3"}'|raw }}
-            </span>
+    {{ report_form.interval }}
+    {{ report_form.start }} - {{ report_form.end }}
+    </dd>
+    <dt>{{ report_form.recipients.label_tag }}</dt>
+    <dd>{{ report_form.recipients }}</dd>
+    <dt>{{ report_form.sched_interval.label_tag }}</dt>
+    <dd>
+        {{ report_form.sched_interval }}
+        <span id='{{ prefix }}-schedule-help-daily'>
+            (Run every day, 12:00 AM GMT.)
+        </span>
+        <span id='{{ prefix }}-schedule-help-weekly'>
+            (Run every Monday, 12:00 AM GMT.)
+        </span>
+        <span id='{{ prefix }}-schedule-help-monthly'>
+            (Run on the first of every month, 12:00 AM GMT.)
+        </span>
+        <span id='{{ prefix }}-schedule-help-quarterly'>
+            (Run at the start of every quarter, 12:00 AM GMT.)
         </span>
     </dd>
-    <dt>Dates:</dt>
-    <dd>
-        {{ form.interval|attrs:'{"class":"int-selectmenu","id":"interval"}'|raw }}
-        &nbsp;&nbsp;
-        <input id='start-input' type='text' class='date-required input-text input-text-number date-field update-button' name='{{form.start.name}}' size='15' value='{{form.start.value|date:'m/d/Y'}}' placeholder='Start'/> -
-        <input id='end-input' type='text' class='date-required input-text input-text-number date-field update-button' name='{{form.end.name}}' size='15' value='{{form.end.value|date:'m/d/Y'}}' placeholder='End'/>
-        <span id='dateError' style="display:none; color:red;">* Required</span>
-    </dd>
-    <dt>
-        E-mail:
-    </dt>
-    <dd>
-        {{form.email|raw|attrs:'{"id":"email-input-checkbox"}'}}&nbsp;&nbsp;<label for="email-input-checkbox">Notify me when the report finishes</label>
-    </dd>
-    <div id='email-recipients'>
-        <dt>
-            Recipients:
-        </dt>
-        <dd>
-            {{form.recipients|raw}}
-        </dd>
-    </div>
-    <div id='reports-email-helpContent' class='hidden'>
-        <h3>Emailing Scheduled Reports</h3>
-        <p>If you would like to be emailed with a copy of the report as an attachment <strong>each</strong> time that this report is run.</p>
-    </div>
-    <dt>Schedule:</dt>
-    <dd>
-        {{ form.sched_interval|attrs:'{"class":"sched-int-selectmenu", "id": "sched_interval"}'|raw}}
-        <div style='padding-top:5px'>
-            &nbsp;
-            &nbsp;
-            <span class='schedule-help daily'>
-                Daily scheduled reports are run every day, 12:00 AM GMT.
-            </span>
-            <span class='schedule-help weekly'>
-                Weekly scheduled reports are run every Monday, 12:00 AM GMT.
-            </span>
-            <span class='schedule-help monthly'>
-                Montly scheduled reports are run on the first of every month, 12:00 AM GMT.
-            </span>
-            <span class='schedule-help quarterly'>
-                Quarterly scheduled reports are run at the start of every quarter, 12:00 AM GMT.
-            </span>
-        </div>
-    </dd>
-    <input id='interval-toggle' type='hidden' value=2 />
+</dl>

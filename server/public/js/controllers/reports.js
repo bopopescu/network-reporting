@@ -68,9 +68,8 @@
                             $.ajax({
                                   url: 'status/' + key,
                                   success: function(data) {
-                                    console.log(data);
-
                                     report_status = data['status'];
+
                                     if(report_status === "Completed") {
                                         $('#' + key + '-status').html('<a href=\'export/' + key + '/\' >Export</a>');
                                     } else {

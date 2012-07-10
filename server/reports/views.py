@@ -66,7 +66,6 @@ def reports_index(request, *args, **kwargs):
 
 class ReportStatusHandler(RequestHandler):
     def get(self, report_key):
-        logging.info('STATUS REQUEST RECIEVED FOR ' + report_key)
         report = ScheduledReport.get(report_key)
 
         if report.account.key() != self.account.key():

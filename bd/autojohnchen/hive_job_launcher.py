@@ -151,7 +151,7 @@ def launch_monthly_mpx_rev_hivejob(year, month, num_machines=NUM_MACHINES):
             keep_alive=True,
             enable_debugging=True,
             hadoop_version='0.20.205',
-            ami_version='2.0.4',
+            ami_version='2.0',
         )
         logging.info('submitted new jobflow: %s "%s"' %(jobid, JOBFLOW_NAME))
 

@@ -374,6 +374,60 @@ class EditNetworkHandler(RequestHandler):
         if not self.request.is_ajax():
             raise Http404
 
+        if network:
+            self.create(network)
+        elif campaign_key:
+            self.edit(campaign_key)
+
+    def edit(campaign_key):
+        campaign = CampaignQueryManager.get(campaign_key)
+
+        if not campaign or campaign.account.key() != self.account.key():
+            raise Http404
+
+        logging.info(self.request.POST)
+
+        for field, value in self.request.POST:
+            # parse field into field and model by looking for '-'
+
+            if field in NetworkCampaignForm:
+                # grab campaign create campaign form
+            if field in NetworkAdGroupForm:
+                # grab single adunit adgroup and us it as an initial in form
+                # apply differences to form
+            elif field in AdunitAdgroupForm:
+                # append it to a dict of lists for each field
+            elif 'pub_id' in field:
+                # get network config
+                # make change
+                # append to modified network config list
+
+        # check if campaign form is valid and submit it
+
+        if default_adgroup_form:
+            # get all adunits
+            # apply individual changes
+            # check if valid
+            # save
+        else:
+            for key, adgroup_properties in adgroups_property_dict.iteritems():
+                # get model for key
+
+                # apply changes
+                for field, value in adgroup_properties:
+                    setattr
+
+        # save all modified network configs
+
+
+        network = campaign.network_type
+        custom_campaign = campaign.network_state == \
+                NetworkStates.CUSTOM_NETWORK_CAMPAIGN
+        if campaign:
+            if not custom_campaign:
+                query_dict['name'] = campaign.name
+
+    def create(network):
         apps = PublisherQueryManager.get_apps_dict_for_account(account=
                 self.account).values()
         adunits = PublisherQueryManager.get_adunits_dict_for_account(account=
@@ -384,25 +438,14 @@ class EditNetworkHandler(RequestHandler):
 
         campaign = None
         custom_campaign = False
-        if campaign_key:
-            campaign = CampaignQueryManager.get(campaign_key)
-            if not campaign or campaign.account.key() != self.account.key():
-                raise Http404
 
-            network = campaign.network_type
-            custom_campaign = campaign.network_state == \
-                    NetworkStates.CUSTOM_NETWORK_CAMPAIGN
-            if campaign:
-                if not custom_campaign:
-                    query_dict['name'] = campaign.name
-        else:
-            # Do no other network campaigns exist or is this custom?
-            custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network) or 'custom' in network
-            if not custom_campaign:
-                query_dict['name'] = NETWORKS[network]
-                campaign = CampaignQueryManager. \
-                        get_default_network_campaign(self.account, network)
+        # Do no other network campaigns exist or is this custom?
+        custom_campaign = CampaignQueryManager.get_network_campaigns(
+                self.account, network) or 'custom' in network
+        if not custom_campaign:
+            query_dict['name'] = NETWORKS[network]
+            campaign = CampaignQueryManager. \
+                    get_default_network_campaign(self.account, network)
 
         campaign_form = NetworkCampaignForm(query_dict, instance=campaign)
 

@@ -8,6 +8,22 @@
         Toast.error(message, "Error fetching app data.");
     };
 
+    function hashDiff(h1, h2) {
+        var d = {};
+        for (k in h2) {
+            if (h1[k] !== h2[k]) d[k] = h2[k];
+        }
+        return d;
+    }
+
+    function convertSerializedArrayToHash(a) { 
+        var r = {}; 
+        for (var i = 0;i<a.length;i++) { 
+            r[a[i].name] = a[i].value;
+        }
+        return r;
+    }
+
     function initialize_campaign_data(campaign_data, apps, include_adunits) {
         // create mopub campaign
         // endpoint=all
@@ -493,11 +509,20 @@
                 $('select[name="campaign_type"]').val(window.location.hash.substring(1));
             }
 
+            // initial form items saved in hash
+            var startItems = convertSerializedArrayToHash($('form#campaign_and_adgroup').serializeArray()); 
+
             var validator = $('form#campaign_and_adgroup').validate({
                 errorPlacement: function(error, element) {
                     element.parents('div').not(':hidden').first().append(error);
                 },
                 submitHandler: function(form) {
+                    var currentItems = convertSerializedArrayToHash($form.serializeArray());
+                    var itemsToSubmit = hashDiff(startItems, currentItems);
+
+                    // TODO: figure out how to submit only the fields that have
+                    // changed using ajaxSubmit (possibly need to modify
+                    // ajaxSubmit)
                     $(form).ajaxSubmit({
                         data: {ajax: true},
                         dataType: 'json',

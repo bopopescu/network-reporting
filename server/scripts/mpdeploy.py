@@ -365,7 +365,9 @@ def main():
 
     PRODUCTION_SERVERS = ('--production', 'frontend-0', 'frontend-1')
     STAGING_SERVERS = ('--staging', 'frontend-staging', 'frontend-slam', 'frontend-boom')
-    BETA_SERVERS = ('--beta', 'frontend-beta')
+    BETA_SERVERS = ('--beta', 'frontend-beta')    
+
+    skip_tagging = '--skip-production' in clint.args
     
     with indent(2, quote=colored.blue('+')):
         try:
@@ -382,7 +384,7 @@ def main():
                 if y_or_n == 'n':
                     sys.exit(1)
 
-            if deploy_server in PRODUCTION_SERVERS:
+            if deploy_server in PRODUCTION_SERVERS and not skip_tagging:
                 # Update the repo with tags that might have been made from other deploys
                 puts("Updating the tag list from origin")
                 git_fetch()
@@ -420,8 +422,10 @@ def main():
                 git_push()
 
             else:
-                puts("Skipping ticket update process because you're not deploying to production")
-                
+                if skip_tagging:
+                    puts("Skipping ticket update process because you said to.")
+                else:
+                    puts("Skipping ticket update process because you're not deploying to production")
             # Set the deploy server to frontend-staging if it hasn't been set.
             if deploy_server == None:
                 puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))

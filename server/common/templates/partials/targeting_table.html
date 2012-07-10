@@ -1,0 +1,16 @@
+{% include elements %}
+<table class="targeting_table">
+  <thead>
+    <th class="name">Source Name</th>
+    <th class="name">Source Type</th>
+    <th class="stat">Requests</th>
+    <th class="stat">Impressions</th>
+    <th class="stat">Clicks</th>
+    <th class="stat">Conversions</th>
+  </thead>
+  <tbody>
+    {% for campaign in campaigns_targeted %}
+      <th> {{ campaign.name }}</th>
+    {% endfor %}
+  </tbody>
+</table>

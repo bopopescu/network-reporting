@@ -222,14 +222,14 @@ class AppDetailHandler(RequestHandler):
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
 
+        targeted_adgroups = AdGroupQueryManager.get_adgroups(app=app)
+
         return {
             'app': app,
             'app_form_fragment':app_form_fragment,
             'adunit_form_fragment':adunit_form_fragment,
             'helptext': help_text,
-            'line_items': [],
-            'marketplace': [],
-            'networks': []
+            'targeted_adgroups': targeted_adgroups
         }
 
 

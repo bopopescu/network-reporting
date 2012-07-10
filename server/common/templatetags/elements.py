@@ -186,7 +186,12 @@ def chart_placeholder(start_date, end_date):
         'start_date': start_date,
         'end_date': end_date,
     }
-    
+
+@register.inclusion_tag("common/partials/targeting_table.html")
+def targeting_table(targeted_adgroups):
+    return {
+        'targeted_adgroups': targeted_adgroups
+    }
     
 def isiterable(item):
     try:

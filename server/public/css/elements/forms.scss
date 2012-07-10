@@ -505,6 +505,22 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
     input.token-input-field.focused {
         background-color: white;
     }
+
+    select[name="included_apps"], select[name="excluded_apps"] {
+        width: 300px;
+    }
+
+    #id_included_apps_chzn, #id_excluded_apps_chzn {
+        margin-top: 5px;
+        ul.chzn-choices {
+            border: 1px solid #eaeaea;
+            border-top-color: #b9b9b9;
+            background: #fafafa;
+            @include border-radius(3px);
+            padding: 1px 2px 2px 3px;
+            width: 290px;
+        }
+    }
 }
 
 // Allow us to put symbols and text within the input field for a cleaner look
@@ -571,4 +587,9 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
       *margin-left: -21px;
     }
   }
+}
+
+.chzn-select {
+    width: 120px;
+    z-index: 5;
 }

@@ -1,0 +1,129 @@
+{% extends 'reports/base.html' %}
+{% load filters %}
+{% block pageTitle %}<h1>Reports</h1>{% endblock pageTitle %}
+{% block dateButtons %}{% endblock dateButtons %}
+{% block content %}
+{% if display_splash %}
+<div class="alert-message block-message">New! We’ve added conversion tracking data to your report data. Reports will be emailed to you in .csv format each time you run a new report or schedule an ongoing report.</div>
+{% endif %}
+<div class="buttonBank buttonBank-right">
+    <a class="button" id="reports-addReportButton" href="#">New Report</a>
+</div>
+<h2>Saved Reports</h2>
+<section id="reports-reportAddForm" class='hidden'>
+<div>
+    <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="new-reportEditForm">
+        <fieldset id="reportAddForm-details" class="alt">
+            <div id="reportAddForm-fragment" class="reportAddForm-fragment">
+                {% with new_report_form as report_form %}
+                {% with "new" as prefix %}
+                {% include "reports/forms/report_form.html" %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+            <div class='clear'></div>
+            <div class='form-submit'>
+                <span id='new-reportEditForm-runSpan'>
+                    <a href='#' class='button' id='new-reportEditForm-run'>Run Report</a>
+                </span>
+                <a href='#' class='button' id='new-reportEditForm-save'>Run and Save</a>
+                <a href='#' class='button' id='new-reportEditForm-cancel'>Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
+</section>
+<section id='report-savedReports'>
+<form id='reportStateChangeForm' action={% url report_state_change %} method='post'>
+    <input type=hidden id='action' name='action' />
+    <table class='reportData-table reportData-saved dataTable reportTable' id='reports-saved-columnHeaders'>
+        <thead>
+            <tr>
+                <th class='reportData-icon'></th>
+                <th class='dataTable-name'>Name</th>
+                <th class='dataTable-name'>Details</th>
+                <th class='dataTable-date'>Last Run</th>
+                <th class='dataTable-data'>Scheduled</th>
+                <th class='dataTable-data'>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in scheduled %}
+            <tr class="{% cycle 'reportData' 'reportData reportData-alt' %}" id='{{ report.key }}-row'>
+                <td class='reportData-icon'>
+                    <input type='checkbox' name='reportChangeStateForm-key' value='{{report.key}}'/>
+                </td>
+                {% comment %}
+                Each table row can either be a scheduled report or a report.
+                {% endcomment %}
+                <th class='dataTable-name'>
+                    <div class="report-name">
+                        {{ report.name }}
+                    </div>
+                    <div id="{{ report.key }}-edit-link" class="edit-link hidden">
+                        <span class="ui-icon ui-icon-wrench"></span>
+                    </div>
+                </th>
+
+                <td class='dataTable-name'>
+                    {{report.details|safe}}
+                </td>
+                <td id='{{report.key}}-status' class='dataTable-date'>
+                    {{ report.last_run|date:'N j, Y \<\b\r /\> f a'|safe }}
+                </td>
+                <td class='dataTable-data'>
+                    {% if report.sched_interval and report.sched_interval != 'none' %}
+                    {{ report.sched_interval|capfirst }}
+                    {% endif %}
+                </td>
+                <td class='dataTable-name'>
+                    {% if report.status == 'Completed' %}
+                    <a href='{% url report_export report_key=report.key %}'>Export</a>
+                    {% else %}
+                    {{ report.status }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class='form-submit-left'>
+        <a class='button' id='reportStateChangeForm-delete'>Delete</a>
+    </div>
+</form>
+</section>
+
+
+{% for report in scheduled %}
+<div id='{{ report.key }}-reportForm-container' style='display: none; overflow: visible;'>
+    <form action="{% url edit_report report_key=report.key %}" method="POST" accept-charset="utf-8" id="{{ report.key }}-reportEditForm">
+        <fieldset id="reportAddForm-details" class="alt">
+            <div id="reportAddForm-fragment" class="reportAddForm-fragment">
+                {% with report.form as report_form %}
+                {% with report.key as prefix %}
+                {% include "reports/forms/report_form.html" %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+            <div class='clear'></div>
+            <div class='form-submit'>
+                <a href='#' class='button' id='{{ report.key }}-reportEditForm-save'>Save</a>
+                <a href='#' class='button' id='{{ report.key }}-reportEditForm-cancel'>Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
+{% endfor %}
+
+{% endblock content %}
+
+{% block extraScripts %}
+{{ block.super }}
+<script>
+    $(function () {
+        ReportIndexController.initialize({
+            report_keys: [{% for report in scheduled %} '{{ report.key }}', {% endfor %}],
+        });
+    });
+</script>
+{% endblock extraScripts %}

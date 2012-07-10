@@ -190,6 +190,11 @@ indexes:
   - name: created_at
     direction: desc
 
+- kind: ScheduledReport
+  properties:
+  - name: account
+  - name: sched_interval
+
 - kind: SiteStats
   properties:
   - name: owner

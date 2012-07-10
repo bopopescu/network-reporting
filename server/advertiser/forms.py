@@ -183,6 +183,7 @@ class LineItemForm(forms.ModelForm):
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
+        apps_choices = kwargs.pop('apps_choices', [])
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
@@ -190,6 +191,14 @@ class LineItemForm(forms.ModelForm):
         # TODO: can we do this a nicer way so we can declare this field with the other fields?
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
+
+        self.fields['included_apps'] = forms.MultipleChoiceField(
+            choices=apps_choices, required=False, widget=forms.SelectMultiple(
+                attrs={'data-placeholder': ' '}))
+        self.fields['excluded_apps'] = forms.MultipleChoiceField(
+            choices=apps_choices, required=False, widget=forms.SelectMultiple(
+                attrs={'data-placeholder': ' '}))
+        
     def _init_gtee_line_item(self, instance, initial):
         if 'high' in instance.adgroup_type:
             initial['gtee_priority'] = 'high'
@@ -225,6 +234,12 @@ class LineItemForm(forms.ModelForm):
         if end_datetime:
             end_datetime = pacific_to_utc(end_datetime)
         return end_datetime
+
+    def clean_included_apps(self):
+        return [Key(app_key) for app_key in self.cleaned_data.get('included_apps', [])]
+
+    def clean_excluded_apps(self):
+        return [Key(app_key) for app_key in self.cleaned_data.get('excluded_apps', [])]
 
     def clean_site_keys(self):
         return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
@@ -364,6 +379,8 @@ class LineItemForm(forms.ModelForm):
                   'android_version_min',
                   'android_version_max',
                   'target_other',
+                  'included_apps',
+                  'excluded_apps',
                   'geo_predicates',
                   'region_targeting',
                   'cities',

@@ -402,24 +402,24 @@ class AdGroupQueryManager(QueryManager):
     @classmethod
     def get_line_items(cls, account=None, order=None,
                        orders=None, limit=1000, keys_only=False):
+        """
+        Return a list of line items for the specified account and/or order(s).
+        """
         if order:
             adgroups = AdGroup.all(keys_only=keys_only)
 
             if account:
                 adgroups = adgroups.filter("account =", account)
 
-            adgroups = adgroups.filter("campaign = ", order)
-            return adgroups.fetch(limit)
+            adgroups = adgroups.filter("campaign =", order)
+
+            return list(adgroups.run(limit=limit, batch_size=limit))
 
         if not orders:
             orders = CampaignQueryManager.get_order_campaigns(account)
 
-        adgroups_dict = {}
-        for order in orders:
-            for adgroup in order.adgroups:
-                adgroups_dict[str(adgroup.key())] = adgroup
-
-        return adgroups_dict.values()
+        # TODO: keys_only=True
+        return cls.get_adgroups(account=account, campaigns=orders, limit=limit)
 
     @classmethod
     def get_network_adgroup(cls, campaign,

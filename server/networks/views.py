@@ -479,7 +479,8 @@ class EditNetworkHandler(RequestHandler):
                     adgroup = NetworkAdGroupForm(query_dict, instance=adgroup).save(commit=False)
                     adgroups.append(adgroup)
 
-        for adgroup_form in adunit_key_adgroup_dict.values():
+        creatives = []
+        for key, adgroup_form in adunit_key_adgroup_dict.iteritems():
             adgroup = adgroup_form.save(commit=False)
 
             # apply global changes
@@ -488,14 +489,23 @@ class EditNetworkHandler(RequestHandler):
                     setattr(adgroup, field, value)
             adgroups.append(adgroup)
 
+            # special case custom and custom native networks
+            if campaign.network_type == 'custom' and key + '-custom_html' in query_dict:
+                creative = adgroup.creatives.get()
+                creative.html_data = adgroup_form.cleaned_data['custom_html']
+                creatives.append(creative)
+            elif campaign.network_type == 'custom_native' and key + '-custom_method' in query_dict:
+                creative = adgroup.creatives.get()
+                creative.html_data = adgroup_form.cleaned_data['custom_method']
+                creatives.append(creative)
+
         # save all modified adgroups
-        logging.info('ADGROUPS')
-        logging.info(adgroups)
         AdGroupQueryManager.put(adgroups)
 
+        # save all modified creatives
+        CreativeQueryManager.put(creatives)
+
         # save all modified network configs
-        logging.info('NETWORK_CONFIGS')
-        logging.info(network_configs)
         NetworkConfigQueryManager.put(network_configs)
 
         return JSONResponse({

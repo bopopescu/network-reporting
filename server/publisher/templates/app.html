@@ -104,9 +104,12 @@
 
   <div id="app-ad-sources">
     <h2>Ad sources for {{app.name}}</h2>
-    <img src="/images/loading2.gif" style='margin-left:450px' />
+      {% if targeted_adgroups %}
+        {% simple_line_item_table targeted_adgroups %}
+      {% else %}
+        No ad sources are currently targeting this adunit
+      {% endif %}
   </div>
-
   <br />
     
   <div id="daily-counts">

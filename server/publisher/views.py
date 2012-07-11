@@ -251,10 +251,13 @@ class AdUnitDetailHandler(RequestHandler):
         # get the form to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
+        targeted_adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
+
         return {
             'site': adunit,
             'adunit': adunit,
             'adunit_form_fragment': adunit_form_fragment,
+            'targeted_adgroups': targeted_adgroups,
         }
 
 

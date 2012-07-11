@@ -1,0 +1,73 @@
+{% load filters %}
+{% load elements %}
+
+<tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
+  {% if show_status %}
+    <td class="controls">
+      <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+    </td>
+  {% else %}
+    <td></td>
+  {% endif %}
+
+  <td class="name"
+      {% if not line_item.active %}{% opacity "0.2" %}{% endif %}>
+    <a class="order-name"
+       href='{% url advertiser_order_detail order_key=line_item.campaign.key %}'
+       style="font-size:12px;">
+      {{ line_item.campaign.name }}
+    </a> >
+    <br />
+    <a href='{% url advertiser_line_item_detail line_item_key=line_item.key %}'>
+      {{ line_item.name }}
+    </a>
+    <br />
+    <span class="muted">
+      {{ line_item.status|capitalize }}
+      {{ line_item.start_datetime|date:"m/d" }} to {{ line_item.end_datetime|date:"m/d" }}
+    </span>
+    <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
+  </td>
+
+  <td class="advertiser stat"
+      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    {{ line_item.campaign.advertiser }}
+  </td>
+  <td class="type stat"
+      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    {{ line_item.adgroup_type_display }}
+  </td>
+  <td class="goal stat"
+      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    {{ line_item.budget_goal_display|default:'--' }}
+  </td>
+  <td class="rev stat"
+      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    --
+  </td>
+  <td class="imp stat"
+      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    --
+  </td>
+  <td class="stat"
+      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    <div class="clk">
+      --
+    </div>
+    <div class="muted ctr">
+      --
+    </div>
+  </td>
+  <td class="stat cpm">
+    --
+  </td>
+  <td class="stat"
+      {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    <div class="conv">
+      --
+    </div>
+    <div class="muted conv_rate">
+      --
+    </div>
+  </td>
+</tr>

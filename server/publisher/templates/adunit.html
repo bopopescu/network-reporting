@@ -64,7 +64,6 @@
   
   <div id="app-ad-sources">
     <div class="clearfix">
-      <h2 class="left">Ad sources for {{adunit.name}}</h2>
       <div class="right">
         <a class="btn" id="advertisers-testAdServer" href="#">
           {% button_icon "tasks" %}
@@ -75,9 +74,13 @@
           Edit ad unit settings
         </a>      
       </div>
+      <h2 class="left">Ad sources for {{adunit.name}}</h2>
+      {% if targeted_adgroups %}
+        {% simple_line_item_table targeted_adgroups %}
+      {% else %}
+        No ad sources are currently targeting this adunit
+      {% endif %}
     </div>
-
-    <img src="/images/loading2.gif" style='margin-left:450px' />
   </div>
 
   <div id="daily-counts">

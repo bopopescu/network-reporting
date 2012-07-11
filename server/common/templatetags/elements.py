@@ -87,9 +87,37 @@ def line_item_table(line_items, show_status=True):
         'show_status': show_status
     }
 
+@register.inclusion_tag("common/partials/simple_line_item_table.html")
+def simple_line_item_table(line_items, show_status=True):
+    """
+    Renders an line_item or a group of line_items in a table.
+    If include_targeting is true, it'll include
+    """
+    singular = False
+
+    # If the object isn't iterable (for instance, a single line_item), put
+    # it in a list so that we can iterate over it in the template
+    if not isiterable(line_items):
+        singular = True
+        line_items = [line_items]
+
+    return {
+        'line_items': line_items,
+        'singular': singular,
+        'show_status': show_status
+    }
+
+
 
 @register.inclusion_tag("common/partials/line_item_row.html")
 def line_item_row(line_item, show_status=False):
+    return {
+        'line_item': line_item,
+        'show_status': show_status
+    }
+
+@register.inclusion_tag("common/partials/simple_line_item_row.html")
+def simple_line_item_row(line_item, show_status=False):
     return {
         'line_item': line_item,
         'show_status': show_status

@@ -514,8 +514,10 @@ class AbstractCreativeForm(forms.ModelForm):
 
         if data:
             img = self.files.get('image_file', None)
-            is_valid_image_type = any([str(img).endswith(ftype) for ftype in ['.png', '.jpeg',
-                                                                              '.jpg', '.gif']])
+            is_valid_image_type = any([str(img).lower().endswith(ftype) for ftype in ['.png',
+                                                                                      '.jpeg',
+                                                                                      '.jpg',
+                                                                                      '.gif']])
             if not (img and is_valid_image_type):
                 extension = _get_filetype_extension(img)
                 if extension:

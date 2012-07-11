@@ -5,7 +5,13 @@
      * # Utility functions for rendering models.
      * REFACTOR: move to views/inventory.js
      */
-    function renderOrder(order) {
+    function renderOrder(order, render_line_items) {
+        
+        if (typeof render_line_items === 'undefined') {
+            render_line_items = true;
+        }
+
+        console.log('rendering order');
 
         var order_view = new OrderView({
             model: order,
@@ -13,10 +19,12 @@
         });
         order_view.renderInline();
 
-        var line_items = new LineItemCollection(order.get('adgroups'));
-        line_items.each(function(line_item){
-            renderLineItem(line_item);
-        });
+        if (render_line_items) {
+            var line_items = new LineItemCollection(order.get('adgroups'));
+            line_items.each(function(line_item){
+                renderLineItem(line_item);
+            });
+        }
     }
 
     function renderLineItem(line_item)  {
@@ -260,20 +268,33 @@
         initializeIndex: function(bootstrapping_data) {
             initializeStatusControls();
             initializeLineItemFilters();
-            /*
-             * Create a campaign collection, fetch all of the
-             * campaigns, and render all of them inline
-             */
-            var orders = new OrderCollection();
 
-            orders.bind('reset', function(order_collection) {
-                // render each of the rows
-                _.each(order_collection.models, function(order) {
-                    renderOrder(order);
+            // Fetch stats for each order and render the row
+            _.each(bootstrapping_data.order_keys, function (order_key) {
+                var order = new Order({
+                    id: order_key
                 });
+
+                order.bind('change', function() {
+                    renderOrder(order, false);
+                });
+
+                order.fetch();
             });
 
-            orders.fetch();
+            // Fetch stats for each line item and render the row
+            _.each(bootstrapping_data.line_item_keys, function (line_item_key) {
+                var line_item = new LineItem({
+                    id: line_item_key
+                });
+
+                line_item.bind('change', function() {
+                    renderLineItem(line_item);
+                });
+
+                line_item.fetch();
+            });
+
 
             /*
              * Clear the checked rows when you click a different tab.
@@ -509,6 +530,7 @@
                         + "?"
                         + window.location.search.substring(1)
                         + '&endpoint='
+
                         + stats_endpoint;
                 };
 

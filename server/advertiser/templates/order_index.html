@@ -161,7 +161,10 @@
   <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
-        OrdersController.initializeIndex({});
+        OrdersController.initializeIndex({
+            order_keys: [ {% for order in orders %}"{{order.key}}", {% endfor %} ],
+            line_item_keys: [ {% for line_item in line_items %} "{{ line_item.key }}", {% endfor %}]
+        });
     });
   </script>
 {% endblock extraScripts %}

@@ -104,6 +104,25 @@ class StatsModelQueryManager(CachedQueryManager):
 
         return stats
 
+    def get_stats_sum(self,
+                      publisher=None,
+                      publishers=None,
+                      advertiser=None,
+                      days=None,
+                      num_days=None,
+                      account=None,
+                      country=None,
+                      offline=False):
+        daily_stats = self.get_stats_for_days(publisher=publisher,
+                                              publishers=publishers,
+                                              advertiser=advertiser,
+                                              days=days,
+                                              num_days=num_days,
+                                              account=account,
+                                              country=country,
+                                              offline=offline)
+        return reduce(lambda x, y: x+y, daily_stats, StatsModel())
+
     def get_stats_for_hours(self,
                             publisher=None,
                             advertiser=None,

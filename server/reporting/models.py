@@ -489,6 +489,30 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
                 return False
             return True
 
+    @property
+    def imp(self):
+        return self.impression_count
+
+    @property
+    def clk(self):
+        return self.click_count
+
+    @property
+    def req(self):
+        return self.request_count
+
+    @property
+    def rev(self):
+        return self.revenue
+
+    @property
+    def att(self):
+        return self.attempt_count
+
+    @property
+    def conv(self):
+        return self.conversion_count
+        
 
     def _dict_properties(self):
         model_props = self.properties().keys()

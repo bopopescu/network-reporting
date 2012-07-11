@@ -641,7 +641,9 @@ class MultipleOrderExporter(RequestHandler):
             stats = stats_q.get_campaign_stats(order,
                                                self.start_date,
                                                self.end_date,
-                                               daily=False)
+                                               daily=False)['sum']
+            logging.info(stats)
+            
             order_data = (
                 order.name,
                 order.advertiser,
@@ -689,7 +691,7 @@ class MultipleLineItemExporter(RequestHandler):
             'CTR',
             'Conv. Rate',
             'Allocation',
-            #'Frequency Caps',
+            'Frequency Caps',
             'Country Target',
             'Device Target',
             'Keywords',
@@ -705,12 +707,12 @@ class MultipleLineItemExporter(RequestHandler):
                 stats = stats_q.get_adgroup_stats(line_item,
                                                   self.start_date,
                                                   self.end_date,
-                                                  daily=False)
+                                                  daily=False)['sum']
                 order_data = (
                     order.name,
                     line_item.name,
                     order.advertiser,
-                    line_item.adgroup_type,
+                    line_item.adgroup_type_display,
                     str(line_item.start_datetime),
                     str(line_item.end_datetime),
                     line_item.bid,
@@ -722,9 +724,9 @@ class MultipleLineItemExporter(RequestHandler):
                     ctr(stats['clk'],stats['imp']),
                     stats['conv_rate'],
                     line_item.allocation_percentage,
-                    #'fcaps',
-                    line_item.geo_predicates,
-                    str(line_item.devices),
+                    line_item.frequency_cap_display,
+                    line_item.country_targeting_display,
+                    line_item.device_targeting_display,
                     line_item.keywords,
                 )
             data_to_export.extend([order_data])

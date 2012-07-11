@@ -3,7 +3,6 @@ Views that handle pages for Apps and AdUnits.
 """
 
 import logging
-
 import urllib
 # hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
@@ -42,12 +41,11 @@ from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
                                       AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 
-
 from common.utils.request_handler import RequestHandler
-#REFACTOR: only import what we need here
 from common.constants import *
-
 from common.utils import tablib
+from common.utils.stats_helpers import SummedStatsFetcher
+
 
 class DashboardHandler(RequestHandler):
     def get(self):
@@ -508,16 +506,64 @@ class InventoryExporter(RequestHandler):
 
     def get(self):
 
-        export_type = self.request.GET.get('type', 'csv')
+        export_type = self.request.GET.get('type', 'html')
 
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
-        logging.warn(apps_dict)
-        app_data = [(app.name, str(app.key())) for app in apps_dict.values()]
+        app_data = []
 
-        headers = ('adunit_name', 'adunit_key')
+        stats = StatsModelQueryManager(self.account)
+        
+        for app in apps_dict.values():
+
+            # Make a row for each app with it's summed stats
+            app_stats = stats.get_stats_sum(publisher=app, num_days=self.date_range)
+            app_row = (
+                app.name,
+                'All',
+                str(app.key()),
+                app.global_id,
+                app_stats.req,
+                app_stats.imp,
+                app_stats.imp,
+                app_stats.clk,
+                app_stats.clk,
+                "N/A",
+                app.app_type
+            )
+            app_data.append(app_row)
+
+            # ... then make a row for each adunit with its summed stats
+            for adunit in app.adunits:
+                adunit_stats = stats.get_stats_sum(publisher=adunit,
+                                                   num_days=self.date_range)
+                
+                row = (
+                    app.name,
+                    adunit.name,
+                    str(adunit.key()),
+                    app.global_id,
+                    adunit_stats.req,
+                    adunit_stats.imp,
+                    adunit_stats.fill_rate,
+                    adunit_stats.clk,
+                    adunit_stats.ctr,
+                    adunit.format,
+                    app.app_type
+                )
+                app_data.append(row)
+
+        # Put together the header list
+        headers = (
+            'App Name', 'Adunit Name', 'Pub ID', 'Resource ID',
+            'Requests', 'Impressions', 'Fill Rate',
+            'Clicks', 'CTR', 'Ad Size', 'Platform'
+        )
+
+        # Create the data to export from all of the rows
         data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(app_data)
 
+        # Return the exported data in the format requested
         return HttpResponse(getattr(data_to_export, export_type))
 
 @login_required
@@ -527,17 +573,37 @@ def inventory_exporter(request, *args, **kwargs):
 
 class AppExporter(RequestHandler):
 
-    def get(self):
+    def get(self, app_key):
 
-        export_type = self.request.GET.get('type', 'csv')
+        app = AppQueryManager.get(app_key)
+        if not app.account.key() == self.account.key():
+            raise Http404
 
-        apps_dict = PublisherQueryManager.get_apps_dict_for_account(self.account)
-        app_data = [(app.name, str(app.key())) \
-                    for app in apps_dict.values()]
+        export_type = self.request.GET.get('type', 'html')            
+        stats = StatsModelQueryManager(self.account)
+        stats_per_day = stats.get_stats_for_days(publisher=app, num_days=self.date_range)
+        app_data = []
 
-        headers = ('app_name', 'app_key')
+        for day in stats_per_day:
+            row = (
+                day.date,
+                day.req,                
+                day.imp,
+                day.fill_rate,
+                day.clk,
+                day.ctr,
+            )
+            app_data.append(row)
+            
+        # Put together the header list
+        headers = (
+            'Date', 'Requests', 'Impressions',
+            'Fill Rate', 'Clicks', 'CTR'
+        )
+
+        # Create the data to export from all of the rows
         data_to_export = tablib.Dataset(headers=headers)
-        data_to_export.extend(app_data)
+        data_to_export.extend(app_data)        
 
         return HttpResponse(getattr(data_to_export, export_type))
 
@@ -549,19 +615,40 @@ def app_exporter(request, *args, **kwargs):
 
 class AdunitExporter(RequestHandler):
 
-    def get(self):
+    def get(self, adunit_key):
+        
+        adunit = AdUnitQueryManager.get(adunit_key)
+        if not adunit.account.key() == self.account.key():
+            raise Http404
 
-        export_type = self.request.GET.get('type', 'csv')
+        export_type = self.request.GET.get('type', 'html')            
+        stats = StatsModelQueryManager(self.account)
+        stats_per_day = stats.get_stats_for_days(publisher=adunit, num_days=self.date_range)
+        adunit_data = []
 
-        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(self.account)
-        adunit_data = [(adunit.name, str(adunit.key())) \
-                    for adunit in adunits_dict.values()]
+        for day in stats_per_day:
+            row = (
+                day.date,
+                day.req,                
+                day.imp,
+                day.fill_rate,
+                day.clk,
+                day.ctr,
+            )
+            adunit_data.append(row)
+            
+        # Put together the header list
+        headers = (
+            'Date', 'Requests', 'Impressions',
+            'Fill Rate', 'Clicks', 'CTR'
+        )
 
-        headers = ('adunit_name', 'adunit_key')
+        # Create the data to export from all of the rows
         data_to_export = tablib.Dataset(headers=headers)
-        data_to_export.extend(adunit_data)
+        data_to_export.extend(adunit_data)        
 
         return HttpResponse(getattr(data_to_export, export_type))
+
 
 @login_required
 def adunit_exporter(request, *args, **kwargs):

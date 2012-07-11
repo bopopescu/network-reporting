@@ -44,11 +44,11 @@ urlpatterns = patterns(
         'inventory_exporter',
         name='publisher_inventory_exporter'),
     
-    url(r'^export/apps/$',
+    url(r'^export/app/(?P<app_key>[-\w\.]+)/$',
         'app_exporter',
         name='publisher_app_exporter'),
 
-    url(r'^export/adunits/$',
+    url(r'^export/adunit/(?P<adunit_key>[-\w\.]+)/$',
         'adunit_exporter',
         name='publisher_adunit_exporter'),
 )

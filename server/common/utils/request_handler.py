@@ -16,6 +16,7 @@ from common.utils import date_magic
 from django.conf import settings
 from django.http import Http404
 from common.ragendja.template import render_to_response
+from common.utils.browsers import is_ie
 
 from stats.log_service import LogService
 
@@ -73,8 +74,6 @@ class RequestHandler(object):
             except:
                 self.date_range = 14
             self.days = date_magic.gen_days(self.start_date, self.end_date)
-
-            logging.warn(self.days)
             
             self.current = datetime.date.today() in self.days
             
@@ -93,6 +92,14 @@ class RequestHandler(object):
                 else:
                     self._set_account()
 
+            # Determine if this request was made from an IE browser so
+            # we can display a warning in the template
+            try:
+                self.is_ie = is_ie(request.META['HTTP_USER_AGENT'])
+            except Exception, error:
+                logging.warn(error)
+                self.is_ie = False
+                    
             # If a key is passed in the url, and if the request handler
             # has been initialized with id='key_name', we can fetch the
             # object from the db now.  We'll use it later on to make sure

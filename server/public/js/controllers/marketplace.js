@@ -301,9 +301,12 @@ var mopub = mopub || {};
             // 'next'/'prev', or changes the number of displayed rows)
             fnRowCallback: function(nRow, aData, iDisplayIndex) {
 
-                $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" +
-                                         aData[0] +
-                                         "'></iframe>");
+                $("td:eq(0)", nRow).html("<iframe "
+                                         + "width='320px' "
+                                         + "height='50px' "
+                                         + "onerror='this.location = \"/images/preview_unavailable.png\";' "
+                                         + "src='" + aData[0] + "'>"
+                                         + "</iframe>");
 
                 var domain = aData[1];
                 if (_.contains(blocklist, domain)) {

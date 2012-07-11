@@ -690,6 +690,7 @@ var mopub = mopub || {};
             stats_endpoint: 'all'
         },
         validate: function(attributes) {
+            
             var current_price_floor = this.get('price_floor');
             if (typeof(attributes.price_floor) !== 'undefined') {
                 var valid_number = Number(attributes.price_floor);

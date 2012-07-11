@@ -1,7 +1,7 @@
 <div id="date-range-controls">
   <div class="btn-group">
     <a id="datepicker-today"
-       class='btn{% if  date_range == 1 and not yesterday %} active{% endif %}'>
+       class='btn{% if date_range == 1 and not yesterday and current %} active{% endif %}'>
       Today
     </a>
     <a id="datepicker-yesterday"
@@ -9,16 +9,16 @@
       Yesterday
     </a>
     <a id="datepicker-7"
-       class='btn{% ifequal date_range 7 %} active{% endifequal %}'>
+       class='btn{% if date_range == 7 and current %} active{% endif %}'>
       7 Days
     </a>
     <a id="datepicker-14"
-       class='btn{% ifequal date_range 14 %} active{% endifequal %}'>
+       class='btn{% if date_range == 14 and current %} active{% endif %}'>
       14 Days
       
     </a>
     <a id="datepicker-custom"
-       class='btn{% if date_range != 1 and date_range != 7 and date_range != 14 and date_range != 30 %} active{% endif %}'>
+       class='btn{% if not current and not yesterday or date_range != 1 and date_range != 7 and date_range != 14 and date_range != 30 %} active{% endif %}'>
       Custom
       <span class="caret"></span>
     </a>

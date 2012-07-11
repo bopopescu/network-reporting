@@ -19,14 +19,11 @@ from common.ragendja.template import (
 )
 
 ## Models
-from advertiser.models import Campaign, \
-        AdGroup, \
-        HtmlCreative, \
-        NetworkStates
+from advertiser.models import (Campaign, 
+                               AdGroup, 
+                               HtmlCreative)
 
-from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
-from reporting.models import StatsModel
 from account.models import NetworkConfig
 
 ## Query Managers
@@ -37,14 +34,13 @@ from advertiser.query_managers import (AdvertiserQueryManager,
                                        CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
-from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
+from publisher.query_managers import (PublisherQueryManager,
+                                      AppQueryManager,
                                       AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils.request_handler import RequestHandler
-from common.constants import *
 from common.utils import tablib
-from common.utils.stats_helpers import SummedStatsFetcher
 
 
 class DashboardHandler(RequestHandler):
@@ -55,13 +51,19 @@ class DashboardHandler(RequestHandler):
             'network': 'Ad Networks',
         }
 
-        for key, campaign in AdvertiserQueryManager.get_campaigns_dict_for_account(account=self.account, include_deleted=True).items():
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
+            account=self.account, include_deleted=True)
+        for key, campaign in campaigns.items():
             names[key] = campaign.name
 
-        for key, app in PublisherQueryManager.get_apps_dict_for_account(account=self.account, include_deleted=True).items():
+        apps = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account, include_deleted=True)
+        for key, app in apps.items():
             names[key] = app.name
 
-        for key, adunit in PublisherQueryManager.get_adunits_dict_for_account(account=self.account, include_deleted=True).items():
+        adunits = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account, include_deleted=True)
+        for key, adunit in adunits.items():
             names[key] = adunit.name
 
         return {

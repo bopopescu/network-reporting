@@ -66,6 +66,7 @@ class RequestHandler(object):
             #       self.start_date and self.end_date, inclusive.
             # * self.days - a list of datetime.date objects for each day
             #       in between self.start_date and self.end_date, inclusive.
+            # self.current - True if the date range includes today, False otherwise
             self.start_date, self.end_date = get_start_and_end_dates(self.request)
             try:
                 self.date_range = int(self.params.get('r'))
@@ -73,6 +74,10 @@ class RequestHandler(object):
                 self.date_range = 14
             self.days = date_magic.gen_days(self.start_date, self.end_date)
 
+            logging.warn(self.days)
+            
+            self.current = datetime.date.today() in self.days
+            
             # little hack to figure out if it's yesterday so we can
             # show the button pressed down in the date controls
             yesterday = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(1)        
@@ -127,9 +132,9 @@ class RequestHandler(object):
                     "yesterday": self.yesterday,
                     "offline": self.offline,
                     "account": self.account,
+                    "current": self.current,
                     "True": True,
                     "False": False,
-                    "foo": "foo"
                 })
                 logging.warn(response)
                 response = render_to_response(self.request,

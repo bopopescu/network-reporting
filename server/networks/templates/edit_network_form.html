@@ -117,7 +117,7 @@
                 <li>
                 <label for="id_{{ network.name }}_pub_id">{{ network.pretty_name }} Publisher Alias:</label>
                 <div>
-                    <input type="text" name="{{ network.name }}_pub_id" id="id_{{ network.name }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
+                    <input type="text" name="{% if campaign_key %}{{ account.network_config.key }}-{% endif %}{{ network.name }}_pub_id" id="id_{{ network.name }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
                 </div>
                 </li>
                 {% endif %}
@@ -700,7 +700,7 @@
                 '{{ adunit.key }}': '{{ app.key }}',
                 {% endfor %}
                 {% endfor %}},
-                account_key: '{{ account_key }}',
+                account_key: '{{ account.key }}',
                 priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
                 city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},
                 login_state: {{ network.login_state }},

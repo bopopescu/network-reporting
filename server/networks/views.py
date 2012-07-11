@@ -355,7 +355,7 @@ class EditNetworkHandler(RequestHandler):
                                   'networks/edit_network_form.html',
                                   {
                                       'network': network_data,
-                                      'account_key': str(self.account.key()),
+                                      'account': self.account,
                                       'custom_campaign': custom_campaign,
                                       'campaign_form': campaign_form,
                                       'campaign_key': campaign_key,

@@ -375,69 +375,136 @@ class EditNetworkHandler(RequestHandler):
             raise Http404
 
         if network:
-            self.create(network)
+            return self.create(network)
         elif campaign_key:
-            self.edit(campaign_key)
+            return self.edit(campaign_key)
 
-    def edit(campaign_key):
+    def edit(self, campaign_key):
         campaign = CampaignQueryManager.get(campaign_key)
 
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
 
-        logging.info(self.request.POST)
+        query_dict = self.request.POST.copy()
+        if 'name' not in query_dict:
+            query_dict['name'] = campaign.name
 
-        for field, value in self.request.POST:
-            # parse field into field and model by looking for '-'
+        campaign_form = None
+        default_adgroup_form = None
+        adunit_key_adgroup_dict = {}
+        network_configs = []
 
-            if field in NetworkCampaignForm:
+        errors = {}
+
+        for field, value in query_dict.iteritems():
+            logging.info(field)
+            logging.info(value)
+
+            # parse field into model key and field by looking for '-'
+            key_field = field.split('-')
+            if len(key_field) == 1:
+                key = None
+            else:
+                key = key_field[0]
+                field = key_field[1]
+
+            if field in NetworkCampaignForm.base_fields and not campaign_form:
                 # grab campaign create campaign form
-            if field in NetworkAdGroupForm:
-                # grab single adunit adgroup and us it as an initial in form
+                campaign_form = NetworkCampaignForm(query_dict, instance=campaign)
+
+                if not campaign_form.is_valid():
+                    for key, value in campaign_form.errors.items():
+                        errors[key] = ' '.join([error for error in value])
+
+            elif field in NetworkAdGroupForm.base_fields and not default_adgroup_form:
+                # grab single adunit adgroup and use it as an initial in form
+                adgroup = campaign.adgroups.filter('deleted =', False).get()
                 # apply differences to form
-            elif field in AdunitAdgroupForm:
-                # append it to a dict of lists for each field
+                default_adgroup_form = NetworkAdGroupForm(query_dict, instance=adgroup)
+
+                if not default_adgroup_form.is_valid():
+                    for key, value in default_adgroup_form.errors.items():
+                        errors[key] = ' '.join([error for error in value])
+            elif field in AdUnitAdGroupForm.base_fields and key not in adunit_key_adgroup_dict:
+                # get adgroup from db
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign, key, self.account.key(),
+                    get_from_db=True)
+                # create form
+                adgroup_form = AdUnitAdGroupForm(query_dict, instance=adgroup, prefix=key)
+
+                if not adgroup_form.is_valid():
+                    for key, value in adgroup_form.errors.items():
+                        if adgroup_form.prefix and key in set(AdUnitAdGroupForm.
+                                base_fields.keys()):
+                            key = adgroup_form.prefix + '-' + key
+                        errors[key] = ' '.join([error for error in value])
+
+                # add it to dict
+                adunit_key_adgroup_dict[key] = adgroup_form
             elif 'pub_id' in field:
                 # get network config
+                network_config = NetworkConfigQueryManager.get(key)
                 # make change
+                setattr(network_config, field, value)
                 # append to modified network config list
+                network_configs.append(network_config)
 
-        # check if campaign form is valid and submit it
+        if errors:
+            return JSONResponse({
+                'errors': errors,
+                'success': False,
+            })
 
+        if campaign_form:
+            # save the campaign changes
+            campaign_form.save()
+
+        adgroups = []
         if default_adgroup_form:
             # get all adunits
-            # apply individual changes
-            # check if valid
-            # save
-        else:
-            for key, adgroup_properties in adgroups_property_dict.iteritems():
-                # get model for key
+            adunits = PublisherQueryManager.get_adunits_dict_for_account(account=
+                    self.account).values()
+            # apply changes to all adunit adgroups that haven't been
+            # individually modified
+            for adunit in adunits:
+                if adunit.key() not in adunit_key_adgroup_dict:
+                    adgroup = AdGroupQueryManager.get_network_adgroup(campaign, adunit.key(), self.account.key(), get_from_db=True)
+                    adgroup = NetworkAdGroupForm(query_dict, instance=adgroup).save(commit=False)
+                    adgroups.append(adgroup)
 
-                # apply changes
-                for field, value in adgroup_properties:
-                    setattr
+        for adgroup_form in adunit_key_adgroup_dict.values():
+            adgroup = adgroup_form.save(commit=False)
+
+            # apply global changes
+            for field, value in default_adgroup_form.cleaned_data.iteritems:
+                setattr(adgroup, field, value)
+            adgroups.append(adgroup)
+
+        # save all modified adgroups
+        AdGroupQueryManager.put(adgroups)
 
         # save all modified network configs
+        NetworkConfigQueryManager.put(network_configs)
 
+        return JSONResponse({
+            'success': True,
+            'redirect': reverse('network_details',
+                args=(str(campaign.key()),)),
+        })
 
-        network = campaign.network_type
-        custom_campaign = campaign.network_state == \
-                NetworkStates.CUSTOM_NETWORK_CAMPAIGN
-        if campaign:
-            if not custom_campaign:
-                query_dict['name'] = campaign.name
-
-    def create(network):
+    def create(self, network):
         apps = PublisherQueryManager.get_apps_dict_for_account(account=
                 self.account).values()
         adunits = PublisherQueryManager.get_adunits_dict_for_account(account=
                 self.account).values()
 
         query_dict = self.request.POST.copy()
+        if 'name' not in query_dict:
+            query_dict['name'] = NETWORKS[network]
+
         query_dict['campaign_type'] = 'network'
 
         campaign = None
-        custom_campaign = False
 
         # Do no other network campaigns exist or is this custom?
         custom_campaign = CampaignQueryManager.get_network_campaigns(

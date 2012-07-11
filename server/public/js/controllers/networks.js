@@ -302,6 +302,7 @@
     var EditNetworkController = {
         initialize: function(bootstrapping_data) {
             var network_type = bootstrapping_data.network_type,
+                campaign_key = bootstrapping_data.campaign_key,
                 pretty_name = bootstrapping_data.pretty_name,
                 adunits_for_app = bootstrapping_data.adunits_for_app,
                 app_for_adunit = bootstrapping_data.app_for_adunit,
@@ -510,16 +511,16 @@
             }
 
             // initial form items saved in hash
-            var startItems = convertSerializedArrayToHash($('form#campaign_and_adgroup').serializeArray()); 
+            console.log(campaign_key);
+            if(campaign_key) {
+                var startItems = convertSerializedArrayToHash($('form#campaign_and_adgroup').serializeArray()); 
+            }
 
             var validator = $('form#campaign_and_adgroup').validate({
                 errorPlacement: function(error, element) {
                     element.parents('div').not(':hidden').first().append(error);
                 },
                 submitHandler: function(form) {
-                    var currentItems = convertSerializedArrayToHash($form.serializeArray());
-                    var itemsToSubmit = hashDiff(startItems, currentItems);
-
                     // TODO: figure out how to submit only the fields that have
                     // changed using ajaxSubmit (possibly need to modify
                     // ajaxSubmit)
@@ -560,6 +561,22 @@
                             });
                         },
                         beforeSubmit: function(arr, $form, options) {
+                            if(campaign_key) {
+                                var currentItems = convertSerializedArrayToHash($form.serializeArray());
+                                var itemsToSubmit = hashDiff(startItems, currentItems);
+
+                                // hack to remove items at arr location prior to
+                                // submit
+                                // NOTE: if this doesn't work we can set form
+                                // elements to disabeled or something similar using
+                                // beforeSerialize
+                                _.each(arr, function(property, i) {
+                                    if(!(property[0] in itemsToSubmit)) {
+                                        arr.splice(i, i);
+                                    }
+                                });
+                            }
+
                             $('#loading').css('display', 'inline');
                             $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
                                                                            disabled: true});

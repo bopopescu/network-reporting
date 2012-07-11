@@ -422,7 +422,12 @@ var mopub = mopub || {};
                 case 'rev':
                 case 'goal':
                 case 'pace':
-                    var stat_val = this.get("sum")[stat];
+                    var stat_val;
+                    try {                        
+                        stat_val = this.get("sum")[stat];
+                    } catch (e) {
+                        stat_val = this.get(stat);
+                    }
                     if (stat_val)
                         return stat_val
                     else
@@ -690,6 +695,7 @@ var mopub = mopub || {};
             stats_endpoint: 'all'
         },
         validate: function(attributes) {
+            
             var current_price_floor = this.get('price_floor');
             if (typeof(attributes.price_floor) !== 'undefined') {
                 var valid_number = Number(attributes.price_floor);

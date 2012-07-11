@@ -459,7 +459,6 @@ var mopub = window.mopub || {};
         render: function () {
             var this_view = this;
             if (this_view.collection.isFullyLoaded()) {
-
                 var metrics = [
                     'imp', 
                     'rev', 
@@ -541,7 +540,8 @@ var mopub = window.mopub || {};
                     $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
                     $(network_selector).html(network_campaigns.get_formatted_stat(metric));
                 });
-
+                               
+                
                 // Chart
                 if (_.isEmpty(network_campaigns.models)) {
                     mopub.dashboardStatsChartData = {
@@ -552,7 +552,7 @@ var mopub = window.mopub || {};
                         ctr: [{'Total': mopub_campaigns.get_total_daily_stats('ctr')}],
                         total: false
                     };
-                } else {b
+                } else {
 
                     mopub.dashboardStatsChartData = {
                         pointStart: this_view.options.start_date,

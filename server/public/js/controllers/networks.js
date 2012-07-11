@@ -570,11 +570,17 @@
                                 // NOTE: if this doesn't work we can set form
                                 // elements to disabeled or something similar using
                                 // beforeSerialize
-                                _.each(arr, function(property, i) {
-                                    if(!(property[0] in itemsToSubmit)) {
-                                        arr.splice(i, i);
+                                var k = 0;
+                                for(i=0; i < arr.length; i++) {
+                                    if(!(arr[i].name in itemsToSubmit)) {
+                                        arr.splice(k, 1);
+                                        i--;
+                                    } else {
+                                        k++;
                                     }
-                                });
+                                }
+
+                                console.log(arr);
                             }
 
                             $('#loading').css('display', 'inline');

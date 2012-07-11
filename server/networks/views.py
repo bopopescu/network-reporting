@@ -386,8 +386,7 @@ class EditNetworkHandler(RequestHandler):
             raise Http404
 
         query_dict = self.request.POST.copy()
-        if 'name' not in query_dict:
-            query_dict['name'] = campaign.name
+        logging.info('query_dict: %s' % query_dict)
 
         campaign_form = None
         default_adgroup_form = None
@@ -397,18 +396,21 @@ class EditNetworkHandler(RequestHandler):
         errors = {}
 
         for field, value in query_dict.iteritems():
-            logging.info(field)
-            logging.info(value)
-
             # parse field into model key and field by looking for '-'
-            key_field = field.split('-')
+            key_field = field.rsplit('-', 1)
             if len(key_field) == 1:
                 key = None
             else:
                 key = key_field[0]
                 field = key_field[1]
 
+            logging.info('field: %s' % field)
+            logging.info('key: %s' % key)
+            logging.info('value: %s' % value)
+
             if field in NetworkCampaignForm.base_fields and not campaign_form:
+                self.copy_fields(NetworkCampaignForm, query_dict, campaign)
+
                 # grab campaign create campaign form
                 campaign_form = NetworkCampaignForm(query_dict, instance=campaign)
 
@@ -419,6 +421,9 @@ class EditNetworkHandler(RequestHandler):
             elif field in NetworkAdGroupForm.base_fields and not default_adgroup_form:
                 # grab single adunit adgroup and use it as an initial in form
                 adgroup = campaign.adgroups.filter('deleted =', False).get()
+
+                self.copy_fields(NetworkAdGroupForm, query_dict, adgroup)
+
                 # apply differences to form
                 default_adgroup_form = NetworkAdGroupForm(query_dict, instance=adgroup)
 
@@ -429,6 +434,8 @@ class EditNetworkHandler(RequestHandler):
                 # get adgroup from db
                 adgroup = AdGroupQueryManager.get_network_adgroup(campaign, key, self.account.key(),
                     get_from_db=True)
+
+                self.copy_fields(AdUnitAdGroupForm, query_dict, adgroup, prefix=key)
                 # create form
                 adgroup_form = AdUnitAdGroupForm(query_dict, instance=adgroup, prefix=key)
 
@@ -476,14 +483,19 @@ class EditNetworkHandler(RequestHandler):
             adgroup = adgroup_form.save(commit=False)
 
             # apply global changes
-            for field, value in default_adgroup_form.cleaned_data.iteritems:
-                setattr(adgroup, field, value)
+            if default_adgroup_form:
+                for field, value in default_adgroup_form.cleaned_data.iteritems():
+                    setattr(adgroup, field, value)
             adgroups.append(adgroup)
 
         # save all modified adgroups
+        logging.info('ADGROUPS')
+        logging.info(adgroups)
         AdGroupQueryManager.put(adgroups)
 
         # save all modified network configs
+        logging.info('NETWORK_CONFIGS')
+        logging.info(network_configs)
         NetworkConfigQueryManager.put(network_configs)
 
         return JSONResponse({
@@ -491,6 +503,29 @@ class EditNetworkHandler(RequestHandler):
             'redirect': reverse('network_details',
                 args=(str(campaign.key()),)),
         })
+
+    def copy_fields(self, form_class, query_dict, instance, prefix=None):
+        COERCE_FIELDS = {'device_targeting': lambda data: '1' if data else '0'}
+
+        for field in form_class.base_fields.iterkeys():
+            if hasattr(instance, field):
+                if prefix:
+                    key = prefix + '-' + field
+                else:
+                    key = field
+
+                if key in query_dict:
+                    continue
+
+                value = getattr(instance, field)
+                if field in COERCE_FIELDS:
+                    value = COERCE_FIELDS[field](value)
+
+                if isinstance(value, list):
+                    query_dict.setlist(key, value)
+                else:
+                    query_dict[key] = value
+
 
     def create(self, network):
         apps = PublisherQueryManager.get_apps_dict_for_account(account=

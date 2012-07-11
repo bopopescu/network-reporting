@@ -103,6 +103,8 @@ class NetworkAdGroupForm(forms.ModelForm):
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
+        else:
+            keywords = []
         return keywords
 
     def clean(self):

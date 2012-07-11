@@ -371,7 +371,7 @@ Make a table for the main ad networks that are not setup
 {{ block.super }}
 <script>
   $(function () {
-    var graph_start_date = {{ start_date|js_date }};
+    var graph_start_date = {{ start_date|js_date }}.getUTCMilliseconds();
   
     NetworksController.initialize({
       campaigns_data: [{% for network in networks %}{

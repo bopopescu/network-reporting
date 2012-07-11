@@ -137,6 +137,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         else:
 
             return self.format_stats(all_stats)
+
             
     def _get_advertiser_stats(self, advertiser, start, end,
                               publisher=None, daily=True,

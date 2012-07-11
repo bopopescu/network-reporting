@@ -422,7 +422,12 @@ var mopub = mopub || {};
                 case 'rev':
                 case 'goal':
                 case 'pace':
-                    var stat_val = this.get("sum")[stat];
+                    var stat_val;
+                    try {                        
+                        stat_val = this.get("sum")[stat];
+                    } catch (e) {
+                        stat_val = this.get(stat);
+                    }
                     if (stat_val)
                         return stat_val
                     else

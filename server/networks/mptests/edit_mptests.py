@@ -111,7 +111,7 @@ class EditNetworkGetTestCase(NetworkTestCase):
 
         dict_eq(network_data, context['network'])
 
-        eq_(str(self.account.key()), context['account_key'])
+        eq_(self.account.key(), context['account'].key())
 
         ok_(not context['custom_campaign'] or (context['custom_campaign'] and
             self.network_type in ('custom', 'custom_native')))
@@ -153,19 +153,14 @@ class EditNetworkPostTestCase(NetworkTestCase):
         self.existing_campaign = self.generate_network_campaign(self.network_type,
             self.account, self.existing_apps)
 
-        app_pub_ids = {}
-        adunit_pub_ids = {}
-
         for app_idx, app in enumerate(self.existing_apps):
             pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
-            app_pub_ids[app.key()] = pub_id
             setattr(app.network_config, '%s_pub_id' % self.network_type,
                     pub_id)
             AppQueryManager.update_config_and_put(app, app.network_config)
 
             for adunit_idx, adunit in enumerate(app.adunits):
                 adunit_pub_id = '%s_%s' % (pub_id, adunit_idx)
-                adunit_pub_ids[adunit.key()] = adunit_pub_id
                 setattr(adunit.network_config, '%s_pub_id' % self.network_type,
                         adunit_pub_id)
                 AdUnitQueryManager.update_config_and_put(adunit, adunit.network_config)
@@ -173,9 +168,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         self.url = reverse('edit_network',
                 kwargs={'campaign_key': str(self.existing_campaign.key())})
 
-        self.post_data = self.setup_post_request_data(apps=self.existing_apps,
-                network_type=self.network_type, app_pub_ids=app_pub_ids,
-                adunit_pub_ids=adunit_pub_ids)
+        self.post_data = {}
 
         self.edited = defaultdict(dict)
         for adgroup in self.existing_campaign.adgroups:
@@ -192,8 +185,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         """
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
-                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
-                           edited=self.edited)
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
 
     def mptest_activates_adgroup(self):
         """Setting adgroup.active to True should work.
@@ -229,7 +221,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         app = self.existing_apps[0]
         adunit = app.adunits[0]
 
-        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit.key(),
+        adunit_pub_id_key = '%s-%s_pub_id' % (adunit.network_config.key(),
                 self.network_type)
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_pub_id_key] = ''
@@ -290,15 +282,16 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adunit_to_modify = app_to_modify.adunits[0]
 
         new_app_pub_id = 'TEST_APP_PUB_ID'
-        app_pub_id_key = 'app_%s-%s_pub_id' % (app_to_modify.key(),
+        app_pub_id_key = '%s-%s_pub_id' % (app_to_modify.network_config.key(),
                 self.network_type)
         self.post_data[app_pub_id_key] = new_app_pub_id
 
         new_adunit_pub_id = 'TEST_ADUNIT_PUB_ID'
-        adunit_pub_id_key = 'adunit_%s-%s_pub_id' % (adunit_to_modify.key(),
+        adunit_pub_id_key = '%s-%s_pub_id' % (adunit_to_modify.network_config.key(),
                 self.network_type)
         self.post_data[adunit_pub_id_key] = new_adunit_pub_id
 
+        self.edited = {}
         self.edited.update({app_to_modify.network_config.key(): {'%s_pub_id' %
                     self.network_type: new_app_pub_id},
                   adunit_to_modify.network_config.key(): {'%s_pub_id' %
@@ -321,13 +314,14 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adunit = app.adunits[0]
 
         new_app_pub_id = 'TEST_APP_PUB_ID'
-        app_pub_id_key = 'app_%s-%s_pub_id' % (app.key(),
+        app_pub_id_key = '%s-%s_pub_id' % (app.network_config.key(),
                 self.network_type)
         self.post_data[app_pub_id_key] = new_app_pub_id
 
         # Prepare a login
         login = self.generate_ad_network_login(self.network_type, self.account)
 
+        self.edited = {}
         self.edited[app.network_config.key()] = {'%s_pub_id' %
                 self.network_type: new_app_pub_id}
 

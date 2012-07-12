@@ -386,7 +386,6 @@ class EditNetworkHandler(RequestHandler):
             raise Http404
 
         query_dict = self.request.POST.copy()
-        logging.info('query_dict: %s' % query_dict)
 
         campaign_form = None
         default_adgroup_form = None
@@ -403,10 +402,6 @@ class EditNetworkHandler(RequestHandler):
             else:
                 key = key_field[0]
                 field = key_field[1]
-
-            logging.info('field: %s' % field)
-            logging.info('key: %s' % key)
-            logging.info('value: %s' % value)
 
             if field in NetworkCampaignForm.base_fields and not campaign_form:
                 self.copy_fields(NetworkCampaignForm, query_dict, campaign)
@@ -446,6 +441,18 @@ class EditNetworkHandler(RequestHandler):
                             key = adgroup_form.prefix + '-' + key
                         errors[key] = ' '.join([error for error in value])
 
+                else:
+                    # Return error if adgroup is set to active yet the user didn't enter a pub id
+                    if adgroup_form.cleaned_data['active'] and campaign.network_type in NETWORKS_WITH_PUB_IDS:
+                        network_config = AdUnitQueryManager.get(key).network_config
+
+                        pub_id_field = '%s_pub_id' % campaign.network_type
+                        pub_id_query_dict = '%s-%s' % (network_config.key(), pub_id_field)
+                        if (pub_id_query_dict not in query_dict and not hasattr(network_config, pub_id_field)) or (pub_id_query_dict in query_dict and not query_dict[pub_id_query_dict]):
+                            errors['%s-%s_pub_id' % (network_config.key(), campaign.network_type)] = "MoPub requires an" \
+                                    " ad network id for enabled adunits."
+
+
                 # add it to dict
                 adunit_key_adgroup_dict[key] = adgroup_form
             elif 'pub_id' in field:
@@ -456,7 +463,29 @@ class EditNetworkHandler(RequestHandler):
                 # append to modified network config list
                 network_configs.append(network_config)
 
+                app = network_config.apps.get()
+                if app and campaign.network_type in REPORTING_NETWORKS:
+                    # Create an AdNetworkAppMapper if there exists a
+                    # login for the network (safe to re-create if it
+                    # already exists)
+                    login = AdNetworkLoginManager.get_logins(
+                            self.account, campaign.network_type).get()
+                    if login:
+                        mappers = AdNetworkMapperManager. \
+                                get_mappers_for_app(login=login, app=app)
+                        # Delete the existing mappers if there are no scrape
+                        # stats for them.
+                        for mapper in mappers:
+                            if mapper:
+                                stats = mapper.ad_network_stats
+                                if not stats.count(1):
+                                    mapper.delete()
+                        if value:
+                            AdNetworkMapperManager.create(network=campaign.network_type,
+                                    pub_id=value, login=login, app=app)
+
         if errors:
+            logging.info('errors: %s' % errors)
             return JSONResponse({
                 'errors': errors,
                 'success': False,

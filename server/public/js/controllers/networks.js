@@ -511,7 +511,6 @@
             }
 
             // initial form items saved in hash
-            console.log(campaign_key);
             if(campaign_key) {
                 var startItems = convertSerializedArrayToHash($('form#campaign_and_adgroup').serializeArray()); 
             }
@@ -579,8 +578,6 @@
                                         k++;
                                     }
                                 }
-
-                                console.log(arr);
                             }
 
                             $('#loading').css('display', 'inline');

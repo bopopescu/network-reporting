@@ -198,6 +198,9 @@ def confirm_model_changes(method,
     # run the intended test
     response = method(*args, **kwargs)
     eq_(response.status_code, response_code)
+
+    network_config = db.get('agltb3B1Yi1pbmNyEwsSDU5ldHdvcmtDb25maWcYCAw')
+
     # HACK for returning values when called via decorator in confirm_all_models
     return_values.append(response)
 

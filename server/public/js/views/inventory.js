@@ -795,7 +795,7 @@ var mopub = window.mopub || {};
             var popover_content = popover_template(current_model.toJSON());            
 
             $(".moreinfo", row).popover({
-                placement: 'bottom',
+                placement: 'left',
                 title: current_model.get('name'),
                 content: popover_content,
                 delay: { hide: 250 }            

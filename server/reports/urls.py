@@ -4,6 +4,7 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('reports.views',
         url(r'^view/$', 'request_report', name='request_report'),
         url(r'^$', 'reports_index', name='reports_index'),
+        url(r'^status/(?P<report_key>[-\w\.]+)/$', 'report_status', name='report_status'),
         url(r'^check/(?P<report_key>[-\w\.]+)/$', 'check_report', name='check_report'),
         url(r'^add/$', 'edit_report', name='add_report'),
         url(r'^edit/(?P<report_key>[-\w\.]+)/$', 'edit_report', name='edit_report'),

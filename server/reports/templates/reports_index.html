@@ -68,7 +68,7 @@
                 <td class='dataTable-name'>
                     {{report.details|safe}}
                 </td>
-                <td id='{{report.key}}-status' class='dataTable-date'>
+                <td class='dataTable-date'>
                     {{ report.last_run|date:'N j, Y \<\b\r /\> f a'|safe }}
                 </td>
                 <td class='dataTable-data'>
@@ -76,12 +76,7 @@
                     {{ report.sched_interval|capfirst }}
                     {% endif %}
                 </td>
-                <td class='dataTable-name'>
-                    {% if report.status == 'Completed' %}
-                    <a href='{% url report_export report_key=report.key %}'>Export</a>
-                    {% else %}
-                    {{ report.status }}
-                    {% endif %}
+                <td id='{{report.key}}-status' class='dataTable-name'>
                 </td>
             </tr>
             {% endfor %}

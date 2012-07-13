@@ -64,6 +64,20 @@ def reports_index(request, *args, **kwargs):
     return ReportIndexHandler()(request, *args, **kwargs)
 
 
+class ReportStatusHandler(RequestHandler):
+    def get(self, report_key):
+        report = ScheduledReport.get(report_key)
+
+        if report.account.key() != self.account.key():
+            raise Http404
+
+        return JSONResponse({'status': report.status})
+
+
+@login_required
+def report_status(request, *args, **kwargs):
+    return ReportStatusHandler()(request, *args, **kwargs)
+
 class EditReportHandler(RequestHandler):
     def post(self, report_key=None):
         """

@@ -384,7 +384,6 @@ class AppQueryManager(CachedQueryManager):
         """
         for app in App.all().filter('account =', account):
             if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
-                logging.info(app.name)
                 ids = re.findall('/id[0-9]*\?', app.url)
                 if ids:
                     pub_id = ids[0][len('/id'):-1]

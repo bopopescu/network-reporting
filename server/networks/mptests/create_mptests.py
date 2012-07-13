@@ -48,6 +48,7 @@ from publisher.query_managers import AdUnitQueryManager, \
         AppQueryManager
 
 from account.models import NetworkConfig
+from account.query_managers import NetworkConfigQueryManager
 from advertiser.models import Campaign, \
         AdGroup, \
         Creative, \
@@ -146,23 +147,29 @@ class CreateNetworkGetTestCase(NetworkTestCase):
 
         Author: Tiago Bandeira
         """
+        # set up network configs
+        for app_idx, app in enumerate(self.existing_apps):
+            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+            setattr(app.network_config, '%s_pub_id' % self.network_type_to_test(), pub_id)
+            AppQueryManager.update_config_and_put(app, app.network_config)
+
+            for adunit_idx, adunit in enumerate(app.adunits):
+                adunit_pub_id = '%s_%s' % (pub_id, adunit_idx)
+                setattr(adunit.network_config, '%s_pub_id' % self.network_type_to_test(), adunit_pub_id)
+                AdUnitQueryManager.update_config_and_put(adunit, adunit.network_config)
+
+        # send the request
         response = self.client.get(self.url)
         context = response.context
 
-        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
-                self.account).values()
-        adgroups_by_adunit = {}
-        for adgroup in adgroups:
-            adgroups_by_adunit[adgroup.site_keys[0]] = adgroup
-
         network_data = {'name': self.network_type,
                         'pretty_name': NETWORKS[self.network_type],
-                        'show_login': False,
+                        'show_login': True,
                         'login_state': LoginStates.NOT_SETUP}
 
         dict_eq(network_data, context['network'])
 
-        eq_(str(self.account.key()), context['account_key'])
+        eq_(self.account.key(), context['account'].key())
 
         ok_(not context['custom_campaign'] or (context['custom_campaign'] and
             self.network_type in ('custom', 'custom_native')))
@@ -182,9 +189,7 @@ class CreateNetworkGetTestCase(NetworkTestCase):
 
             for adunit_idx, adunit in enumerate(app.adunits):
                 ok_(isinstance(adunit.adgroup_form, AdUnitAdGroupForm))
-                ok_(adunit.key() in adgroups_by_adunit)
-                model_eq(adunit.adgroup_form.instance,
-                        adgroups_by_adunit[adunit.key()])
+                ok_(adunit.adgroup_form)
 
                 eq_(adunit.pub_id, '%s_%s' % (pub_id, adunit_idx))
 

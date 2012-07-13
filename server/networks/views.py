@@ -390,7 +390,6 @@ class EditNetworkHandler(RequestHandler):
         campaign_form = None
         default_adgroup_form = None
         adunit_key_adgroup_dict = {}
-        network_configs = []
 
         errors = {}
 
@@ -460,29 +459,35 @@ class EditNetworkHandler(RequestHandler):
                 network_config = NetworkConfigQueryManager.get(key)
                 # make change
                 setattr(network_config, field, value)
-                # append to modified network config list
-                network_configs.append(network_config)
 
-                app = network_config.apps.get()
-                if app and campaign.network_type in REPORTING_NETWORKS:
-                    # Create an AdNetworkAppMapper if there exists a
-                    # login for the network (safe to re-create if it
-                    # already exists)
-                    login = AdNetworkLoginManager.get_logins(
-                            self.account, campaign.network_type).get()
-                    if login:
-                        mappers = AdNetworkMapperManager. \
-                                get_mappers_for_app(login=login, app=app)
-                        # Delete the existing mappers if there are no scrape
-                        # stats for them.
-                        for mapper in mappers:
-                            if mapper:
-                                stats = mapper.ad_network_stats
-                                if not stats.count(1):
-                                    mapper.delete()
-                        if value:
-                            AdNetworkMapperManager.create(network=campaign.network_type,
-                                    pub_id=value, login=login, app=app)
+                adunit = network_config.adunits.get()
+                if adunit:
+                    AdUnitQueryManager.update_config_and_put(adunit, network_config)
+                else:
+                    app = network_config.apps.get()
+
+                    if app:
+                        AppQueryManager.update_config_and_put(app, network_config)
+
+                        if campaign.network_type in REPORTING_NETWORKS:
+                            # Create an AdNetworkAppMapper if there exists a
+                            # login for the network (safe to re-create if it
+                            # already exists)
+                            login = AdNetworkLoginManager.get_logins(
+                                    self.account, campaign.network_type).get()
+                            if login:
+                                mappers = AdNetworkMapperManager. \
+                                        get_mappers_for_app(login=login, app=app)
+                                # Delete the existing mappers if there are no scrape
+                                # stats for them.
+                                for mapper in mappers:
+                                    if mapper:
+                                        stats = mapper.ad_network_stats
+                                        if not stats.count(1):
+                                            mapper.delete()
+                                if value:
+                                    AdNetworkMapperManager.create(network=campaign.network_type,
+                                            pub_id=value, login=login, app=app)
 
         if errors:
             logging.info('errors: %s' % errors)
@@ -533,9 +538,6 @@ class EditNetworkHandler(RequestHandler):
 
         # save all modified creatives
         CreativeQueryManager.put(creatives)
-
-        # save all modified network configs
-        NetworkConfigQueryManager.put(network_configs)
 
         return JSONResponse({
             'success': True,

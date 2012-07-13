@@ -520,9 +520,7 @@
                     element.parents('div').not(':hidden').first().append(error);
                 },
                 submitHandler: function(form) {
-                    // TODO: figure out how to submit only the fields that have
-                    // changed using ajaxSubmit (possibly need to modify
-                    // ajaxSubmit)
+                    // Submit only the fields that have changed using ajaxSubmit
                     $(form).ajaxSubmit({
                         data: {ajax: true},
                         dataType: 'json',
@@ -566,9 +564,6 @@
 
                                 // hack to remove items at arr location prior to
                                 // submit
-                                // NOTE: if this doesn't work we can set form
-                                // elements to disabeled or something similar using
-                                // beforeSerialize
                                 var k = 0;
                                 for(i=0; i < arr.length; i++) {
                                     if(!(arr[i].name in itemsToSubmit)) {

@@ -46,6 +46,10 @@ urlpatterns = patterns(
         'marketplace_content_filter',
         name='marketplace_content_filter'),
 
+    url(r'^marketplace/export/$',
+        'marketplace_export',
+        name='marketplace_export'),
+
 
     ###############
     # Direct sold #

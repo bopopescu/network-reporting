@@ -7,13 +7,13 @@ from google.appengine.api import urlfetch
 
 from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
-from advertiser.query_managers import CampaignQueryManager
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from common.ragendja.template import render_to_response, JSONResponse
 from common.utils.request_handler import RequestHandler
 from publisher.query_managers import PublisherQueryManager
-from common.utils.stats_helpers import (MarketplaceStatsFetcher,
-                                        MPStatsAPIException)
+from reporting.query_managers import StatsModelQueryManager
 
+from common.utils import tablib
 
 class MarketplaceIndexHandler(RequestHandler):
     """
@@ -252,6 +252,72 @@ def marketplace_creative_proxy(request, *args, **kwargs):
     return MarketplaceCreativeProxyHandler()(request, *args, **kwargs)
 
 
+class MarketplaceExportHandler(RequestHandler):
+    def get(self):
+        
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)        
+        export_type = self.request.GET.get('type', 'html')
+        stats = StatsModelQueryManager(self.account)
+        export_data = []
+        
+        for app in apps_dict.values():
+            app_stats = stats.get_stats_sum(publisher=app,
+                                            advertiser=marketplace_campaign,
+                                            num_days=self.date_range)
+            app_row = (
+                app.name,
+                str(app.key()),
+                app_stats.rev,
+                app_stats.imp,
+                app_stats.cpm,
+                "N/A",
+                "N/A",
+            )
+            export_data.append(app_row)
+            
+            for adunit in app.adunits:
+                marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(str(adunit.key()),
+                                                                                  str(self.account.key()),
+                                                                                  get_from_db=True)
+                adunit_stats = stats.get_stats_sum(publisher=adunit,
+                                                   advertiser=marketplace_campaign,
+                                                   num_days=self.date_range)
+                adunit_row = (
+                    adunit.name,
+                    str(adunit.key()),
+                    adunit_stats.rev,
+                    adunit_stats.imp,
+                    adunit_stats.cpm,
+                    marketplace_adgroup.mktplace_price_floor,
+                    marketplace_adgroup.active,
+                )
+                export_data.append(adunit_row)
+                
+            
+        # Put together the header list
+        headers = (
+            'Name',
+            'Pub ID',
+            'Revenue',
+            'Impressions',
+            'eCPM',
+            'Minimum Acceptable CPM',
+            'RTB Enabled'
+        )
+
+        # Create the data to export from all of the rows
+        data_to_export = tablib.Dataset(headers=headers)
+        data_to_export.extend(export_data)        
+
+        return HttpResponse(getattr(data_to_export, export_type))
+
+@login_required
+def marketplace_export(request, *args, **kwargs):
+    return MarketplaceExportHandler()(request, *args, **kwargs)
+
+    
 # REFACTOR: Do we still need this?
 class MPXInfoHandler(RequestHandler):
     def get(self):

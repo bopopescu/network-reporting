@@ -157,7 +157,9 @@
                 <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
                   <input id="{{ adunit.key }}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
                 </td>
-                <td class="dataTable-data numeric targeting" style="border:none;"></td>
+                <td class="dataTable-data numeric targeting" style="border:none;">
+                  <input type="checkbox" disabled> </input>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -166,7 +168,37 @@
       </div>
     </div>
     {% endfor %}
+
+    <br />
+    
+    <div class="right">
+      <div class="btn-group">
+        <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="{% url marketplace_export %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
+        </ul>
+      </div>
+    </div>
+
   </section>
+
+
   </div>
 
 

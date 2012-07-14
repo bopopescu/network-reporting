@@ -216,13 +216,13 @@ HOUR = 'hour'
 
 def date_name(val, dim):
     if dim == MO:
-        name = val.strftime('%B, %Y')
+        name = val.strftime('%m-%Y')
     elif dim == WEEK:
         #I think this is the right order...
         dte1, dte2 = val
-        name = dte1.strftime('%b %d') + ' - ' + dte2.strftime('%b %d, %Y')
+        name = dte1.strftime('%m-%d') + ' - ' + dte2.strftime('%m-%d-%Y')
     elif dim == DAY:
-        name = val.strftime('%b %d, %Y')
+        name = val.strftime('%m-%d-%Y')
     elif dim == HOUR:
         name = val.strftime('%H:00')
     else:

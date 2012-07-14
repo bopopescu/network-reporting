@@ -13,11 +13,11 @@ from reports.aws_reports.parse_utils import gen_days
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY, JOBFLOW_NAME
 #from reports.aws_reports.report_exceptions import (MRSubmitError, ReportException, NoDataError)
 
-############### Poster Imports ############### 
+############### Poster Imports ###############
 from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
 
-############### GAE Imports ############### 
+############### GAE Imports ###############
 from google.appengine.ext.remote_api import remote_api_stub
 
 
@@ -26,7 +26,7 @@ S3_CONN = S3Connection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
 BUCK = S3_CONN.get_bucket('mopub-aws-logging')
 
 S3_BUCKET = 's3://mopub-aws-logging'
-LOG_URI = S3_BUCKET + '/jobflow_logs/AAreports'  
+LOG_URI = S3_BUCKET + '/jobflow_logs/AAreports'
 
 REPORTING_S3_CODE_DIR = S3_BUCKET + '/reports_code0'
 
@@ -54,7 +54,7 @@ JOBFLOW_NAME = 'generating report job'
 if sys.platform == 'darwin':
     LOG_FILE = 'poller_%d.log'
 else:
-    LOG_FILE = '/home/ubuntu/poller_%d.log'
+    LOG_FILE = '/mnt/logs/poller_%d.log'
 
 LOGGER = logging.getLogger('aws_reports')
 LOGGER.setLevel(logging.DEBUG)
@@ -93,7 +93,7 @@ def log(mesg, level = 'warning'):
 def default_exc_handle(e):
     log("Encountered exception: %s" % e, level='exception')
 
-    tb_file = open('/home/ubuntu/tb.log', 'a')
+    tb_file = open('/mnt/logs/tb.log', 'a')
     tb_file.write("\nERROR---\n%s" % time.time())
     traceback.print_exc(file=tb_file)
     tb_file.close()
@@ -143,7 +143,7 @@ def get_waiting_jobflow(conn, jobflow_ids):
         jid = jobflow.jobflowid
         num_steps = len(jobflow.steps)
         print 'found waitingjobflow %s with %i steps completed' % (jid, num_steps)
-        if num_steps > 250: 
+        if num_steps > 250:
             if jobflow.state != u'RUNNING':
                 print 'num of steps near limit of 256: terminating jobflow %s ...' % (jid)
                 conn.terminate_jobflow(jid)

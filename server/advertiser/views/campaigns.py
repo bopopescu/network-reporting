@@ -68,12 +68,19 @@ class AdGroupIndexHandler(RequestHandler):
         days = date_magic.gen_days(today - datetime.timedelta(days=(num_days-1)), today)
 
         # Get all adgroups, filtering out those that are archived or deleted.
-        adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
-        adgroups = self._attach_targeted_app_keys_to_adgroups(adgroups_dict.values(), self.account)
+        adgroups = AdGroupQueryManager.get_adgroups(account=self.account,
+                network_type=None)
 
         # Divide adgroups into buckets based on priorities, and sort each bucket by bid.
         promo_adgroups, gtee_adgroups, backfill_promo_adgroups = _sort_adgroups(adgroups,
                                                                                 self.account)
+        promo_adgroups = self._attach_targeted_app_keys_to_adgroups(promo_adgroups,
+                self.account)
+        gtee_adgroups = self._attach_targeted_app_keys_to_adgroups(gtee_adgroups,
+                self.account)
+        backfill_promo_adgroups = self._attach_targeted_app_keys_to_adgroups(backfill_promo_adgroups,
+                self.account)
+
 
         apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
         apps = sorted(apps, lambda x, y: cmp(x.name, y.name))
@@ -256,11 +263,13 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Keyword arguments:
         adgroup_key -- the key of the adgroup we want to edit (only used for editing, not creating)
         """
+
         adgroup_to_edit = AdGroupQueryManager.get(adgroup_key) if adgroup_key else None
         campaign_form = self._campaign_form(adgroup=adgroup_to_edit)
-        adgroup_form = self._adgroup_form(adgroup=adgroup_to_edit)
+        adgroup_form = self._adgroup_form(adgroup=adgroup_to_edit, apps_choices=get_apps_choices(self.account))
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
         apps = self._apps_with_network_config_forms_for_account(self.account)
+        apps_without_global_id = get_targeted_apps_without_global_id(adgroup_to_edit) if adgroup_to_edit else []
 
         if adgroup_to_edit:
             template = 'advertiser/edit_campaign_and_adgroup.html'
@@ -270,11 +279,13 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         return render_to_response(self.request,
                                   template,
                                   {
+                                      'is_staff': self.request.user.is_staff,
                                       'campaign_form': campaign_form,
                                       'adgroup': adgroup_to_edit,
                                       'adgroup_form': adgroup_form,
                                       'account_network_config_form': account_network_config_form,
                                       'apps': apps,
+                                      'apps_without_global_id': apps_without_global_id,
                                   })
 
     ### BEGIN helpers for get()
@@ -294,11 +305,11 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             instance = adgroup.campaign
             initial = {'bid': adgroup.bid, 'bid_strategy': adgroup.bid_strategy}
         return CampaignForm(instance=instance,
-                            initial=initial, 
+                            initial=initial,
                             is_staff=self.request.user.is_staff,
                             account=self.account)
-    
-    def _adgroup_form(self, adgroup=None):
+
+    def _adgroup_form(self, adgroup=None, apps_choices=[]):
         """
         Returns a form that can create an adgroup. If an adgroup object is provided as an argument
         to this method, the adgroup will be used as the instance for the form.
@@ -306,7 +317,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Keyword arguments:
         adgroup -- an adgroup object used as the instance for the AdGroupForm (default None)
         """
-        return AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
+        return AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff, apps_choices=apps_choices)
 
     def _apps_with_network_config_forms_for_account(self, account):
         """
@@ -336,7 +347,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
                 adunit_key = str(adunit.key())
                 adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit_network_config,
                                                                      prefix="adunit_%s" % adunit_key)
-        
+
         return apps
 
     ### END helpers for get()
@@ -354,8 +365,9 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             self._flush_adunit_contexts_affected_by_adgroup(adgroup_to_edit)
 
         apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
+        apps_choices = get_apps_choices(self.account)
         adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
- 
+
         # Construct the campaign and adgroup objects from the form data. Return an error response
         # if anything goes wrong with the forms.
         try:
@@ -367,11 +379,11 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             campaign.save()
 
             adgroup = self._adgroup_from_form_data_with_campaign_and_adunits(campaign, adunits,
-                    instance=adgroup_to_edit)
+                    instance=adgroup_to_edit, apps_choices=apps_choices)
         except self.MPFormValidationException, ex:
             errors = ex[0] if len(ex.args) > 0 else {}
             return self._json_failure_response_with_errors(errors)
-        
+
         # Network campaigns require a few additional steps: generating a "network creative" and
         # updating all of the relevant network config objects.
         if campaign.campaign_type == 'network':
@@ -380,7 +392,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
             configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
             self._update_network_configs_using_adgroup(adgroup, configs_dict, apps, adunits, self.account)
-        
+
         # Miscellaneous tasks.
         self._flush_adunit_contexts_affected_by_adgroup(adgroup)
         self._mark_user_onboarding_complete_for_account(self.account)
@@ -416,7 +428,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             initial = {'bid': adgroup.bid, 'bid_strategy': adgroup.bid_strategy}
         form = CampaignForm(self.request.POST,
                             instance=instance,
-                            initial=initial, 
+                            initial=initial,
                             is_staff=self.request.user.is_staff,
                             account=self.account)
 
@@ -437,7 +449,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         campaign.account = self.account
         return campaign
 
-    def _adgroup_from_form_data_with_campaign_and_adunits(self, campaign, adunits, instance=None):
+    def _adgroup_from_form_data_with_campaign_and_adunits(self, campaign, adunits, instance=None, apps_choices=[]):
         """
         Returns an adgroup object created using form data from self.request.POST. The adgroup's
         campaign property will point to the given campaign, and its site_keys will be some subset
@@ -449,15 +461,16 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         Arguments:
         campaign -- the campaign to which this adgroup should belong
         adunits  -- the list of adunits that are allowed to be targeted by this adgroup
-        
+
         Keyword arguments:
         instance -- an adgroup object (default None)
 
         Note: this method does not save the adgroup to the datastore; you must do it yourself.
         """
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-        form = AdGroupForm(self.request.POST, instance=instance, site_keys=site_keys,
-                           is_staff=self.request.user.is_staff)
+        form = AdGroupForm(
+            self.request.POST, instance=instance, site_keys=site_keys,
+            is_staff=self.request.user.is_staff, apps_choices=apps_choices)
 
         if not form.is_valid():
             errors = {}
@@ -475,7 +488,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             adgroup.network_type = None
 
         return adgroup
-    
+
     def _json_failure_response_with_errors(self, errors):
         """
         Returns an HTTP response representing failure, along with a set of errors.
@@ -501,12 +514,12 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             html_data = self.request.POST.get('custom_html', '')
         elif adgroup.network_type == 'custom_native':
             html_data = self.request.POST.get('custom_method', '')
-        
+
         # We need to save the adgroup before we can call default_creative.
         AdGroupQueryManager.put(adgroup)
 
         return adgroup.default_creative(html_data)
-    
+
     def _assign_creative_to_adgroup_and_save(self, creative, adgroup):
         """
         Sets the given adgroup's net_creative property to be the given creative, and then saves
@@ -538,11 +551,11 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         # IMPORTANT: don't use self.account, since that can often belong to a superuser!
         new_creative.account = adgroup.account
         CreativeQueryManager.put(new_creative)
-        
+
         # Assign the new creative to the adgroup and save the adgroup.
         adgroup.net_creative = new_creative.key()
         AdGroupQueryManager.put(adgroup)
-    
+
     def _update_network_configs_using_adgroup(self, adgroup, all_configs, apps, adunits, account):
         """
         Updates all app-, adunit-, and account-level NetworkConfig objects related to the given
@@ -581,12 +594,12 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         for app in apps:
             app_network_config_key = str(App.network_config.get_value_for_datastore(app))
             network_config = all_configs.get(app_network_config_key) or app.network_config or NetworkConfig(account=self.account)
-            setattr(network_config, network_config_field, 
+            setattr(network_config, network_config_field,
                     self.request.POST.get("app_%s-%s" % (app.key(), network_config_field), ''))
             configs.append(network_config)
-        
+
         AppQueryManager.update_config_and_put_multi(apps, configs)
-    
+
     def _update_adunit_network_configs_using_adgroup(self, adgroup, all_configs, adunits):
         """
         Updates all adunit-level NetworkConfig objects related to the given adgroup.
@@ -599,7 +612,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         # Only certain networks have adunit-level IDs.
         if adgroup.network_type not in ('admob_native', 'jumptap', 'millennial_native'):
             return
-        
+
         # Get rid of _native in admob_native, millennial_native.
         network_config_field = "%s_pub_id" % adgroup.network_type.replace('_native', '')
 
@@ -610,9 +623,9 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             setattr(network_config, network_config_field,
                     self.request.POST.get("adunit_%s-%s" % (adunit.key(), network_config_field), ''))
             configs.append(network_config)
-        
+
         AdUnitQueryManager.update_config_and_put_multi(adunits, configs)
-                 
+
     def _update_account_network_configs_using_adgroup(self, adgroup, all_configs, account):
         """
         Updates the account-level NetworkConfig object for this adgroup.
@@ -625,13 +638,13 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         # Only Jumptap requires an account-level publisher alias.
         if adgroup.network_type != 'jumptap':
             return
-        
+
         network_config_field = "%s_pub_id" % adgroup.network_type
         account_network_config_key = str(Account.network_config.get_value_for_datastore(account))
         network_config = all_configs.get(account_network_config_key) or account.network_config or NetworkConfig(account=account)
         setattr(network_config, network_config_field, self.request.POST.get('jumptap_pub_id', ''))
         AccountQueryManager.update_config_and_put(account, network_config)
-    
+
     def _flush_adunit_contexts_affected_by_adgroup(self, adgroup):
         """
         Clears from memcache any adunit contexts that are affected by changes to this adgroup.
@@ -641,7 +654,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         """
         if not adgroup or not adgroup.site_keys:
             return
-        
+
         adunits = AdUnitQueryManager.get(adgroup.site_keys)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
@@ -655,15 +668,18 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
         """
         if account.status != 'step4':
             return
-        
+
         account.status = ''
         AccountQueryManager.put_accounts(account)
 
     ### END helper methods for post()
 
+
 @login_required
 def create_or_edit_campaign_and_adgroup(request, *args, **kwargs):
-    return CreateOrEditCampaignAndAdGroupHandler()(request, *args, **kwargs)
+    handler = CreateOrEditCampaignAndAdGroupHandler()
+    return handler(request, use_cache=False, *args, **kwargs)
+
 
 class AdGroupDetailHandler(RequestHandler):
     """
@@ -689,7 +705,7 @@ class AdGroupDetailHandler(RequestHandler):
         # 1 GET
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
-        show_graph = True
+        apps_without_global_id = get_targeted_apps_without_global_id(adgroup)
 
         # Direct sold campaigns have a start date, and sometimes an end date.
         # Use those values if they both exist, otherwise set the range from
@@ -707,7 +723,6 @@ class AdGroupDetailHandler(RequestHandler):
             if adgroup.campaign.start_datetime:
                 if adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) > today:
                     self.start_date = today
-                    show_graph = False
                 else:
                     self.start_date = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific)
             else:
@@ -774,58 +789,36 @@ class AdGroupDetailHandler(RequestHandler):
         except Exception:
             pass
 
-
-
         # Load creatives and populate
         # 1 RunQuery
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
-        creatives = list(creatives)
-        for c in creatives:
-            c.all_stats = StatsModelQueryManager(self.account,
-                                                 offline=self.offline).get_stats_for_days(advertiser=c,
+        for creative in creatives:
+            creative.all_stats = StatsModelQueryManager(self.account,
+                                                 offline=self.offline).get_stats_for_days(advertiser=creative,
                                                                                           days=self.days)
-            c.stats = reduce(lambda x, y: x + y, c.all_stats, StatsModel())
+            creative.stats = reduce(lambda x, y: x + y, creative.all_stats, StatsModel())
             # TODO: Should fix DB so that format is always there
-            if not c.format:
-                c.format = "320x50"
-            c.size = c.format.partition('x')
+            if not creative.format:
+                creative.format = "320x50"
+            creative.size = creative.format.partition('x')
 
         # Load all adunits targeted by this adgroup/camaign
         # 1 GET
         adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
-        apps = {}
-        for au in adunits:
+        apps_dict = PublisherQueryManager.get_apps_dict_for_account(self.account)
+        for adunit in adunits:
             # 1 GET per adunit
-            app = apps.get(au.app_key.key())
+            app = apps_dict.get(str(adunit._app_key))
             if not app:
-                # 1 GET per adunit
-                app = AppQueryManager.get(au.app_key.key())
-                app.adunits = [au]
-                # 1 GET
-                app.all_stats = StatsModelQueryManager(self.account, offline=self.offline).\
-                                        get_stats_for_days(publisher=app,
-                                                           advertiser=adgroup,
-                                                           days=self.days)
-                app.stats = reduce(lambda x, y: x + y, app.all_stats, StatsModel())
-                apps[au.app_key.key()] = app
-            else:
-                app.adunits.append(au)
+                logging.error("AdUnit %s was in account %s, but its App %s was not." % (adunit, self.account, adunit.app_key))
+                continue
+            if not hasattr(app, 'adunits'):
+                app.adunits = []
+            app.adunits.append(adunit)
 
-            # 1 GET
-            stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
-            au.all_stats = stats_manager.get_stats_for_days(publisher=au,
-                                                            advertiser=adgroup,
-                                                            days=self.days)
-            au.stats = reduce(lambda x, y: x + y, au.all_stats, StatsModel())
-
-        # Figure out the top 4 ad units for the graph
-        adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
-        graph_adunits = adunits[0:4]
-        if len(adunits) > 4:
-            graph_adunits[3] = Site(name='Others')
-            graph_adunits[3].all_stats = [reduce(lambda x, y: x + y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
-        elif len(adunits) == 0:
-            show_graph = False
+        for app in apps_dict.values():
+            if not hasattr(app, 'adunits'):
+                del apps_dict[str(app.key())]
 
         # Load creatives if we are supposed to
         if not (adgroup.campaign.campaign_type in ['network', 'marketplace', 'backfill_marketplace']):
@@ -839,104 +832,51 @@ class AdGroupDetailHandler(RequestHandler):
         else:
             creative_fragment = None
 
-        today = None
-        yesterday = None
-
-        # Only pass back today/yesterday if the last 2 days in the date range are actually today/yesterday
-        if self.end_date == datetime.datetime.now(Pacific_tzinfo()).date():
-            today = reduce(lambda x, y: x + y, [a.all_stats[-1] for a in graph_adunits], StatsModel())
-            try:
-                yesterday = reduce(lambda x, y: x + y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
-            except:
-                pass
+        network_configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
 
         message = []
         if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type != 'iAd':
-            # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
-            if '_native' in adgroup.network_type:
-                adgroup_network_type = adgroup.network_type.replace('_native', '')
-            else:
-                adgroup_network_type = adgroup.network_type
+            # Get rid of _native in admob_native_pub_id and
+            # millennial_native_pub_id.
+            adgroup_network_type = adgroup.network_type.replace('_native', '')
 
-            if (self.account.network_config \
-                and not getattr(self.account.network_config, adgroup_network_type + '_pub_id')) \
-                or not self.account.network_config:
+            self.account.network_config = network_configs_dict.get(str(self.account._network_config))
+            if not (self.account.network_config and
+                    getattr(self.account.network_config, adgroup_network_type + '_pub_id')):
 
-                for app in apps.values():
+                for app in apps_dict.values():
+                    app.network_config = network_configs_dict.get(str(app._network_config))
                     if not (app.network_config and
                             getattr(app.network_config, adgroup_network_type + '_pub_id')):
 
-                        for adunit in app.all_adunits:
+                        for adunit in app.adunits:
+                            adunit.network_config = network_configs_dict.get(str(adunit._network_config))
                             if not (adunit.network_config and
                                     getattr(adunit.network_config, adgroup_network_type + '_pub_id')):
                                 message.append("The application " + app.name + " needs to have a <strong>" + adgroup_network_type.title() + " Network ID</strong> in order to serve. Specify a " + adgroup_network_type.title() + " Network ID on <a href=%s>your account's ad network settings</a> page." % reverse("ad_network_settings"))
                                 break
-        if message == []:
-            message = None
-        else:
-            message = "<br/>".join(message)
+        message = "<br/>".join(message)
 
-        totals = adgroup.stats
-
-        if today and yesterday:
-            stats = {
-                'revenue': {
-                    'today': today.revenue,
-                    'yesterday': yesterday.revenue,
-                    'total': totals.revenue
-                },
-                'impressions': {
-                    'today': today.impression_count,
-                    'yesterday': yesterday.impression_count,
-                    'total': totals.impression_count
-                },
-                'conversions': {
-                    'today': today.conversion_count,
-                    'yesterday': yesterday.conversion_count,
-                    'total': totals.conversion_count
-                },
-                'ctr': {
-                    'today': today.ctr,
-                    'yesterday': yesterday.ctr,
-                    'total': totals.ctr
-                },
-            }
-        else:
-            stats = {
-                'revenue': {
-                    'total': totals.revenue
-                },
-                'impressions': {
-                    'total': totals.impression_count
-                },
-                'conversions': {
-                    'total': totals.conversion_count
-                },
-                'ctr': {
-                    'total': totals.ctr
-                },
-            }
+        # Sort apps alphabetically
+        sorted_apps = sorted(apps_dict.values(), key=lambda app: app.name)
 
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {
                                       'account': self.account,
+                                      'is_staff': self.request.user.is_staff,
                                       'campaign': adgroup.campaign,
-                                      'apps': apps.values(),
+                                      'apps': sorted_apps,
                                       'adgroup': adgroup,
                                       'adgroup_key': adgroup_key,
                                       'creatives': creatives,
-                                      #'stats': stats,
-                                      'today': today,
-                                      'yesterday': yesterday,
-                                      'totals': totals,
-                                      'graph_adunits': graph_adunits,
+                                      'totals': adgroup.stats,
                                       'start_date': self.start_date,
                                       'end_date': self.end_date,
                                       'date_range': self.date_range,
-                                      'show_graph': show_graph,
                                       'creative_fragment': creative_fragment,
-                                      'message': message
+                                      'message': message,
+                                      'apps_without_global_id': apps_without_global_id,
                                   })
 
     def post(self, adgroup_key):
@@ -986,7 +926,8 @@ class AdGroupDetailHandler(RequestHandler):
 
 @login_required
 def advertiser_adgroup_show(request, *args, **kwargs):
-    return AdGroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
+    handler = AdGroupDetailHandler(id='adgroup_key')
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):
@@ -1356,3 +1297,20 @@ class CampaignExporter(RequestHandler):
 
 def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
+
+
+def get_apps_choices(account):
+    apps = PublisherQueryManager.get_apps_dict_for_account(account).values()
+    apps = [app for app in apps if app.app_type != 'mweb']
+    apps.sort(key=lambda app: app.name.lower())
+    return [(str(app.key()), "%s (%s)" % (app.name, app.type)) for app in apps]
+
+
+def get_targeted_apps_without_global_id(adgroup):
+    app_keys = list(adgroup.included_apps) + list(adgroup.excluded_apps)
+    apps_without_global_id = []
+    for app_key in app_keys:
+        app = AppQueryManager.get_app_by_key(app_key)
+        if not app.global_id:
+            apps_without_global_id.append(app)
+    return apps_without_global_id

@@ -8,8 +8,6 @@ from google.appengine.datastore import entity_pb
 from common.utils.decorators import wraps_first_arg
 from common.utils import simplejson
 
-from account.models import Account
-from advertiser.models import Campaign
 
 NAMESPACE = None
 #MAX_CACHE_TIME = 60*5 # 5 minutes
@@ -18,21 +16,21 @@ MAX_CACHE_TIME = 0 # No expiration
 class QueryManager(object):
     """ We use a simplified QueryManager to handle gets and puts """
     Model = None
-    
+
     @classmethod
     def get(cls, keys):
         """ Get based on key name """
         if cls.Model:
-            return cls.Model.get(keys)    
+            return cls.Model.get(keys)
         else:
             return db.get(keys)
-    
+
     @classmethod
     @wraps_first_arg
     def put(cls, objs):
         # Otherwise it is a list
         return db.put(objs)
-            
+
     @classmethod
     @wraps_first_arg
     def delete(cls, objs):
@@ -40,8 +38,8 @@ class QueryManager(object):
         for obj in objs:
             obj.deleted = True
         return cls.put(objs)
-        
-        
+
+
 class CachedQueryManager(QueryManager):
     """ Intelligently uses the datastore for speed """
     Model = None
@@ -57,7 +55,7 @@ class CachedQueryManager(QueryManager):
         However, this can serve as a framework for a standardized cache"""
         if isinstance(keys,str) or isinstance(keys,unicode):
             keys = [keys]
-        
+
         data_dict = memcache.get_multi([k for k in keys],namespace=NAMESPACE)
         logging.info("data dict: %s"%data_dict)
         new_cache_dict = {}
@@ -73,8 +71,8 @@ class CachedQueryManager(QueryManager):
                 new_cache_dict[key] = data
                 data_dict[key] = data
             else:
-                pass    
-        if new_data:        
+                pass
+        if new_data:
             memcache.set_multi(new_cache_dict,namespace=NAMESPACE)
         objects = data_dict.values()
         return [obj for obj in objects if not getattr(obj,"deleted",False) ]
@@ -85,11 +83,11 @@ class CachedQueryManager(QueryManager):
         However, this can serve as a framework for a standardized cache"""
         if not isinstance(objs,list):
             objs = [objs]
-                
+
         cache_dict = dict([(str(obj.key()),obj) for obj in objs])
         if replace:
-            return memcache.replace_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE) 
-        else:    
+            return memcache.replace_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE)
+        else:
             return memcache.set_multi(cache_dict,time=MAX_CACHE_TIME,namespace=NAMESPACE)
 
     @classmethod
@@ -98,9 +96,9 @@ class CachedQueryManager(QueryManager):
         However, this can serve as a framework for a standardized cache"""
         if not isinstance(objs,list):
             objs = [objs]
-        
+
         return memcache.delete_multi([str(obj.key()) for obj in objs],namespace=NAMESPACE)
-    
+
     @classmethod
     def get_entities_for_account(cls, account, entity_class, include_deleted=False,
                                  include_archived=False):
@@ -143,10 +141,12 @@ class CachedQueryManager(QueryManager):
         Arguments:
         query -- the query for which we want to fetch results
         """
-        results = query.fetch(cls.FETCH_LIMIT)
+        results = list(query.run(limit=cls.FETCH_LIMIT,
+            batch_size=cls.FETCH_LIMIT))
         while True:
             cursor = query.cursor()
-            next_chunk = query.with_cursor(cursor).fetch(cls.FETCH_LIMIT)
+            next_chunk = list(query.with_cursor(cursor).run(limit=
+                cls.FETCH_LIMIT, batch_size=cls.FETCH_LIMIT))
             if len(next_chunk) == 0:
                 break
             results += next_chunk
@@ -155,17 +155,17 @@ class CachedQueryManager(QueryManager):
     @classmethod
     def _filtered_entities(cls, entities, include_deleted, include_archived):
         if not include_deleted:
-            keys_of_del_entities = [key for key in entities 
+            keys_of_del_entities = [key for key in entities
                                     if hasattr(entities[key], 'deleted') and entities[key].deleted]
             for key in keys_of_del_entities:
                 del entities[key]
-        
+
         if not include_archived:
             keys_of_arc_entities = [key for key in entities
                                     if hasattr(entities[key], 'archived') and entities[key].archived]
             for key in keys_of_arc_entities:
                 del entities[key]
-        
+
         return entities
 
     @classmethod
@@ -193,14 +193,14 @@ class CachedQueryManager(QueryManager):
         return cls.memcache_delete_multi_chunked(memcache_keys)
 
     @classmethod
-    def memcache_set_chunked(cls, key_prefix, value, chunksize=CHUNK_SIZE, 
+    def memcache_set_chunked(cls, key_prefix, value, chunksize=CHUNK_SIZE,
                              time=MEMCACHE_EXPIRY_ONE_DAY):
         """
         Takes the given value and stores it in memcache as ~1 MB chunks. This method provides a
         convenient way to circumvent the 1 MB size limit on memcache values. The keys for the chunks
         will be "<key_prefix>.<chunk number>". This method also stores the number of chunks under
         the key "<key_prefix>.chunks".
-        
+
         Note: due to memcache API restrictions, this will fail if the value provided exceeds 32 MB.
         """
         pickled_value = pickle.dumps(value, 2)

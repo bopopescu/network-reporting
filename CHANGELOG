@@ -1,12 +1,905 @@
+# Deployed Friday, July 13, 2012 at 06:34PM PST
+### Deployed by John Pena
+### Tagged deploy-152
+### Bugs Fixed: ['1322']
+### Included Commits: 
+ * 9eecaef better logging for mpdeploy
+ * 0f18682 added a script for setting up postgres
+ * a274a2e Merge branch 'master' of github.com:mopub/mopub
+ * cd2ed0b turn off keep alive for autojc jobflow
+ * 8995aac Merge branch 'master' into #1322
+ * 1153613 Removed reports status logging
+ * 9a423f5 Deployed without finding any bug fixes.
+ * d480212 stubbed out a targeting table
+ * 3ec2f02 merge conflicts fixed
+ * a449477 Merge branch 'master' of github.com:mopub/mopub
+ * fbdc457 fixed a merge conflict with master
+ * 6cd0d48 downgrade ami version from 2.0.4 to 2.0, since hive jobs started failing
+ * fe62e48 [#1322 state:fixed]
+ * 0821fd5 working on reports bug
+ * c8c9197 added line item copying
+ * 95db4a9 working on line item copy functionality
+ * 4c8ef30 Deployed without finding any bug fixes.
+ * ec0c44f fixed duplicated kwargs in simplify
+ * 8ed26ad fixed another weird changelog conflict
+ * 5dede30 got randomgen working again and fixed some stats-loading bugs that appeared when stats are non-zero
+ * e2d6da8 Deployed without finding any bug fixes.
+ * ec2f529 fixed merge conflict, working on getting randomgen to work again
+ * 01837cc Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * d949e8f fixed some creative form wonkiness
+ * ec294de fixed issues with previewing creatives
+ * e3f15cf booty order form hack
+ * 947d994 line items show up as paused if orders are paused
+ * e70e24b made some stuff look nicer
+ * 0a26834 progress bars and pace work!!!
+ * 84d2134 budgets fixed WOOOO
+ * 1e538d6 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * ca8efae fixed line item form
+ * bc73c1c daily counts working in both pages, refactored inventory_table a little
+ * e57a94a adunit daily stats and total stats
+ * f191487 dumb merge conflict fixed
+ * 7ea7316 working daily stats over ajax
+ * d2ed1bf changelog merges -_-
+ * f3d64df fixed merge
+ * 0042431 regen plugins
+ * f5f4f5e merged
+ * a0c20b3 some clean up, added an order/line item archive page
+ * a2ea9ba now properly checks errors for both forms
+ * 8b4b8a1 more daily counts work
+ * 546769d working on daily counts
+ * 69ab764 progress bar works
+ * d8e29ee updated app search and adunit form
+ * a92d8a9 fixed the radio buttons in the adunit form
+ * f716c12 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 669f43f working on app store search
+ * fa1f8df added bootstrap modal and transition
+ * d7a6e43 creative preview is sexy
+ * 47e58fa Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 2e6e1ce merged master and fixed an issue generating callback functions in the api
+ * 1044272 fixed dateinput formats
+ * 4f76993 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 0173c29 added warning for no creatives or adunits
+ * 887ea0a Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 5b5f415 lot of small bug fixes and page cleanup
+ * 85d82e4 fixed app form loading, need to figure out what the fuck is happening with app search button
+ * c9a2cc7 fixed merge
+ * 40dfe98 trying to figure out app create problems with device_format buttons
+ * d4ea70d popovers with real data
+ * 2841742 cleaned up the app and adunit detail pages and added in graphs. graphs now support derivative properties
+ * 8210fec changed the content of order/line item rows and fixed a stats error that may change the way graphs work
+ * cbe7663 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * a5ffc20 fixed app form
+ * 937444e progress bars are easier to see when theyre empty
+ * 46625d9 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 33e91e5 fixes to network page bugs introduced in adgroups
+ * 5bbe114 Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * 1afe425 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 8aa6d53 better dropdown lists
+ * 96a5a54 fixed ajax issues in networks
+ * 64b16d2 Merge branch 'master' into adgroups
+ * c3688e2 appsearch button kinks need to be worked out. progress bar not placeholder, but needs some css fixes
+ * 659e6cf mpx blocklist works
+ * d844098 Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * 634de60 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 502b8d2 mpx formatting
+ * 099f844 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 8db78e2 getting networks page working...
+ * 8067da4 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 692acef updated publisher tests
+ * 496f157 in the middle of mpx shit
+ * 84811b2 fixed some js bugs in network controller js
+ * ab12d4d fixed merge
+ * a92da49 segmented control for device format
+ * a3d068e added popover template
+ * 21d5914 fixed order form to create orders using campaign_type instead of is_order
+ * 01f3969 changed advertiser query managers to filter orders based on campaign_type property
+ * 66bb6be removed campaign_type computed property
+ * a88984f removed is_order/is_network/is_marketplace model properties
+ * 87b3630 changed is_order/is_network/is_marketplace to computer properties and restored campaign_type property
+ * 6b1fd21 charts work everywhere mfer
+ * 40a21cc fixed merge
+ * 4e462f6 wrote an include_template filter for including javascript html templates
+ * 8f87618 fixed priority text and old typo
+ * 6cb0c22 added tablib
+ * f035c7e exporters for inventory, app, and adunit
+ * 99e3f8d fixed merge conflicts, working on exporting
+ * 336f000 ordered line items, TOOK OUT FILTER BUTTON FOR NOW
+ * 7e9e873 refactoring publisher views to use new campaign types
+ * f881b9d charts working on line item details, working on apps and adunits
+ * 593c034 fixed merge
+ * ffc32d5 fixed merge
+ * 8988527 fixed a strange merge conflict
+ * 8188927 refactored stats fetching into DirectSoldStatsFetcher
+ * 21cac8a orders alphabetized
+ * 6a5f5ea show advanced togggle on orders
+ * 18efe18 fixed line item filtering buttons and table sizing
+ * 0cff966 fixed statuses and filtering buttons
+ * e29c20c check for negative price floors
+ * 3e61b1f checkboxes unchecked after selection on orders
+ * a5a9ae6 query manager tests
+ * 126e259 fixed randomgen bug
+ * 5746970 db checks in orders
+ * 3667bb7 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * c0e7a58 got all stats data that goes into the tables to load correctly.
+ * e02a737 halfway through editing orders test
+ * b2ec53e Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 0a932fb changing tests for new confirm_db
+ * aa90488 added notes for the move off appengine meeting
+ * 75a5c39 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 3094936 finished up form tests, 85-90% coverage
+ * 3efad8b Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 00be566 fixed image bugs in order tests
+ * 03a844e Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 6abb337 cleanup
+ * 414420d Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * e796d0b Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 2177c4d lots of form tests
+ * 16a0943 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 4a44914 fixed some bugs with the signup process, got stats loading most places again, got marketplace to use the new style chart view
+ * 1946638 stubbed form tests
+ * e1885fb text_tile and commit bug
+ * 67db3b8 fixed city/geo_pred
+ * 9e8cd0f Merge branch 'adgroups' of github.com:mopub/mopub into adv-form-refactor
+ * d0ff4ab new style graphs that load like a boss
+ * 8848179 fixed merge
+ * 8c3f555 fixed subclassing
+ * 7ef730c figuring out subclassing
+ * b83826a fixed merge
+ * b0e1139 refactoring forms. fragile state
+ * 26e121c Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 3089c8a working on getting new style charts to work for stats on the fly loading
+ * fa21903 Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * 4e6d4ce Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 561847b more refactor
+ * decf04d formatted forms
+ * 9009e69 getting daily stats going
+ * 566dda1 explicitly declarated for 2.5, pylinted, made tests pass for changes
+ * 6bd4b37 took out that annoying hover in the adunit table
+ * 14b71ba lot of work put into getting charts to load over ajax with the stats
+ * 5410056 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * a3e4bdf fixing bugs with stats fetching
+ * 7020814 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 99d66e1 added in an init file that was missing, redoing charts
+ * 326ae51 added tests back in. also fixed charting errors in the dashboard
+ * 7ccbc5f editing formatting for adunitids
+ * 888bca6 stubbed some form tests
+ * 47a92f6 making refactored tests pass
+ * 20b6ff5 refactored old order/line_item form tests
+ * 2277ca4 merged in tests-utils
+ * 37890e0 refactored datetime tests for form/lineitem, added message to time_almost_eq
+ * be631e7 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 0bcbe1c used model_eq for everything
+ * 2250c10 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 62c2350 fixed merge conflict
+ * 7c3f645 modified confirm_db to check for deleted
+ * 66bdeba added confirm_db, need to make tests pass later
+ * d1f6103 added confirm_db, need to make tests pass later
+ * 1d3b4e4 Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * b6f0e80 merged master
+ * 32616c5 fixed decorate_ALLL!!!!!!!!
+ * d243134 fixed merge
+ * 6d93d09 added decorate_all_methods
+ * 967f93d Merge branch 'tests-utils' of github.com:mopub/mopub into adgroups
+ * fe61bce Merge branch 'tests-utils' of github.com:mopub/mopub into adgroups
+ * ad6539c fixed merge
+ * ed8ab93 fixed some tests and view
+ * 431b956 Added some extra stuff to the creative generation in randomgen Added static page tests to the orders test suite Added documentation to mpdeploy Added a readme file to the tests directory
+ * c867d89 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 5d75ca4 refactored DisplayCreativeHandler awfulness
+ * b0cbf1e stubbed static view tests
+ * 38a8639 fixed merge
+ * ca5c0e7 all tests passing
+ * 7d22404 fixed a fetch error in the creative test
+ * ad05ad7 trying to figure out why blobstore is failing
+ * 78ff225 fixed merge
+ * 027ac53 condensed ad_Type tests
+ * 1919a9d fixed some erroneous tests and added ajax to the creative view handler
+ * 5b46454 made creative form view posts ajax-only
+ * 9d6f910 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 4e8d783 finished creative tests
+ * 32c8436 5 more creative form handler tests passing
+ * d99db8f fixed merge
+ * 4e595f8 added test images
+ * 36ec44e fixed merge
+ * 431890d Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * 2049d57 creative put tests
+ * 90b51bc added default creative post data and files for the creative test handler
+ * f0a5b3e creative tests
+ * dc3a401 fixed some reference properties failing in the orders javascript, will need to resolve differences with master asap
+ * 0a4da00 yah
+ * 326910d stubbed out new/edit creatives, removed extraneous log line
+ * a1667b2 Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * ac43c03 added time verification
+ * 13f8542 added time helper, need to integrate it
+ * 9eb3bb7 fixed typo
+ * 7dfc00d fixed merge
+ * 0d8929f changed tests based on tiag/andrew code review
+ * b916e96 Merge branch 'adgroups' into adgroup-test
+ * d871033 added some comments to the test suite
+ * 7b1f847 passing on a test instead of explicitely failing so that all tests pass (troll)
+ * 9f6b5bc fixed a merge conflict
+ * 8faa41f all tests passing
+ * 7a71049 fixed merge
+ * 9a0eae5 added 1 minute delta
+ * 58ac25c fixed a merge conflict in a docstring
+ * d441667 added a bunch of doc strings and fixed author names
+ * 922023d fixed merge
+ * 7638c86 fixed randomgen account hiccups and added some tests for adding new line items
+ * 6f974bb moar comments
+ * b46ffa4 moar comments
+ * 54587b1 fixed a merge conflicts
+ * 0c27a76 fixed merge conflicts and added some docstrings
+ * 48bf1a5 added new helper
+ * bc11990 Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * 834ef50 finished new order/line item create
+ * d55ddbe fixed merge
+ * d6dfccd Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * f0abe46 started to implement mock posts
+ * dada85d Merge branch 'master' into adgroups
+ * f2b2885 fixed an account checking bug and wrote a tests for making a new line item
+ * 26a50e5 Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * b7bea6b new order/lineitem tests
+ * f4dbcca lame merge conflicts fixed
+ * 5ad403f fixed merge
+ * 95d2117 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 2ec6461 post failure tests
+ * 33da967 added comments
+ * 1f8f42f Merge branch 'master' of github.com:mopub/mopub into adgroups
+ * 809fbcc fixed merge
+ * e7b3ce7 more tests for the new/edit line item POST method
+ * bcf3654 no longer eq_ for bools, added test for model change
+ * c15696a added tests that check for graceful failures
+ * d06deed finished get tests, other than owner checking
+ * 9ae5c14 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 7f53625 +1 test
+ * 6a215d0 added back post stubs
+ * 2a71705 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+ * 1fa4d47 cleanup
+ * d4b7afc comments
+ * b460dfc fuddling around
+ * 3009f9f fixed a merge conflict
+ * fd2056f started to write tests, wrote account ownership for gets
+ * 4c48087 removed an unused import
+ * 4d39d99 stubbed new/edit line item
+ * 5b05772 pylinted
+ * 09c0f71 added docstrings to the ad_source_status_change view tests
+ * 20fe737 added a test to check that users cant access objects they dont own in the ad_source_status_change view
+ * 63dfd68 added tests to check the status of multiple items after theyve been changed by the ad_source_status_change view
+ * d20fc53 added tests to check the status of multiple items after theyve been changed by the ad_source_status_change view
+ * 0dc637b fixed merge
+ * 87cab92 creative and order tests update source status
+ * e303148 added tests to check the status of line items after theyve been changed by the ad_source_status_change view
+ * d78be3e stubstep
+ * e3a32a2 fixed a merge conflict
+ * 1bbb47a minor cleanup
+ * ef3ca55 Fixed some issues with buttons not appearing in the sign up flow Fixed an issue creating marketplace creatives when adgroup_type wasn't set Fixed an issue getting a display type for adgroups when adgroup_type wasn't set
+ * a274a7c fixed some remaining issues from the merge
+ * 3109f17 mergéd?
+ * 3e03172 fixed button label
+ * 5ae7ff0 updated css
+ * c42aaf8 merged order.js
+ * 7f4d0b2 merged
+ * 756ccd4 creative forms and table
+ * 3c0f541 little more work on exporting
+ * f5364d7 working on exporting, removed the stats breakdown in the order/lineitem index, added some cool plugins for backbone/underscore
+ * 1e1b153 just added a comment
+ * 35f3425 stubbed out the router for the date/granularity picker
+ * 345b2ae added moment.js, updated the bootstrap datepicker to the newest version, got date buttons fully working
+ * ec63edf refactored css a little, removed some more jquery ui, made the today and yesterday buttons work
+ * 7606d73 mostly working datepicker
+ * 085a141 removing jqueryui
+ * 4479c49 moving around dateOptions
+ * c0eb346 working on the popover
+ * 9b0cd7a moving popovers to the adgroups view
+ * cef30db added some better looking stats rollups
+ * a7fff6d more fixes and minor features
+ * ee08990 moved scripts to the end of the base.html template. made stats appear right in line item and order detail pages. fixed randomgen to make fixtures the right way. removed typekit
+ * 2f8d70c fixed some merge conflicts and removed unnecessary shit
+ * 1341933 added tests back in
+ * a15ade3 working on getting correct stats data in the page
+ * 83906ae merged
+ * 4b488b6 creative URLs and views
+ * 6a45e7e creative form fixes
+ * c2bf2af merged order + line item indexes, started workign on an exporter, did some clean up
+ * 7aba800 fuck yeah better readme
+ * 9662d29 added JSON to the exports, added a percentage to the progress bar
+ * 474b4e1 fucking around making the line items page a lot better
+ * d8eb95f top line numbers rendering
+ * 380e879 filtering awesomeness
+ * f0f5f87 filters working on line item index
+ * 657f7d0 fixed dumbass merge conflicts
+ * 0b5f41e slambooming the lineitems table
+ * 61dbd4d redesigned the way tables work, added filter buttons
+ * 56f3bf4 working on filtering
+ * dda6c84 fixed merge conflicts, updating creative editing
+ * 8ed879e merged
+ * 4f52200 bunch of changes
+ * 798051c added some partials in, javascript tests that will be way better
+ * 315f9a4 changed the tables big time, cleaned up the urls
+ * b867d67 line item activity buttons now work like a boss
+ * 12a69f1 pause/resume/archive/delete
+ * 448a784 adgroup status changing
+ * 5b88f57 added bootstrap buttons
+ * 0382ba1 grouping adunits by apps correctly
+ * 0ebf77a Merge branch 'newadgroups' of github.com:mopub/mopub into newadgroups
+ * 687ca63 moved contents of /templates/ into common/templates/ and /common_templates/ into /common/ and updated references
+ * 12f296e line item form fixes
+ * 8670fa9 date fixes
+ * 2536154 fixed orders.js merge conflict
+ * d15e67b updated required, fixed adunits list
+ * 6c7331d whatever
+ * 17ac915 cleaned up libs a little, added app/adunit service campaign data
+ * 196cc08 targeting tables in order detail and lineitem detail, order form in the order detail page now submits correctly
+ * 9f063a7 fixed some links in the app and adunit pages
+ * b1d69d0 fixed merge conflict
+ * 9a4e039 most basic functionality on order index, order detail, and line item detail
+ * 9cd9165 updated form tests, all tests passing
+ * 6721841 orders page loading
+ * 813f2e0 work on the order detail page
+ * d1b2f54 merged in master
+ * dd7fb08 cleaned up line item validation
+ * 6494002 merged
+ * b504be4 added basic detail views, updated forms
+ * 6c6f150 Merge branch 'newadgroups' of github.com:mopub/mopub into newadgroups
+ * 8477983 using localstorage for much faster loading
+ * 7226816 fixed line item form init, added notes for extra datetime validation
+ * b59eaca removed erroneous padding
+ * 1392611 cleaned up line item form validation
+ * 877bcee ajax loading of campaigns
+ * f9d9ab1 line item form updated
+ * ae4cd3f orders page loads correctly
+ * 7a61cf7 merged
+ * 48c6090 order and line item forms
+ * 8d661e5 adding in campaign and adgroup views
+ * f8b0e50 fuck you git
+ * 391317e orders.js
+ * 4c53e72 fixed merge conflicts
+ * b21c08b updated the api with campaign and adgroup data
+ * 97299f0 adding order/line item form stuff
+ * c196631 makin things wrk
+ * 3219b9f fixing up order_index
+ * b1eb0f7 sparklines bitch! laid out a javascript controller for orders
+ * c023c25 basics
+ * dadac6a outlined the basics for orders and line items
+ * 6e5c981 changed a budgeting query
+ * 4024165 added a little documentation to randomgen
+ * a8948a2 trying to fix mpx
+ * 1eb4ce7 made fixtures work with the new adgroup format and fixed the app/adunit pages
+ * 65cdd07 changed fixture generation to use new adgroup format
+ * 1bb8faa refactored campaign and adgroup models to contain properties specified in adgroups PRD
+ 
+# Deployed Monday, July 02, 2012 at 10:36PM PST
+### Deployed by tiags
+### Tagged deploy-149
+### Bugs Fixed: []
+### Included Commits:
+
+# Deployed Tuesday, June 26, 2012 at 11:09PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-146
+### Bugs Fixed: []
+### Included Commits:
+* 16ef5a1 Deployed without finding any bug fixes.
+
+# Deployed Friday, June 22, 2012 at 08:57PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-145
+### Bugs Fixed: []
+### Included Commits:
+* 8a91bbf Deployed without finding any bug fixes.
+
+# Deployed Friday, June 22, 2012 at 08:35PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-144
+### Bugs Fixed: []
+### Included Commits:
+* 2354acd Deployed without finding any bug fixes.
+
+# Deployed Friday, June 22, 2012 at 08:11PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-143
+### Bugs Fixed: []
+### Included Commits:
+* fb5a532 Deployed without finding any bug fixes.
+
+# Deployed Friday, June 22, 2012 at 07:46PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-142
+### Bugs Fixed: []
+### Included Commits:
+* d0a0c2e Merge branch 'negative-user-targeting' of github.com:mopub/mopub
+* 9ef7f49 Deployed without finding any bug fixes.
+* cf97f75 Merge branch 'master' of github.com:mopub/mopub into negative-user-targeting
+* fd69b65 updated error message and help text
+* 11e1d42 Merge branch 'master' of github.com:mopub/mopub into negative-user-targeting
+* 61573c1 Merge branch 'master' of github.com:mopub/mopub into negative-user-targeting
+* 9dea5f8 fixed app targeting global id methods
+* f2ce9a9 merged master
+* aa22cba don't show mweb apps as options to negative user target, help text moved, error messages added
+* 475fa19 removed caching from campaign/adgroup create/edit page
+* 7adeb3c changed to match Btyan's feedback on Jira
+* c1b77f4 removed nonexistant global_ids from included and excluded _apps
+* 5286945 fist stab at negative user targeting ui
+
+# Deployed Friday, June 22, 2012 at 06:46PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-141
+### Bugs Fixed: []
+### Included Commits:
+* c48e8e5 fixed pacing fetch
+* 94fce59 Deployed without finding any bug fixes.
+
+# Deployed Thursday, June 21, 2012 at 10:33PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-140
+### Bugs Fixed: []
+### Included Commits:
+* 46651a8 moved updating budget to adgroup put
+* 1227c60 Deployed without finding any bug fixes.
+
+# Deployed Thursday, June 21, 2012 at 08:22PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-139
+### Bugs Fixed: []
+### Included Commits:
+* f624b3e added logging for budget fetch where campaign has no adgroup
+* 321b22f Deployed without finding any bug fixes.
+
+# Deployed Thursday, June 21, 2012 at 07:20AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-138
+### Bugs Fixed: []
+### Included Commits:
+* 6ee9b61 Merge branch 'master' of github.com:mopub/mopub into budget-migration
+* ba7188f removed everything that modifies budgets
+* 70872c3 Deployed without finding any bug fixes.
+* 4ee4541 fixed date
+* dd6546a Deployed without finding any bug fixes.
+* 46b0960 added alert for budget freeze
+* d496552 adgroup key passed down in the remote update dict
+* f82380c added fields that will be moved to the adgroup to SimpleAdGroup
+
+# Deployed Tuesday, June 19, 2012 at 05:54PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-134
+### Bugs Fixed: []
+### Included Commits:
+* 19e1f34 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, June 19, 2012 at 04:04PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-133
+### Bugs Fixed: []
+### Included Commits:
+* 38c66fd added logging to global_id generation
+
+# Deployed Monday, June 18, 2012 at 07:58PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-130
+### Bugs Fixed: []
+### Included Commits:
+* fa4c995 Deployed without finding any bug fixes.
+
+# Deployed Monday, June 18, 2012 at 07:53PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-129
+### Bugs Fixed: []
+### Included Commits:
+* e69a367 Deployed without finding any bug fixes.
+
+# Deployed Monday, June 18, 2012 at 07:49PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-128
+### Bugs Fixed: []
+### Included Commits:
+* c0791f8 Deployed without finding any bug fixes.
+
+# Deployed Monday, June 18, 2012 at 07:21PM PST
+### Deployed by John Pena
+### Tagged deploy-127
+### Bugs Fixed: []
+### Included Commits:
+* 2949ec5 Deployed without finding any bug fixes.
+
+# Deployed Monday, June 18, 2012 at 06:51PM PST
+### Deployed by John Pena
+### Tagged deploy-126
+### Bugs Fixed: []
+### Included Commits:
+* 49ed08c [#1288 state:resolved] [#1265 state:resolved] [#1282 state:resolved]
+
+# Deployed Monday, June 18, 2012 at 06:06PM PST
+### Deployed by John Pena
+### Tagged deploy-125
+### Bugs Fixed: ['1288', '1265', '1282']
+### Included Commits:
+* 6d7be81 fixed versions merge conflict
+* c30c66a Merge branch '1288-app-adunit-speedup'
+* 6467608 [#1288 state:fixed] removed calculated_ecpm when stats aren't loaded
+* 3ce6cfa did same for adunit page
+* a1aae6f Merge branch 'master' into old-networks
+* af809bf sped up app page with more than 20 adsources
+* 729c0d7 Make sure campaign_type is valid in form
+* 8e18ec9 Merge branch '1257-price-floor-wording' of github.com:mopub/mopub
+* ad442e9 Merge branch 'master' of github.com:mopub/mopub
+* 8c22115 removed unused import, explicity return None in global_id
+* 015883e [#1265 state:fixed] fixed app.url not being updated for ios, removed app.global_id db property and replaced it with one constructed using app_type and url or package, added/updated tests
+* 9643bfd [#1282 state:fixed]
+* f85a54a Merge branch 'master' of github.com:mopub/mopub
+* 878a787 Merge master
+* a44206b Finalize create_mptests.py, add skip decorators; Small change to EditNetworkHandler that sets NetworkConfig IDs to None rather than empty string if not present in the POST body
+* dc6e7ec Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* e4d48c7 fix index.yaml
+* 0b6141e Change Price Floor wording [#1257 status:review-requested]
+* d042852 Changed wording
+* 88b732c fixed network details test context check
+* bebbb87 -- HTML version of John Chen email
+* 3394858 -- Adding COGS to the daily report, based  on AWS programmatic access to bills
+* 085531a Merge branch 'master' of github.com:mopub/mopub
+* 003f7c5 Merge branch 'cached-query-manager'
+* 76f8c8a changed two instances of fetch to run
+* 168a23d Merge branch '1217-creative-limit-text' of github.com:mopub/mopub
+* b5b7316 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* ba9797f network_type no longer set in post data
+* c5c6bc3 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* 11ea394 Remove network config changes from generate_network_campaign in network_test_case.py
+* 8fd4799 All edit network tests pass again
+* b5d12fc Changed things to write to /mnt because they take upa lot of room
+* 135b9e4 fixed pre_test_instances_dict in confirm edited for test utils
+* 96e8851 Merge branch 'master' of github.com:mopub/mopub
+* eee0734 Merge branch 'report-none-fix'
+* ef951cf GOOD CALL SIMON
+* b1b259a All network edit tests pass
+* a6966df updated formatting
+* 610b090 Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* ff4a7c4 add comments to advertiser.tests.marketplace
+* 6451a44 updated advertiser marketplace testing
+* 3057642 added publisher query manager tests
+* e68c4c9 fixed some echos
+* df071f7 [#1225 state:resolved]
+* 2abd6f2 merge
+* d7b5985 All edit tests working except for bs appengine django issue
+* 0e5455e added marketplace view tests
+* ad0e2fe Make some test_utils 2.5-compatible, edit NetworkTestCase fixture to include NetworkConfigs, starting to use confirm_all_models in create_mptests
+* c261c2f Added pub ids to generated network configs in generate network campaign, working on edit network tests
+* fb0d175 removed flawed check for added instances
+* 035c338 Small changes to network tests
+* cdbc18b removed network tests, added network campaign fixture function, updated publisher views and view tests
+* 5cfd980 Ugly hack to fix people deleting things that they shoudln't delete
+* 4f2a7b2 updated query manager tests
+* a8c9b0c updated query manager tests, only iad pub ids to test
+* ee1ebd4 Merge branch 'master' into networks-tests
+* b09b5c9 Updating network edit tests
+* 08e2992 added confirm_db, fixed indentation
+* 589d50b remove decorate_all_test_methods from qm_tests
+* 43621b5 use new confirm_db in view tests
+* 6143091 commented form tests
+* 28ca05e removed functions that use Python 2.7 modules and syntax
+* ef6586f Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* 836ab25 Merge branch 'networks-tests' of github.com:mopub/mopub into publisher-refactor
+* c043464 Updated index and pause network mptests to use new test helper
+* 674d459 Updated network details test to use new test helper, added hack to pass back response
+* 6b1bd32 Updated delete network tests to use new helper test function, fixed delete in network test view
+* 4e9ea87 Completely changed helper function to confirm entire db state to check additions correctly, needs testing
+* fe308b2 Add work in progress publisher query_manager tests
+* 2c45c69 Converted new test decorators to functions
+* 677758f Fixing new test decorator
+* 5151cb5 Default values in test decorator signatures should be evaluated later
+* e48805a some bug fixes for test decorators
+* 8be4c52 Added confirm_model_changes and confirm_all_models to commom/utils/test/test_utils
+* 613f772 Merge + new confirm_all / confirm_db concept showing
+* a2b32b2 Merge branch 'master' into networks-tests
+* ad6163b updated confirm db
+* b31ec40 Merge
+* fe47007 updated test to match change in app detail view
+* f1c17f0 merged in master
+* ae3de44 confirm_db fix
+* 812ec03 Merge branch 'networks-tests' of github.com:mopub/mopub into networks-tests
+* 1124ae7 Working on confirm_db
+* ffc5541 updated form tests
+* cb7b7df updated form tests
+* ac57128 actually fixed timezone issue
+* d2fadfe added form tests
+* 9eec3e7 Start using model_eq to verify model changes
+* f12cf87 create and edit network campaign test checks adgroup instance and pub_id
+* eb74190 Added confirm_db decorator to delete, edit and pause networks tests
+* e6174c2 Added confirm_db decorators to create network mptests
+* 2ed6a10 decorate_all_test_methods working for index and details network mptests
+* 8cb54e0 Added mptest_context for network details
+* 3c0ce45 Cleaned up edit network and create network get tests
+* 13c0841 Cleaned up edit network and create network get tests
+* a2f90d2 Merge
+* 7200810 Added context checks for edit and create network, missing imports
+* d47129a Broke up networks/mptests/views_mptests.py
+* 741c092 Moved networks tests helpers to new base class
+* 21df2f0 Moved networks tests helpers to new base class
+* 19487d9 Merge Tiago's tests
+* f560dc1 adding tests for editing networks
+* c295c74 Merge, + bug fixes
+* 55858e7 Clarify that we are showing top 100 creatives
+* 34d4534 Added networks, details, delete, and pause tests
+* c425345 changed some helper methods to functions
+* 353be3c ready for review
+* 33ed9e8 hey tiago
+* fa437cb breaking apart check_response
+* cc50be2 some more tests
+* e68cab1 Merge branch 'master' into networks-tests
+* f38224a Added some additional networks tests
+* 8906332 migration script now uses old net_creative reference and shouldn't create new custom networks for old custom_native networks
+* 7b99b90 Fixed bug in network edit views testing
+* 3d4b4e4 Removed unnecessary clear_db helper from network views test
+* 8331c31 Created two new tests for the edit network view
+* 35ccf7b Created some helpers and wrote some doc strings and method signatures for network edit view testing
+* 8650098 Created default network creation test
+
+# Deployed Tuesday, June 05, 2012 at 05:06PM PST
+### Deployed by John Pena
+### Tagged deploy-124
+### Bugs Fixed: ['1225']
+### Included Commits:
+* 0f3e5e1 turned off admin d cron
+* d9d5ce0 [#1225 state:fixed]
+* d150fe6 added comment
+* bed28c3 Deployed without finding any bug fixes.
+* e0d6d31 [#1225 state:review-requested assigned:andrew]
+
+# Deployed Friday, June 01, 2012 at 04:58PM PST
+### Deployed by John Pena
+### Tagged deploy-123
+### Bugs Fixed: []
+### Included Commits:
+* 0aad496 Merge branch 'master' of github.com:mopub/mopub
+* 98a83e5 mongostats deadline to 10 seconds
+* 957cfeb removed superfluous check in NetworkEdit view
+* ab23eaf Merge branch 'master' of github.com:mopub/mopub
+* 004883a NetworkConfigs grabbed from memcache when possible in EditNetwork view
+* cfc706d [#1268 state:resolved]
+* ee5e8f8 added logging of URL on mongostats timeout
+* 99d1e3f checkedout updated publisher view tests
+* 284afdb Merge branch 'app_page_speedup' of github.com:mopub/mopub
+* 20da58b Merge branch 'campaign_page_speedup' of github.com:mopub/mopub
+* 2bc3009 sped up app page
+* 06286a0 speed up campaign page
+
+# Deployed Friday, June 01, 2012 at 12:19AM PST
+### Deployed by Andrew He
+### Tagged deploy-122
+### Bugs Fixed: ['1268']
+### Included Commits:
+* 520d11a Fixed bug in AppQueryManager: NetworkConfigs having wrong account property
+* d8368dc frontend-staging from B8 to B2, like the others
+* 5234d10 Merge branch 'master' of github.com:mopub/mopub
+* 06e5106 [#1268 state:fixed]
+* 6a8696c Merge branch 'master' of github.com:mopub/mopub
+* 2ff38d9 changed the default marketplace price floor from $0.25 to $0.05 [#1258 state:review-requested]
+* 2b258a2 updated comment
+* dc5041f Merge branch 'master' of github.com:mopub/mopub
+* f888ff4 accumulating creatives one adgroup at a time
+* e4c1264 Deployed without finding any bug fixes.
+
+# Deployed Thursday, May 31, 2012 at 01:13AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-121
+### Bugs Fixed: []
+### Included Commits:
+* eb5003b query instead of using memcache for adgroups index
+* 3dd252d Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 10:50PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-120
+### Bugs Fixed: []
+### Included Commits:
+* b9dba90 fixed bad test cleaned, commented out test failing on Jenkins due to missing package
+* 396423b Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 10:06PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-119
+### Bugs Fixed: []
+### Included Commits:
+* 2c446a3 removed appstats
+* 188eeb8 [#1261 state:resolved]
+
+# Deployed Wednesday, May 30, 2012 at 09:50PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-118
+### Bugs Fixed: ['1261']
+### Included Commits:
+* fdca86f Merge branch 'master' of github.com:mopub/mopub
+* 1335aab Merge branch 'master' of github.com:mopub/mopub
+* 05747f2 added multiple deploys (for production/staging/beta) to the deploy script
+* db77285 Merge branch 'master' of github.com:mopub/mopub
+* e032d0d checked out updated tests from publisher-refactor branch
+* 751da0f Added new frontend-1 backend with 20 instances to split the load w/ frontend-0
+* dbd6918 updated query managers return a list again, not a QueryIterator
+* d8c626d Merge branch 'master' of github.com:mopub/mopub
+* 092abd3 [#1261 state:fixed]
+* fc8aab8 DeleteNetworkHandler uses key names to get campaign adgroups instead of memcache
+* 3621b34 removed app/adunit stats fetching from adgroup detail page, replaced fetch with run in advertiser query managers
+* b5425a0 Deployed without finding any bug fixes.
+* 515bd8e changed fetch to run in publisher query managers
+
+# Deployed Wednesday, May 30, 2012 at 06:54PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-117
+### Bugs Fixed: []
+### Included Commits:
+* 99d0369 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 06:41PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-116
+### Bugs Fixed: []
+### Included Commits:
+* 3a9c2b0 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 06:39PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-115
+### Bugs Fixed: []
+### Included Commits:
+* 486d888 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, May 30, 2012 at 06:36PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-114
+### Bugs Fixed: []
+### Included Commits:
+* 3464613 (function($, _) { for networks controller
+* 9196a76 Fixed network api response when network is not definded
+* 82e2dd5 Merge branch 'master' into networks-page
+* ca8d473 Testing new modal js code
+* 1ea479b Working on using ids for modal setup
+* 38e9c29 working around GAE index issues by fetching all creatives then filtering out in memory
+* 125cd55 Merge branch 'master' into networks-page
+* eb2acd2 Merge branch 'master' of github.com:mopub/mopub
+* 63f50b2 Merge branch 'publisher-refactor' of github.com:mopub/mopub
+* 73e235e added confirm_db to all tests, fixed datetime issue
+* b21d041 Merge branch 'master' of github.com:mopub/mopub
+* c66840f Fixes to network migration script
+* 423b76c Remove erroneous import inspect
+* 69ad921 Merge branch 'publisher-refactor', remote-tracking branch 'origin'
+* d9348e4 merged
+* 12c42db updated account creation and login
+* 678d0ed cleaned up model_eq and fixed bug in model_to_dict prepending
+* 4cb750e modified confirm_db to check against deleted count if total_count is off
+* 53e92bd merged
+* 5468236 import inspect for test_utils
+* ae23ed7 fixed merge
+* 6ad2079 added dec_all
+* 6952ccb merge
+* e850959 did some shit
+* 1ab95df added decorate_all
+* 2adcb60 moved decorate_all
+* 874af32 Merge branch 'publisher-refactor' of github.com:mopub/mopub into publisher-refactor
+* 85398df some more tinkering, untested
+* d492233 Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* 57b0017 merged in updated test utils
+* dcd0b3e did some shit
+* 73a529f denoted that it was just for testing now
+* e09a770 took out unnecessary log
+* 31bb051 fixed decorate_all_methods
+* 1e63be2 added decorate_all
+* fbdc1be added more test utils and added a model equality check versus dictionary
+* 26371a3 did some shit
+* 354f6dc cleaned up tests, moved generation and default dict functions to common utils test fixtures
+* 7dbb0fc completed all tests except the exporter tests
+* cdccc2d some work on static views from yesterday
+* 6f91ee0 added some tests, deleted a dumb J3 view
+* e94a552 Merge branch 'master' of github.com:mopub/mopub
+* 60f71bc added yanc to requirements
+* 42d21a1 mobfox has reporting
+* 4ad0994 added more ignore
+* ff23cce Merge branch 'master' of github.com:mopub/mopub into publisher-refactor
+* 0cab2cd removed 404 handler
+* 5b4b597 update pylint
+* 48e45b4 updated pylint
+* aa9b945 fixed views so they pass tests
+* 6c7f19e updated pylint run
+* d470592 add pylint script
+* 1ff98f8 updated unittest
+* 1d56fa3 added pylint
+* ea60739 only test coverage on server
+* 6521f62 deletion tests
+* 08120e2 merged
+* 39dff12 minor fixes
+* acc3fac got rid of back imoprt
+* 3dd018f documented tests
+* 06ac9f2 removed failing tests
+* 060abcc added some test utils
+* 807af4b added secondary login for view testing
+* e7ad0f9 added aunit update tests, seconday login for view testing, fixed authorization error in app update view
+* 6a42f76 admin/preps more regularly
+* 496819b updated tests, fixed view
+* 7859e01 push up some time_almost_eq
+* e44ec03 did some shit
+* ea4d246 Need to re-pair
+* dbc404e added some test utils, updated publisher view tests
+* 09dea9e added test helper functions, updated publisher view tests
+* a0008a1 Merge branch 'master' of github.com:mopub/mopub
+* 628f981 Merge branch 'master' of github.com:mopub/mopub
+* 3fc7fb4 added dict eq_ helper
+* e82058d Text change in UI for mpx blind settings
+* 1354b90 did some shit
+* 93f1733 Add a couple functions to BaseViewTestCase (still needs some imports)
+* eb9453d Merge branch 'master' of github.com:mopub/mopub
+* 66724d5 -- formatting
+* 7c2ce78 Merge branch 'master' of github.com:mopub/mopub
+* 678ede1 -- add 7d and 30d breakdowns -- add eCPM
+* 17ebcd0 Changed 9:00 PM to 12:00 PM [#1087 state:review-requested]
+* 3efdbe6 Merge branch 'master' of github.com:mopub/mopub
+* cfed638 slight refactor
+* 270305f added some tests, cleaned up a bit
+* 9cae7f9 Deployed without finding any bug fixes.
+* 488b525 added tests for app & adunit creation
+* 0509b78 Merge branch 'publisher-refactor' of github.com:mopub/mopub into publisher-refactor
+* 54280c5 Success test case for CreateAdUnit
+* 7a8d780 removed unused view
+* f5593a1 merged in master
+* c86d10d did even more different shit
+* 4010621 did some more different shit
+* 0ef20a7 removed some bullshit
+* d0df5a4 added view test class
+* fa8e890 refactor inventory page, added tests
+* 3cbaf2c Improvements to millennial scraping script
+* 920f627 Basic scraping working
+* 7b91915 Added script for scraping millennial, still needs work
+* f6e7dcc Merge branch 'better-simple-models'
+* 901ee8f Rawwwwrrrrrrr SimpleModels workin it.  With tests
+* a89913d Commit 2
+* 15ffa4a Initial commit
+
+# Deployed Friday, May 11, 2012 at 09:09PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-113
+### Bugs Fixed: []
+### Included Commits:
+* 8acb8aa Deployed without finding any bug fixes.
+
+# Deployed Friday, May 11, 2012 at 07:47PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-112
+### Bugs Fixed: []
+### Included Commits:
+* 4d04d97 Merge branch 'master' of github.com:mopub/mopub
+* d2a1d42 Added some comments to enable network and fixed it so it doesn't break on a case that should never happen, when the first adunit for an account is being created and network campaigns exist
+* 05aee6b added coverage.xml to git ignore
+* 7a46597 deleted __init__.py
+* 605f502 added back __init__.py
+* 8ced21f fixing tests
+* 9ec386e Deployed without finding any bug fixes.
+* e6bf2f2 moved file names
+* 2ed152c deleted unnecessary adserver tests
+
+# Deployed Friday, May 11, 2012 at 02:10AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-111
+### Bugs Fixed: []
+### Included Commits:
+* 314ab21 Fixed millennial mispelling bug
+* 503e8b0 added xcover
+* 97b006a added back in scraping tests
+* 93a160a Merge branch 'master' of github.com:mopub/mopub
+* e2d683a added scraper requirements
+* 5cdd73f made scrape test python2.5 compatible
+* 66a9f72 updated view testing, publisher view tests
+* 88f25f2 Merge branch 'master' of github.com:mopub/mopub
+* e837d05 added view testing module and publisher view tests
+* 136b2ad Generating test data can take in a variable name script
+* 1610278 decreased task retry limit
+* 0ef4f17 added a bunch of requirements
+* edb719e Deployed without finding any bug fixes.
+
 # Deployed Wednesday, May 09, 2012 at 05:33PM PST
 ### Deployed by Nafis Jamal
 ### Tagged deploy-110
 ### Bugs Fixed: []
-### Included Commits: 
- * 4f8856a added default value for fetch context to allow for warmups
- * 7e827da added target for adunit context pushes
- * fc6c267 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 4f8856a added default value for fetch context to allow for warmups
+* 7e827da added target for adunit context pushes
+* fc6c267 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, May 09, 2012 at 01:04AM PST
 ### Deployed by Andrew He
 ### Tagged deploy-109

@@ -15,10 +15,20 @@ backends:
   options: public
   class: B2
 
-- name: frontend-staging
-  instances: 2
+- name: frontend-1
+  instances: 20
   options: public
-  class: B8
+  class: B2
+
+- name: frontend-2
+  instances: 20
+  options: public
+  class: B2
+
+- name: frontend-staging
+  instances: 20
+  options: public
+  class: B2
 
 - name: gae-context-fetch
   options: public

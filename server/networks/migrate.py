@@ -35,13 +35,8 @@ SKIP_THESE_ACCOUNTS = set(['agltb3B1Yi1pbmNyEAsSB0FjY291bnQYvaXlBQw', 'agltb3B1Y
 def create_creative(account, new_adgroup, old_adgroup):
     old_creative = None
     html_data = None
-    old_creatives = [creative for creative in old_adgroup._creatives if not
-                creative.deleted]
-    if old_creatives:
-        old_creative = old_creatives[0]
-        print "AdGroup Creatives"
-        print [str(creative.key()) for creative in old_creatives]
-
+    old_creative = old_adgroup.net_creative
+    if old_creative:
         if new_adgroup.network_type in ('custom', 'custom_native') and \
                 hasattr(old_creative, 'html_data'):
             html_data = old_creative.html_data
@@ -100,9 +95,16 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
                 campaigns_dict[adgroup._campaign]._adgroups.append(adgroup)
 
         print "Getting all creatives"
+        creatives_dict = {}
         for creative in get_all(Creative):
+            creatives_dict[creative.key()] = creative
             if creative._ad_group in adgroups_dict:
                 adgroups_dict[creative._ad_group]._creatives.append(creative)
+
+        for adgroup in adgroups_dict.values():
+            if adgroup._net_creative and adgroup._net_creative in \
+                    creatives_dict:
+                adgroup.net_creative = creatives_dict[adgroup._net_creative]
 
 
     new_campaigns = []
@@ -150,8 +152,11 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
                 old_adgroup = [ag for ag in old_campaign._adgroups if not \
                         ag.deleted and ag.network_type][0]
 
-                network = old_adgroup.network_type.replace('_native',
-                        '').lower()
+                old_adgroup_translation = {'iAd': 'iad',
+                        'admob_native': 'admob',
+                        'millennial_native': 'millennial'}
+                network = old_adgroup_translation.get(old_adgroup.network_type,
+                        old_adgroup.network_type)
                 # make sure it's not a deprecated campaign
                 if old_adgroup.network_type not in ('millennial', \
                         'admob') and network in NETWORKS:

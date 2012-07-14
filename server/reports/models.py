@@ -22,8 +22,8 @@ from common.utils import date_magic
 from common.utils.helpers import cust_sum
 from common.wurfl.query_managers import WurflQueryManager
 from publisher.models import AdUnit
-from mail.mails import (REPORT_FINISHED_SIMPLE, 
-                        REPORT_FAILED_SIMPLE, 
+from mail.mails import (REPORT_FINISHED_SIMPLE,
+                        REPORT_FAILED_SIMPLE,
                         REPORT_NO_DATA,
                         )
 
@@ -70,7 +70,10 @@ MRFAILURE = FAILURE % 1
 OTHER = FAILURE % 2
 
 def log(mesg):
-    my_log = open('/home/ubuntu/poller.log', 'a')
+    try:
+        my_log = open('/home/ubuntu/poller.log', 'a')
+    except IOError:
+        my_log = open('/tmp/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
     my_log.close()
 
@@ -121,7 +124,7 @@ class ScheduledReport(db.Model):
     created_at = db.DateTimeProperty(auto_now_add=True)
 
     name = db.StringProperty()
-    saved = db.BooleanProperty()
+    saved = db.BooleanProperty(default=False)
     deleted = db.BooleanProperty(default=False)
     last_run = db.DateTimeProperty()
     default = db.BooleanProperty(default=False)
@@ -158,7 +161,7 @@ class ScheduledReport(db.Model):
         else:
             return self.reports.order('-created_at').get()
         #get the most recent report created by this scheduler
-        
+
     @property
     def details(self):
         if self._details:
@@ -199,15 +202,26 @@ class ScheduledReport(db.Model):
 
     @property
     def status(self):
-        if self._status:
-            return self._status
-        else:
+        if self.most_recent:
             return self.most_recent.status
+        else:
+            return self.status
+
+    def __init__(self, *args, **kwargs):
+        if 'next_sched_date' not in kwargs and 'sched_interval' in kwargs:
+            sched_interval = kwargs.get('sched_interval')
+            if sched_interval != 'none':
+                kwargs['next_sched_date'] =  date_magic.get_next_day(sched_interval)
+            else:
+                kwargs['next_sched_date'] = datetime.now().date()
+
+        super(ScheduledReport, self).__init__(*args, **kwargs)
 
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
     created_at = db.DateTimeProperty(auto_now_add=True)
+    deleted = db.BooleanProperty(default=False)
 
     #scheduled report
     schedule = db.ReferenceProperty(ScheduledReport, collection_name='reports')
@@ -257,10 +271,10 @@ class Report(db.Model):
             pass
 
     def notify_failure(self, reason=OTHER):
-        mesg_dict = dict(dim1 = self.d1, 
-                         dim2 = self.d2, 
-                         dim3 = self.d3, 
-                         start = self.start.strftime('%m/%d/%y'), 
+        mesg_dict = dict(dim1 = self.d1,
+                         dim2 = self.d2,
+                         dim3 = self.d3,
+                         start = self.start.strftime('%m/%d/%y'),
                          end = self.end.strftime('%m/%d/%y'))
         if reason == NODAT:
             mesg = mail.EmailMessage(sender = 'olp@mopub.com',
@@ -365,17 +379,16 @@ class Report(db.Model):
             data = list(names)
             data.append(value['name'])
 
-            for i in range(level_total - level):
-                data.append('ALL')
+            if level_total == level:
+                if isinstance(value['stats'], dict):
+                    impressions = float(value['stats']['impression_count'])
+                    ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
+                    data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
+                else:
+                    data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
 
-            if isinstance(value['stats'], dict):
-                impressions = float(value['stats']['impression_count'])
-                ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
-                data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
-            else:
-                data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
+                data_list.append(data)
 
-            data_list.append(data)
             if 'sub_stats' in value:
                 temp_names = list(names)
                 temp_names.append(value['name'])
@@ -472,6 +485,8 @@ class Report(db.Model):
         crtvs = Creative.get(batch[CRTV])
 
         for adunit in adunits:
+            if not adunit:
+                continue
             obj_key = str(adunit.key())
             for dim in key_dims[obj_key]:
                 key_tuple = (str(dim), obj_key)
@@ -481,6 +496,8 @@ class Report(db.Model):
                     dimkey_to_obj[key_tuple] = adunit.app_key
 
         for crtv in crtvs:
+            if not crtv:
+                continue
             obj_key = str(crtv.key())
             for dim in key_dims[obj_key]:
                 key_tuple = (str(dim), obj_key)
@@ -537,6 +554,24 @@ class Report(db.Model):
             temp = final
             keys, vals = line.split('\t')
             keys = keys.split(':')
+            keylen = len(keys)
+            if keylen == 1:
+                dim_list = (self.d1,)
+            elif keylen == 2:
+                dim_list = (self.d1, self.d2)
+            elif keylen == 3:
+                dim_list = (self.d1, self.d2, self.d3)
+            dims_keys = zip(keys, dim_list)
+            # Hack because people fucking broke shit and deleted things
+            # and other dumb shit
+            all_keys_in = [False] * len(keys)
+            for dimkey in dimkey_to_obj:
+                for i, (key, dim) in enumerate(dims_keys):
+                    if key in dimkey or dim not in ONLINE_DIMS:
+                        all_keys_in[i] = True
+
+            if not all(all_keys_in):
+                continue
             vals = eval(vals)
             req, att = self.get_stats_info(keys, dimkey_to_obj, testing)
             #I'm using list comprehension for you Nafis
@@ -710,7 +745,6 @@ class Report(db.Model):
             return None, None
 
         key_tuple = (str(CRTV), str(key))
-
         if dim in [CAMP, CRTV]:
             crtv = dimkey_to_obj[key_tuple]
             adgroup = crtv.adgroup

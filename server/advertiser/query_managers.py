@@ -80,6 +80,9 @@ class AdvertiserQueryManager(CachedQueryManager):
             if campaign_key in campaigns_dict:
                 campaign_for_this_adgroup = campaigns_dict[campaign_key]
                 campaign_for_this_adgroup._adgroups.append(adgroup)
+            net_creative_key = str(AdGroup.net_creative.get_value_for_datastore(adgroup))
+            if net_creative_key in creatives_dict:
+                adgroup.net_creative = creatives_dict[net_creative_key]
 
         return campaigns_dict
 
@@ -194,6 +197,7 @@ class CampaignQueryManager(QueryManager):
         """
         return 'mkt:%s' % account_key
 
+    # TODO: this is broken and not used anywhere.
     @classmethod
     def get_marketplace_campaign(cls, adunit=None):
         """ Returns a marketplace campaign for this adunit,
@@ -213,6 +217,7 @@ class CampaignQueryManager(QueryManager):
         else:
             return cls.add_marketplace_campaign(cls, adunit=adunit)
 
+    # TODO: this is not used anywhere.
     @classmethod
     def add_marketplace_campaign(cls, adunit=None):
             """ Adds a marketplace campagin for this adunit
@@ -241,7 +246,7 @@ class CampaignQueryManager(QueryManager):
             campaigns = campaigns.filter("deleted =",deleted)
         if account:
             campaigns = campaigns.filter("account =",account)
-        return campaigns.fetch(limit)
+        return list(campaigns.run(limit=limit, batch_size=limit))
 
     @classmethod
     @wraps_first_arg
@@ -253,15 +258,6 @@ class CampaignQueryManager(QueryManager):
 
         # Save campaigns.
         put_response = db.put(campaigns)
-
-        # Update campaign budgets asynchronously using a Task Queue.
-        campaign_keys = [campaign.key() for campaign in campaigns]
-        queue = taskqueue.Queue()
-        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
-                              method='POST',
-                              url='/fetch_api/budget/update_or_create'
-                              )
-        queue.add(task)
 
         # Clear cache
         adunits = []
@@ -332,13 +328,18 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup
 
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS, archived=False):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None,
+            account=None, deleted=False, limit=MAX_OBJECTS, archived=False,
+            network_type=False):
         """ archived=True means we only show archived adgroups. """
         adgroups = AdGroup.all()
         if not (deleted == None):
             adgroups = adgroups.filter("deleted =", deleted)
         if account:
             adgroups = adgroups.filter("account =", account)
+
+        if network_type != False:
+            adgroups = adgroups.filter("network_type =", network_type)
 
         if not (archived == None):
             adgroups = adgroups.filter("archived =", archived)
@@ -372,7 +373,7 @@ class AdGroupQueryManager(QueryManager):
                     adgroups_dict[adgroup.key()] = adgroup
             return adgroups_dict.values()[:limit]
 
-        return adgroups.fetch(limit)
+        return list(adgroups.run(limit=limit, batch_size=limit))
 
     @classmethod
     def get_network_adgroup(cls, campaign, adunit_key, account_key,
@@ -480,6 +481,15 @@ class AdGroupQueryManager(QueryManager):
     def put(self, adgroups):
         put_response = db.put(adgroups)
 
+        # Update campaign budgets asynchronously using a Task Queue.
+        campaign_keys = set([adgroup.campaign.key() for adgroup in adgroups])
+        queue = taskqueue.Queue()
+        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
+                              method='POST',
+                              url='/fetch_api/budget/update_or_create'
+                              )
+        queue.add(task)
+
         # Clear cache
         adunits = []
         affected_account_keys = set()
@@ -512,7 +522,7 @@ class CreativeQueryManager(QueryManager):
             creatives = creatives.filter("ad_types IN", ad_types)
         if ad_type:
             creatives = creatives.filter("ad_type =", ad_type)
-        return creatives.fetch(limit)
+        return list(creatives.run(limit=limit, batch_size=limit))
 
     def put_creatives(self,creatives):
         return db.put(creatives)

@@ -166,7 +166,7 @@
                     </a>
                 </td>
                 <td class="dataTable-name">
-                    <a href="/inventory/app/{{ app.key_ }}">{{ app.name }}</a>
+                    <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
                     <span class="muted unbold">({{ app.type }})</span>
                 </td>
                 {% if reporting %}

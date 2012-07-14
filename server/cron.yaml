@@ -7,22 +7,22 @@ cron:
 
 - description: Run all reports scheduled for today
   url: /reports/daily_sched_runner/
-  schedule: every day 21:00
+  schedule: every day 12:00
   timezone: America/Los_Angeles
   target: frontend-0
-  
+
 # Removing for now because we are only doing offline
 # - description: Periodic dashboard refresh
 #   url: /admin/prep/
 #   schedule: every 30 minutes
 #   timezone: America/Los_Angeles
 #   target: admin-prep
-  
-- description: Periodic dashboard refresh (offline)
-  url: /admin/prep/?offline=1
-  schedule: every 6 hours  
-  timezone: America/Los_Angeles
-  target: admin-prep
+
+# - description: Periodic dashboard refresh (offline)
+#   url: /admin/prep/?offline=1
+#   schedule: every 1 hours
+#   timezone: America/Los_Angeles
+#   target: admin-prep
 
 - description: Check how much each bidder has spent
   url: /admin/bidder_spent/

@@ -61,13 +61,7 @@
           <tbody>
 
             <tr class="active" id="stats-breakdown-requests">
-              <td class="stats-breakdown-value today">
-                <span class="inner">{{today.request_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.request_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value all">
+              <td class="stats-breakdown-value">
                 <span class="inner">{{app.stats.request_count|withsep}}</span>
               </td>
               <th class="stats-breakdown-name">
@@ -76,32 +70,14 @@
             </tr>
 
             <tr id="stats-breakdown-impressions">
-              <td class="stats-breakdown-value today">
-                <span class="inner">{{today.impression_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.impression_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value all">
+              <td class="stats-breakdown-value">
                 <span class="inner">{{app.stats.impression_count|withsep}}</span>
               </td>
               <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
             </tr>
 
             <tr id="stats-breakdown-clicks">
-              <td class="stats-breakdown-value today">
-                <span class="inner">
-                  <span class="muted unbold">({{today.ctr|percentage}})</span>
-                  {{today.click_count|withsep}}
-                </span>
-              </td>
-              <td class="stats-breakdown-value yesterday">
-                <span class="inner">
-                  <span class="muted unbold">({{yesterday.ctr|percentage}})</span>
-                  {{yesterday.click_count|withsep}}
-                </span>
-              </td>
-              <td class="stats-breakdown-value all">
+              <td class="stats-breakdown-value">
                 <span class="inner">
                   <span class="muted unbold">({{app.stats.ctr|percentage}})</span>
                   {{app.stats.click_count|withsep}}
@@ -111,13 +87,7 @@
             </tr>
 
             <tr id="stats-breakdown-users">
-              <td class="stats-breakdown-value today">
-                <span class="inner">{{today.user_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.user_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value all">
+              <td class="stats-breakdown-value">
                 <span class="inner">{{app.stats.user_count|withsep}}</span>
               </td>
               <th class="stats-breakdown-name">
@@ -127,16 +97,6 @@
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class="stats-breakdown-buttons">
-        <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-          <label for="stats-breakdown-dateOptions-option-0">Today</label>
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-          <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-          <label for="stats-breakdown-dateOptions-option-2">All</label>
-        </span>
       </div>
 
       {% comment %}
@@ -153,18 +113,18 @@
               //pointStart: 1294963200000,
               pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
               pointInterval: 86400000,
-              'requests': [{% for au in app.graph_adunits %}
-                           { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                          ],
-              'impressions': [{% for au in app.graph_adunits %}
-                              { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                             ],
-              'clicks': [{% for au in app.graph_adunits %}
-                         { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-              'users': [{% for au in app.graph_adunits %}
-                        { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                       ]
+              'requests': [{
+                  '{{app.name|safe|addslashes}}': [{% for t in app.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}]
+              }],
+              'impressions': [{
+                  '{{app.name|safe|addslashes}}': [{% for t in app.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}]
+              }],
+              'clicks': [{
+                  '{{app.name|safe|addslashes}}': [{% for t in app.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}]
+              }],
+              'users': [{
+                  '{{app.name|safe|addslashes}}': [{% for t in app.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}]
+              }]
           };
         </script>
       </div>
@@ -288,23 +248,47 @@
                         </th>
                         <td class="dataTable-data numeric">
                             Guaranteed<br/><span class="muted">{{level.name}}</span></td>
-                        <td class="dataTable-data numeric">{{campaign.stats.revenue|currency}}</td>
+                        <td class="dataTable-data numeric">
+                          {% if campaign.stats %}
+                            {{campaign.stats.revenue|currency}}
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
                         <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if campaign.adgroup.bid_strategy == 'cpc' %}
-                            {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% if campaign.stats %}
+                              {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% else %}
+                              -
+                            {% endif %}
                           {% else %}
                             {{ campaign.adgroup.bid|currency }}
                           {% endif %}
                         </td>
                         <td class="dataTable-data numeric">-</td>
-                        <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                         <td class="dataTable-data numeric">
-                            {{campaign.stats.clk|withsep}}<br/>
-                            <span class="muted">{{campaign.stats.ctr|percentage}}</span>
+                          {% if campaign.stats %}
+                            {{campaign.stats.imp|withsep}}
+                          {% else %}
+                            -
+                          {% endif %}
                         </td>
                         <td class="dataTable-data numeric">
-                          {{campaign.stats.conv|withsep}}<br/>
-                          <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
+                          {% if campaign.stats %}
+                            {{campaign.stats.clk|withsep}}<br/>
+                            <span class="muted">{{campaign.stats.ctr|percentage}}</span>
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
+                        <td class="dataTable-data numeric">
+                          {% if campaign.stats %}
+                            {{campaign.stats.conv|withsep}}<br/>
+                            <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
+                          {% else %}
+                            -
+                          {% endif %}
                         </td>
                       </tr>
                     {% endfor %}
@@ -343,23 +327,41 @@
                         </span>
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Normal</span></td>
-                      <td class="dataTable-data numeric"> -- </td>
+                      <td class="dataTable-data numeric"> - </td>
                       <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if campaign.adgroup.bid_strategy == 'cpc' %}
-                            {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% if campaign.stats %}
+                              {{ campaign.adgroup.calculated_ecpm|currency }}
+                            {% else %}
+                              -
+                            {% endif %}
                           {% else %}
                             {{ campaign.adgroup.bid|currency }}
                           {% endif %}
                         </td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{campaign.stats.clk|withsep}}<br/>
-                          <span class="muted">{{campaign.stats.ctr|percentage|withsep}}<span>
+                        {% if campaign.stats %}
+                          {{campaign.stats.imp|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
-                        {{campaign.stats.conv|withsep}}<br/>
-                        <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
+                        {% if campaign.stats %}
+                          {{campaign.stats.clk|withsep}}<br/>
+                          <span class="muted">{{campaign.stats.ctr|percentage|withsep}}<span>
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if campaign.stats %}
+                          {{campaign.stats.conv|withsep}}<br/>
+                          <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                     </tr>
                   {% endfor %}
@@ -380,10 +382,34 @@
                             </a>
                           </th>
                           <td class="dataTable-data numeric">Marketplace</td>
-                          <td class="dataTable-data numeric">{{campaign.stats.rev|currency}}</td>
-                          <td class="dataTable-data numeric">{{campaign.stats.cpm|currency}}</td>
-                          <td class="dataTable-data numeric">{{campaign.stats.req|withsep}}</td>
-                          <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
+                          <td class="dataTable-data numeric">
+                            {% if campaign.stats %}
+                              {{campaign.stats.rev|currency}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <td class="dataTable-data numeric">
+                            {% if campaign.stats %}
+                              {{campaign.stats.cpm|currency}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <td class="dataTable-data numeric">
+                            {% if campaign.stats %}
+                              {{campaign.stats.req|withsep}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <td class="dataTable-data numeric">
+                            {% if campaign.stats %}
+                              {{campaign.stats.imp|withsep}}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
                           <td class="dataTable-data numeric">-</td>
                           <td class="dataTable-data numeric">-</td>
                         </tr>
@@ -415,18 +441,37 @@
                           -
                           {% else %}
                               {% if campaign.adgroup.bid_strategy == 'cpc' %}
-                                {{ campaign.adgroup.calculated_ecpm|currency }}
+                                {% if campaign.stats %}
+                                  {{ campaign.adgroup.calculated_ecpm|currency }}
+                                {% else %}
+                                  -
+                                {% endif %}
                               {% else %}
                                 {{ campaign.adgroup.bid|currency }}
                               {% endif %}
                           {% endif %}
                         </td>
-                      <td class="dataTable-data numeric">{{campaign.stats.req|withsep}}</td>
-                      <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{campaign.stats.clk|withsep}}
-                          <br/>
+                        {% if campaign.stats %}
+                          {{campaign.stats.req|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if campaign.stats %}
+                          {{campaign.stats.imp|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if campaign.stats %}
+                          {{campaign.stats.clk|withsep}}<br/>
                           <span class="muted">{{campaign.stats.ctr|percentage}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                       <td class="dataTable-data numeric">-</td>
                     </tr>
@@ -475,14 +520,28 @@
                           {% endif %}
                       </td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{campaign.stats.clk|withsep}}<br/>
-                          <span class="muted">{{campaign.stats.ctr|percentage|withsep}}</span>
+                        {% if campaign.stats %}
+                          {{campaign.stats.imp|withsep}}
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                       <td class="dataTable-data numeric">
-                        {{campaign.stats.conv|withsep}}<br/>
-                        <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
+                        {% if campaign.stats %}
+                          {{campaign.stats.clk|withsep}}<br/>
+                          <span class="muted">{{campaign.stats.ctr|percentage|withsep}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {% if campaign.stats %}
+                          {{campaign.stats.conv|withsep}}<br/>
+                          <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
+                        {% else %}
+                          -
+                        {% endif %}
                       </td>
                     </tr>
                   {% endfor %}

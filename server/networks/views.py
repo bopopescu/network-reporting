@@ -2,7 +2,8 @@ import logging
 
 from account.forms import AccountNetworkConfigForm, \
         AppNetworkConfigForm
-from account.query_managers import AccountQueryManager
+from account.query_managers import AccountQueryManager, \
+        NetworkConfigQueryManager
 from account.models import NetworkConfig
 
 from ad_network_reports.forms import LoginCredentialsForm
@@ -274,7 +275,12 @@ class EditNetworkHandler(RequestHandler):
                 login_form = LoginCredentialsForm(network=network,
                         prefix=network)
 
+        network_configs_dict = NetworkConfigQueryManager. \
+                get_network_configs_dict_for_account(self.account)
         if network == 'jumptap':
+            if str(self.account._network_config) in network_configs_dict:
+                self.account.network_config = network_configs_dict[str(
+                    self.account._network_config)]
             network_data['pub_id'] = getattr(self.account.network_config,
                     network + '_pub_id', '')
 
@@ -283,6 +289,10 @@ class EditNetworkHandler(RequestHandler):
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
+                if str(app._network_config) in network_configs_dict:
+                    app.network_config = network_configs_dict[
+                            str(app._network_config)]
+
                 app.pub_id = getattr(app.network_config, network + '_pub_id',
                         '') or ''
 
@@ -321,6 +331,10 @@ class EditNetworkHandler(RequestHandler):
                         ' bid'
 
                 if network in NETWORKS_WITH_PUB_IDS:
+                    if str(adunit._network_config) in network_configs_dict:
+                        adunit.network_config = network_configs_dict[
+                                str(adunit._network_config)]
+
                     adunit_pub_id = getattr(adunit.network_config, network +
                             '_pub_id', False)
                     if adunit_pub_id != app.pub_id:
@@ -422,7 +436,7 @@ class EditNetworkHandler(RequestHandler):
                         break
 
                     pub_id = self.request.POST.get("adunit_%s-%s" %
-                            (adunit.key(), network_config_field), '')
+                            (adunit.key(), network_config_field), None)
                     # Return error if adgroup is set to active yet
                     # the user didn't enter a pub id
                     if not pub_id and self.request.POST.get('%s-active' %
@@ -510,7 +524,7 @@ class EditNetworkHandler(RequestHandler):
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
                         app_pub_id = self.request.POST.get("app_%s-%s" %
-                                (app.key(), network_config_field), '')
+                                (app.key(), network_config_field), None)
                         setattr(network_config, network_config_field,
                                 app_pub_id)
                         AppQueryManager.update_config_and_put(app,
@@ -522,19 +536,20 @@ class EditNetworkHandler(RequestHandler):
                             # already exists)
                             login = AdNetworkLoginManager.get_logins(
                                     self.account, network).get()
-                            mappers = AdNetworkMapperManager. \
-                                    get_mappers_for_app(login=login, app=app)
-                            # Delete the existing mappers if there are no scrape
-                            # stats for them.
-                            for mapper in mappers:
-                                if mapper:
-                                    stats = mapper.ad_network_stats
-                                    if not stats.count(1):
-                                        mapper.delete()
-                            if app_pub_id:
-                                AdNetworkMapperManager.create(network=network,
-                                        pub_id=app_pub_id, login=login,
-                                        app=app)
+                            if login:
+                                mappers = AdNetworkMapperManager. \
+                                        get_mappers_for_app(login=login, app=app)
+                                # Delete the existing mappers if there are no scrape
+                                # stats for them.
+                                for mapper in mappers:
+                                    if mapper:
+                                        stats = mapper.ad_network_stats
+                                        if not stats.count(1):
+                                            mapper.delete()
+                                if app_pub_id:
+                                    AdNetworkMapperManager.create(network=network,
+                                            pub_id=app_pub_id, login=login,
+                                            app=app)
 
                     # NetworkConfig for AdUnits
                     if network in NETWORKS_WITH_PUB_IDS:
@@ -542,7 +557,7 @@ class EditNetworkHandler(RequestHandler):
                             network_config = adunit.network_config or \
                                     NetworkConfig()
                             pub_id = self.request.POST.get("adunit_%s-%s" %
-                                    (adunit.key(), network_config_field), '')
+                                    (adunit.key(), network_config_field), None)
 
                             setattr(network_config, network_config_field,
                                     pub_id)
@@ -555,7 +570,7 @@ class EditNetworkHandler(RequestHandler):
                                     NetworkConfig()
                             setattr(network_config, network_config_field, \
                                     self.request.POST.get(network +
-                                        '_pub_id', ''))
+                                        '_pub_id', None))
                             AccountQueryManager.update_config_and_put( \
                                     self.account, network_config)
 
@@ -733,13 +748,7 @@ class DeleteNetworkHandler(RequestHandler):
 
         campaign_key = self.request.POST.get('campaign_key')
 
-        campaigns = AdvertiserQueryManager.get_objects_dict_for_account(
-                self.account)
-
-        if campaign_key not in campaigns:
-            raise Http404
-
-        campaign = campaigns[campaign_key]
+        campaign = CampaignQueryManager.get(campaign_key)
 
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
@@ -766,10 +775,22 @@ class DeleteNetworkHandler(RequestHandler):
                     login.deleted = True
                     login.put()
 
+        adunits = PublisherQueryManager.get_adunits_dict_for_account(
+                self.account).values()
+        adgroups = AdGroupQueryManager.get([AdGroupQueryManager.
+            get_network_adgroup(campaign, adunit.key(),
+                self.account.key()).key() for adunit in adunits])
         # Mark all adgroups as deleted
-        for adgroup in campaign._adgroups:
+        all_creatives = []
+        for adgroup in adgroups:
             adgroup.deleted = True
-        AdGroupQueryManager.put(campaign._adgroups)
+
+            creatives = list(adgroup.creatives)
+            for creative in creatives:
+                creative.deleted = True
+            all_creatives += creatives
+        AdGroupQueryManager.put(adgroups)
+        CreativeQueryManager.put(all_creatives)
 
         return TextResponse()
 

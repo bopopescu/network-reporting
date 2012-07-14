@@ -1,3 +1,4 @@
+import logging
 from django.http import Http404
 from common.utils.date_magic import gen_days
 
@@ -25,10 +26,7 @@ def get_all_stats(app_key, network, account_key, start_date, end_date):
     else:
         app = None
 
-    if network == '*':
-        network = None
-
-    if network:
+    if network != '*':
         network = network.replace('_native', '').lower()
         if app:
             login = AdNetworkLoginManager.get_logins(account,

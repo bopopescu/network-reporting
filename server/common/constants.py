@@ -171,8 +171,7 @@ REPORTING_NETWORKS = {'admob': 'AdMob',
                     'inmobi': 'InMobi',
                     'mobfox': 'MobFox'}
 
-NETWORKS_WITHOUT_REPORTING = {'mobfox': 'MobFox',
-                              'millennial': 'Millennial',
+NETWORKS_WITHOUT_REPORTING = {'millennial': 'Millennial',
                               'adsense': 'AdSense',
                               'ejam': 'TapIt',
                               'brightroll': 'BrightRoll',
@@ -184,5 +183,5 @@ NETWORKS = dict(NETWORKS_WITHOUT_REPORTING.items() +
 
 NETWORK_ADGROUP_TRANSLATION = {'iad': 'iAd',
                                'admob': 'admob_native',
-                               'millenial': 'millenial_native'}
+                               'millennial': 'millennial_native'}
 

@@ -15,7 +15,6 @@ import os
 
 from ad_server.adunit_context.adunit_context import AdUnitContext
 
-from advertiser.models import Campaign, AdGroup, Creative
 from common.constants import MAX_OBJECTS
 from common.utils.decorators import wraps_first_arg
 
@@ -212,7 +211,7 @@ class AppQueryManager(CachedQueryManager):
                 apps = apps.order("name")
         if offset:
             apps = apps.filter("__key__ >", offset)
-        return apps.fetch(limit)
+        return list(apps.run(limit=limit, batch_size=limit))
 
     @classmethod
     def get_app_keys(cls, account=None, deleted=False, limit=MAX_OBJECTS, alphabetize=False, offset=None):
@@ -273,6 +272,8 @@ class AppQueryManager(CachedQueryManager):
             apps = apps.filter('account =', account)
         return apps
 
+    # TODO: make this consistent with AdUnit.put_adunits by making this a
+    # class method.
     def put_apps(self,apps):
         return db.put(apps)
 
@@ -299,7 +300,7 @@ class AppQueryManager(CachedQueryManager):
         """ Updates the network config and the associated app"""
         from account.query_managers import NetworkConfigQueryManager
 
-        network_config.account = App.network_config.get_value_for_datastore(app)
+        network_config.account = App.account.get_value_for_datastore(app)
         NetworkConfigQueryManager.put(network_config)
         app.network_config = network_config
         cls.put(app)
@@ -412,7 +413,7 @@ class AdUnitQueryManager(QueryManager):
             adunits = adunits.filter("app_key =",app)
         if account:
             adunits = adunits.filter("account =",account)
-        return adunits.fetch(limit)
+        return list(adunits.run(limit=limit, batch_size=limit))
 
     @classmethod
     def reports_get_adunits(cls, account=None, publisher=None, advertiser=None, deleted=False):
@@ -473,6 +474,7 @@ class AdUnitQueryManager(QueryManager):
     def put_adunits(cls,adunits):
         db.put(adunits)
 
+    # TODO: this is horrible and should be removed.
     def get_by_key(self,key,none=False,cache=False):
         if not cache:
           return super(AdUnitQueryManager, self).get_by_key(key)
@@ -493,6 +495,7 @@ class AdUnitQueryManager(QueryManager):
               self.adunit = "Does not exist"
         return self.adunit
 
+    # TODO: this is horrible and should be removed.
     def get_adunit(self):
         if not self.adunit:
             self.get_by_key(self.key,cache=True)

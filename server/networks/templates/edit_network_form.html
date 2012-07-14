@@ -399,7 +399,7 @@
                     </td>
                     {% endif %}
                     <td class="text advanced-options">
-                        <div class="options-edit editable">
+                        <div id="global-options-edit" class="editable">
                             None
                         </div>    
                     </td>
@@ -471,7 +471,7 @@
                     </td>
                     {% endif %}
                     <td class="text">
-                        <div class="options-edit  editable">
+                        <div id="{{ app.key }}-options-edit" class="editable">
                             None
                         </div>    
                     </td>
@@ -541,7 +541,7 @@
                     </td>
                     {% endif %}
                     <td class="text advanced-options">
-                        <div class="options-edit editable">
+                        <div id="{{ adunit.key }}-options-edit" class="editable">
                             None
                         </div>    
                     </td>
@@ -689,6 +689,16 @@
             EditNetworkController.initialize({
                 network_type: '{{ network.name }}',
                 pretty_name: '{{ network.pretty_name }}',
+                adunits_for_app: {
+                {% for app in apps %}
+                    '{{ app.key }}': [{% for adunit in app.adunits %}'{{ adunit.key }}', {% endfor %}],
+                {% endfor %}},
+                app_for_adunit: {
+                {% for app in apps %}
+                {% for adunit in app.adunits %}
+                '{{ adunit.key }}': '{{ app.key }}',
+                {% endfor %}
+                {% endfor %}},
                 account_key: '{{ account_key }}',
                 priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
                 city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},

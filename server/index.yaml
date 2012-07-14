@@ -163,6 +163,13 @@ indexes:
   - name: account
   - name: campaign_type
   - name: deleted
+  - name: name
+
+- kind: Campaign
+  properties:
+  - name: account
+  - name: campaign_type
+  - name: deleted
   - name: network_type
 
 - kind: Campaign
@@ -175,6 +182,11 @@ indexes:
   - name: schedule
   - name: created_at
     direction: desc
+
+- kind: ScheduledReport
+  properties:
+  - name: account
+  - name: sched_interval
 
 - kind: SiteStats
   properties:

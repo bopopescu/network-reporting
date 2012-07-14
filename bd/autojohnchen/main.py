@@ -17,9 +17,21 @@ import sys
 import os
 import json
 
+import boto
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+
+# access to AWS billing information
+ACCESS_KEY_ID = 'AKIAJKOJXDCZA3VYXP3Q'
+SECRET_ACCESS_KEY = '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'
+S3_CONN = S3Connection(ACCESS_KEY_ID, SECRET_ACCESS_KEY)
+S3_BUCKET = S3_CONN.get_bucket('mopub-aws-billing')
+
+# where to send things 
 SENDER="jim@mopub.com"
 RCPT="billing@mopub.com"
-MPX_URL="http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf&.."
+RCPT_BCC="revforce@mopub.com"
+MPX_URL="http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf&start=%s&end=%s"
 ADS_URL="http://read.mongostats.mopub.com/stats?pub=agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww&adv=agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww&acct=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww&hybrid=False&offline=False&start_date=%s&end_date=%s"
 ADS_KEY="agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww||agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww||agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww"
 
@@ -63,6 +75,7 @@ class GenerateHandler(webapp.RequestHandler):
         # send a thank you email
         mail.send_mail(sender=SENDER,
                           to=RCPT,
+                          bcc=RCPT_BCC,
                           subject="Your report request %s has been received" % jobId,
                           body="""Sir- Many machines have been provisioned to process your request. To check the status of your job, visit http://mopub-billing.appspot.com/check/%s. Yours, Automated John Chen""" % jobId)
 
@@ -175,40 +188,100 @@ class CheckHandler(webapp.RequestHandler):
         logging.info("Sending the report:\n%s" % output.getvalue())
         mail.send_mail(sender=SENDER,
                           to=RCPT,
+                          bcc=RCPT_BCC,
                           subject="Your revenue report for %02d-%04d is attached (ID: %s)" % (m, y, jobId),
                           body="""SIR-\nGood times. Attached is your report. Sincerely, Automated John Chen""",
                           attachments=[("%s-%02d-%04d.csv" % (jobId, m, y), output.getvalue())])
 
 
 class MpxReportHandler(webapp.RequestHandler):
-    def get(self):
-        now = datetime.datetime.now() + datetime.timedelta(hours=-8)
+    def ads_total(self, start, end):
+        ads = json.loads(urlfetch.fetch(ADS_URL % (start.strftime("%y%m%d"), end.strftime("%y%m%d"))).content)
+        return int(ads["all_stats"][ADS_KEY]["sum"]["request_count"])
         
-        # total inventory
-        ads = json.loads(urlfetch.fetch(ADS_URL % (now.strftime("%y%m%d"), now.strftime("%y%m%d"))).content)
-        request_count = int(ads["all_stats"][ADS_KEY]["daily_stats"][-1]["request_count"])
-
+    def mpx_total(self, start, end):
         # total spend
-        mpx = json.loads(urlfetch.fetch(MPX_URL).content)
+        mpx = json.loads(urlfetch.fetch(MPX_URL % (start.strftime("%m-%d-%Y"), end.strftime("%m-%d-%Y")), deadline=30).content)
         total = sum([x["spent"] for x in mpx.values()])
 
         # spend by DSP
         a=[(x["bidder_name"], x["spent"]) for x in mpx.values() if x["spent"] > 0]
         a.sort(lambda x,y: cmp(y[1],x[1]))
         
-        # compute body
-        body = "Total Spend: $%.2f\nTotal Inventory: %.1fMM\n\n" % (total, request_count / 1000000.0)
-        body += "Top Bidders\n===========\n"
-        for x in a:
-          body += "%s: $%.2f\n" % (x[0], x[1])
+        return (total, a)
+        
+    def cost_total(self, end):
+        BANDWIDTH = ["AWS Data Transfer"]
+        CPU = ["Amazon Elastic Compute Cloud", "Amazon Simple Notification Service", "Amazon Simple Queue Service", "Amazon SimpleDB", "Amazon Elastic MapReduce"]
+        STORAGE = ["Amazon Simple Storage Service", "Amazon CloudFront"]
+        
+        # figure out the month involved and find in S3
+        cost_key_name = "345840704531-aws-billing-csv-%s.csv" % end.strftime("%Y-%m")
+        billing_data = S3_BUCKET.get_key(cost_key_name)
+        
+        if billing_data:
+            # read billing contents, if it exists
+            lines = [x for x in csv.DictReader(billing_data.get_contents_as_string().split("\n"), delimiter=',', quotechar='"')]
+            bandwidth_cost = sum([float(x["CostBeforeTax"]) for x in lines if x.get('ProductName') in BANDWIDTH])
+            storage_cost = sum([float(x["CostBeforeTax"]) for x in lines if x.get('ProductName') in STORAGE])
+            cpu_cost = sum([float(x["CostBeforeTax"]) for x in lines if x.get('ProductName') in CPU])
+            logging.info([bandwidth_cost, storage_cost, cpu_cost])
 
-        body += "\nData retrieved at %s UTC. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
+            # since the cost is only meaningful as a CPM, we calculate inventory for period in 
+            # question and return the CPM
+            beginning_of_month = end.replace(day=1)
+            ads_for_period = self.ads_total(beginning_of_month, end)
+            logging.info(ads_for_period)
+
+            return ((bandwidth_cost + storage_cost + cpu_cost) / (ads_for_period / 1000.0), 
+                bandwidth_cost / (ads_for_period / 1000.0), 
+                storage_cost / (ads_for_period / 1000.0), 
+                cpu_cost / (ads_for_period / 1000.0))
+        else:
+            logging.warn("Could not retrieve billing stats from AWS")
+            return (0, 0, 0, 0)        
+        
+    def get(self):
+        now = datetime.datetime.now() + datetime.timedelta(hours=-8)
+        week = [now + datetime.timedelta(days=-7), now]
+        month = [now + datetime.timedelta(days=-30), now]
+        
+        # total inventory
+        request_count = (self.ads_total(now, now) / 1000000.0, 
+            self.ads_total(week[0], week[1]) / 1000000000.0, 
+            self.ads_total(month[0], month[1]) / 1000000000.0)
+
+        # total spend
+        total, a = self.mpx_total(now, now)
+        mpx_spend = (total, 
+            self.mpx_total(week[0], week[1])[0] / 1000.0, 
+            self.mpx_total(month[0], month[1])[0] / 1000.0)
+            
+        # total cost 
+        cost = self.cost_total(now)
+            
+        # cpm
+        cpm = (mpx_spend[0] / request_count[0] / 1000.0, mpx_spend[1] / request_count[1] / 1000.0, mpx_spend[2] / request_count[2] / 1000.0)
+        
+        # compute body
+        body = "Total Spend: $%.2f (7d: $%.1fK 30d: $%.1fK)\n" % mpx_spend
+        body += "Total Inventory: %.1fMM (7d: %.1fB 30d: %.1fB)\n" % request_count
+        body += "eCPM: $%.3f (7d: $%.3f 30d: $%.3f)\n" % cpm
+        body += "COGS: $%.3f (bandwidth: $%.3f storage: $%.3f cpu: $%.3f)\n" % cost
+        
+        # bidders
+        body += "\nTop Bidders\n===========\n"
+        for x in a:
+          body += "%s: $%.2f\n" % x
+
+        body += "\nData retrieved at %s UTC. COGS computed on a month-to-date basis. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
         
         # send mail
         logging.info(body)
         mail.send_mail(sender=SENDER, to="ft+reports@mopub.com", 
             subject="MPX Daily Spend Report for %s" % now.strftime('%b %d %Y'),
-            body=body)
+            body=body,
+            html="<html><body><pre>%s</pre></body></html>" % body)
 
 
 def main():

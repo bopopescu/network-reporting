@@ -138,6 +138,8 @@ def setup_remote_api():
 def get_waiting_jobflow(conn, jobflow_ids):
     waiting_jobflows = conn.describe_jobflows(jobflow_ids= jobflow_ids)
     for jobflow in waiting_jobflows:
+        if not hasattr(jobflow, 'name'):
+            continue
         if jobflow.name != JOBFLOW_NAME or jobflow.state not in [u'WAITING', u'RUNNING', u'STARTING']:
             continue
         jid = jobflow.jobflowid

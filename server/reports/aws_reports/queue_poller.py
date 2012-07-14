@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import logging
 import time
 import sys
 import os
@@ -64,6 +65,7 @@ def main_loop():
             rep_handler.kill_waiting_jobflows()
             time.sleep(10)
         except Exception, e:
+            logging.warning("\n\n\nFAILING FAILING FAILLING FAILING")
             default_exc_handle(e)
 
 if __name__ == '__main__':

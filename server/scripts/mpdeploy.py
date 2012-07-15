@@ -422,7 +422,7 @@ def main():
             # servers and launch the deploy process for each.
             if deploy_server == '--production':
                 puts("Deploying " + colored.green(active_branch_name) +
-                     " to " + colored.green("all active staging servers"))
+                     " to " + colored.green("all active production servers"))
                 for production_server in PRODUCTION_SERVERS[1:]:
                     launch_deploy_process(server=production_server)
                     
@@ -446,13 +446,15 @@ def main():
             # notify people of a successful deploy on hipichat
             puts("Notifying hipchat")
             message = "Branch %s just deployed to %s by %s" % (active_branch_name,
-                                                                     deploy_server,
-                                                                     deployer)
+                                                               deploy_server.replace('--',''),
+                                                               deployer)
             # only post a message in hipchat if its in production
             if deploy_server in PRODUCTION_SERVERS:
                 post_to_hipchat(message, room_id="21565") #mopub chat room
             elif deploy_server in STAGING_SERVERS:
                 post_to_hipchat(message, room_id="47652") #frontend chat room
+                
+            puts(message)
 
         except Exception, error:
             puts(colored.red("Deploy failed."))

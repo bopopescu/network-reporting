@@ -170,6 +170,11 @@
           }
           ul {
               margin-bottom: 0;
+              &.simple {
+                list-style-type: none;
+                margin-top: 15px;
+                margin-bottom: 15px;
+              }
           }
           li {
               color: $dark_gray;
@@ -637,4 +642,19 @@ div.editable {
 
 .editable:hover .caret {
   border-top: 4px solid #0090D9;
+}
+
+.report-name {
+    max-width: 170px;
+    margin: 0 5px 0 5px;
+    float: left;
+}
+
+.edit-link {
+    cursor: pointer;
+    float: left;
+}
+
+.ui-dialog {
+    overflow: visible;
 }

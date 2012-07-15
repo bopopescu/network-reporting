@@ -73,7 +73,7 @@
 
         // help links
         // TODO: make sure all of these are necessary, rename?
-        $.each(['type', 'priority', 'promo-priority', 'bid', 'keyword'], function(iter, link_type) {
+        $.each(['type', 'priority', 'promo-priority', 'bid', 'keyword', 'apps'], function(iter, link_type) {
             $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
                 e.preventDefault();
                 $('#campaignForm-' + link_type + '-helpContent').dialog({
@@ -441,6 +441,33 @@
                 });
             }
         }).filter(':checked').click();
+
+        // Negative User Targeting
+        $('[name="included_apps"]').chosen();
+        $('[name="excluded_apps"]').chosen();
+
+        if($('[name="included_apps"] option:selected').length > 0) {
+            $('#user_targeting_type').val('included_apps');
+        }
+        else {
+            $('#user_targeting_type').val('excluded_apps');
+        }
+
+        $('#user_targeting_type').change(function() {
+            $this = $(this);
+            if($this.val() == 'included_apps') {
+                $('#id_excluded_apps_chzn').hide();
+                $('[name="excluded_apps"] option:selected').removeAttr('selected');
+                $('[name="excluded_apps"]').trigger("liszt:updated");
+                $('#id_included_apps_chzn').show();
+            }
+            else {
+                $('#id_included_apps_chzn').hide();
+                $('[name="included_apps"] option:selected').removeAttr('selected');
+                $('[name="included_apps"]').trigger("liszt:updated");
+                $('#id_excluded_apps_chzn').show();
+            }
+        }).change();
     }
 
 

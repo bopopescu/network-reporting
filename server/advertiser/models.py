@@ -368,6 +368,28 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
+    # negative user targeting
+    included_apps = db.ListProperty(db.Key)
+    excluded_apps = db.ListProperty(db.Key)
+
+    @property
+    def included_apps_global_ids(self):
+        global_ids = []
+        for app_key in self.included_apps or []:
+            app = db.get(app_key)
+            if app.global_id:
+                global_ids.append(app.global_id)
+        return global_ids
+
+    @property
+    def excluded_apps_global_ids(self):
+        global_ids = []
+        for app_key in self.excluded_apps or []:
+            app = db.get(app_key)
+            if app.global_id:
+                global_ids.append(app.global_id)
+        return global_ids
+
     @property
     def calculated_cpm(self):
         """
@@ -383,8 +405,14 @@ class AdGroup(db.Model):
                              campaign = self.campaign,
                              account = self.account,
                              name = self.name,
+                             adgroup_type = self.campaign.campaign_type,
                              bid = self.bid,
                              bid_strategy = self.bid_strategy,
+                             full_budget=self.campaign.full_budget,
+                             daily_budget=self.campaign.budget,
+                             budget_type=self.campaign.budget_type,
+                             start_datetime=self.campaign.start_datetime,
+                             end_datetime=self.campaign.end_datetime,
                              active = self.active,
                              deleted = self.deleted,
                              minute_frequency_cap= self.minute_frequency_cap,
@@ -412,6 +440,8 @@ class AdGroup(db.Model):
                              optimizable = self.optimizable,
                              default_cpm = self.default_cpm,
                              network_type = self.network_type,
+                             included_apps = self.included_apps_global_ids,
+                             excluded_apps = self.excluded_apps_global_ids,
                              )
 
     def default_creative(self, custom_html=None, key_name=None):

@@ -124,7 +124,7 @@ class ScheduledReport(db.Model):
     created_at = db.DateTimeProperty(auto_now_add=True)
 
     name = db.StringProperty()
-    saved = db.BooleanProperty()
+    saved = db.BooleanProperty(default=False)
     deleted = db.BooleanProperty(default=False)
     last_run = db.DateTimeProperty()
     default = db.BooleanProperty(default=False)
@@ -202,15 +202,26 @@ class ScheduledReport(db.Model):
 
     @property
     def status(self):
-        if self._status:
-            return self._status
-        else:
+        if self.most_recent:
             return self.most_recent.status
+        else:
+            return self.status
+
+    def __init__(self, *args, **kwargs):
+        if 'next_sched_date' not in kwargs and 'sched_interval' in kwargs:
+            sched_interval = kwargs.get('sched_interval')
+            if sched_interval != 'none':
+                kwargs['next_sched_date'] =  date_magic.get_next_day(sched_interval)
+            else:
+                kwargs['next_sched_date'] = datetime.now().date()
+
+        super(ScheduledReport, self).__init__(*args, **kwargs)
 
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
     created_at = db.DateTimeProperty(auto_now_add=True)
+    deleted = db.BooleanProperty(default=False)
 
     #scheduled report
     schedule = db.ReferenceProperty(ScheduledReport, collection_name='reports')
@@ -368,17 +379,16 @@ class Report(db.Model):
             data = list(names)
             data.append(value['name'])
 
-            for i in range(level_total - level):
-                data.append('ALL')
+            if level_total == level:
+                if isinstance(value['stats'], dict):
+                    impressions = float(value['stats']['impression_count'])
+                    ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
+                    data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
+                else:
+                    data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
 
-            if isinstance(value['stats'], dict):
-                impressions = float(value['stats']['impression_count'])
-                ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
-                data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
-            else:
-                data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
+                data_list.append(data)
 
-            data_list.append(data)
             if 'sub_stats' in value:
                 temp_names = list(names)
                 temp_names.append(value['name'])

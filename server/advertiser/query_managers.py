@@ -401,7 +401,8 @@ class AdGroupQueryManager(QueryManager):
 
     @classmethod
     def get_line_items(cls, account=None, order=None,
-                       orders=None, limit=1000, keys_only=False):
+                       orders=None, limit=1000, keys_only=False,
+                       archived=False, deleted=False, **kwargs):
         """
         Return a list of line items for the specified account and/or order(s).
         """
@@ -413,13 +414,21 @@ class AdGroupQueryManager(QueryManager):
 
             adgroups = adgroups.filter("campaign =", order)
 
+            if not (deleted == None):
+                adgroups = adgroups.filter("deleted =", deleted)
+
+            if not (archived == None):
+                adgroups = adgroups.filter("archived =", archived)
+
             return list(adgroups.run(limit=limit, batch_size=limit))
 
         if not orders:
             orders = CampaignQueryManager.get_order_campaigns(account)
 
         # TODO: keys_only=True
-        return cls.get_adgroups(account=account, campaigns=orders, limit=limit)
+        return cls.get_adgroups(account=account, campaigns=orders,
+                                limit=limit, archived=archived, deleted=deleted,
+                                **kwargs)
 
     @classmethod
     def get_network_adgroup(cls, campaign,

@@ -76,11 +76,14 @@ class OrderArchiveHandler(RequestHandler):
         
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
-                                                        orders=orders)
+                                                        orders=orders,
+                                                        archived=True)
 
         archived_orders = [order for order in orders if order.archived]
         archived_line_items = [line_item for line_item in line_items \
                                if line_item.archived or line_item.campaign.archived]
+
+        logging.warn(archived_line_items)
         
             
         return {
@@ -107,6 +110,12 @@ class OrderDetailHandler(RequestHandler):
         # Grab the campaign info
         order = CampaignQueryManager.get(order_key)
 
+        line_items = AdGroupQueryManager.get_line_items(account=self.account,
+                                                        order=order,
+                                                        archived=False)
+
+        logging.warn(line_items)
+        
         # Get the targeted adunits and group them by their app.
         targeted_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
                                     for line_item in order.adgroups]))
@@ -118,6 +127,7 @@ class OrderDetailHandler(RequestHandler):
         return {
             'order': order,
             'order_form': order_form,
+            'line_items': line_items,
             'targeted_apps': targeted_apps.values(),
             'targeted_app_keys': targeted_apps.keys(),
             'targeted_adunits': targeted_adunits

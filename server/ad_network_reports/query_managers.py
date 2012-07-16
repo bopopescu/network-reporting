@@ -87,10 +87,12 @@ class AdNetworkReportManager(CachedQueryManager):
                     include_apps=include_apps):
                 yield item
 
+        publisher_ids = set()
         for app in AppQueryManager.get_apps_with_network_configs(account):
             publisher_id = getattr(app.network_config, '%s_pub_id'
                     % ad_network_name, None)
-            if publisher_id:
+            if publisher_id and publisher_id not in publisher_ids:
+                publisher_ids.add(publisher_id)
                 if include_apps:
                     # example return (App, NetworkConfig.admob_pub_id)
                     yield (app, publisher_id.strip())

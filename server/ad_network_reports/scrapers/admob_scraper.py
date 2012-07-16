@@ -98,8 +98,10 @@ class AdMobScraper(Scraper):
 
         if len(ids) > 1:
             query_string = admob_list_encode(ids, 'site_id')
-        else:
+        elif len(ids) == 1:
             query_string = 'site_id=%s' % ids[0]
+        else:
+            return []
 
         query_dict = dict(start_date = start_date.strftime("%Y-%m-%d"),
                           end_date = end_date.strftime("%Y-%m-%d"),

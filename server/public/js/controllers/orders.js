@@ -376,6 +376,12 @@
                     display_values: ['req', 'imp', 'clk']
                 });
                 chart_view.render();
+
+                // Load the daily counts
+                var daily_counts_view = new DailyCountsView({
+                    model: order
+                });
+                daily_counts_view.render();
             });
 
             order.fetch();
@@ -476,8 +482,13 @@
                     start_date: bootstrapping_data.start_date,
                     display_values: ['req', 'imp', 'clk']
                 });
-
                 chart_view.render();
+
+                // Load the daily counts
+                var daily_counts_view = new DailyCountsView({
+                    model: line_item
+                });
+                daily_counts_view.render();
             });
 
             line_item.fetch();

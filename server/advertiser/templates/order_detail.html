@@ -91,12 +91,19 @@
     {% inventory_table targeted_apps %}
   </section>
 
+
+  <div id="daily-counts">
+    <h2>Daily Counts</h2>
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
+  
 {% endblock content %}
 
 {% block extraScripts %}
 
  
   {% include_template "chart" %}
+  {% include_template "daily-counts" %}
   {% include_template "popover" %}
   
   {% include_script "models/inventory" %}

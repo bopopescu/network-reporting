@@ -222,14 +222,15 @@ var mopub = window.mopub || {};
             // Fill in the total stats 
             _.each(display_fields, function (field) {
                 template_values.total_stats[field] = this_model.get_formatted_stat(field);
-            })
+            });
                                     
             // Expose yourself
             $(this_view.el).html(this_view.template(template_values));
 
             // When the 'show/hide daily totals' button is clicked,
             // hide or show daily totals
-            $("#daily-totals-toggle").click(function () {
+            $("#daily-totals-toggle").click(function (event) {
+                event.preventDefault();
                 $("#daily-totals-toggle .toggle-on-click").toggleClass('hidden');
                 $("#appData-individual").toggleClass('hidden');
             });

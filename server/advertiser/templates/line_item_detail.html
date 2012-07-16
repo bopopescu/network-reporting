@@ -169,6 +169,12 @@
     </div>
 </section>
 
+
+<div id="daily-counts">
+  <h2>Daily Counts</h2>
+  <img src="/images/loading2.gif" style='margin-left:450px' />
+</div>
+
 <div class="modal hidden" id="copy_modal" style='overflow: visible;'>
   
   <div class="modal-header">
@@ -219,6 +225,7 @@
 
   {% include_template "chart" %}
   {% include_template "popover" %}
+  {% include_template "daily-counts" %}
   
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}

@@ -13,9 +13,11 @@
   </thead>
   <tbody>
     {% for creative in creatives %}
-      <tbody class="{% cycle 'alt' 'primary' %}">
-        {% creative_row creative %}
-      </tbody>
+      {% if not creative.deleted %}
+        <tbody class="{% cycle 'alt' 'primary' %}">
+          {% creative_row creative %}
+        </tbody>
+      {% endif %}
     {% endfor %}
   </tbody>
 </table>

@@ -372,6 +372,19 @@ class EditNetworkHandler(RequestHandler):
                                   })
 
     def post(self, network='', campaign_key=''):
+        """Create or edit a network campaign.
+
+        Args:
+            network: a base network name, must be in NETWORKS, used to create new network campaigns
+            or
+            campaign_key: the campaign_key for the campaign being edited, used to edit existing network campaigns
+
+        Return:
+            JSONResponse dict with either errors or success and a redirect url
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         if not self.request.is_ajax():
             raise Http404
 
@@ -381,6 +394,17 @@ class EditNetworkHandler(RequestHandler):
             return self.edit(campaign_key)
 
     def edit(self, campaign_key):
+        """Edit a network campaign.
+
+        Args:
+            campaign_key: the campaign_key for the campaign being edited, used to edit existing network campaigns
+
+        Return:
+            JSONResponse dict with either errors or success and a redirect url
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         campaign = CampaignQueryManager.get(campaign_key)
 
         if not campaign or campaign.account.key() != self.account.key():
@@ -422,7 +446,7 @@ class EditNetworkHandler(RequestHandler):
 
         campaign_form = None
         if campaign_fields:
-            campaign_form = self.generate_default_campaign_form(campaign_fields, errors, campaign)
+            campaign_form = self.generate_campaign_form(campaign_fields, errors, campaign)
 
         network_adgroup_form = None
         if network_adgroup_fields:
@@ -430,7 +454,7 @@ class EditNetworkHandler(RequestHandler):
 
         adunit_key_adgroup_form_dict = {}
         if adunit_adgroup_fields:
-            adunit_key_adgroup_form_dict = self.generate_adunit_key_adgroup_form_dict(adunit_adgroup_fields, errors, campaign, self.request.POST)
+            adunit_key_adgroup_form_dict = self.generate_adunit_key_adgroup_form_dict(adunit_adgroup_fields, errors, campaign)
 
         # if errors exist return them to the page
         if errors:
@@ -492,7 +516,21 @@ class EditNetworkHandler(RequestHandler):
                 args=(str(campaign.key()),)),
         })
 
-    def generate_default_campaign_form(self, campaign_fields, errors, campaign):
+    def generate_campaign_form(self, campaign_fields, errors, campaign):
+        """Create the campaign form given the campaign fields and the existing campaign
+
+        Args:
+            campaign_fields: a dict mapping modified fields to properties
+            errors: a dict of errors, used for returning errors
+            campaign: the existing campaign
+
+        Return:
+            errors: by modifying errors
+            campaign_form: the campaign django form object
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         self.copy_fields(NetworkCampaignForm, campaign_fields, campaign)
 
         # grab campaign create campaign form
@@ -505,6 +543,20 @@ class EditNetworkHandler(RequestHandler):
         return campaign_form
 
     def generate_network_adgroup_form(self, network_adgroup_fields, errors, campaign):
+        """Create the network adgroup form given the network adgroup fields and the existing campaign
+
+        Args:
+            network_adgroup_fields: a dict mapping modified fields to properties
+            errors: a dict of errors, used for returning errors
+            campaign: the existing campaign
+
+        Return:
+            errors: by modifying errors
+            network_adgroup_form: the network adgroup django form object
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         # grab single adunit adgroup and use it as an initial in form
         adgroup = campaign.adgroups.filter('deleted =', False).get()
 
@@ -519,7 +571,23 @@ class EditNetworkHandler(RequestHandler):
 
         return network_adgroup_form
 
-    def generate_adunit_key_adgroup_form_dict(self, adunit_adgroup_fields, errors, campaign, query_dict):
+    def generate_adunit_key_adgroup_form_dict(self, adunit_adgroup_fields, errors, campaign):
+        """Create all the adunit adgroup forms given the adunit adgroup fields and the existing campaign
+
+        Args:
+            adunit_adgroup_fields: a dict of dicts mapping adunit keys of modified adunit adgroups to a mapping
+                of modified fields to properties
+            errors: a dict of errors, used for returning errors
+            campaign: the existing campaign
+
+        Return:
+            errors: by modifying errors
+            adunit_key_adgroup_form_dict: a dict mapping adunit keys of modified adunit adgroups to
+                their AdUnitAdGroup django forms
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         adunit_key_adgroup_form_dict = {}
         for adunit_key, adgroup_field_dict in adunit_adgroup_fields.iteritems():
             # get adgroup from db
@@ -537,7 +605,7 @@ class EditNetworkHandler(RequestHandler):
                         key = adgroup_form.prefix + '-' + key
                     errors[key] = ' '.join([error for error in value])
             else:
-                self.user_entered_pub_id(adgroup_form, adunit_key, campaign.network_type, errors, query_dict)
+                self.user_entered_pub_id(adgroup_form, adunit_key, campaign.network_type, errors)
 
             adgroup = adgroup_form.save(commit=False)
 
@@ -546,21 +614,37 @@ class EditNetworkHandler(RequestHandler):
 
         return adunit_key_adgroup_form_dict
 
-    def user_entered_pub_id(self, adgroup_form, adunit_key, network_type, errors, query_dict):
-        """
-        Add error if adgroup is set to active yet the user didn't enter a pub id
+    def user_entered_pub_id(self, adgroup_form, adunit_key, network_type, errors):
+        """Check that a pub_id has been entered if adgroup's active property is set to True
+
+        Return:
+            errors: by modifying errors
+
+        Author:
+            Tiago Bandeira (7/17/2012)
         """
         if adgroup_form.cleaned_data['active'] and network_type in NETWORKS_WITH_PUB_IDS:
             network_config = AdUnitQueryManager.get(adunit_key).network_config
 
             pub_id_field = '%s_pub_id' % network_type
             pub_id_query_dict = '%s-%s' % (network_config.key(), pub_id_field)
+
+            query_dict = self.request.POST
             if (pub_id_query_dict not in query_dict and not hasattr(network_config, pub_id_field)) \
                     or (pub_id_query_dict in query_dict and not query_dict[pub_id_query_dict]):
                 errors['%s-%s_pub_id' % (network_config.key(), network_type)] = "MoPub requires an" \
                         " ad network id for enabled adunits."
 
     def update_network_configs_and_create_mappers(self, pub_id_fields, network_type):
+        """Update network_configs and create or delete mappers given pub_id_fields and the network_type
+
+        Args:
+            pub_id_fields: a dict of dicts mapping network_config keys to a mapping of fields and values
+            network_type: a string, the base name of the network being modified, must be in NETWORKS
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         for key, network_config_dict in pub_id_fields.iteritems():
             # get network config
             network_config = NetworkConfigQueryManager.get(key)
@@ -580,6 +664,17 @@ class EditNetworkHandler(RequestHandler):
                         self.create_mapper(network_type, app, pub_id)
 
     def create_mapper(self, network_type, app, pub_id):
+        """Create mapper for the given network_type, app, and pub_id. Delete existing mappers
+        with the same network_type and app if they don't have stats.
+
+        Args:
+            network_type: a string, the base name of the network being modified, must be in NETWORKS
+            app: an Application
+            pub_id: a string, the value of the new publisher id
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         if network_type in REPORTING_NETWORKS:
             # Create an AdNetworkAppMapper if there exists a
             # login for the network (safe to re-create if it
@@ -600,9 +695,20 @@ class EditNetworkHandler(RequestHandler):
                             pub_id=pub_id, login=login, app=app)
 
     def copy_fields(self, form_class, query_dict, instance, prefix=None):
-        """
-        Copy fields from the instance to the query dict if they're not already
+        """Copy fields from the instance to the query dict if they're not already
         in the dict and in the base_fields of the form class
+
+        Args:
+            form_class: a django form class
+            query_dict: a dict of form fields to values
+            instance: the existing instance of what's getting modified
+            prefix: a string, if the form has a prefix pass in the prefix
+
+        Return:
+            query_dict: by modifying query_dict
+
+        Author:
+            Tiago Bandeira (7/17/2012)
         """
         COERCE_FIELDS = {'device_targeting': lambda data: '1' if data else '0',
                          'keywords': lambda data: '\n'.join(data)}
@@ -629,6 +735,17 @@ class EditNetworkHandler(RequestHandler):
 
 
     def create(self, network):
+        """Create a network campaign.
+
+        Args:
+            network: a base network name, must be in NETWORKS, used to create new network campaigns
+
+        Return:
+            JSONResponse dict with either errors or success and a redirect url
+
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
         apps = PublisherQueryManager.get_apps_dict_for_account(account=
                 self.account).values()
         adunits = PublisherQueryManager.get_adunits_dict_for_account(account=

@@ -1,13 +1,20 @@
+# Deployed Tuesday, July 17, 2012 at 01:14AM PST
+### Deployed by John Pena
+### Tagged deploy-157
+### Bugs Fixed: []
+### Included Commits: 
+ * e9b5a29 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, July 17, 2012 at 01:10AM PST
 ### Deployed by John Pena
 ### Tagged deploy-156
 ### Bugs Fixed: []
-### Included Commits: 
- * a38c14f fixed this dumb ass thing
- * 739ca74 Deployed without finding any bug fixes.
- * 2715533 Merge branch 'master' of github.com:mopub/mopub
- * 3c40573 fixed queries so that they work on ec2
- 
+### Included Commits:
+* a38c14f fixed this dumb ass thing
+* 739ca74 Deployed without finding any bug fixes.
+* 2715533 Merge branch 'master' of github.com:mopub/mopub
+* 3c40573 fixed queries so that they work on ec2
+
 # Deployed Tuesday, July 17, 2012 at 01:04AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-155

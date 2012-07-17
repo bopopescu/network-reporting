@@ -1,16 +1,32 @@
+# Deployed Tuesday, July 17, 2012 at 01:04AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-155
+### Bugs Fixed: []
+### Included Commits: 
+ * 5314885 Deployed without finding any bug fixes.
+ 
+# Deployed Tuesday, July 17, 2012 at 12:55AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-154
+### Bugs Fixed: []
+### Included Commits:
+* a4f1f4d Merge branch 'master' of github.com:mopub/mopub
+* 51b6b0a updated transfer datastore script
+* 67f8be6 [#1270 state:resolved] [#1338 state:resolved]
+
 # Deployed Monday, July 16, 2012 at 09:33PM PST
 ### Deployed by John Pena
 ### Tagged deploy-153
 ### Bugs Fixed: ['1270', '1338']
-### Included Commits: 
- * f6d91ed Merge branch 'master' of github.com:mopub/mopub
- * a35bccd Merge branch 'master' of github.com:mopub/mopub
- * 2437ccb small fix to admob scraper
- * 4852103 [#1270 state:fixed]
- * e3be251 [#1338 state:fixed]
- * 47438dc versions
- * 8ec5ded [#1322 state:resolved]
- 
+### Included Commits:
+* f6d91ed Merge branch 'master' of github.com:mopub/mopub
+* a35bccd Merge branch 'master' of github.com:mopub/mopub
+* 2437ccb small fix to admob scraper
+* 4852103 [#1270 state:fixed]
+* e3be251 [#1338 state:fixed]
+* 47438dc versions
+* 8ec5ded [#1322 state:resolved]
+
 # Deployed Friday, July 13, 2012 at 06:34PM PST
 ### Deployed by John Pena
 ### Tagged deploy-152

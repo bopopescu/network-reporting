@@ -14,6 +14,6 @@ urlpatterns = auth_patterns + patterns('',
         {'template': '404.html'}),
     (r'^', include('website.urls')),
     # Uncomment the following line to put us in maintenance mode.
-    (r'.*', 'django.views.generic.simple.direct_to_template', {'template': 'maintenance.html'}),
+    #(r'.*', 'django.views.generic.simple.direct_to_template', {'template': 'maintenance.html'}),
 
 ) + urlpatterns

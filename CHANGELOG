@@ -1,12 +1,19 @@
+# Deployed Tuesday, July 17, 2012 at 01:04AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-155
+### Bugs Fixed: []
+### Included Commits: 
+ * 5314885 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, July 17, 2012 at 12:55AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-154
 ### Bugs Fixed: []
-### Included Commits: 
- * a4f1f4d Merge branch 'master' of github.com:mopub/mopub
- * 51b6b0a updated transfer datastore script
- * 67f8be6 [#1270 state:resolved] [#1338 state:resolved]
- 
+### Included Commits:
+* a4f1f4d Merge branch 'master' of github.com:mopub/mopub
+* 51b6b0a updated transfer datastore script
+* 67f8be6 [#1270 state:resolved] [#1338 state:resolved]
+
 # Deployed Monday, July 16, 2012 at 09:33PM PST
 ### Deployed by John Pena
 ### Tagged deploy-153

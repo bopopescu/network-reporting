@@ -446,6 +446,7 @@ class AdGroup(db.Model):
             logging.warning("OMG no total budget...? %s" % budget)
             return None
 
+    @property
     def adgroup_type_display(self):
         kinds = {
             'gtee_high': "Guaranteed (High)",

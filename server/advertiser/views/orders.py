@@ -29,7 +29,7 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-
+from reporting.query_managers import StatsModelQueryManager
 import logging
 
 flatten = lambda l: [item for sublist in l for item in sublist]
@@ -749,45 +749,50 @@ def export_multiple_line_items(request, *args, **kwargs):
     return handler(request, *args, **kwargs)        
 
     
-class SingularOrderExporter(RequestHandler):
+class SingleOrderExporter(RequestHandler):
     
-    def get(self):
-        """
-        Exports a daily
-        """
-        export_type = self.request.GET.get('type', 'csv')
-        headers = (
-            'Date (each date has separate row)',
-            'Order name',
-            'Line Item name',
-            'Advertiser',
-            'Type',
-            'Start Time',
-            'Stop Time',
-            'Rate (CPM/CPC)',
-            'Budget',
-            'Impressions',
-            'Clicks',
-            'Conversions',
-            'Revenue',
-            'CTR',
-            'Conv. Rate',
-            'Frequency Caps',
-            'Country Target',
-            'Device Target',
-            'Keywords',
-        )
-        
-@login_required
-def export_single_order(request, *args, **kwargs):
-    handler = SingleOrderExporter()
-    return handler(request, *args, **kwargs)
+    def get(self, order_key):
 
-    
-class SingularLineItemExporter(RequestHandler):
-    
-    def get(self):
+        order = CampaignQueryManager.get(order_key)
+        if not order.account.key() == self.account.key():
+            raise Http404
+        
         export_type = self.request.GET.get('type', 'csv')
+        stats_q = StatsModelQueryManager(self.account)
+        export_rows = []        
+
+        for line_item in order.adgroups:
+            for creative in line_item.creatives:
+                stats_per_day = stats_q.get_stats_for_days(publisher=creative,
+                                                       num_days=self.date_range)
+
+                for day in stats_per_day:
+                    row = (
+                        order.name,
+                        line_item.name,
+                        order.advertiser,
+                        line_item.adgroup_type_display,
+                        line_item.start_datetime,
+                        line_item.end_datetime,
+                        day.date,
+                        creative.name,
+                        creative.format,
+                        creative.ad_type,
+                        line_item.bid_strategy,
+                        line_item.bid,
+                        day.imp,
+                        day.clk,
+                        day.conv,
+                        day.rev,
+                        day.ctr,
+                        day.conv_rate,
+                        line_item.frequency_cap_display,
+                        line_item.country_targeting_display,
+                        line_item.device_targeting_display,
+                        line_item.keywords
+                    )
+                    export_rows.append(row)
+        
         headers = (
             'Order name',
             'Line Item name',
@@ -795,13 +800,11 @@ class SingularLineItemExporter(RequestHandler):
             'Type',
             'Start Time',
             'Stop Time',
-            'Date (each date has separate row)',
-            'App',
-            'Ad Unit (each ad unit has separate row)',
-            'Creative Name (each creative has separate row)',
-            'Creative Format (size)',
-            'Creative Type (image/html)',
-            'Rate (CPM/CPC)',
+            'Date',
+            'Creative Name',
+            'Creative Format',
+            'Creative Type',
+            'Rate',
             'Budget',
             'Impressions',
             'Clicks',
@@ -816,7 +819,89 @@ class SingularLineItemExporter(RequestHandler):
         )
 
         data_to_export = tablib.Dataset(headers=headers)        
-        data_to_export.extend(adunit_data)
+        data_to_export.extend(export_rows)
+
+        return HttpResponse(getattr(data_to_export, export_type))
+
+
+@login_required
+def export_single_order(request, *args, **kwargs):
+    handler = SingleOrderExporter()
+    return handler(request, *args, **kwargs)
+
+    
+class SingularLineItemExporter(RequestHandler):
+    
+    def get(self, line_item_key):
+
+        line_item = AdGroupQueryManager.get(line_item_key)
+        if not line_item.account.key() == self.account.key():
+            raise Http404
+
+        order = line_item.campaign
+        
+        export_type = self.request.GET.get('type', 'csv')
+        stats_q = StatsModelQueryManager(self.account)
+        export_rows = []        
+
+        for creative in line_item.creatives:
+            stats_per_day = stats_q.get_stats_for_days(publisher=creative,
+                                                       num_days=self.date_range)
+
+            for day in stats_per_day:
+                row = (
+                    order.name,
+                    line_item.name,
+                    order.advertiser,
+                    line_item.adgroup_type_display,
+                    line_item.start_datetime,
+                    line_item.end_datetime,
+                    day.date,
+                    creative.name,
+                    creative.format,
+                    creative.ad_type,
+                    line_item.bid_strategy,
+                    line_item.bid,
+                    day.imp,
+                    day.clk,
+                    day.conv,
+                    day.rev,
+                    day.ctr,
+                    day.conv_rate,
+                    line_item.frequency_cap_display,
+                    line_item.country_targeting_display,
+                    line_item.device_targeting_display,
+                    line_item.keywords
+                )
+                export_rows.append(row)
+        
+        headers = (
+            'Order name',
+            'Line Item name',
+            'Advertiser',
+            'Type',
+            'Start Time',
+            'Stop Time',
+            'Date',
+            'Creative Name',
+            'Creative Format',
+            'Creative Type',
+            'Rate',
+            'Budget',
+            'Impressions',
+            'Clicks',
+            'Conversions',
+            'Revenue',
+            'CTR',
+            'Conv. Rate',
+            'Frequency Caps',
+            'Country Target',
+            'Device Target',
+            'Keywords',
+        )
+
+        data_to_export = tablib.Dataset(headers=headers)        
+        data_to_export.extend(export_rows)
 
         return HttpResponse(getattr(data_to_export, export_type))
         

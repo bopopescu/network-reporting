@@ -96,6 +96,32 @@
     <h2>Daily Counts</h2>
     <img src="/images/loading2.gif" style='margin-left:450px' />
   </div>
+
+  <div class="right">
+  <div class="btn-group">
+    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+      <i class="icon-download-alt"></i> Export
+      <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
+              data-toggle="running"> Excel XLS </a> </li>
+      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xlsx"
+              data-toggle="running"> Excel XLSX </a> </li>
+      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=ods"
+              data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=csv"
+              data-toggle="running"> CSV </a> </li>
+      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=tsv"
+              data-toggle="running"> TSV </a> </li>
+      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=yaml"
+              data-toggle="running"> YAML </a> </li>
+      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=json"
+              data-toggle="running"> JSON </a> </li>
+    </ul>
+  </div>
+</div>
+
   
 {% endblock content %}
 

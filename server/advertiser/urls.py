@@ -129,7 +129,7 @@ urlpatterns = patterns(
         'export_multiple_orders',
         name='advertiser_export_multiple_orders'),
 
-    url('^export/order/$',
+    url('^export/order/(?P<order_key>[-\w\.]+)/$',
         'export_single_order',
         name='advertiser_export_single_order'),
 
@@ -137,7 +137,7 @@ urlpatterns = patterns(
         'export_multiple_line_items',
         name='advertiser_export_multiple_line_items'),
 
-    url('^export/lineitem/$',
+    url('^export/lineitem/(?P<line_item_key>[-\w\.]+)/$',
         'export_single_line_item',
         name='advertiser_export_single_line_item'),
 )

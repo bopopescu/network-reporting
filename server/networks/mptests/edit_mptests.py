@@ -227,17 +227,12 @@ class EditNetworkPostTestCase(NetworkTestCase):
         self.post_data[adunit_pub_id_key] = ''
         self.post_data[adunit_active_key] = True
 
-        self.edited = {}
-        self.edited.update({adunit.network_config.key(): {'%s_pub_id' %
-                    self.network_type: ''}})
-
         # Send the request.
         response = confirm_all_models(self.client.post,
                                       args=[self.url, self.post_data],
                                       kwargs={'HTTP_X_REQUESTED_WITH':
-                                          'XMLHttpRequest'},
-                                      edited=self.edited)
-        print response
+                                          'XMLHttpRequest'})
+
         response_json = json.loads(response.content)
 
         # Check that the request fails and returns a validation error for the

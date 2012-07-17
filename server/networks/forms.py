@@ -1,4 +1,3 @@
-import logging
 from django import forms
 from advertiser.models import Campaign, AdGroup
 
@@ -87,8 +86,12 @@ class NetworkAdGroupForm(forms.ModelForm):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
     def clean_geo_predicates(self):
+        cleaned_geo_predicates = self.cleaned_data.get('geo_predicates', [])
+        if isinstance(cleaned_geo_predicates, basestring):
+            cleaned_geo_predicates = [cleaned_geo_predicates]
+
         geo_predicates = []
-        for geo_predicate in self.cleaned_data.get('geo_predicates', []) or []:
+        for geo_predicate in cleaned_geo_predicates:
             geo_predicate = tuple(geo_predicate.split(','))
             #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
             geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
@@ -96,12 +99,17 @@ class NetworkAdGroupForm(forms.ModelForm):
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
-        logging.warning("keywords: %s" % keywords)
+
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
+
+            if isinstance(keywords, basestring):
+                keywords = keywords.replace(',', '\n').split('\n')
+                keywords = [word.strip() for word in keywords]
         else:
             keywords = []
+
         return keywords
 
     def clean(self):

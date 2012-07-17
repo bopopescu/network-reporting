@@ -268,7 +268,7 @@ def confirm_edited_and_marked_as_deleted(edited,
         try:
             model_eq(instance, pre_test_model, exclude=exclude)
         except AssertionError, exception:
-            messages.append(exception.message + " When checking %s instance "
+            messages.append(exception.message + ". When checking %s instance "
                     "with %s key" % (instance.__class__.__name__,
                         instance.key()))
             error = True

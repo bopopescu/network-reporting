@@ -346,7 +346,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         eq_(mapper.ad_network_login.key(), login.key())
 
     def mptest_updates_cpms(self):
-        """Updating CPM (bid) should work.
+        """Update CPM (bid)
 
         Author: Andrew He
                 Tiago Bandeira (6/4/2012)
@@ -370,8 +370,24 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
+    def mptest_updates_description(self):
+        """Update details for a campaign
+
+        Author: Tiago Bandeira (7/17/2012)
+        """
+        # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['description'] = 'description'
+
+        self.edited = {self.existing_campaign.key(): {'description': 'description'}}
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
     def mptest_updates_advanced_targeting(self):
-        """Updating advanced targeting for a campaign should work.
+        """Update advanced targeting for a campaign
 
         Author: Andrew He
                 Tiago Bandeira (6/4/2012)
@@ -392,8 +408,44 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
+    def mptest_multiple_geo_predicates(self):
+        """Set up multiple geo predicates
+
+        Author: Tiago Bandeira (7/17/2012)
+        """
+        # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['geo_predicates'] = [u'AD', u'US']
+
+        for adgroup in self.existing_campaign.adgroups:
+            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
+    def mptest_updates_keywords_and_geo_predicates(self):
+        """Set up keywords and multiple geo predicates
+
+        Author: Tiago Bandeira (7/17/2012)
+        """
+        # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['geo_predicates'] = [u'AD', u'US']
+        self.post_data['keywords'] = 'abc de, fm\n g'
+
+        for adgroup in self.existing_campaign.adgroups:
+            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
+            self.edited[adgroup.key()]['keywords'] = ['abc de', 'fm', 'g']
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
     def mptest_updates_allocation_and_fcaps(self):
-        """Updating allocation and frequency capping on an adgroup should work.
+        """Update allocation and frequency capping on an adgroup
 
         Author: Andrew He
                 Tiago Bandeira (6/4/2012)

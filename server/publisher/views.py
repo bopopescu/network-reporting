@@ -19,8 +19,8 @@ from common.ragendja.template import (
 )
 
 ## Models
-from advertiser.models import (Campaign, 
-                               AdGroup, 
+from advertiser.models import (Campaign,
+                               AdGroup,
                                HtmlCreative)
 
 from publisher.forms import AppForm, AdUnitForm
@@ -83,7 +83,7 @@ class AppIndexHandler(RequestHandler):
     A list of apps and their real-time stats.
     """
     def get(self):
-        
+
         # Get all of the account's apps.
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
         app_keys = simplejson.dumps([str(key) for key in apps_dict.keys()])
@@ -93,7 +93,7 @@ class AppIndexHandler(RequestHandler):
         if len(apps_dict) == 0:
             return HttpResponseRedirect(reverse('publisher_create_app'))
 
-            
+
         return {
             'apps': sorted_apps,
             'app_keys': app_keys,
@@ -124,7 +124,7 @@ class CreateAppHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, app_form=None, adunit_form=None, reg_complete=None):
-        
+
         # create the forms
         app_form = app_form or AppForm()
         adunit_form = adunit_form or AdUnitForm(prefix="adunit")
@@ -140,7 +140,7 @@ class CreateAppHandler(RequestHandler):
         }
 
     def post(self):
-        
+
         app_form = AppForm(data=self.request.POST, files=self.request.FILES)
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
         logging.warn(self.request.POST)
@@ -222,12 +222,13 @@ class AppDetailHandler(RequestHandler):
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
 
-        targeted_adgroups = AdGroupQueryManager.get_adgroups(app=app)
+        targeted_adgroups = AdGroupQueryManager.get_adgroups(app=app,
+                                                             active=True)
 
         return {
             'app': app,
-            'app_form_fragment':app_form_fragment,
-            'adunit_form_fragment':adunit_form_fragment,
+            'app_form_fragment': app_form_fragment,
+            'adunit_form_fragment': adunit_form_fragment,
             'helptext': help_text,
             'targeted_adgroups': targeted_adgroups
         }
@@ -235,7 +236,7 @@ class AppDetailHandler(RequestHandler):
 
 @login_required
 def app_detail(request, *args, **kwargs):
-    handler = AppDetailHandler(id="app_key", template='publisher/app.html')
+    handler = AppDetailHandler(id='app_key', template='publisher/app.html')
     return handler(request, use_cache=False, *args, **kwargs)
 
 
@@ -243,15 +244,13 @@ class AdUnitDetailHandler(RequestHandler):
 
     def get(self, adunit_key):
 
-        # Load the adunit 
         adunit = AdUnitQueryManager.get(adunit_key)
-        if adunit.account.key() != self.account.key():
-            raise Http404
 
         # get the form to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
-        targeted_adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
+        targeted_adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit,
+                                                             active=True)
 
         return {
             'site': adunit,
@@ -263,8 +262,7 @@ class AdUnitDetailHandler(RequestHandler):
 
 @login_required
 def adunit_detail(request, *args, **kwargs):
-    template = 'publisher/adunit.html',
-    handler = AdUnitDetailHandler(id='adunit_key', template=template)
+    handler = AdUnitDetailHandler(id='adunit_key', template='publisher/adunit.html')
     return handler(request, use_cache=False, *args, **kwargs)
 
 
@@ -517,7 +515,7 @@ class InventoryExporter(RequestHandler):
         app_data = []
 
         stats = StatsModelQueryManager(self.account)
-        
+
         for app in apps_dict.values():
 
             # Make a row for each app with it's summed stats
@@ -541,7 +539,7 @@ class InventoryExporter(RequestHandler):
             for adunit in app.adunits:
                 adunit_stats = stats.get_stats_sum(publisher=adunit,
                                                    num_days=self.date_range)
-                
+
                 row = (
                     app.name,
                     adunit.name,
@@ -584,7 +582,7 @@ class AppExporter(RequestHandler):
         if not app.account.key() == self.account.key():
             raise Http404
 
-        export_type = self.request.GET.get('type', 'html')            
+        export_type = self.request.GET.get('type', 'html')
         stats = StatsModelQueryManager(self.account)
         stats_per_day = stats.get_stats_for_days(publisher=app, num_days=self.date_range)
         app_data = []
@@ -592,14 +590,14 @@ class AppExporter(RequestHandler):
         for day in stats_per_day:
             row = (
                 day.date,
-                day.req,                
+                day.req,
                 day.imp,
                 day.fill_rate,
                 day.clk,
                 day.ctr,
             )
             app_data.append(row)
-            
+
         # Put together the header list
         headers = (
             'Date', 'Requests', 'Impressions',
@@ -608,7 +606,7 @@ class AppExporter(RequestHandler):
 
         # Create the data to export from all of the rows
         data_to_export = tablib.Dataset(headers=headers)
-        data_to_export.extend(app_data)        
+        data_to_export.extend(app_data)
 
         return HttpResponse(getattr(data_to_export, export_type))
 
@@ -621,12 +619,12 @@ def app_exporter(request, *args, **kwargs):
 class AdunitExporter(RequestHandler):
 
     def get(self, adunit_key):
-        
+
         adunit = AdUnitQueryManager.get(adunit_key)
         if not adunit.account.key() == self.account.key():
             raise Http404
 
-        export_type = self.request.GET.get('type', 'html')            
+        export_type = self.request.GET.get('type', 'html')
         stats = StatsModelQueryManager(self.account)
         stats_per_day = stats.get_stats_for_days(publisher=adunit, num_days=self.date_range)
         adunit_data = []
@@ -634,14 +632,14 @@ class AdunitExporter(RequestHandler):
         for day in stats_per_day:
             row = (
                 day.date,
-                day.req,                
+                day.req,
                 day.imp,
                 day.fill_rate,
                 day.clk,
                 day.ctr,
             )
             adunit_data.append(row)
-            
+
         # Put together the header list
         headers = (
             'Date', 'Requests', 'Impressions',
@@ -650,7 +648,7 @@ class AdunitExporter(RequestHandler):
 
         # Create the data to export from all of the rows
         data_to_export = tablib.Dataset(headers=headers)
-        data_to_export.extend(adunit_data)        
+        data_to_export.extend(adunit_data)
 
         return HttpResponse(getattr(data_to_export, export_type))
 

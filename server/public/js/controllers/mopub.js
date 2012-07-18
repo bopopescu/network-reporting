@@ -29,7 +29,7 @@ if (window.console === undefined) {
     var Chart = window.Chart || {};
     var Stats = window.Stats || {};
 
-    $(document).ready(function() {
+    $(function() {
         
 
         // export tables as xls/csv
@@ -1191,4 +1191,4 @@ if (window.console === undefined) {
         Toast.notify(message, title, "/images/36x36-success.png");
     };
 
-}(this.jQuery));
+}(window.jQuery));

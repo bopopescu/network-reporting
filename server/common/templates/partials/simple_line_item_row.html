@@ -13,14 +13,27 @@
   <td class="name"
       {% if not line_item.active %}{% opacity "0.2" %}{% endif %}>
     <a class="order-name"
-       href='{% url advertiser_order_detail order_key=line_item.campaign.key %}'
+       href="
+            {% if line_item.campaign.campaign_type == 'order' %}
+                {% url advertiser_order_detail order_key=line_item.campaign.key %}
+            {% else %}
+                {% if line_item.campaign.campaign_type == 'marketplace' %}
+                    {% url marketplace_index %}
+                {% else %}
+                    {% url network_details campaign_key=line_item.campaign.key %}
+                {% endif %}
+            {% endif %}
+            "
        style="font-size:12px;">
       {{ line_item.campaign.name }}
-    </a> >
+    </a>
+    {% if line_item.campaign.campaign_type == 'order' %}
+    >
     <br />
     <a href='{% url advertiser_line_item_detail line_item_key=line_item.key %}'>
       {{ line_item.name }}
     </a>
+    {% endif %}
     <br />
     <span class="muted">
       {{ line_item.status|capitalize }}

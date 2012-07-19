@@ -8,16 +8,6 @@
 </h1>
 {% endblock pageTitle %}
 
-{% block titleBarRight %}
-{% if reporting %}
-<span class="titlebar-right">
-    <a class="btn" id="network-settingsButton" href="#">Daily report settings</a>
-</span>
-{% endif %}
-
-{{ block.super }}
-{% endblock titleBarRight %}
-
 {% block preContent %}
 {% if display_message %}
 <div class="alert-message block-message warning">
@@ -66,6 +56,10 @@ Make a table for ad networks that are active
 </div>
 
 <div class="right">
+  {% if reporting %}
+    <a class="btn" id="network-settingsButton" href="#">Daily report settings</a>
+  {% endif %}
+
   <select id='network-editSelect'>
     <option value="">Add a Network</option>
     {% for network in additional_networks %}

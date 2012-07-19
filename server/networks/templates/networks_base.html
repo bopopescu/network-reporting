@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "common/base.html" %}
 {% load filters %}
 {% load elements %}
 
@@ -8,14 +8,6 @@
 <li><a href="{% url marketplace_index %}">Marketplace</a></li>
 <li class="active"><a href="{% url networks %}">Networks</a></li>
 {% endblock navLinks %}
-
-{% block titleBarRight %}
-{% endblock titleBarRight %}
-
-{% block dateButtons %}
-{% include "partials/datecontrols.html" %}
-{% endblock dateButtons %}
-
 
 {% block content %}
 

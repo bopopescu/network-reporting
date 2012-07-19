@@ -14,6 +14,8 @@
     <a class="btn" id="network-settingsButton" href="#">Daily report settings</a>
 </span>
 {% endif %}
+
+{{ block.super }}
 {% endblock titleBarRight %}
 
 {% block preContent %}
@@ -371,7 +373,7 @@ Make a table for the main ad networks that are not setup
 {{ block.super }}
 <script>
   $(function () {
-    var graph_start_date = {{ start_date|js_date }}.getUTCMilliseconds();
+    var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
   
     NetworksController.initialize({
       campaigns_data: [{% for network in networks %}{
@@ -380,8 +382,7 @@ Make a table for the main ad networks that are not setup
         reporting: {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
         apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
         date_range: {{ date_range }},
-        graph_start_date: graph_start_date,
-  });
+        graph_start_date: graph_start_date, });
   });
 </script>
 {% endblock extraScripts %}

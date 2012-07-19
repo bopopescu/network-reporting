@@ -607,8 +607,6 @@ class EditNetworkHandler(RequestHandler):
             else:
                 self.user_entered_pub_id(adgroup_form, adunit_key, campaign.network_type, errors)
 
-            adgroup = adgroup_form.save(commit=False)
-
             # add it to dict
             adunit_key_adgroup_form_dict[adunit_key] = adgroup_form
 
@@ -624,7 +622,12 @@ class EditNetworkHandler(RequestHandler):
             Tiago Bandeira (7/17/2012)
         """
         if adgroup_form.cleaned_data['active'] and network_type in NETWORKS_WITH_PUB_IDS:
-            network_config = AdUnitQueryManager.get(adunit_key).network_config
+            adunit = AdUnitQueryManager.get(adunit_key)
+            network_config = adunit.network_config
+
+            if not network_config:
+                network_config = NetworkConfig()
+                AdUnitQueryManager.update_config_and_put(adunit, network_config)
 
             pub_id_field = '%s_pub_id' % network_type
             pub_id_query_dict = '%s-%s' % (network_config.key(), pub_id_field)

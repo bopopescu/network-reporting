@@ -342,57 +342,64 @@ class CampaignQueryManager(QueryManager):
         return camps
 
 
-
 class AdGroupQueryManager(QueryManager):
+
     Model = AdGroup
 
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None,
-                     app=None, account=None, deleted=False, limit=MAX_OBJECTS,
-                     archived=False, network_type=False):
+    def get_adgroups(cls, account=None, app=None, adunit=None, campaigns=None,
+                     campaign=None, active=None, deleted=False, archived=False,
+                     network_type=False, limit=MAX_OBJECTS):
         """
         archived=True means we only show archived adgroups.
         """
 
         adgroups = AdGroup.all()
-        if not (deleted == None):
-            adgroups = adgroups.filter("deleted =", deleted)
+
         if account:
             adgroups = adgroups.filter("account =", account)
 
-        if network_type != False:
-            adgroups = adgroups.filter("network_type =", network_type)
+        if active is not None:
+            adgroups = adgroups.filter("active =", active)
 
-        if not (archived == None):
+        if deleted is not None:
+            adgroups = adgroups.filter("deleted =", deleted)
+
+        if archived is not None:
             adgroups = adgroups.filter("archived =", archived)
+
+        if network_type is not False:
+            adgroups = adgroups.filter("network_type =", network_type)
 
         if campaigns:
             # if the number of campaigns is greater than 30 we must "chunk" the query
             if len(campaigns) > MAX_ALLOWABLE_QUERIES:
                 total_adgroups = []
-                for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
+                for sub_campaigns in chunks(campaigns, MAX_ALLOWABLE_QUERIES):
                     adgroups_current = copy.deepcopy(adgroups)
                     total_adgroups += adgroups_current.filter("campaign IN",
                                                               sub_campaigns)\
                                                       .fetch(limit)
                 return total_adgroups
             else:
-                adgroups = adgroups.filter("campaign IN",campaigns)
+                adgroups = adgroups.filter("campaign IN", campaigns)
         elif campaign:
-            adgroups = adgroups.filter("campaign =",campaign)
+            adgroups = adgroups.filter("campaign =", campaign)
 
         if adunit:
-            if isinstance(adunit,db.Model):
+            if isinstance(adunit, db.Model):
                 adunit_key = adunit.key()
             else:
                 adunit_key = adunit
-            adgroups = adgroups.filter("site_keys =",adunit_key)
+            adgroups = adgroups.filter("site_keys =", adunit_key)
 
         if app:
             adgroups_dict = {}
             adunits = AdUnitQueryManager.get_adunits(app=app)
             for adunit in adunits:
-                adgroups_per_adunit = cls.get_adgroups(adunit=adunit, limit=limit)
+                adgroups_per_adunit = cls.get_adgroups(
+                    adunit=adunit, active=active, deleted=deleted,
+                    archived=archived, network_type=network_type, limit=limit)
                 for adgroup in adgroups_per_adunit:
                     adgroups_dict[adgroup.key()] = adgroup
             return adgroups_dict.values()[:limit]

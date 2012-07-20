@@ -864,6 +864,7 @@ class EditNetworkHandler(RequestHandler):
                         # ignore the new creative and set the variable to point
                         # to the old one
                         creative = old_creative
+                        creative.deleted = False
                         if adgroup.network_type == 'custom':
                             # if the network is a custom one, the creative
                             # might be the same, but the data might be new, set

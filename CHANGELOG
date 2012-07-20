@@ -1,28 +1,19 @@
-<<<<<<< HEAD
-# Deployed Wednesday, July 18, 2012 at 02:01AM PST
-=======
+# Deployed Thursday, July 19, 2012 at 10:50PM PST
+### Deployed by tiags
+### Tagged deploy-161
+### Bugs Fixed: []
+### Included Commits: 
+ 
 # Deployed Wednesday, July 18, 2012 at 06:46PM PST
 ### Deployed by tiags
 ### Tagged deploy-160
 ### Bugs Fixed: []
-### Included Commits: 
- 
-# Deployed Tuesday, July 17, 2012 at 02:27AM PST
->>>>>>> f4ed1885c9c725a47dd0b1f3831d0b3555402e9f
-### Deployed by John Pena
-### Tagged deploy-159
-### Bugs Fixed: []
-<<<<<<< HEAD
-### Included Commits: 
- * 6ed6943 possible fix for jquery race condition
- * 93a8791 Deployed without finding any bug fixes.
- 
+### Included Commits:
+
 # Deployed Tuesday, July 17, 2012 at 02:27AM PST
 ### Deployed by John Pena
 ### Tagged deploy-158
 ### Bugs Fixed: []
-=======
->>>>>>> f4ed1885c9c725a47dd0b1f3831d0b3555402e9f
 ### Included Commits:
 * d4d8c29 Deployed without finding any bug fixes.
 

@@ -561,6 +561,7 @@
                             if(campaign_key) {
                                 var currentItems = convertSerializedArrayToHash($form.serializeArray());
                                 var itemsToSubmit = hashDiff(startItems, currentItems);
+                                var extraItems = hashDiff(currentItems, startItems);
 
                                 // hack to remove items at arr location prior to
                                 // submit
@@ -573,6 +574,15 @@
                                         k++;
                                     }
                                 }
+
+                                for (k in extraItems) {
+                                    var value = extraItems[k];
+                                    if(k.indexOf('active') != -1) {
+                                        arr.push({'name': k,
+                                                  'value': ''});
+                                    }
+                                }
+
                             }
 
                             $('#loading').css('display', 'inline');

@@ -4,7 +4,7 @@
 
 # pushd ~/tmp
 
-echo $1
+# echo $1
 # if [ -z "$1" ] # if $1 does not exist
 # then
 #     rm -rf datastore0
@@ -34,33 +34,37 @@ DESTINATION_URL="http://mopub-experimental.appspot.com/remote_api"
 DESTINATION_APP="mopub-experimental"
 
 # User
-#echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --kind=User --filename=datastore_user
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_user
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=User --filename=datastore_user
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_user
 
 # Account
-#echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --kind=Account --filename=datastore_account
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_account
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=Account --filename=datastore_account
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_account
 
 # App
-#echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --kind=App --filename=datastore_app
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_app
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=App --filename=datastore_app
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_app
 
 # Site
-#echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --kind=Site --filename=datastore_site
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_site
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=Site --filename=datastore_site
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_site
 
 # Campaign
-#echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --kind=Campaign --filename=datastore_campaign
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_campaign
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=Campaign --filename=datastore_campaign
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_campaign
 
 # AdGroup
-#echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --kind=AdGroup --filename=datastore_adgroup
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_adgroup
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=AdGroup --filename=datastore_adgroup
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_adgroup
 
 # Creative
 echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=Creative --filename=datastore_creative
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_creative
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_creative
 
 # NetworkConfig
 echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=NetworkConfig --filename=datastore_networkconfig
-#echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --filename=datastore_networkconfig
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_networkconfig
+
+# Budget
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=Budget --filename=datastore_budget
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_budget

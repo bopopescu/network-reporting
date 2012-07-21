@@ -15,6 +15,8 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
+from django.core.servers.basehttp import FileWrapper
+import cStringIO as StringIO
 from google.appengine.ext import db
 
 from common.utils import helpers, tablib, stats_helpers
@@ -667,8 +669,12 @@ class MultipleOrderExporter(RequestHandler):
             )
             data_to_export.extend([order_data])
 
-        # Export the document with the desired type (json, csv, etc)
-        return HttpResponse(getattr(data_to_export, export_type))
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   ("MoPub orders", export_type)
+        
+        return response
 
 @login_required
 def export_multiple_orders(request, *args, **kwargs):
@@ -741,7 +747,13 @@ class MultipleLineItemExporter(RequestHandler):
                 )
             data_to_export.extend([order_data])
 
-        return HttpResponse(getattr(data_to_export, export_type))
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   ("MoPub line items", export_type)
+        
+        return response
+            
 
 @login_required
 def export_multiple_line_items(request, *args, **kwargs):
@@ -820,8 +832,12 @@ class SingleOrderExporter(RequestHandler):
 
         data_to_export = tablib.Dataset(headers=headers)        
         data_to_export.extend(export_rows)
-
-        return HttpResponse(getattr(data_to_export, export_type))
+        
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (order.name, export_type)
+        
+        return response
 
 
 @login_required
@@ -902,8 +918,11 @@ class SingularLineItemExporter(RequestHandler):
 
         data_to_export = tablib.Dataset(headers=headers)        
         data_to_export.extend(export_rows)
-
-        return HttpResponse(getattr(data_to_export, export_type))
+        
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (line_item.name, export_type)
+        return response
         
 @login_required
 def export_single_line_item(request, *args, **kwargs):
@@ -929,3 +948,10 @@ def get_targeted_apps(adunits):
             targeted_apps[app_key] = app
         targeted_apps[app_key].adunits += [adunit]
     return targeted_apps
+
+def downloadable_file(contents):
+    buffer= StringIO.StringIO()
+    wrapper = FileWrapper(file(filename))
+    response = HttpResponse(wrapper, content_type='text/plain')
+    response['Content-Length'] = os.path.getsize(filename)
+    return response

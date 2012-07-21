@@ -37,12 +37,27 @@
       </div>
     </div>
     <div class="right">
-      <div class="btn-group">
-        <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
-          {% button_icon "plus" %}
-          Add a new order
-        </a>
+
+      <div style='position: fixed; top: 175; right: 290px;'>
+      <select data-placeholder="Quick jump to an order"
+              class="chosen-select"
+              style=" width:200px;"
+              id="order-quick-navigate">
+        <option value=""></option>
+        {% for order in orders %}
+          {% if not order.deleted and not order.archived %}
+            <option value="{% url advertiser_order_detail order_key=order.key %}">
+              {{order.name}} ({{ order.advertiser }})
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+
       </div>
+      <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
+        {% button_icon "plus" %}
+        Add a new order
+      </a>
     </div>
 
     {% order_table orders %}
@@ -105,7 +120,23 @@
     </div>
 
     <div class="right">
-      <div class="btn-group">
+
+      <div style='position: fixed; top: 175; right: 413px;'>
+      <select data-placeholder="Quick jump to a line item"
+              style=" width:200px; top: -9px;"
+              id="line-item-quick-navigate">
+        <option value=""></option>
+        {% for line_item in line_items %}
+          {% if not line_item.deleted and not line_item.archived %}
+            <option value="{% url advertiser_line_item_detail line_item_key=line_item.key %}">
+              {{line_item.name}} ({{ line_item.campaign.name }})
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      </div>
+      <div class="btn-group" style='padding: 0; margin: 0;'>
+        
         <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
           {% button_icon "plus" %}
           Add a new order
@@ -113,6 +144,7 @@
       </div>
       {% filter_buttons %}
     </div>
+    
     {% line_item_table line_items %}
 
     <br />

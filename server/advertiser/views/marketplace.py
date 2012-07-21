@@ -311,7 +311,13 @@ class MarketplaceExportHandler(RequestHandler):
         data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(export_data)        
 
-        return HttpResponse(getattr(data_to_export, export_type))
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   ("MoPub marketplace", export_type)
+        
+        return response
+        
 
 @login_required
 def marketplace_export(request, *args, **kwargs):

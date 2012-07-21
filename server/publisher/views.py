@@ -566,8 +566,13 @@ class InventoryExporter(RequestHandler):
         data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(app_data)
 
-        # Return the exported data in the format requested
-        return HttpResponse(getattr(data_to_export, export_type))
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   ("MoPub inventory", export_type)
+        
+        return response
+
 
 @login_required
 def inventory_exporter(request, *args, **kwargs):
@@ -608,7 +613,13 @@ class AppExporter(RequestHandler):
         data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(app_data)
 
-        return HttpResponse(getattr(data_to_export, export_type))
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   (app.name, export_type)
+        
+        return response
+        
 
 
 @login_required
@@ -650,7 +661,12 @@ class AdunitExporter(RequestHandler):
         data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(adunit_data)
 
-        return HttpResponse(getattr(data_to_export, export_type))
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   (adunit.name, export_type)
+        
+        return response
 
 
 @login_required

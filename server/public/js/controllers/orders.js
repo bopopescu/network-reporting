@@ -96,7 +96,6 @@
                             $(status_img).attr('src', '/images/active.gif');
 
                         } else if (status == 'pause') {
-                            $(ad_source_tds).fadeTo(500, 0.4);
                             $('#' + ad_source).addClass('paused')
                                 .removeClass('archived')
                                 .removeClass('running');
@@ -304,6 +303,19 @@
                     $(this).attr('checked', false);
                 });
             });
+
+
+            // Set up the quick jump dropdowns
+            $("#order-quick-navigate").chosen().change(function() {
+                window.location = $(this).val();
+            });
+
+            // Set up the quick jump dropdown
+            $("#line-item-quick-navigate")
+                .chosen()
+                .change(function() {
+                    window.location = $(this).val();
+                });
         },
 
         initializeOrderDetail: function(bootstrapping_data) {

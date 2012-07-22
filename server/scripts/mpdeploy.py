@@ -475,6 +475,8 @@ def main():
                 post_to_hipchat(message, room_id="21565") #mopub chat room
             elif deploy_server in STAGING_SERVERS:
                 post_to_hipchat(message, room_id="47652") #frontend chat room
+                
+            puts(message)
 
             if deploy_server == 'frontend-0':
                 # notify people of a successful deploy on hipichat

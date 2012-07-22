@@ -24,6 +24,7 @@ if (window.console === undefined) {
     var Stats = mopub.Stats || {};
     var Utils = mopub.Utils || {};
         
+
     
     /*
      * Sets up the date range buttons at the top of each page.
@@ -173,45 +174,13 @@ if (window.console === undefined) {
         });
     }
 
-    $(document).ready(function() {
-        
+    
+    $(function() {        
         initializeDateButtons();
         
         /*
          * ## Mixpanel Event Tracking
          */
-
-        if (typeof mixpanel !== 'undefined' && 
-            typeof mixpanel.push !== 'undefined') {
-            // Date options in dashboard
-            try {
-                $("#dashboard-dateOptions-option-7").click(function(){
-                    mixpanel.push(['track', '7 Day Date-option clicked']);
-                });
-                $("#dashboard-dateOptions-option-14").click(function(){
-                    mixpanel.push(['track', '14 Day Date-option clicked']);
-                });
-                $("#dashboard-dateOptions-option-30").click(function(){
-                    mixpanel.push(['track', '30 Day Date-option clicked']);
-                });
-                $("#dashboard-dateOptions-option-custom").click(function(){
-                    mixpanel.push(['track', 'Custom Date-option clicked']);
-                });
-                // Today/Yesterday/All options in rollup
-                $("#stats-breakdown-dateOptions-option-0").click(function(){
-                    mixpanel.push(['track', '"Today" clicked in Stats Breakdown']);
-                });
-                $("#stats-breakdown-dateOptions-option-1").click(function(){
-                    mixpanel.push(['track', '"Yesterday" clicked in Stats Breakdown']);
-                });
-                $("#stats-breakdown-dateOptions-option-2").click(function(){
-                    mixpanel.push(['track', '"All" clicked in Stats Breakdown']);
-                });
-            } catch (e) {
-
-            }
-        }
-
 
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
@@ -230,8 +199,6 @@ if (window.console === undefined) {
         $('.tabs').tabs();
         $('.pills').tabs();
 
-        // Where is this used?
-        // $(".tree").treeview();
 
         // Override default jQuery UI dialog options
         $.extend($.ui.dialog.prototype.options, {
@@ -396,8 +363,7 @@ if (window.console === undefined) {
 
     }); // end $(document).ready
 
-    function getUrlParameters()
-    {
+    function getUrlParameters() {
         var parameters = {};
         var url_params = window.location.search.slice(1).split('&');
         var param;
@@ -1144,4 +1110,4 @@ if (window.console === undefined) {
         Toast.notify(message, title, "/images/36x36-success.png");
     };
 
-}(this.jQuery));
+}(window.jQuery));

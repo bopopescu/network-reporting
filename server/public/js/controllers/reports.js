@@ -64,6 +64,20 @@
                         _.each(report_keys, function(key) {
                             var row = $('#' + key + '-row')
 
+                            // populate report status
+                            $.ajax({
+                                  url: 'status/' + key,
+                                  success: function(data) {
+                                    report_status = data['status'];
+
+                                    if(report_status === "Completed") {
+                                        $('#' + key + '-status').html('<a href=\'export/' + key + '/\' >Export</a>');
+                                    } else {
+                                        $('#' + key + '-status').html(report_status);
+                                    }
+                                  }
+                            });
+
                             // hide / show wrench edit icon
                             $(row).mouseenter(function(e) {
                                 $('#' + key + '-edit-link').show();

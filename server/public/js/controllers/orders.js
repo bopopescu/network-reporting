@@ -385,7 +385,7 @@
                 var chart_view = new CollectionChartView({
                     collection: orders,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['req', 'imp', 'clk']
+                    display_values: ['imp', 'clk', 'ctr', 'conv']
                 });
                 chart_view.render();
 
@@ -492,7 +492,7 @@
                 var chart_view = new CollectionChartView({
                     collection: line_items,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['req', 'imp', 'clk']
+                    display_values: ['imp', 'clk', 'ctr', 'conv']
                 });
                 chart_view.render();
 

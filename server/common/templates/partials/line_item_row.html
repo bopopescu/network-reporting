@@ -43,10 +43,17 @@
     {{ line_item.adgroup_type_display }}
   </td>
   <td class="goal stat">
-    {{ line_item.budget_goal_display|default:'--' }}
+    {{ line_item.budget_goal_display }}
   </td>
-  <td class="cpm stat">
-    --
+  <td class="stat">
+    {{ line_item.individual_cost }}
+    {% if line_item.bid_strategy == 'cpm' %}
+      CPM
+    {% else %}
+      {% if line_item.bid_strategy == 'cpc' %}
+        CPC
+      {% endif %}
+    {% endif %}
   </td>
   <td class="stat">
     {{ line_item.start_datetime|pacific_time:"m/d" }}

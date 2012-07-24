@@ -38,7 +38,6 @@
     </div>
     <div class="right">
 
-      <div style='position: fixed; top: 175; right: 290px;'>
       <select data-placeholder="Quick jump to an order"
               class="chosen-select"
               style=" width:200px;"
@@ -53,13 +52,15 @@
         {% endfor %}
       </select>
 
-      </div>
-      <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
+      <a class="btn"
+         style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
+         href='{% url advertiser_order_and_line_item_form_new %}'>
         {% button_icon "plus" %}
         Add a new order
       </a>
+      
     </div>
-
+      
     {% order_table orders %}
 
     <br />
@@ -120,8 +121,7 @@
     </div>
 
     <div class="right">
-
-      <div style='position: fixed; top: 175; right: 413px;'>
+      <div class="left">
       <select data-placeholder="Quick jump to a line item"
               style=" width:200px; top: -9px;"
               id="line-item-quick-navigate">
@@ -134,15 +134,19 @@
           {% endif %}
         {% endfor %}
       </select>
-      </div>
-      <div class="btn-group" style='padding: 0; margin: 0;'>
+
         
-        <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
-          {% button_icon "plus" %}
-          Add a new order
-        </a>
+      <a class="btn"
+         style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
+         href='{% url advertiser_order_and_line_item_form_new %}'>
+        {% button_icon "plus" %}
+        Add a new order
+      </a>
       </div>
-      {% filter_buttons %}
+      
+      <div class="right" style='margin-left: 5px;'>
+        {% filter_buttons %}
+      </div>
     </div>
     
     {% line_item_table line_items %}

@@ -75,6 +75,7 @@ var mopub = window.mopub || {};
 	        width: 660,
 	        height: 160,
 	        renderer: 'area',
+            interpolation: 'linear',
 	        stroke: true,
 	        series: [{
 		        data: _.map(datapoints[kind], function (item, iter){
@@ -147,7 +148,8 @@ var mopub = window.mopub || {};
                 att: null,
                 cpm: null,
                 fill_rate: null,
-                ctr: null
+                ctr: null,
+                conv: null
             };
 
             // Set the active display value so we know which graph and breakdown
@@ -189,6 +191,11 @@ var mopub = window.mopub || {};
 
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
+
+
+                console.log(stats_type);
+                console.log(series_list);
+                console.log(series_date_labels);
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_date_labels);

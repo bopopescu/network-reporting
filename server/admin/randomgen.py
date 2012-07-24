@@ -120,7 +120,8 @@ def get_random_name(kind=None):
     """
     if not kind:
         kind = 'Object'
-    return 'penisbreath' #+ (kind, str(uuid.uuid4())[:4])
+    iden = str(uuid.uuid4())[:4]
+    return "%s%s" % (kind, iden)
 
 def get_random_color():
     """

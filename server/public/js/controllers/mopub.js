@@ -217,7 +217,7 @@ if (window.console === undefined) {
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
 
         //REFACTOR: replace this with something from bootstrap
-        $("#account-dropdown").dropdown();
+        //$("#account-dropdown").dropdown();
         
         // Set up alert-message closing
         $(".alert-message .close").click(function() {

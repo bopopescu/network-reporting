@@ -150,7 +150,7 @@
 
 
     function copyLineItem(line_item_key, order_key, with_creatives) {
-
+        
         var error_message = "MoPub experienced an error "
             + "trying to copy your line item. "
             + "We apologize for this inconvenience. "
@@ -173,7 +173,7 @@
         // copied line item. Otherwise, show the error message.
         copy_promise.success(function(response) {                            
             if (response.success) {                                
-                var message = "Your line item was successfully copied."
+                var message = "Your line  was successfully copied."
                     + "You can see your new line item <a href='" + response.url
                     + "'>here</a>.";
                 Toast.success(message);
@@ -511,58 +511,58 @@
 
             // Get all of the apps that are targeted by this line item
             // and fill in their stats in the targeted table.
-            _.each(bootstrapping_data.targeted_apps, function(app_key) {
-                var app = new App({
-                    id: app_key,
-                    stats_endpoint: 'direct'
-                });
+            // _.each(bootstrapping_data.targeted_apps, function(app_key) {
+            //     var app = new App({
+            //         id: app_key,
+            //         stats_endpoint: 'direct'
+            //     });
 
-                app.url = function () {
-                    var stats_endpoint = this.get('stats_endpoint');
-                    return '/api/adgroup/'
-                        + bootstrapping_data.line_item_key
-                        + '/apps/'
-                        + this.id
-                        + "?"
-                        + window.location.search.substring(1)
-                        + '&endpoint='
-                        + stats_endpoint;
-                };
+            //     app.url = function () {
+            //         var stats_endpoint = this.get('stats_endpoint');
+            //         return '/api/adgroup/'
+            //             + bootstrapping_data.line_item_key
+            //             + '/apps/'
+            //             + this.id
+            //             + "?"
+            //             + window.location.search.substring(1)
+            //             + '&endpoint='
+            //             + stats_endpoint;
+            //     };
 
-                app.bind('change', function(current_app){
-                    renderApp(current_app);
-                });
-                app.fetch();
-            });
+            //     app.bind('change', function(current_app){
+            //         renderApp(current_app);
+            //     });
+            //     app.fetch();
+            // });
 
             // Same deal with the adunits. Get all of the adunits that are
             // targeted by this line item and fill in their stats in the
             // targeted table.
-            _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
-                var adunit = new AdUnit({
-                    id: adunit_key,
-                    stats_endpoint: 'direct'
-                });
+            // _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
+            //     var adunit = new AdUnit({
+            //         id: adunit_key,
+            //         stats_endpoint: 'direct'
+            //     });
 
-                adunit.url = function () {
-                    var stats_endpoint = this.get('stats_endpoint');
-                    return '/api/adgroup/'
-                        + bootstrapping_data.line_item_key
-                        + '/adunits/'
-                        + this.id
-                        + "?"
-                        + window.location.search.substring(1)
-                        + '&endpoint='
+            //     adunit.url = function () {
+            //         var stats_endpoint = this.get('stats_endpoint');
+            //         return '/api/adgroup/'
+            //             + bootstrapping_data.line_item_key
+            //             + '/adunits/'
+            //             + this.id
+            //             + "?"
+            //             + window.location.search.substring(1)
+            //             + '&endpoint='
 
-                        + stats_endpoint;
-                };
+            //             + stats_endpoint;
+            //     };
 
-                adunit.bind('change', function(current_adunit){
-                    renderAdUnit(current_adunit);
-                });
+            //     adunit.bind('change', function(current_adunit){
+            //         renderAdUnit(current_adunit);
+            //     });
 
-                adunit.fetch();
-            });
+            //     adunit.fetch();
+            // });
 
             // Set up the handler for the copy button
             var copy_modal = $("#copy_modal").modal({
@@ -573,7 +573,7 @@
 
             $("#copy-to-order").chosen();
 
-            $("#copy_line_item .copy_option").click(function () {
+            $("#copy-line-item .copy_option").click(function () {
                 
                 var $option = $(this),
                     toggle = $option.data('toggle');
@@ -627,7 +627,7 @@
             
 
             /*
-             * Click handlers for the creative form. These could be refactored.
+             * Click handlers for the creative form.
              */
 
             // format

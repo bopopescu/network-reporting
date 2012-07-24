@@ -242,8 +242,8 @@ var mopub = mopub || {};
 
             var stat_series = this.map(function(model) {
                 var daily_stats = model.get('daily_stats');
-                return _.map(daily_stats, function (day) {
 
+                return _.map(daily_stats, function (day) {
                     switch(stat) {
                       case 'ctr':
                         return calculate_ctr(day['imp'], day['clk']);

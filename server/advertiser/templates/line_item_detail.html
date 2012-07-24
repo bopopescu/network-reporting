@@ -34,31 +34,63 @@
     </div>
   {% endif %}
 
-<div class="right">
-  <div class="btn-group">
-    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-      <i class="icon-download-alt"></i> Export
-      <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
-              data-toggle="running"> Excel XLS </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
-              data-toggle="running"> Excel XLSX </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
-              data-toggle="running"> OpenOffice Spreadsheet </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"
-              data-toggle="running"> CSV </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=tsv"
-              data-toggle="running"> TSV </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=yaml"
-              data-toggle="running"> YAML </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=json"
-              data-toggle="running"> JSON </a> </li>
-    </ul>
+  <div class="clearfix" style='margin-bottom: 5px;'>
+  <div class="left dropdown" id="copy-line-item">
+  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#copy-line-item">
+    <i class="icon-share"></i>
+    Copy Line Item
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu">
+    <li>
+      <a class="copy_option" href="#" data-toggle="copy_with">
+        Copy with creatives
+      </a>
+    </li>
+    <li>
+      <a class="copy_option" href="#" data-toggle="copy_without">
+        Copy without creatives
+      </a>
+    </li>
+    <li>
+      <a class="copy_option" href="#" data-toggle="copy_to_another">
+        Copy to another order
+      </a>
+    </li>
+  </ul>
   </div>
-</div>
 
+  <div class="right">
+  <a class="btn" href="{% url advertiser_line_item_form_edit line_item.key %}">      
+    {% button_icon "pencil" %}
+    Edit Line Item
+  </a>
+  
+
+  <div class="dropdown" id="export-menu" style='display:inline-block'>
+  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
+    <i class="icon-download-alt"></i> Export
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu">
+    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
+            data-toggle="running"> Excel XLS </a> </li>
+    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
+            data-toggle="running"> Excel XLSX </a> </li>
+    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
+            data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"
+            data-toggle="running"> CSV </a> </li>
+    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=tsv"
+                data-toggle="running"> TSV </a> </li>
+    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=yaml"
+            data-toggle="running"> YAML </a> </li>
+    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=json"
+                data-toggle="running"> JSON </a> </li>
+  </ul>
+  </div>
+    </div>
+</div>
 <div style="clear: both;"></div>
 
 {# The stats breakdown and graph #}
@@ -70,41 +102,10 @@
 <section>
   <div class="clearfix">
     <h3 class="left">
-      Status for {{ line_item.name }}
-      (part of <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a>)
+      Status {# for {{ line_item.name }}#}
+      {# (part of <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a>) #}
     </h3>
   </div>
-
-  <div class="btn-group" id="copy_line_item">
-    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-      <i class="icon-share"></i>
-      Copy Line Item
-      <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      <li>
-        <a class="copy_option" href="#" data-toggle="copy_with">
-          Copy with creatives
-        </a>
-      </li>
-      <li>
-        <a class="copy_option" href="#" data-toggle="copy_without">
-          Copy without creatives
-        </a>
-      </li>
-      <li>
-        <a class="copy_option" href="#" data-toggle="copy_to_another">
-          Copy to another order
-        </a>
-      </li>
-    </ul>
-  </div>
-
-
-  <a class="right btn" href="{% url advertiser_line_item_form_edit line_item.key %}">
-    {% button_icon "pencil" %}
-    Edit Line Item
-  </a>
 
   {% line_item_table line_item %}
 
@@ -155,7 +156,7 @@
     Add a creative
   </button>
 
-  <h2>Creatives</h2>
+  <h3>Creatives</h3>
 
   <form action="{% url advertiser_creative_form_new line_item.key %}"
     {% if line_item.creatives.count %}class="hidden"{% endif %}

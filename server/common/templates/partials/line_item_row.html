@@ -49,10 +49,14 @@
     --
   </td>
   <td class="stat">
-    {{ line_item.start_datetime|date:"m/d" }}
+    {{ line_item.start_datetime|pacific_time:"m/d" }}
   </td>
   <td class="stat">
-    {{ line_item.end_datetime|date:"m/d" }}
+    {% if line_item.end_datetime %}
+      {{ line_item.end_datetime|pacific_time:"m/d" }}
+    {% else %}
+      None
+    {% endif %}
   </td>
   <td class="imp stat">
     --

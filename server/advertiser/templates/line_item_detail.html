@@ -34,10 +34,37 @@
     </div>
   {% endif %}
 
+<div class="right">
+  <div class="btn-group">
+    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+      <i class="icon-download-alt"></i> Export
+      <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
+              data-toggle="running"> Excel XLS </a> </li>
+      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
+              data-toggle="running"> Excel XLSX </a> </li>
+      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
+              data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"
+              data-toggle="running"> CSV </a> </li>
+      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=tsv"
+              data-toggle="running"> TSV </a> </li>
+      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=yaml"
+              data-toggle="running"> YAML </a> </li>
+      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=json"
+              data-toggle="running"> JSON </a> </li>
+    </ul>
+  </div>
+</div>
+
+<div style="clear: both;"></div>
+
 {# The stats breakdown and graph #}
 
   {% chart_placeholder start_date end_date %}
-  
+
 <br />
 
 <section>
@@ -73,16 +100,16 @@
     </ul>
   </div>
 
-  
+
   <a class="right btn" href="{% url advertiser_line_item_form_edit line_item.key %}">
     {% button_icon "pencil" %}
     Edit Line Item
   </a>
 
   {% line_item_table line_item %}
-    
+
   <br />
-    
+
   <div class="btn-group">
     <button class="btn status_change" data-toggle="pause">
       {% button_icon "pause" %}
@@ -97,7 +124,7 @@
       Archive
     </button>
   </div>
-  
+
   {% if user.is_admin %}
     <a class="btn right" href="/budget/view/{{line_item.key}}">
       {% button_icon "wrench" %}
@@ -107,20 +134,19 @@
 
 </section>
 
-
+{% comment %}
 {# Table that shows all of the adunits being targeted #}
 <section>
   <h3 class="left"> Inventory targeted by {{ line_item.name }} </h3>
 
-  {% comment %}
     <a class="btn right" href="#">
       <i class="icon-random"></i>
       Change targeting
     </a>
-    {% endcomment %}
 
     {% inventory_table targeted_apps %}
 </section>
+{% endcomment %}
 
 <section>
 
@@ -136,9 +162,9 @@
     enctype="multipart/form-data"
     id="new_creative_form"
     method="post">
-      
+
       {% creative_form %}
-          
+
       <button class="btn right submit">
         {% button_icon "check" %}
         Save
@@ -169,44 +195,20 @@
     </div>
 </section>
 
-
+{% comment %}
 <div id="daily-counts">
   <h2>Daily Counts</h2>
   <img src="/images/loading2.gif" style='margin-left:450px' />
 </div>
-
-<div class="right">
-  <div class="btn-group">
-    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-      <i class="icon-download-alt"></i> Export
-      <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
-              data-toggle="running"> Excel XLS </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
-              data-toggle="running"> Excel XLSX </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
-              data-toggle="running"> OpenOffice Spreadsheet </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"
-              data-toggle="running"> CSV </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=tsv"
-              data-toggle="running"> TSV </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=yaml"
-              data-toggle="running"> YAML </a> </li>
-      <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=json"
-              data-toggle="running"> JSON </a> </li>
-    </ul>
-  </div>
-</div>
+{% endcomment %}
 
 <div class="modal hidden" id="copy_modal" style='overflow: visible;'>
-  
+
   <div class="modal-header">
     <a href="#" class="close" data-dismiss="modal">×</a>
     <h3> Copy Line Item </h3>
   </div>
-  
+
   <div class="modal-body" style='overflow: visible;'>
     <ul style='list-style-type: none;'>
       <li>
@@ -235,13 +237,13 @@
       {% endfor %}
     </select>
   </div>
-  
+
   <div class="modal-footer">
     <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
     <a href="#" class="btn" data-dismiss="modal">Close</a>
     <a id="copy-ok-button" href="#" class="btn btn-primary">Copy Line Item</a>
   </div>
-  
+
 </div>
 
 {% endblock content %}
@@ -251,13 +253,13 @@
   {% include_template "chart" %}
   {% include_template "popover" %}
   {% include_template "daily-counts" %}
-  
+
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}
-  
+
   <script type="text/javascript">
-    $(function() {
+    $(function () {
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
@@ -267,5 +269,6 @@
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
         });
     });
-</script>
+  </script>
+
 {% endblock extraScripts %}

@@ -14,7 +14,7 @@
 
 var mopub = window.mopub || {};
 
-(function ($, Backbone, _) {
+(function() {
     "use strict";
 
     var ATTRIBUTE_LABELS = {
@@ -48,7 +48,11 @@ var mopub = window.mopub || {};
 
         _.times(ticks, function (tick) {
             var label = current_date.format("MM/DD");
-            labels.push(label);
+            if ((ticks <= 14 || tick % 2 == 0) && (ticks <= 30 || tick % 3 == 0)) {
+                labels.push(label);
+            } else {
+                labels.push("");
+            }
             current_date.add(interval_type, 1);
         });
 
@@ -71,6 +75,7 @@ var mopub = window.mopub || {};
 	        width: 660,
 	        height: 160,
 	        renderer: 'area',
+            interpolation: 'linear',
 	        stroke: true,
 	        series: [{
 		        data: _.map(datapoints[kind], function (item, iter){
@@ -143,7 +148,8 @@ var mopub = window.mopub || {};
                 att: null,
                 cpm: null,
                 fill_rate: null,
-                ctr: null
+                ctr: null,
+                conv: null
             };
 
             // Set the active display value so we know which graph and breakdown
@@ -169,10 +175,10 @@ var mopub = window.mopub || {};
 
             // Render the template and the chart with the values we composed
             $(this_view.el).html(this_view.template(template_values));
-            
-            var series_date_labels = getDateLabels(this_view.options.start_date, 
-                                                   series_list.length);
 
+            var series_length = series_list[this_view.options.display_values[0]].length;
+            var series_date_labels = getDateLabels(this_view.options.start_date, 
+                                                   series_length);
             
             $("#stats-breakdown-container tr", this_view.el).click(function() {
 
@@ -185,6 +191,11 @@ var mopub = window.mopub || {};
 
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
+
+
+                console.log(stats_type);
+                console.log(series_list);
+                console.log(series_date_labels);
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_date_labels);
@@ -825,4 +836,4 @@ var mopub = window.mopub || {};
     window.NetworkGraphView = NetworkGraphView;
     window.NetworkDailyCountsView = NetworkDailyCountsView;
     
-}(this.jQuery, this.Backbone, this._));
+}).call(this);

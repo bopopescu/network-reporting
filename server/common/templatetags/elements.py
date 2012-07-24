@@ -220,6 +220,7 @@ def targeting_table(targeted_adgroups):
     return {
         'targeted_adgroups': targeted_adgroups
     }
+
     
 def isiterable(item):
     try:
@@ -227,3 +228,5 @@ def isiterable(item):
     except TypeError:
         return False
     return True
+
+    

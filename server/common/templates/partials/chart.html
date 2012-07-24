@@ -38,9 +38,6 @@
         <tr <% if (active === 'clk') { %>class="active"<% } %> id="stats-breakdown-clk">
           <td class="stats-breakdown-value">
             <span class="inner">
-              <% if (ctr !== null) { %>
-              <span class="muted unbold">(<%= ctr %>)</span>
-              <% } %>
               <%= clk %>
             </span>
           </td>
@@ -49,6 +46,33 @@
           </th>
         </tr>
         <% } %>
+
+        <% if (ctr !== null) { %>
+        <tr <% if (active === 'ctr') { %>class="active"<% } %> id="stats-breakdown-ctr">
+          <td class="stats-breakdown-value">
+            <span class="inner">
+              <%= ctr %>
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">CTR</span>
+          </th>
+        </tr>
+        <% } %>        
+
+        <% if (conv !== null) { %>
+        <tr <% if (active === 'conv') { %>class="active"<% } %> id="stats-breakdown-conv">
+          <td class="stats-breakdown-value">
+            <span class="inner">
+              <%= conv %>
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Conversions</span>
+          </th>
+        </tr>
+        <% } %>
+
         
         <% if (cpm !== null) { %>
         <tr <% if (active === 'cpm') { %>class="active"<% } %> id="stats-breakdown-cpm">

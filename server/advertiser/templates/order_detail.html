@@ -16,12 +16,21 @@
 
 {% block content %}
 
-  <div class="right">
-    <div class="btn-group">
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+  
+  
+  <div class="right" style='margin-bottom: 5px'>
+
+    <a class="left btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
+        {% button_icon "pencil" %}
+        Edit this order
+    </a>
+    
+    <div class="right dropdown" id="order-export" style='margin-left: 5px'>
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#order-export">
         <i class="icon-download-alt"></i> Export
         <span class="caret"></span>
       </a>
+      
       <ul class="dropdown-menu">
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
@@ -41,6 +50,7 @@
     </div>
   </div>
 
+
   <div style="clear:both;"></div>
 
   {% chart_placeholder start_date end_date %}
@@ -59,30 +69,26 @@
   {# Table with all of the line items #}
   <section>
     <h3 class="left">
-      Status of {{ order.name }}
+      Status
     </h3>
     <div class="right">
-      <a class="btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
-        {% button_icon "pencil" %}
-        Edit this order
-      </a>
+
     </div>
 
   {% order_table order %}
 
   <br />
 
-  <h3 class="left"> Line Items in {{ order.name }} </h3>
+  <h3 class="left"> Line Items </h3>
   <div class="right">
-    <div class="btn-group">
-      <a class="btn" href='{% url advertiser_line_item_form_new order.key %}'>
-        <i class="icon-plus"></i>
-        New Line Item
-      </a>
-    </div>
+    <a class="left btn" href='{% url advertiser_line_item_form_new order.key %}'>
+      <i class="icon-plus"></i>
+      New Line Item
+    </a>
 
+    <div class="right" style='margin-left: 5px;'>
     {% filter_buttons %}
-
+    </div>
   </div>
 
   {% line_item_table line_items %}

@@ -75,6 +75,7 @@ class AbstractStatsFetcher(object):
                              'imp': stats.impression_count,
                              'clk': stats.click_count,
                              'req': stats.request_count,
+                             'conv': stats.conversion_count,
                              'date': stats.date.strftime("%Y-%m-%d")} \
                             for stats in all_stats],
         }

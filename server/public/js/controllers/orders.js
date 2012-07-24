@@ -11,8 +11,6 @@
             render_line_items = true;
         }
 
-        console.log('rendering order');
-
         var order_view = new OrderView({
             model: order,
             el: 'inventory_table'
@@ -271,7 +269,7 @@
             // Fetch stats for each order and render the row
             _.each(bootstrapping_data.order_keys, function (order_key) {
                 var order = new Order({
-                    id: order_key
+                    id: order_key,
                 });
 
                 order.bind('change', function() {
@@ -284,7 +282,7 @@
             // Fetch stats for each line item and render the row
             _.each(bootstrapping_data.line_item_keys, function (line_item_key) {
                 var line_item = new LineItem({
-                    id: line_item_key
+                    id: line_item_key,
                 });
 
                 line_item.bind('change', function() {
@@ -444,7 +442,6 @@
                 };
 
                 adunit.bind('change', function(current_adunit){                    
-                    console.log(current_adunit);
                     renderAdUnit(current_adunit);
                 });
 
@@ -607,9 +604,6 @@
                         $("#modal-loading-img").removeClass('hidden');
                         var order = $("#copy-to-order").val();
                         var copy_creatives = $("#copy_with_creatives").is(":checked");
-
-                        console.log(copy_creatives);
-
                         var promise = copyLineItem(bootstrapping_data.line_item_key,
                                                    order,
                                                    copy_creatives);

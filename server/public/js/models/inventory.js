@@ -920,8 +920,7 @@ var mopub = mopub || {};
             var stats_endpoint = this.stats_endpoint;
             return '/api/adgroup/'
                 + this.id
-                + "?"
-                + window.location.search.substring(1)
+                + "?r=90"
                 + '&endpoint='
                 + stats_endpoint;
         }
@@ -937,8 +936,7 @@ var mopub = mopub || {};
             var stats_endpoint = this.stats_endpoint;
             return '/api/campaign/'
                 + this.campaign_id
-                + "?"
-                + window.location.search.substring(1)
+                + "?r=90"                
                 + '&endpoint='
                 + stats_endpoint;
         },
@@ -967,8 +965,7 @@ var mopub = mopub || {};
         url: function() {
             return '/api/campaign/'
                 + this.get('id')
-                + "?"
-                + window.location.search.substring(1)
+                + "?r=90"
                 + '&endpoint=direct';
         },
         parse: function(response) {
@@ -995,8 +992,7 @@ var mopub = mopub || {};
         stats_endpoint: 'direct',
         url: function() {
             return '/api/campaign/'
-                + "?"
-                + window.location.search.substring(1)
+                + "?r=90",
                 + '&endpoint=direct';
         }
     });

@@ -479,7 +479,7 @@ class EditNetworkHandler(RequestHandler):
             # apply changes to all adunit adgroups that haven't been
             # individually modified
             for adunit in adunits:
-                if adunit.key() not in adunit_key_adgroup_form_dict:
+                if str(adunit.key()) not in adunit_key_adgroup_form_dict:
                     adgroup = AdGroupQueryManager.get_network_adgroup(campaign, adunit.key(), self.account.key(), get_from_db=True)
                     adgroup = NetworkAdGroupForm(network_adgroup_fields, instance=adgroup).save(commit=False)
                     adgroups.append(adgroup)
@@ -864,6 +864,7 @@ class EditNetworkHandler(RequestHandler):
                         # ignore the new creative and set the variable to point
                         # to the old one
                         creative = old_creative
+                        creative.deleted = False
                         if adgroup.network_type == 'custom':
                             # if the network is a custom one, the creative
                             # might be the same, but the data might be new, set

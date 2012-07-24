@@ -46,7 +46,7 @@
     {{ line_item.budget_goal_display }}
   </td>
   <td class="stat">
-    {{ line_item.individual_cost }}
+    {{ line_item.bid|currency }}
     {% if line_item.bid_strategy == 'cpm' %}
       CPM
     {% else %}

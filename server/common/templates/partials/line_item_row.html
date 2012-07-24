@@ -14,47 +14,53 @@
   {% endif %}
 
   <td class="name">
+    {% comment %}
     <a class="order-name"
        href='{% url advertiser_order_detail order_key=line_item.campaign.key %}'
        style="font-size:12px;">
       {{ line_item.campaign.name }}
     </a> >
     <br />
+    {% endcomment %}
     <a href='{% url advertiser_line_item_detail line_item_key=line_item.key %}'>
       {{ line_item.name }}
     </a>
     <br />
     <span class="muted">
       {{ line_item.status|capitalize }}
+      {% comment %}
       {{ line_item.start_datetime|date:"m/d" }} to {{ line_item.end_datetime|date:"m/d" }}
+      {% endcomment %}
     </span>
     <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
   </td>
-
+  {% comment %}
   <td class="advertiser stat">
     {{ line_item.campaign.advertiser }}
   </td>
+  {% endcomment %}
   <td class="type stat">
     {{ line_item.adgroup_type_display }}
   </td>
   <td class="goal stat">
     {{ line_item.budget_goal_display|default:'--' }}
   </td>
-  <td class="rev stat">
+  <td class="cpm stat">
     --
+  </td>
+  <td class="stat">
+    {{ line_item.start_datetime|date:"m/d" }}
+  </td>
+  <td class="stat">
+    {{ line_item.end_datetime|date:"m/d" }}
   </td>
   <td class="imp stat">
     --
   </td>
-  <td class="stat">
-    <div class="clk">
-      --
-    </div>
-    <div class="muted ctr">
-      --
-    </div>
+  <td class="clk stat">
+    --
   </td>
-  <td class="stat cpm">
+  <td class="ctr stat">
     --
   </td>
   <td class="stat">

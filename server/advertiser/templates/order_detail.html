@@ -16,6 +16,33 @@
 
 {% block content %}
 
+  <div class="right">
+    <div class="btn-group">
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="icon-download-alt"></i> Export
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
+                data-toggle="running"> Excel XLS </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xlsx"
+                data-toggle="running"> Excel XLSX </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=ods"
+                data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=csv"
+                data-toggle="running"> CSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=tsv"
+                data-toggle="running"> TSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=yaml"
+                data-toggle="running"> YAML </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=json"
+                data-toggle="running"> JSON </a> </li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="clear:both;"></div>
+
   {% chart_placeholder start_date end_date %}
 
   <br />
@@ -53,9 +80,9 @@
         New Line Item
       </a>
     </div>
-    
+
     {% filter_buttons %}
-      
+
   </div>
 
   {% line_item_table line_items %}
@@ -74,70 +101,43 @@
   </div>
   </section>
 
+  {% comment %}
   {# Table that shows all of the adunits being targeted #}
   <section>
     <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
 
-    {% comment %}
     <div class="right">
       <a class="btn" href='#'>
         <i class="icon-random"></i>
         Change Targeting
       </a>
     </div>
-    {% endcomment %}
-    
 
     {% inventory_table targeted_apps %}
   </section>
+  {% endcomment %}
 
-
+  {% comment %}
   <div id="daily-counts">
     <h2>Daily Counts</h2>
     <img src="/images/loading2.gif" style='margin-left:450px' />
   </div>
+  {% endcomment %}
 
-  <div class="right">
-  <div class="btn-group">
-    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-      <i class="icon-download-alt"></i> Export
-      <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
-              data-toggle="running"> Excel XLS </a> </li>
-      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xlsx"
-              data-toggle="running"> Excel XLSX </a> </li>
-      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=ods"
-              data-toggle="running"> OpenOffice Spreadsheet </a> </li>
-      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=csv"
-              data-toggle="running"> CSV </a> </li>
-      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=tsv"
-              data-toggle="running"> TSV </a> </li>
-      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=yaml"
-              data-toggle="running"> YAML </a> </li>
-      <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=json"
-              data-toggle="running"> JSON </a> </li>
-    </ul>
-  </div>
-</div>
-
-  
 {% endblock content %}
 
 {% block extraScripts %}
 
- 
   {% include_template "chart" %}
   {% include_template "daily-counts" %}
   {% include_template "popover" %}
-  
+
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}
-  
+
   <script type="text/javascript">
-    $(function() {
+    $(function () {
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeOrderDetail({
             order_key: "{{ order.key }}",
@@ -149,5 +149,6 @@
                               {{ start_date.day }})
         });
     });
-</script>
+  </script>
+
 {% endblock extraScripts %}

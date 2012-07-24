@@ -9,6 +9,9 @@ function redo_tags(div) {
         if (curr.href != '#') {
             curr.href = mopub_click_url + '&r=' + curr.href;
         }
+        if (window.mopub_click_prepend !== null) {
+            curr.href = window.mopub_click_prepend + curr.href;
+        }
     }
 }
 

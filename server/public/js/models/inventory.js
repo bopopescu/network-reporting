@@ -902,8 +902,10 @@ var mopub = mopub || {};
      *  LineItem
      */
     var LineItem = Backbone.Model.extend({
-        stats_endpoint: 'direct',
         defaults: {
+            start_date: null,
+            date_range: 90,
+            name: '',
             att: 0,
             clk: 0,
             ctr: 0,
@@ -911,18 +913,18 @@ var mopub = mopub || {};
             conv: 0,
             fill_rate: 0,
             imp: 0,
-            name: '',
             req: 0,
-            rev: 0,
-            stats_endpoint: 'all'
+            rev: 0
         },
-        url: function() {
-            var stats_endpoint = this.stats_endpoint;
-            return '/api/adgroup/'
-                + this.id
-                + "?r=90"
-                + '&endpoint='
-                + stats_endpoint;
+        url: function () {
+            var url = '/api/adgroup/' + this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=direct';
+            return url;
         }
     });
 
@@ -950,6 +952,9 @@ var mopub = mopub || {};
 
     var Order = Backbone.Model.extend({
         defaults: {
+            start_date: null,
+            date_range: 90,
+            name: '',
             att: 0,
             clk: 0,
             ctr: 0,
@@ -957,16 +962,18 @@ var mopub = mopub || {};
             conv: 0,
             fill_rate: 0,
             imp: 0,
-            name: '',
             req: 0,
-            rev: 0,
-            stats_endpoint: 'direct'
+            rev: 0
         },
-        url: function() {
-            return '/api/campaign/'
-                + this.get('id')
-                + "?r=90"
-                + '&endpoint=direct';
+        url: function () {
+            var url = '/api/campaign/' + this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=direct';
+            return url;
         },
         parse: function(response) {
 

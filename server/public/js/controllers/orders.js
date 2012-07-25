@@ -369,15 +369,10 @@
 
             // Fill in stats for the order/line item table
             var order = new Order({
-                id: bootstrapping_data.order_key
+                id: bootstrapping_data.order_key,
+                start_date: bootstrapping_data.start_date,
+                date_range: bootstrapping_data.date_range
             });
-            order.url = function () {
-                return '/api/campaign/'
-                    + this.id
-                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + (bootstrapping_data.start_date.getMonth() + 1) + '-' + bootstrapping_data.start_date.getDate()
-                    + '&r=' + bootstrapping_data.date_range
-                    + '&endpoint=direct';
-            };
 
             order.bind('change', function(current_order) {
                 // Render the order row
@@ -482,15 +477,10 @@
              */
 
             var line_item = new LineItem({
-                id: bootstrapping_data.line_item_key
+                id: bootstrapping_data.line_item_key,
+                start_date: bootstrapping_data.start_date,
+                date_range: bootstrapping_data.date_range
             });
-            line_item.url = function () {
-                return '/api/adgroup/'
-                    + this.id
-                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + (bootstrapping_data.start_date.getMonth() + 1) + '-' + bootstrapping_data.start_date.getDate()
-                    + '&r=' + bootstrapping_data.date_range
-                    + '&endpoint=direct';
-            };
 
             line_item.bind('change', function (current_line_item) {
 

@@ -707,7 +707,7 @@ var mopub = mopub || {};
                 // Load the chart
                 var chart_view = new CollectionChartView({
                     collection: apps,
-                    start_date: bootstrapping_data.end_date,
+                    start_date: bootstrapping_data.start_date,
                     display_values: ['imp', 'clk', 'ctr']
                 });
                 chart_view.render();

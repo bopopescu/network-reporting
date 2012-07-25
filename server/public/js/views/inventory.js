@@ -38,7 +38,7 @@ var mopub = window.mopub || {};
     }
 
     function generateEpochTimeSequence(start_date_time, tick_size, ticks, tick_type) {
-
+        console.log(arguments);
         if (typeof tick_type === 'undefined') {
             tick_type = 'days';
         }
@@ -49,8 +49,9 @@ var mopub = window.mopub || {};
         _.times(ticks, function (tick) {
             var start = moment([start_date_time.getFullYear(), 
                                 start_date_time.getMonth(),
-                                start_date_time.getDay()]);
+                                start_date_time.getDate()]);
             start.add(tick_type, tick);
+            console.log(start);
             sequence.push( start.unix() );
         });
 
@@ -122,11 +123,9 @@ var mopub = window.mopub || {};
     var CollectionChartView = Backbone.View.extend({
         el: "#stats",
         initialize: function () {
-            console.log(arguments);
             try {
                 this.template = _.template($('#chart-template').html());
             } catch (e) {}
-            console.log(this);
         },
 
         render: function() {

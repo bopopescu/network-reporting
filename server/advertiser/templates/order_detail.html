@@ -16,21 +16,21 @@
 
 {% block content %}
 
-  
-  
+
+
   <div class="right" style='margin-bottom: 5px'>
 
     <a class="left btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
         {% button_icon "pencil" %}
         Edit this order
     </a>
-    
+
     <div class="right dropdown" id="order-export" style='margin-left: 5px'>
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#order-export">
         <i class="icon-download-alt"></i> Export
         <span class="caret"></span>
       </a>
-      
+
       <ul class="dropdown-menu">
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>

@@ -11,6 +11,8 @@ Whenever you see "Campaign", think "Order", and wherever you see
 "AdGroup", think "LineItem".
 """
 
+import datetime
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -19,9 +21,10 @@ from django.core.servers.basehttp import FileWrapper
 import cStringIO as StringIO
 from google.appengine.ext import db
 
-from common.utils import helpers, tablib, stats_helpers
 from common.ragendja.template import render_to_response, JSONResponse
+from common.utils import helpers, tablib, stats_helpers
 from common.utils.request_handler import RequestHandler
+from common.utils.timezones import Pacific_tzinfo
 
 from account.query_managers import AccountQueryManager
 from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
@@ -55,7 +58,7 @@ class OrderIndexHandler(RequestHandler):
         line_items = [line_item for line_item in line_items \
                       if not (line_item.archived or line_item.deleted) and
                       not (line_item.campaign.archived or line_item.campaign.deleted)]
-        
+
         return {
             'orders': orders,
             'line_items': line_items
@@ -69,13 +72,13 @@ def order_index(request, *args, **kwargs):
                                          use_cache=False,
                                          *args, **kwargs)
 
-    
+
 class OrderArchiveHandler(RequestHandler):
     """
     Shows a list of archived orders and line items.
     """
     def get(self):
-        
+
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
                                                         orders=orders,
@@ -86,8 +89,8 @@ class OrderArchiveHandler(RequestHandler):
                                if line_item.archived or line_item.campaign.archived]
 
         logging.warn(archived_line_items)
-        
-            
+
+
         return {
             'orders': archived_orders,
             'line_items': archived_line_items
@@ -101,7 +104,7 @@ def order_archive(request, *args, **kwargs):
                                            use_cache=False,
                                            *args, **kwargs)
 
-    
+
 class OrderDetailHandler(RequestHandler):
     """
     Top level stats rollup for all of the line items within the order.
@@ -116,8 +119,20 @@ class OrderDetailHandler(RequestHandler):
                                                         order=order,
                                                         archived=False)
 
-        logging.warn(line_items)
-        
+        self.start_date = None
+        self.end_date = None
+
+        for line_item in line_items:
+            if not self.start_date or line_item.start_datetime.date() < self.start_date:
+                self.start_date = line_item.start_datetime.date()
+
+            if not line_item.end_datetime:
+                self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
+            elif not self.end_date or line_item.end_datetime.date() > self.end_date:
+                self.end_date = line_item.end_datetime.date()
+
+        self.date_range = (self.end_date - self.start_date).days + 1
+
         # Get the targeted adunits and group them by their app.
         targeted_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
                                     for line_item in order.adgroups]))
@@ -138,8 +153,8 @@ class OrderDetailHandler(RequestHandler):
 
 @login_required
 def order_detail(request, *args, **kwargs):
-    t="advertiser/order_detail.html"
-    handler = OrderDetailHandler(template=t, id="order_key")
+    template = 'advertiser/order_detail.html'
+    handler = OrderDetailHandler(template=template, id="order_key")
     return handler(request, use_cache=False, *args, **kwargs)
 
 
@@ -151,6 +166,14 @@ class LineItemDetailHandler(RequestHandler):
 
         line_item = AdGroupQueryManager.get(line_item_key)
 
+        self.start_date = line_item.start_datetime.date()
+        if line_item.end_datetime:
+            self.end_date = line_item.end_datetime.date()
+        else:
+            self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
+
+        self.date_range = (self.end_date - self.start_date).days + 1
+
         # Create creative forms
         creative_form = NewCreativeForm()
 
@@ -160,7 +183,7 @@ class LineItemDetailHandler(RequestHandler):
 
         # We need all the other orders for the copy line item functionality
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        
+
         return {
             'order': line_item.campaign,
             'orders': orders,
@@ -174,10 +197,9 @@ class LineItemDetailHandler(RequestHandler):
 
 @login_required
 def line_item_detail(request, *args, **kwargs):
-    t = "advertiser/line_item_detail.html"
-    return LineItemDetailHandler(template=t, id="line_item_key")(request,
-                                                                 use_cache=False,
-                                                                 *args, **kwargs)
+    template = 'advertiser/line_item_detail.html'
+    handler = LineItemDetailHandler(template=template, id='line_item_key')
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class AdSourceStatusChangeHandler(RequestHandler):
@@ -368,7 +390,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
         order_form_is_valid = order_form.is_valid() if not order else True
         line_item_form_is_valid = line_item_form.is_valid()
         if order_form_is_valid and line_item_form_is_valid:
-            if not order:     
+            if not order:
                 order = order_form.save()
                 order.account = self.account
                 order.campaign_type = 'order'
@@ -391,7 +413,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
                 'redirect': reverse('advertiser_line_item_detail',
                                     kwargs={'line_item_key': line_item.key()}),
             })
-        
+
         errors = {}
         if not line_item_form_is_valid:
             logging.warn('line')
@@ -569,8 +591,8 @@ class CopyLineItemHandler(RequestHandler):
         if copy_creatives == 'false':
             copy_creatives = False
 
-        if line_item_key:            
-            
+        if line_item_key:
+
             # Get the line item and copy it
             try:
                 line_item = AdGroupQueryManager.get(line_item_key)
@@ -587,7 +609,7 @@ class CopyLineItemHandler(RequestHandler):
                     logging.warn(error)
                     return JSONResponse({'error': 'Could not fetch order.'})
             else:
-                order = line_item.campaign                
+                order = line_item.campaign
 
             # Copy, rename and save the new line item
             copied_line_item = helpers.clone_entity(line_item,
@@ -601,7 +623,7 @@ class CopyLineItemHandler(RequestHandler):
                     copied_creative = helpers.clone_entity(creative)
                     copied_creative.adgroup = copied_line_item
                     CreativeQueryManager.put(copied_creative)
-            
+
             return JSONResponse({
                 'success': 'Line item copied',
                 'new_key': str(copied_line_item.key()),
@@ -612,17 +634,17 @@ class CopyLineItemHandler(RequestHandler):
             raise Http404
 
 def copy_line_item(request, *args, **kwargs):
-    return CopyLineItemHandler()(request, *args, **kwargs)            
-            
-            
+    return CopyLineItemHandler()(request, *args, **kwargs)
+
+
 #############
 # Exporters #
 #############
 
 ctr = lambda clk, imp: float(clk)/float(imp)*100.0 if imp > 0 else 0
-    
+
 class MultipleOrderExporter(RequestHandler):
-    
+
     def get(self):
         """
         Exports an account-level report on all orders.
@@ -648,14 +670,14 @@ class MultipleOrderExporter(RequestHandler):
 
         # For each order, add a new row to the document
         stats_q = stats_helpers.DirectSoldStatsFetcher(self.account.key())
-        orders = CampaignQueryManager.get_order_campaigns(account=self.account)        
+        orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         for order in orders:
             stats = stats_q.get_campaign_stats(order,
                                                self.start_date,
                                                self.end_date,
                                                daily=False)['sum']
             logging.info(stats)
-            
+
             order_data = (
                 order.name,
                 order.advertiser,
@@ -673,7 +695,7 @@ class MultipleOrderExporter(RequestHandler):
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
                    ("MoPub orders", export_type)
-        
+
         return response
 
 @login_required
@@ -681,9 +703,9 @@ def export_multiple_orders(request, *args, **kwargs):
     handler = MultipleOrderExporter()
     return handler(request, *args, **kwargs)
 
-    
+
 class MultipleLineItemExporter(RequestHandler):
-    
+
     def get(self):
         """
         Exports an account-level report on all line items.
@@ -711,7 +733,7 @@ class MultipleLineItemExporter(RequestHandler):
             'Country Target',
             'Device Target',
             'Keywords',
-        )        
+        )
         data_to_export = tablib.Dataset(headers=headers)
 
 
@@ -751,27 +773,27 @@ class MultipleLineItemExporter(RequestHandler):
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
                    ("MoPub line items", export_type)
-        
+
         return response
-            
+
 
 @login_required
 def export_multiple_line_items(request, *args, **kwargs):
     handler = MultipleLineItemExporter()
-    return handler(request, *args, **kwargs)        
+    return handler(request, *args, **kwargs)
 
-    
+
 class SingleOrderExporter(RequestHandler):
-    
+
     def get(self, order_key):
 
         order = CampaignQueryManager.get(order_key)
         if not order.account.key() == self.account.key():
             raise Http404
-        
+
         export_type = self.request.GET.get('type', 'csv')
         stats_q = StatsModelQueryManager(self.account)
-        export_rows = []        
+        export_rows = []
 
         for line_item in order.adgroups:
             for creative in line_item.creatives:
@@ -804,7 +826,7 @@ class SingleOrderExporter(RequestHandler):
                         line_item.keywords
                     )
                     export_rows.append(row)
-        
+
         headers = (
             'Order name',
             'Line Item name',
@@ -830,13 +852,13 @@ class SingleOrderExporter(RequestHandler):
             'Keywords',
         )
 
-        data_to_export = tablib.Dataset(headers=headers)        
+        data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(export_rows)
-        
+
         response = HttpResponse(getattr(data_to_export, export_type),
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' % (order.name, export_type)
-        
+
         return response
 
 
@@ -845,9 +867,9 @@ def export_single_order(request, *args, **kwargs):
     handler = SingleOrderExporter()
     return handler(request, *args, **kwargs)
 
-    
+
 class SingularLineItemExporter(RequestHandler):
-    
+
     def get(self, line_item_key):
 
         line_item = AdGroupQueryManager.get(line_item_key)
@@ -855,10 +877,10 @@ class SingularLineItemExporter(RequestHandler):
             raise Http404
 
         order = line_item.campaign
-        
+
         export_type = self.request.GET.get('type', 'csv')
         stats_q = StatsModelQueryManager(self.account)
-        export_rows = []        
+        export_rows = []
 
         for creative in line_item.creatives:
             stats_per_day = stats_q.get_stats_for_days(publisher=creative,
@@ -890,7 +912,7 @@ class SingularLineItemExporter(RequestHandler):
                     line_item.keywords
                 )
                 export_rows.append(row)
-        
+
         headers = (
             'Order name',
             'Line Item name',
@@ -916,20 +938,20 @@ class SingularLineItemExporter(RequestHandler):
             'Keywords',
         )
 
-        data_to_export = tablib.Dataset(headers=headers)        
+        data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(export_rows)
-        
+
         response = HttpResponse(getattr(data_to_export, export_type),
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' % (line_item.name, export_type)
         return response
-        
+
 @login_required
 def export_single_line_item(request, *args, **kwargs):
     handler = SingularLineItemExporter()
     return handler(request, *args, **kwargs)
 
-    
+
 ###########
 # Helpers #
 ###########

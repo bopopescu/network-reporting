@@ -61,11 +61,11 @@
   </div>
 
   <div class="right">
-  <a class="btn" href="{% url advertiser_line_item_form_edit line_item.key %}">      
+  <a class="btn" href="{% url advertiser_line_item_form_edit line_item.key %}">
     {% button_icon "pencil" %}
     Edit Line Item
   </a>
-  
+
 
   <div class="dropdown" id="export-menu" style='display:inline-block'>
   <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
@@ -266,6 +266,7 @@
             order_key: "{{ order.key }}",
             line_item_key: "{{ line_item.key }}",
             start_date:  {{ start_date|js_date }},
+            date_range: {{ date_range }},
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
         });

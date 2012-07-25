@@ -6,7 +6,7 @@
      * REFACTOR: move to views/inventory.js
      */
     function renderOrder(order, render_line_items) {
-        
+
         if (typeof render_line_items === 'undefined') {
             render_line_items = true;
         }
@@ -148,13 +148,13 @@
 
 
     function copyLineItem(line_item_key, order_key, with_creatives) {
-        
+
         var error_message = "MoPub experienced an error "
             + "trying to copy your line item. "
             + "We apologize for this inconvenience. "
             + "If this error persists, please contact "
             + "support@mopub.com";
-        
+
         // Hit the copy endpoint with our form data
         var copy_promise = $.ajax({
             url: '/advertise/line_item_copy/',
@@ -165,12 +165,12 @@
                 copy_creatives: with_creatives
             }
         });
-        
+
         // If we got a response, and there was a success message,
         // let them know in a toast message that points to the new
         // copied line item. Otherwise, show the error message.
-        copy_promise.success(function(response) {                            
-            if (response.success) {                                
+        copy_promise.success(function(response) {
+            if (response.success) {
                 var message = "Your line  was successfully copied."
                     + "You can see your new line item <a href='" + response.url
                     + "'>here</a>.";
@@ -179,9 +179,9 @@
                 console.log(response);
                 Toast.error(error_message);
             }
-            
+
         });
-        
+
         // We blew it.
         copy_promise.error(function(response) {
             console.log(response);
@@ -433,7 +433,6 @@
             //         id: adunit_key,
             //         stats_endpoint: 'direct'
             //     });
-
             //     adunit.url = function () {
             //         return '/api/campaign/'
             //             + bootstrapping_data.order_key
@@ -443,7 +442,6 @@
             //             + window.location.search.substring(1)
             //             + '&endpoint=direct';
             //     };
-
             //     adunit.bind('change', function(current_adunit){                    
             //         renderAdUnit(current_adunit);
             //     });
@@ -574,23 +572,23 @@
             $("#copy-to-order").chosen();
 
             $("#copy-line-item .copy_option").click(function () {
-                
+
                 var $option = $(this),
                     toggle = $option.data('toggle');
-                
+
                 // Quick copy with creatives. No need to show a modal.
                 if (toggle === 'copy_with') {
                     var promise = copyLineItem(bootstrapping_data.line_item_key,
                                                bootstrapping_data.order_key,
                                                true);
-                    
+
                 // Quick copy with creatives. No need to show a modal.
                 } else if (toggle === 'copy_without') {
                     var promise = copyLineItem(bootstrapping_data.line_item_key,
                                                bootstrapping_data.order_key,
                                                false);
-                    
-                    
+
+
                 } else if (toggle === 'copy_to_another') {
                     // Copy with more options. Show a modal.
 
@@ -610,18 +608,18 @@
                         var promise = copyLineItem(bootstrapping_data.line_item_key,
                                                    order,
                                                    copy_creatives);
-                        
+
                         promise.done(function () {
                             $("#modal-loading-img").addClass('hidden');
                         });
                     });
-                    
+
                 } else {
                     throw Error('malformed data toggle');
                 }
-                
+
             });
-            
+
 
             /*
              * Click handlers for the creative form.
@@ -727,7 +725,7 @@
                 var preview = modal.children('div.modal-body');
                 var src = preview.children('input[name="src"]').val();
                 var iframe = preview.children('iframe');
-                iframe.attr('src', src);                
+                iframe.attr('src', src);
                 var width = parseInt(iframe.attr("width"));
                 var height = parseInt(iframe.attr("height"));
                 modal.css({

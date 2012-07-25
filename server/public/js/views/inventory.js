@@ -83,7 +83,7 @@ var mopub = window.mopub || {};
                 }),
                 stroke: 'hsla(200,77%,55%,1)',
                 color: 'hsla(205,79%,61%,0.1)'
-                
+
             }]
         });
 
@@ -94,20 +94,20 @@ var mopub = window.mopub || {};
 	        graph: graph
         });
         xaxes.render();
-        
+
         var yAxis = new Rickshaw.Graph.Axis.Y({
             graph: graph,
             tickFormat: Rickshaw.Fixtures.Number.formatKMBT
         });
         yAxis.render();
-        
+
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail({
             graph: graph,
             xFormatter: function(x, y) {
                 return '' + moment.unix(x).format("dddd MMMM Do") + 
                     "<br />" + 
                     "Total: " + 
-                    ModelHelpers.format_stat(kind, y) + ' ' + 
+                    ModelHelpers.format_stat(kind, y) + ' ' +
                     ATTRIBUTE_LABELS[kind];
 
             }
@@ -149,7 +149,7 @@ var mopub = window.mopub || {};
 
             // Set the active display value so we know which graph and breakdown
             // value to display first.
-            var active_display_value = this_view.options.active_display_value || 
+            var active_display_value = this_view.options.active_display_value ||
                 this_view.options.display_values[0];
 
             template_values['active'] = active_display_value;
@@ -176,8 +176,7 @@ var mopub = window.mopub || {};
             var series_dates = generateEpochTimeSequence(this_view.options.start_date, 
                                                          1, 
                                                          series_length);
-            
-            
+
             $("#stats-breakdown-container tr", this_view.el).click(function() {
 
                 // Remove the active class from the previously active row
@@ -199,8 +198,8 @@ var mopub = window.mopub || {};
             createDailyStatsChart(active_display_value,
                                   series_list,
                                   series_dates);
-            
-        }        
+
+        }
     });
 
 
@@ -223,13 +222,13 @@ var mopub = window.mopub || {};
             var template_values = {
                 daily_stats: this_model.get_formatted_daily_stats().reverse(),
                 total_stats: {}
-            };            
+            };
 
-            // Fill in the total stats 
+            // Fill in the total stats
             _.each(display_fields, function (field) {
                 template_values.total_stats[field] = this_model.get_formatted_stat(field);
             });
-                                    
+
             // Expose yourself
             $(this_view.el).html(this_view.template(template_values));
 
@@ -240,7 +239,7 @@ var mopub = window.mopub || {};
                 $("#daily-totals-toggle .toggle-on-click").toggleClass('hidden');
                 $("#appData-individual").toggleClass('hidden');
             });
-                
+
         }
     });
 
@@ -283,18 +282,18 @@ var mopub = window.mopub || {};
             var this_view = this;
             var app_row = $('#app-' + this_view.model.id);
             var metrics = [
-                'cpm', 
-                'imp', 
-                'clk', 
-                'ctr', 
-                'fill_rate', 
-                'req', 
-                'att', 
-                'conv', 
+                'cpm',
+                'imp',
+                'clk',
+                'ctr',
+                'fill_rate',
+                'req',
+                'att',
+                'conv',
                 'conv_rate',
                 'rev'
             ];
-            
+
             _.each(metrics, function (metric) {
                 var metric_text = this_view.model.get_formatted_stat(metric);
                 $('.' + metric, app_row).text(metric_text);
@@ -335,15 +334,15 @@ var mopub = window.mopub || {};
             var current_model = this.model;
             var adunit_row = $('#adunit-' + this.model.id);
             var metrics = [
-                'rev', 
-                'cpm', 
-                'imp', 
-                'clk', 
-                'ctr', 
-                'fill_rate', 
-                'req', 
-                'att', 
-                'conv', 
+                'rev',
+                'cpm',
+                'imp',
+                'clk',
+                'ctr',
+                'fill_rate',
+                'req',
+                'att',
+                'conv',
                 'conv_rate'
             ];
 
@@ -356,7 +355,7 @@ var mopub = window.mopub || {};
                 'type="text" ' +
                 'class="input-text input-text-number number" ' +
                 'style="width:50px;margin: -3px 0;" ' +
-                'value="' + this.model.get('price_floor') + '"> ' + 
+                'value="' + this.model.get('price_floor') + '"> ' +
                 '<img class="loading-img hidden" ' +
                 'src="/images/icons-custom/spinner-12.gif">' +
                 '</img> ';
@@ -423,7 +422,7 @@ var mopub = window.mopub || {};
         initialize: function () {
             this.collection.bind('reset', this.render, this);
         },
-        
+
         render: function () {
             if(this.collection.isFullyLoaded()) {
                 this.collection.each(function(adunit) {
@@ -467,9 +466,9 @@ var mopub = window.mopub || {};
             var this_view = this;
             if (this_view.collection.isFullyLoaded()) {
                 var metrics = [
-                    'imp', 
-                    'rev', 
-                    'clk', 
+                    'imp',
+                    'rev',
+                    'clk',
                     'ctr'
                 ];
 
@@ -479,7 +478,7 @@ var mopub = window.mopub || {};
                     $(selector).html(this_view.collection.get_formatted_stat(metric));
                 });
 
-                if (this_view.options.yesterday !== null && 
+                if (this_view.options.yesterday !== null &&
                     this_view.options.today !== null) {
 
                     // Render the stats breakdown for yesterday
@@ -547,8 +546,8 @@ var mopub = window.mopub || {};
                     $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
                     $(network_selector).html(network_campaigns.get_formatted_stat(metric));
                 });
-                               
-                
+
+
                 // Chart
                 if (_.isEmpty(network_campaigns.models)) {
                     mopub.dashboardStatsChartData = {
@@ -564,13 +563,13 @@ var mopub = window.mopub || {};
                     mopub.dashboardStatsChartData = {
                         pointStart: this_view.options.start_date,
                         pointInterval: 86400000,
-                        imp: [{'From MoPub': mopub_campaigns.get_total_daily_stats('imp')}, 
+                        imp: [{'From MoPub': mopub_campaigns.get_total_daily_stats('imp')},
                               {'From Networks': network_campaigns.get_total_daily_stats('imp')}],
-                        rev: [{'From Networks': {'data': network_campaigns.get_total_daily_stats('rev'), 
+                        rev: [{'From Networks': {'data': network_campaigns.get_total_daily_stats('rev'),
                                                  'color': '#e57300'}}],
-                        clk: [{'From MoPub': mopub_campaigns.get_total_daily_stats('clk')}, 
+                        clk: [{'From MoPub': mopub_campaigns.get_total_daily_stats('clk')},
                               {'From Networks': network_campaigns.get_total_daily_stats('clk')}],
-                        ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, 
+                        ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')},
                               {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
                         total: false
                     };
@@ -609,7 +608,7 @@ var mopub = window.mopub || {};
             _.each(metrics, function (metric) {
                 var stat = this_view.model.get_stat(metric);
                 if ((stat || stat == 0) && (this_view.model.get('stats_endpoint') != 'networks'
-                        || this_view.model.get('network') != 'mobfox' || (metric != 'att' 
+                        || this_view.model.get('network') != 'mobfox' || (metric != 'att'
                         && metric != 'fill_rate'))) {
                     $('.' + metric + selector, row).text(this_view.model.get_formatted_stat(metric));
                 }
@@ -636,25 +635,25 @@ var mopub = window.mopub || {};
             var app_row = $('#app-' + this_view.model.id, this_view.el);
 
             /*jslint maxlen: 200 */
-            if (!this_view.options.endpoint_specific 
+            if (!this_view.options.endpoint_specific
                 || this_view.model.get('stats_endpoint') == 'networks') {
                 $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
             }
             var metrics = [
-                'cpm', 
-                'imp', 
-                'clk', 
-                'ctr', 
-                'fill_rate', 
-                'req', 
-                'att', 
-                'conv', 
+                'cpm',
+                'imp',
+                'clk',
+                'ctr',
+                'fill_rate',
+                'req',
+                'att',
+                'conv',
                 'conv_rate'
             ];
 
             _.each(metrics, function (metric) {
                 if (this_view.model.get('stats_endpoint') != 'networks'
-                    || this_view.options.network != 'mobfox' 
+                    || this_view.options.network != 'mobfox'
                     || (metric != 'att' && metric != 'fill_rate')) {
                     $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
                 }
@@ -736,7 +735,7 @@ var mopub = window.mopub || {};
     /*
      * Direct Sold
      */
-    
+
     var OrderView = Backbone.View.extend({
         initialize: function () {
             try {
@@ -799,14 +798,31 @@ var mopub = window.mopub || {};
             });
 
             var popover_template = _.template($("#popover-template").html());
-            var popover_content = popover_template(current_model.toJSON());            
+            var popover_content = popover_template(current_model.toJSON());
 
             $(".moreinfo", row).popover({
                 placement: 'left',
                 title: current_model.get('name'),
                 content: popover_content,
-                delay: { hide: 250 }            
+                delay: { hide: 250 }
             });
+
+            var percent_delivered = current_model.get('percent_delivered');
+            if(percent_delivered >= 0) {
+                var $percent_delivered = $('.progress', row);
+                $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100 + '%');
+                $('div#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
+                $percent_delivered.show();
+            }
+
+            var pace = current_model.get('pace');
+            if(pace >= 0) {
+                var $pace = $('.pace', row);
+                $pace.addClass(current_model.get('pace_type'));
+                $pace.text('Pace: ' + Math.round(pace*100) + '%')
+                $pace.show();
+            }
+
         }
     });
 
@@ -819,7 +835,7 @@ var mopub = window.mopub || {};
     window.AdUnitView = AdUnitView;
     window.AdUnitCollectionView = AdUnitCollectionView;
     window.AppView = AppView;
-    
+
     // Orders
     window.LineItemView = LineItemView;
     window.OrderView = OrderView;
@@ -830,5 +846,5 @@ var mopub = window.mopub || {};
     window.CollectionGraphView = CollectionGraphView;
     window.NetworkGraphView = NetworkGraphView;
     window.NetworkDailyCountsView = NetworkDailyCountsView;
-    
+
 }).call(this);

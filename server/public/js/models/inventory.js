@@ -131,8 +131,8 @@ var mopub = mopub || {};
          * `get_stat`
          * Gets the raw stat value from a model. Calculates
          * derivative (fill_rate/ctr/cpm/conv_rate) stats from
-         * other raw stats. 
-         * 
+         * other raw stats.
+         *
          * Works for models only.
          */
         get_stat: function(stat) {
@@ -173,16 +173,16 @@ var mopub = mopub || {};
          * `get_formatted_stat_sum`
          * Returns the summed (or averaged, for some derivative stats)
          * stat total, and formats it accordingly.
-         * 
+         *
          * e.g. get_formatted_stat_sum('rev')  // "$1,402.53"
-         * 
+         *
          * Works for both models and collections.
          */
         get_formatted_stat_sum: function(stat) {
             var sum = this.models.reduce(function(memo, model){
                 return memo + model.get_stat(stat);
             }, 0);
-            
+
             return format_stat(stat, sum);
         },
 
@@ -191,7 +191,7 @@ var mopub = mopub || {};
          * Returns an object with formatted stats for each day
          * in daily_stats. So, if daily_stats contains 14 days
          * of data, this will return an object like this:
-         * 
+         *
          * {
          *    clk: "0",
          *    conv: "0",
@@ -204,9 +204,9 @@ var mopub = mopub || {};
          *    req: "0",
          *    rev: "$0.00",
          * }
-         * 
+         *
          * for each of the 14 days.
-         * 
+         *
          * Works for models only (not for collections).
          */
         get_formatted_daily_stats: function () {
@@ -218,7 +218,7 @@ var mopub = mopub || {};
                 day.cpm = calculate_cpm(day.imp, day.rev);
                 day.conv = day.conv || 0;
                 day.conv_rate = calculate_conv_rate(day.conv, day.clk);
-                
+
                 // Format each of them
                 _.each(_.keys(day), function (key) {
                     if (key !== 'date') {
@@ -227,7 +227,7 @@ var mopub = mopub || {};
                         day[key] = moment(day[key], "YYYY-MM-DD").format("dddd, MMM D, YYYY");
                     }
                 });
-                
+
                 return day;
             });
         },
@@ -254,7 +254,7 @@ var mopub = mopub || {};
                       case 'conv_rate':
                         return day[stat] || calculate_conv_rate(day['conv'],day['clk']);
                     default:
-                        return day[stat];                    
+                        return day[stat];
                     }
                 });
             })[0];
@@ -324,7 +324,7 @@ var mopub = mopub || {};
                 params.data = params.data ? {model : params.data} : {};
             }
 
-            // For older servers, emulate HTTP by mimicking the HTTP method 
+            // For older servers, emulate HTTP by mimicking the HTTP method
             // with `_method`
 
             // And an `X-HTTP-Method-Override` header.
@@ -423,7 +423,7 @@ var mopub = mopub || {};
                 case 'goal':
                 case 'pace':
                     var stat_val;
-                    try {                        
+                    try {
                         stat_val = this.get("sum")[stat];
                     } catch (e) {
                         stat_val = this.get(stat);
@@ -695,7 +695,7 @@ var mopub = mopub || {};
             stats_endpoint: 'all'
         },
         validate: function(attributes) {
-            
+
             var current_price_floor = this.get('price_floor');
             if (typeof(attributes.price_floor) !== 'undefined') {
                 var valid_number = Number(attributes.price_floor);
@@ -936,7 +936,7 @@ var mopub = mopub || {};
             var stats_endpoint = this.stats_endpoint;
             return '/api/campaign/'
                 + this.campaign_id
-                + "?r=90"                
+                + "?r=90"
                 + '&endpoint='
                 + stats_endpoint;
         },
@@ -1000,7 +1000,7 @@ var mopub = mopub || {};
     _.extend(OrderCollection.prototype, StatsMixin);
 
     /*
-     * EXPOSE HIS JUNK
+     * EXPOSE THIS JUNK
      * (We should find a better way to do this.)
      */
     window.StatsModel = StatsModel;

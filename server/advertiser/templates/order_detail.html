@@ -16,21 +16,21 @@
 
 {% block content %}
 
-  
-  
+
+
   <div class="right" style='margin-bottom: 5px'>
 
     <a class="left btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
         {% button_icon "pencil" %}
         Edit this order
     </a>
-    
+
     <div class="right dropdown" id="order-export" style='margin-left: 5px'>
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#order-export">
         <i class="icon-download-alt"></i> Export
         <span class="caret"></span>
       </a>
-      
+
       <ul class="dropdown-menu">
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
@@ -147,12 +147,12 @@
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeOrderDetail({
             order_key: "{{ order.key }}",
-            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
-            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
-
             start_date:  Date({{ start_date.year }},
                               {{ start_date.month|add:"-1" }},
-                              {{ start_date.day }})
+                              {{ start_date.day }}),
+            date_range: {{ date_range }},
+            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
         });
     });
   </script>

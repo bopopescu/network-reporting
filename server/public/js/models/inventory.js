@@ -56,7 +56,7 @@ var mopub = mopub || {};
         if (imp === null || clk === null || imp === undefined || clk === undefined) {
             return null;
         }
-        return (imp === 0) ? 0 : clk / imp;
+        return (imp === 0) ? 0 : (clk / imp);
     }
 
     function calculate_fill_rate(req, imp) {
@@ -179,9 +179,14 @@ var mopub = mopub || {};
          * Works for both models and collections.
          */
         get_formatted_stat_sum: function(stat) {
-            var sum = this.models.reduce(function(memo, model){
+            var these_models = this.models;
+            var sum = these_models.reduce(function(memo, model){
                 return memo + model.get_stat(stat);
             }, 0);
+
+            if (stat === 'ctr' || stat === 'fill_rate' || stat === 'conv_rate') {
+                sum = sum / these_models.length;
+            }
 
             return format_stat(stat, sum);
         },
@@ -240,7 +245,11 @@ var mopub = mopub || {};
          */
         get_full_stat_series: function(stat) {
 
-            var stat_series = this.map(function(model) {
+            // Go through each of the daily stats for each of the
+            // models in the collection and pull them out.
+            // At the end of this we'll have an array of arrays, where
+            // each inner array has the daily values for the particular stat
+            var dailies_for_stat = this.map(function(model) {
                 var daily_stats = model.get('daily_stats');
 
                 return _.map(daily_stats, function (day) {
@@ -257,9 +266,23 @@ var mopub = mopub || {};
                         return day[stat];
                     }
                 });
-            })[0];
+            });
 
-            return stat_series;
+            // Now sum by day
+            var memo = [];
+            _.times(dailies_for_stat[0].length, function (t) { memo.push(0); });
+
+            // Turn this 2D Array into a 1D array
+            var full_series = _.reduce(dailies_for_stat, function (memo, day_stats){
+                _.times(memo.length, function (iter){
+                    memo[iter] += day_stats[iter];
+                });
+                return memo;
+            }, memo);
+
+            console.log(full_series);
+
+            return full_series;
         }
     };
 

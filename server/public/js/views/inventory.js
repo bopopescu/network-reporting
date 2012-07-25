@@ -38,7 +38,6 @@ var mopub = window.mopub || {};
     }
 
     function generateEpochTimeSequence(start_date_time, tick_size, ticks, tick_type) {
-        console.log(arguments);
         if (typeof tick_type === 'undefined') {
             tick_type = 'days';
         }
@@ -51,7 +50,6 @@ var mopub = window.mopub || {};
                                 start_date_time.getMonth(),
                                 start_date_time.getDate()]);
             start.add(tick_type, tick);
-            console.log(start);
             sequence.push( start.unix() );
         });
 
@@ -170,7 +168,6 @@ var mopub = window.mopub || {};
             // Render the template and the chart with the values we composed
             $(this_view.el).html(this_view.template(template_values));
 
-            console.log('statement');
             var series_length = series_list[this_view.options.display_values[0]].length;
             var series_dates = generateEpochTimeSequence(this_view.options.start_date, 
                                                          1, 

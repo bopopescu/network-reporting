@@ -388,11 +388,9 @@
                 var orders = new OrderCollection();
                 orders.add(order);
 
-                var start_date2 = new Date(bootstrapping_data.start_date);
-
                 var chart_view = new CollectionChartView({
                     collection: orders,
-                    start_date: start_date2,
+                    start_date: new Date(bootstrapping_data.start_date.getTime()),
                     display_values: ['imp', 'clk', 'ctr', 'conv']
                 });
                 chart_view.render();
@@ -503,7 +501,7 @@
 
                 var chart_view = new CollectionChartView({
                     collection: line_items,
-                    start_date: bootstrapping_data.start_date,
+                    start_date: new Date(bootstrapping_data.start_date.getTime()),
                     display_values: ['imp', 'clk', 'ctr', 'conv']
                 });
                 chart_view.render();

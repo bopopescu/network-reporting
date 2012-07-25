@@ -50,14 +50,38 @@ Rickshaw.Graph.MoPubHoverDetail = function(args) {
 		var approximateIndex = Math.floor(domainIndexScale(domainX));
 		var dataIndex = approximateIndex || 0;
 
-		for (var i = approximateIndex; i < stackedData[0].length - 1;) {
+		// for (var i = approximateIndex; i < stackedData[0].length - 1;) {
 
-			if (stackedData[0][i].x <= domainX && stackedData[0][i + 1].x > domainX) {
-				dataIndex = i;
-				break;
-			}
-			if (stackedData[0][i + 1] < domainX) { i++ } else { i-- }
-		}
+		// 	if (stackedData[0][i].x <= domainX && stackedData[0][i + 1].x > domainX) {
+		// 		dataIndex = i;
+		// 		break;
+		// 	}
+		// 	if (stackedData[0][i + 1] < domainX) { i++ } else { i-- }
+		// }
+
+        for (var i = approximateIndex; i < stackedData[0].length;) {
+
+            if (i == stackedData[0].length - 1) {
+                if (!stackedData[0][i]) {
+                    break;
+                }
+                
+                if (stackedData[0][i].x <= domainX) {
+                    dataIndex = i;
+                    break;
+                }
+            } else {
+                if (!stackedData[0][i] || !stackedData[0][i + 1]) {
+                    break;
+                }
+                
+                if (stackedData[0][i].x <= domainX && stackedData[0][i + 1].x > domainX) {
+                    dataIndex = i;
+                break;
+            }
+        }
+            if (stackedData[0][i] >= domainX) { i++; } else { i--; }
+    }
 
 		domainX = stackedData[0][dataIndex].x;
 
@@ -109,7 +133,7 @@ Rickshaw.Graph.MoPubHoverDetail = function(args) {
 
 		var xLabel = document.createElement('div');
 		xLabel.className = 'x_label';
-		xLabel.innerHTML = xFormatter(domainX);
+		xLabel.innerHTML = xFormatter(domainX, detail[0].value.y);
         
         // HACK here
         // The tooltip usually floats along with the vertical line that's

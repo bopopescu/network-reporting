@@ -75,7 +75,9 @@ class RequestHandler(object):
                 self.date_range = 14
             self.days = date_magic.gen_days(self.start_date, self.end_date)
             
-            self.current = datetime.date.today() in self.days
+            today = datetime.datetime.now(Pacific_tzinfo()).date()
+            self.current = today == self.days[-1]
+
             
             # little hack to figure out if it's yesterday so we can
             # show the button pressed down in the date controls

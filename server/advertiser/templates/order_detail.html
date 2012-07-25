@@ -66,6 +66,7 @@
   </section>
 
 
+  {%comment %}
   {# Table with all of the line items #}
   <section>
     <h3 class="left">
@@ -78,7 +79,7 @@
   {% order_table order %}
 
   <br />
-
+{% endcomment %}
   <h3 class="left"> Line Items </h3>
   <div class="right">
     <a class="left btn" href='{% url advertiser_line_item_form_new order.key %}'>
@@ -150,9 +151,7 @@
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
 
-            start_date:  Date({{ start_date.year }},
-                              {{ start_date.month|add:"-1" }},
-                              {{ start_date.day }})
+            start_date: {{ start_date|js_date}},
         });
     });
   </script>

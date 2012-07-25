@@ -27,40 +27,37 @@ var mopub = window.mopub || {};
         fill_rate: "Fill Rate",
         ctr: "CTR"
     };
-    
-    function getDateLabels(start_date, ticks, interval_type) {
-        
-        if (ticks === undefined) {
-            ticks = 14;
-        }
 
-        if (interval_type === undefined) {
-            interval_type = 'days';
-        }
-
-        if (interval_type !== 'days' && interval_type !== 'hours') {
-            throw Error('getDateLabels only accepts "days" or "hours" as an interval_type');
-        }
-
-        var current_date = moment(new Date(start_date));
-
-        var labels = [];
-
-        _.times(ticks, function (tick) {
-            var label = current_date.format("MM/DD");
-            if ((ticks <= 14 || tick % 2 == 0) && (ticks <= 30 || tick % 3 == 0)) {
-                labels.push(label);
-            } else {
-                labels.push("");
+    function clone(obj) {
+        if (null == obj || "object" != typeof obj) return obj;
+        var copy = obj.constructor();
+            for (var attr in obj) {
+                if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
             }
-            current_date.add(interval_type, 1);
-        });
-
-        return labels;
+        return copy;
     }
 
+    function generateEpochTimeSequence(start_date_time, tick_size, ticks, tick_type) {
 
-    function createDailyStatsChart(kind, datapoints, labels) {
+        if (typeof tick_type === 'undefined') {
+            tick_type = 'days';
+        }
+
+        var sequence = [];
+        var new_date;
+        
+        _.times(ticks, function (tick) {
+            var start = moment([start_date_time.getFullYear(), 
+                                start_date_time.getMonth(),
+                                start_date_time.getDay()]);
+            start.subtract(tick_type, tick);
+            sequence.unshift( start.unix() );
+        });
+
+        return sequence;
+    }
+
+    function createDailyStatsChart(kind, datapoints, dates) {
 
         var element = "#stats-chart";
 
@@ -80,7 +77,7 @@ var mopub = window.mopub || {};
 	        series: [{
 		        data: _.map(datapoints[kind], function (item, iter){
                     return {
-                        x: iter,
+                        x: dates[iter],
                         y: item
                     };
                 }),
@@ -93,14 +90,10 @@ var mopub = window.mopub || {};
         graph.renderer.unstack = true;
         graph.render();
         
-        // On the X-axis, display the date in MM/DD form.
-        var xAxis = new Rickshaw.Graph.Axis.X({
-            graph: graph,
-            labels: labels,
-            ticksTreatment: 'glow'
+        var xaxes = new Rickshaw.Graph.Axis.Time({
+	        graph: graph
         });
-        
-        xAxis.render();
+        xaxes.render();
         
         var yAxis = new Rickshaw.Graph.Axis.Y({
             graph: graph,
@@ -110,11 +103,11 @@ var mopub = window.mopub || {};
         
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail({
             graph: graph,
-            xFormatter: function(x) {
-                return moment(labels[x]).format("dddd MMMM Do") + 
+            xFormatter: function(x, y) {
+                return '' + moment.unix(x).format("dddd MMMM Do") + 
                     "<br />" + 
                     "Total: " + 
-                    ModelHelpers.format_stat(kind, datapoints[kind][x]) + ' ' + 
+                    ModelHelpers.format_stat(kind, y) + ' ' + 
                     ATTRIBUTE_LABELS[kind];
 
             }
@@ -129,9 +122,11 @@ var mopub = window.mopub || {};
     var CollectionChartView = Backbone.View.extend({
         el: "#stats",
         initialize: function () {
+            console.log(arguments);
             try {
                 this.template = _.template($('#chart-template').html());
             } catch (e) {}
+            console.log(this);
         },
 
         render: function() {
@@ -176,9 +171,12 @@ var mopub = window.mopub || {};
             // Render the template and the chart with the values we composed
             $(this_view.el).html(this_view.template(template_values));
 
+            console.log('statement');
             var series_length = series_list[this_view.options.display_values[0]].length;
-            var series_date_labels = getDateLabels(this_view.options.start_date, 
-                                                   series_length);
+            var series_dates = generateEpochTimeSequence(this_view.options.start_date, 
+                                                         1, 
+                                                         series_length);
+            
             
             $("#stats-breakdown-container tr", this_view.el).click(function() {
 
@@ -192,18 +190,15 @@ var mopub = window.mopub || {};
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
 
-
-                console.log(stats_type);
-                console.log(series_list);
-                console.log(series_date_labels);
+                
                 createDailyStatsChart(stats_type,
                                       series_list,
-                                      series_date_labels);
+                                      series_dates);
             });
 
             createDailyStatsChart(active_display_value,
                                   series_list,
-                                  series_date_labels);
+                                  series_dates);
             
         }        
     });

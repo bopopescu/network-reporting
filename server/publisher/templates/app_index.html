@@ -103,7 +103,8 @@
     $(function() {
         DashboardController.initializeIndex({
             start_date: {{ start_date|js_date}},
-            app_keys: {{ app_keys|safe }}
+            end_date: {{ end_date|js_date}},
+            app_keys: {{ app_keys|safe }},            
         });
     });
 </script>

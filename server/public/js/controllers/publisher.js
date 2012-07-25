@@ -707,8 +707,8 @@ var mopub = mopub || {};
                 // Load the chart
                 var chart_view = new CollectionChartView({
                     collection: apps,
-                    start_date: bootstrapping_data.start_date,
-                    display_values: ['req', 'imp', 'clk']
+                    start_date: bootstrapping_data.end_date,
+                    display_values: ['imp', 'clk', 'ctr']
                 });
                 chart_view.render();
             });
@@ -733,6 +733,8 @@ var mopub = mopub || {};
             initializeDeleteForm();
             initializeiOSAppSearch();
 
+            console.log(bootstrapping_data.start_date);
+            
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdUnitsFromAppKeys(bootstrapping_data.app_key);
 

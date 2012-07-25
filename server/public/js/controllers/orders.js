@@ -371,7 +371,7 @@
             var order = new Order({
                 id: bootstrapping_data.order_key
             });
-
+            
             order.bind('change', function(current_order) {
                 // Render the order row
                 renderOrder(order);
@@ -380,9 +380,12 @@
                 // so we add the single order to a collection.
                 var orders = new OrderCollection();
                 orders.add(order);
+
+                var start_date2 = new Date(bootstrapping_data.start_date);
+                
                 var chart_view = new CollectionChartView({
                     collection: orders,
-                    start_date: bootstrapping_data.start_date,
+                    start_date: start_date2,
                     display_values: ['imp', 'clk', 'ctr', 'conv']
                 });
                 chart_view.render();
@@ -402,51 +405,51 @@
              */
 
             // Fill in stats for the targeted apps
-            _.each(bootstrapping_data.targeted_apps, function(app_key) {
-                var app = new App({
-                    id: app_key,
-                    stats_endpoint: 'direct'
-                });
+            // _.each(bootstrapping_data.targeted_apps, function(app_key) {
+            //     var app = new App({
+            //         id: app_key,
+            //         stats_endpoint: 'direct'
+            //     });
 
-                app.url = function () {
-                    return '/api/campaign/'
-                        + bootstrapping_data.order_key
-                        + '/apps/'
-                        + this.id
-                        + "?"
-                        + window.location.search.substring(1)
-                        + '&endpoint=direct';
-                };
+            //     app.url = function () {
+            //         return '/api/campaign/'
+            //             + bootstrapping_data.order_key
+            //             + '/apps/'
+            //             + this.id
+            //             + "?"
+            //             + window.location.search.substring(1)
+            //             + '&endpoint=direct';
+            //     };
 
-                app.bind('change', function(current_app){
-                    renderApp(current_app);
-                });
-                app.fetch();
-            });
+            //     app.bind('change', function(current_app){
+            //         renderApp(current_app);
+            //     });
+            //     app.fetch();
+            // });
 
             // Fill in the stats for the targeted adunits
-            _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
-                var adunit = new AdUnit({
-                    id: adunit_key,
-                    stats_endpoint: 'direct'
-                });
+            // _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
+            //     var adunit = new AdUnit({
+            //         id: adunit_key,
+            //         stats_endpoint: 'direct'
+            //     });
 
-                adunit.url = function () {
-                    return '/api/campaign/'
-                        + bootstrapping_data.order_key
-                        + '/adunits/'
-                        + this.id
-                        + "?"
-                        + window.location.search.substring(1)
-                        + '&endpoint=direct';
-                };
+            //     adunit.url = function () {
+            //         return '/api/campaign/'
+            //             + bootstrapping_data.order_key
+            //             + '/adunits/'
+            //             + this.id
+            //             + "?"
+            //             + window.location.search.substring(1)
+            //             + '&endpoint=direct';
+            //     };
 
-                adunit.bind('change', function(current_adunit){                    
-                    renderAdUnit(current_adunit);
-                });
+            //     adunit.bind('change', function(current_adunit){                    
+            //         renderAdUnit(current_adunit);
+            //     });
 
-                adunit.fetch();
-            });
+            //     adunit.fetch();
+            // });
 
 
             /*

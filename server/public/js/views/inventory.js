@@ -50,8 +50,8 @@ var mopub = window.mopub || {};
             var start = moment([start_date_time.getFullYear(), 
                                 start_date_time.getMonth(),
                                 start_date_time.getDay()]);
-            start.subtract(tick_type, tick);
-            sequence.unshift( start.unix() );
+            start.add(tick_type, tick);
+            sequence.push( start.unix() );
         });
 
         return sequence;

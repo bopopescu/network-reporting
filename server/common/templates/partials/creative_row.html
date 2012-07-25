@@ -1,7 +1,7 @@
 {% load elements %}
 {% load filters %}
 
-<tr class="sub">
+<tr class="sub" id="{{ creative.key }}">
   <td class="controls">
     <input class="status_change_control" id="{{ creative.key }}" type="checkbox" />
     {% status_icon creative %}
@@ -20,7 +20,7 @@
           class="edit_creative_form hidden"
           enctype="multipart/form-data"
           method="post">
-      
+
       {% creative_form creative %}
         <button class="btn right submit">Continue</button>
         <button class="btn right cancel">Cancel</button>
@@ -28,14 +28,8 @@
     </form>
     {% creative_preview creative %}
   </td>
-  <td class="impressions stat">{{ c.stats.impression_count|withsep }}</td>
-  <td class="clicks stat">{{ c.stats.click_count|withsep }}</td>
-  <td class="ctr stat">{{ c.stats.ctr|percentage }}</td>
-  <td class="{% if line_item.gtee %}revenue{% else %}conversions{% endif %} stat">
-    {% if creative.gtee %}
-      {{ c.stats.revenue|currency }}
-    {% else %}
-      {{c.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})
-    {% endif %}
-  </td>
+  <td class="imp stat">--</td>
+  <td class="clk stat">--</td>
+  <td class="ctr stat">--</td>
+  <td class="{% if line_item.gtee %}rev{% else %}conv{% endif %} stat">--</td>
 </tr>

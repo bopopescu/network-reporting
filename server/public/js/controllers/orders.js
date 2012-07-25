@@ -20,17 +20,36 @@
         if (render_line_items) {
             var line_items = new LineItemCollection(order.get('adgroups'));
             line_items.each(function(line_item){
-                renderLineItem(line_item);
+                renderLineItem(line_item, false);
             });
         }
     }
 
-    function renderLineItem(line_item)  {
+    function renderLineItem(line_item, render_creatives) {
+        if (typeof render_creatives === 'undefined') {
+            render_creatives = true;
+        }
+
         var line_item_view = new LineItemView({
             model: line_item,
             el: 'inventory_table'
         });
         line_item_view.renderInline();
+
+        if (render_creatives) {
+            var creatives = new CreativeCollection(line_item.get('creatives'));
+            creatives.each(function(creative){
+                renderCreative(creative, false);
+            });
+        }
+    }
+
+    function renderCreative(creative) {
+        var creative_view = new CreativeView({
+            model: creative,
+            el: 'inventory_table'
+        });
+        creative_view.renderInline();
     }
 
     function renderApp(app) {
@@ -286,7 +305,7 @@
                 });
 
                 line_item.bind('change', function() {
-                    renderLineItem(line_item);
+                    renderLineItem(line_item, false);
                 });
 
                 line_item.fetch();

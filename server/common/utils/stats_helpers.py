@@ -7,8 +7,9 @@ from api.networks_helpers import get_all_stats as get_network_stats
 
 from account.query_managers import AccountQueryManager
 from advertiser.models import NetworkStates
-from advertiser.query_managers import AdGroupQueryManager, \
-        CampaignQueryManager
+from advertiser.query_managers import (CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
@@ -109,7 +110,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         if campaign.is_network and \
            campaign.network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
            campaign.old_campaign and start <= campaign.transition_date:
-            
+
             new_stats = None
             if end >= campaign.transition_date:
                 # get new campaign stats
@@ -139,7 +140,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
 
             return self.format_stats(all_stats)
 
-            
+
     def _get_advertiser_stats(self, advertiser, start, end,
                               publisher=None, daily=True,
                               *args, **kwargs):
@@ -153,12 +154,12 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         else:
             return self.format_stats(stats)
 
-            
+
     def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
-        
+
         if isinstance(campaign, str):
             campaign = CampaignQueryManager.get(campaign)
-            
+
         campaign_stats = self._get_campaign_stats(start, end,
                                                   campaign,
                                                   daily=True)
@@ -183,7 +184,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         return adgroup_stats
 
 
-    
+
     def get_network_app_stats(self, app_key, campaign,
                                         start, end, *args, **kwargs):
         """ This method needs to be merged """
@@ -203,7 +204,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                               advertiser=campaign)
         return app_stats
 
-        
+
     def get_campaign_specific_adunit_stats(self, adunit_key,
                                            campaign_key,
                                            start, end,
@@ -215,7 +216,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                                  publisher=adunit,
                                                  advertiser=campaign)
         return adunit_stats
-        
+
     def get_network_adunit_stats(self, adunit_key, campaign, start,
             end, *args, **kwargs):
         # mongo
@@ -224,7 +225,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                 publisher=adunit)
         return adunit_stats
 
-        
+
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
         # mongo
@@ -234,7 +235,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                               advertiser=adgroup)
         return app_stats
 
-        
+
     def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
         # mongo
@@ -245,9 +246,8 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         return adunit_stats
 
 
-
 class DirectSoldStatsFetcher(AbstractStatsFetcher):
-    
+
     def _get_publisher_stats(self, start, end,
                              publisher=None,
                              advertiser=None,
@@ -264,13 +264,13 @@ class DirectSoldStatsFetcher(AbstractStatsFetcher):
             return self.format_daily_stats(stats)
         else:
             return self.format_stats(stats)
-            
+
     def _get_advertiser_stats(self, start, end,
                               advertiser=None,
                               publisher=None,
                               daily=True,
                               *args, **kwargs):
-        
+
         days = date_magic.gen_days(start, end)
         query_manager = StatsModelQueryManager(advertiser.account)
         stats = query_manager.get_stats_for_days(publisher=publisher,
@@ -282,26 +282,35 @@ class DirectSoldStatsFetcher(AbstractStatsFetcher):
         else:
             return self.format_stats(stats)
 
-
     def get_campaign_stats(self, campaign, start, end, daily=True):
 
         if isinstance(campaign, str):
             campaign = CampaignQueryManager.get(campaign)
-            
+
         campaign_stats = self._get_advertiser_stats(start, end,
                                                     advertiser=campaign,
                                                     daily=daily)
         return campaign_stats
-        
+
     def get_adgroup_stats(self, adgroup, start, end, daily=True):
-        
+
         if isinstance(adgroup, str):
             adgroup = AdGroupQueryManager.get(adgroup)
-            
+
         adgroup_stats = self._get_advertiser_stats(start, end,
                                                    advertiser=adgroup,
                                                    daily=daily)
         return adgroup_stats
+
+    def get_creative_stats(self, creative, start, end, daily=True):
+
+        if isinstance(creative, str):
+            creative = CreativeQueryManager.get(creative)
+
+        creative_stats = self._get_advertiser_stats(start, end,
+                                                    advertiser=creative,
+                                                    daily=daily)
+        return creative_stats
 
     def get_campaign_specific_app_stats(self, app_key, campaign_key,
                                         start, end, *args, **kwargs):
@@ -313,7 +322,7 @@ class DirectSoldStatsFetcher(AbstractStatsFetcher):
                                               advertiser=campaign)
         return app_stats
 
-        
+
     def get_campaign_specific_adunit_stats(self, adunit_key,
                                            campaign_key,
                                            start, end,
@@ -325,8 +334,8 @@ class DirectSoldStatsFetcher(AbstractStatsFetcher):
                                                  publisher=adunit,
                                                  advertiser=campaign)
         return adunit_stats
-        
-        
+
+
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
         # mongo
@@ -336,7 +345,7 @@ class DirectSoldStatsFetcher(AbstractStatsFetcher):
                                               advertiser=adgroup)
         return app_stats
 
-        
+
     def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
         # mongo

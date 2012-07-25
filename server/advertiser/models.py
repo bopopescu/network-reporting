@@ -1009,6 +1009,13 @@ class Creative(polymodel.PolyModel):
         simplify_dict = self.build_simplify_dict()
         return self.SIMPLE(**simplify_dict)
 
+    # TODO: rename
+    def toJSON(self):
+        return {
+            'key': str(self.key()),
+            'name': self.name
+        }
+
 
 class TextAndTileCreative(Creative):
     SIMPLE = SimpleTextAndTileCreative

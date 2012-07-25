@@ -1029,6 +1029,58 @@ var mopub = mopub || {};
 
     _.extend(OrderCollection.prototype, StatsMixin);
 
+
+    /*
+     *  Creative
+     */
+    var Creative = Backbone.Model.extend({
+        defaults: {
+            start_date: null,
+            date_range: 90,
+            name: '',
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            conv: 0,
+            fill_rate: 0,
+            imp: 0,
+            req: 0,
+            rev: 0
+        },
+        url: function () {
+            var url = '/api/creative/' + this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=direct';
+            return url;
+        }
+    });
+
+    _.extend(Creative.prototype, StatsMixin);
+
+
+    var CreativeCollection = Backbone.Collection.extend({
+        model: Creative,
+        // url: function() {
+        //     var stats_endpoint = this.stats_endpoint;
+        //     return '/api/campaign/'
+        //         + this.campaign_id
+        //         + "?r=90"
+        //         + '&endpoint='
+        //         + stats_endpoint;
+        // },
+        // parse: function(response) {
+        //     return response.adunits;
+        // }
+    });
+
+    _.extend(CreativeCollection.prototype, StatsMixin);
+
+
     /*
      * EXPOSE THIS JUNK
      * (We should find a better way to do this.)
@@ -1048,7 +1100,9 @@ var mopub = mopub || {};
 
     window.Order = Order;
     window.LineItem = LineItem;
+    window.Creative = Creative
     window.OrderCollection = OrderCollection;
     window.LineItemCollection = LineItemCollection;
+    window.CreativeCollection = CreativeCollection;
 
 } (this.jQuery, this.Backbone, this._));

@@ -297,9 +297,31 @@ class AdGroupServiceHandler(RequestHandler):
     def get(self, adgroup_key):
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
-        adgroup_dict = get_adgroup_dict_with_stats(
-            adgroup, self.start_date, self.end_date,
-            self.request.GET.get('endpoint', 'all'))
+        endpoint = self.request.GET.get('endpoint', 'all')
+        stats_fetcher = get_stats_fetcher(adgroup._account, endpoint)
+
+        # adgroup dict
+        adgroup_dict = adgroup.toJSON()
+
+        # stats
+        stats_dict = stats_fetcher.get_adgroup_stats(
+            adgroup, self.start_date, self.end_date, True)
+        adgroup_dict.update(stats_dict)
+
+        # progress
+        adgroup_dict.update(get_progress_dict(adgroup.key()))
+
+        # creatives
+        adgroup_dict['creatives'] = []
+        for creative in adgroup.creatives:
+            # adgroup dict
+            creative_dict = creative.toJSON()
+
+            # stats
+            creative_dict.update(stats_fetcher.get_creative_stats(
+                creative, self.start_date, self.end_date, False))
+
+            adgroup_dict['creatives'].append(creative_dict)
 
         return JSONResponse(adgroup_dict)
 
@@ -321,7 +343,6 @@ def adgroup_service(request, *args, **kwargs):
 
 class CampaignServiceHandler(RequestHandler):
     def get(self, campaign_key=None, *args, **kwargs):
-
         # Get the campaign from the campaign key if it was
         # given. Otherwise, get all of the campaigns for the account.
         if campaign_key:
@@ -329,32 +350,39 @@ class CampaignServiceHandler(RequestHandler):
             if not campaign or campaign.account.key() != self.account.key():
                 raise Http404
             campaigns = [campaign]
-
         else:
             campaigns = CampaignQueryManager.get_campaigns(self.account)
 
-        # Get stats and serialize all of the data
         endpoint = self.request.GET.get('endpoint', 'all')
         stats_fetcher = get_stats_fetcher(campaign._account, endpoint)
 
-        campaigns_dict = []
+        campaigns_dicts = []
         for campaign in campaigns:
+            # campaign dict
             campaign_dict = campaign.toJSON()
 
+            # stats
+            campaign_dict.update(stats_fetcher.get_campaign_stats(
+                campaign, self.start_date, self.end_date, True))
+
+            # adgroups
             campaign_dict['adgroups'] = []
             for adgroup in campaign.adgroups:
-                adgroup_dict = get_adgroup_dict_with_stats(
-                    adgroup, self.start_date, self.end_date, endpoint, False)
+                # adgroup dict
+                adgroup_dict = adgroup.toJSON()
+
+                # stats
+                adgroup_dict.update(stats_fetcher.get_adgroup_stats(
+                    adgroup, self.start_date, self.end_date, False))
+
+                # progress
+                adgroup_dict.update(get_progress_dict(adgroup.key()))
 
                 campaign_dict['adgroups'].append(adgroup_dict)
 
-            # Get the top level stats for the campaign
-            campaign_dict.update(stats_fetcher.get_campaign_stats(
-                campaign, self.start_date,  self.end_date, True))
+            campaigns_dicts.append(campaign_dict)
 
-            campaigns_dict.append(campaign_dict)
-
-        return JSONResponse(campaigns_dict)
+        return JSONResponse(campaigns_dicts)
 
     def post(self, *args, **kwargs):
         return JSONResponse({'error': 'Not yet implemented'})
@@ -373,17 +401,11 @@ def campaign_service(request, *args, **kwargs):
 # Helper Functions #
 ####################
 
-def get_adgroup_dict_with_stats(adgroup, start_date, end_date, endpoint='all', daily=True):
-    adgroup_dict = adgroup.toJSON()
-
-    stats_fetcher = get_stats_fetcher(adgroup._account, endpoint)
-    stats_dict = stats_fetcher.get_adgroup_stats(adgroup, start_date, end_date,
-                                                 daily)
-
-    adgroup_dict.update(stats_dict)
+def get_progress_dict(adgroup_key):
+    progress_dict = {}
 
     query_string = urllib.urlencode({
-        'key': str(adgroup.key()),
+        'key': str(adgroup_key),
         'key_type': 'adgroup',
     })
 
@@ -393,26 +415,26 @@ def get_adgroup_dict_with_stats(adgroup, start_date, end_date, endpoint='all', d
     try:
         pacing_data = simplejson.loads(urllib2.urlopen(pacing_url).read())['pacing']
         if pacing_data[0] == 'Pacing':
-            adgroup_dict['pace'] = pacing_data[1]
-            if adgroup_dict['pace'] < .5:
-                adgroup_dict['pace_type'] = "pace-failure"
-            elif adgroup_dict['pace'] < .85:
-                adgroup_dict['pace_type'] = "pace-warning"
+            progress_dict['pace'] = pacing_data[1]
+            if progress_dict['pace'] < .5:
+                progress_dict['pace_type'] = "pace-failure"
+            elif progress_dict['pace'] < .85:
+                progress_dict['pace_type'] = "pace-warning"
             else:
-                adgroup_dict['pace_type'] = "pace-success"
+                progress_dict['pace_type'] = "pace-success"
         else:
-            adgroup_dict['pace_type'] = "delivery"
+            progress_dict['pace_type'] = "delivery"
     except:
         pass
 
     delivered_url = adserver_url + REMOTE_DELIVERED_PATH + '?' + query_string
     try:
         delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
-        adgroup_dict['percent_delivered'] = delivered_data['percent_delivered']
+        progress_dict['percent_delivered'] = delivered_data['percent_delivered']
     except:
         pass
 
-    return adgroup_dict
+    return progress_dict
 
 
 def get_stats_fetcher(account_key, stats_endpoint):

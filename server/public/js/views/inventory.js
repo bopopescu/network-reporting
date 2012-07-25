@@ -44,9 +44,9 @@ var mopub = window.mopub || {};
 
         var sequence = [];
         var new_date;
-        
+
         _.times(ticks, function (tick) {
-            var start = moment([start_date_time.getFullYear(), 
+            var start = moment([start_date_time.getFullYear(),
                                 start_date_time.getMonth(),
                                 start_date_time.getDate()]);
             start.add(tick_type, tick);
@@ -88,7 +88,7 @@ var mopub = window.mopub || {};
 
         graph.renderer.unstack = true;
         graph.render();
-        
+
         var xaxes = new Rickshaw.Graph.Axis.Time({
 	        graph: graph
         });
@@ -103,9 +103,9 @@ var mopub = window.mopub || {};
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail({
             graph: graph,
             xFormatter: function(x, y) {
-                return '' + moment.unix(x).format("dddd MMMM Do") + 
-                    "<br />" + 
-                    "Total: " + 
+                return '' + moment.unix(x).format("dddd MMMM Do") +
+                    "<br />" +
+                    "Total: " +
                     ModelHelpers.format_stat(kind, y) + ' ' +
                     ATTRIBUTE_LABELS[kind];
 
@@ -169,8 +169,8 @@ var mopub = window.mopub || {};
             $(this_view.el).html(this_view.template(template_values));
 
             var series_length = series_list[this_view.options.display_values[0]].length;
-            var series_dates = generateEpochTimeSequence(this_view.options.start_date, 
-                                                         1, 
+            var series_dates = generateEpochTimeSequence(this_view.options.start_date,
+                                                         1,
                                                          series_length);
 
             $("#stats-breakdown-container tr", this_view.el).click(function() {
@@ -185,7 +185,7 @@ var mopub = window.mopub || {};
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
 
-                
+
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_dates);
@@ -822,6 +822,29 @@ var mopub = window.mopub || {};
         }
     });
 
+    var CreativeView = Backbone.View.extend({
+        renderInline: function () {
+            var current_model = this.model;
+
+            var creative_row = $('#' + current_model.get('key'), this.el);
+
+            var display_fields = [
+                'rev',
+                'imp',
+                'fill_rate',
+                'clk',
+                'ctr',
+                'conv',
+                'conv_rate'
+            ];
+            _.each(display_fields, function(field){
+                var field_text = current_model.get_formatted_stat(field);
+                $("." + field, creative_row).text(field_text);
+            });
+            $(".loading-img", creative_row).hide();
+        }
+    });
+
 
     // Common
     window.CollectionChartView = CollectionChartView;
@@ -833,8 +856,9 @@ var mopub = window.mopub || {};
     window.AppView = AppView;
 
     // Orders
-    window.LineItemView = LineItemView;
     window.OrderView = OrderView;
+    window.LineItemView = LineItemView;
+    window.CreativeView = CreativeView;
 
     // Networks
     window.NetworkAppView = NetworkAppView;

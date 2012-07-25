@@ -83,6 +83,7 @@
     </div>
   </td>
   <td class="delivery">
+    {% if line_item.budget_goal %}
     <div class="hidden progress progress-striped
         {% if line_item.status == 'running' %}active{% endif %}
         {% if line_item.status == 'paused' %}progress-info{% endif %}">
@@ -91,6 +92,7 @@
     </div>
 
     <div class="hidden pace"></div>
+    {% endif %}
   </td>
   <td class="popdown">
     <i class="moreinfo icon-search" id="popover-{{line_item.key}}"></i>

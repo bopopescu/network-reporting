@@ -148,10 +148,10 @@
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeOrderDetail({
             order_key: "{{ order.key }}",
+            start_date: {{ start_date|js_date}},
+            date_range: {{ date_range }},
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
             targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
-
-            start_date: {{ start_date|js_date}},
         });
     });
   </script>

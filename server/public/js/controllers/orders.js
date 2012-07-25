@@ -371,7 +371,14 @@
             var order = new Order({
                 id: bootstrapping_data.order_key
             });
-            
+            order.url = function () {
+                return '/api/campaign/'
+                    + this.id
+                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + bootstrapping_data.start_date.getMonth() + '-' + bootstrapping_data.start_date.getDate()
+                    + '&r=' + bootstrapping_data.date_range
+                    + '&endpoint=direct';
+            };
+
             order.bind('change', function(current_order) {
                 // Render the order row
                 renderOrder(order);
@@ -382,7 +389,7 @@
                 orders.add(order);
 
                 var start_date2 = new Date(bootstrapping_data.start_date);
-                
+
                 var chart_view = new CollectionChartView({
                     collection: orders,
                     start_date: start_date2,
@@ -442,7 +449,7 @@
             //             + window.location.search.substring(1)
             //             + '&endpoint=direct';
             //     };
-            //     adunit.bind('change', function(current_adunit){                    
+            //     adunit.bind('change', function(current_adunit){
             //         renderAdUnit(current_adunit);
             //     });
 
@@ -479,6 +486,13 @@
             var line_item = new LineItem({
                 id: bootstrapping_data.line_item_key
             });
+            line_item.url = function () {
+                return '/api/adgroup/'
+                    + this.id
+                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + bootstrapping_data.start_date.getMonth() + '-' + bootstrapping_data.start_date.getDate()
+                    + '&r=' + bootstrapping_data.date_range
+                    + '&endpoint=direct';
+            };
 
             line_item.bind('change', function (current_line_item) {
 

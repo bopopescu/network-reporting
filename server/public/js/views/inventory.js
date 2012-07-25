@@ -813,17 +813,21 @@ var mopub = window.mopub || {};
                 delay: { hide: 250 }
             });
 
-            if(current_model.percent_delivered >= 0) {
-                $percent_delivered = $('.progress', row);
-                $('div.bar', $percent_delivered).css('width', '' + current_model.percent_delivered*100.0 + '%');
-                $('div#progress-bar-text', $percent_delivered).text('' + current_model.percent_delivered*100 + '%')
+            var percent_delivered = current_model.get('percent_delivered');
+            console.log(percent_delivered);
+            if(percent_delivered >= 0) {
+                var $percent_delivered = $('.progress', row);
+                $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100.0 + '%');
+                $('div#progress-bar-text', $percent_delivered).text('' + percent_delivered*100 + '%')
                 $percent_delivered.show();
             }
 
-            if(current_model.pace >= 0) {
-                $pace = $('.pace', row);
-                $pace.addClass(current_model.pace_indicator);
-                $pace.text('Pace: ' + current_model.pace*100 + '%')
+            var pace = current_model.get('pace');
+            console.log(pace);
+            if(pace >= 0) {
+                var $pace = $('.pace', row);
+                $pace.addClass(current_model.get('pace_indicator'));
+                $pace.text('Pace: ' + pace*100 + '%')
                 $pace.show();
             }
 

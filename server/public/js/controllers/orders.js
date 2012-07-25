@@ -374,7 +374,7 @@
             order.url = function () {
                 return '/api/campaign/'
                     + this.id
-                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + bootstrapping_data.start_date.getMonth() + '-' + bootstrapping_data.start_date.getDate()
+                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + (bootstrapping_data.start_date.getMonth() + 1) + '-' + bootstrapping_data.start_date.getDate()
                     + '&r=' + bootstrapping_data.date_range
                     + '&endpoint=direct';
             };
@@ -397,11 +397,11 @@
                 });
                 chart_view.render();
 
-                // Load the daily counts
-                var daily_counts_view = new DailyCountsView({
-                    model: order
-                });
-                daily_counts_view.render();
+                // // Load the daily counts
+                // var daily_counts_view = new DailyCountsView({
+                //     model: order
+                // });
+                // daily_counts_view.render();
             });
 
             order.fetch();
@@ -489,7 +489,7 @@
             line_item.url = function () {
                 return '/api/adgroup/'
                     + this.id
-                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + bootstrapping_data.start_date.getMonth() + '-' + bootstrapping_data.start_date.getDate()
+                    + '?s=' + bootstrapping_data.start_date.getFullYear() + '-' + (bootstrapping_data.start_date.getMonth() + 1) + '-' + bootstrapping_data.start_date.getDate()
                     + '&r=' + bootstrapping_data.date_range
                     + '&endpoint=direct';
             };
@@ -508,11 +508,11 @@
                 });
                 chart_view.render();
 
-                // Load the daily counts
-                var daily_counts_view = new DailyCountsView({
-                    model: line_item
-                });
-                daily_counts_view.render();
+                // // Load the daily counts
+                // var daily_counts_view = new DailyCountsView({
+                //     model: line_item
+                // });
+                // daily_counts_view.render();
             });
 
             line_item.fetch();

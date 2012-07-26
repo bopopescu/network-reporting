@@ -264,13 +264,12 @@ class CreateAppHandler(RequestHandler):
         account = self.account  # attach account info
         app = app_form.save(commit=False)
         app.account = account
+        AppQueryManager.update_config_and_put(app, NetworkConfig())
 
         account = self.account
         adunit = adunit_form.save(commit=False)
         adunit.account = account
-
-        network_config = NetworkConfig()
-        AppQueryManager.update_config_and_put(app, network_config)
+        AdUnitQueryManager.update_config_and_put(adunit, NetworkConfig())
 
         # update the database
         AppQueryManager.put(app)
@@ -788,8 +787,7 @@ class AppUpdateAJAXHandler(RequestHandler):
             app.account = account
 
             if create:
-                network_config = NetworkConfig()
-                AppQueryManager.update_config_and_put(app, network_config)
+                AppQueryManager.update_config_and_put(app, NetworkConfig())
 
             AppQueryManager.put(app)
 
@@ -878,8 +876,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
             adunit.account = account
 
             if create:
-                network_config = NetworkConfig()
-                AdUnitQueryManager.update_config_and_put(adunit, network_config)
+                AdUnitQueryManager.update_config_and_put(adunit, NetworkConfig())
 
             AdUnitQueryManager.put(adunit)
 

@@ -269,6 +269,9 @@ class CreateAppHandler(RequestHandler):
         adunit = adunit_form.save(commit=False)
         adunit.account = account
 
+        network_config = NetworkConfig()
+        AppQueryManager.update_config_and_put(app, network_config)
+
         # update the database
         AppQueryManager.put(app)
 
@@ -764,8 +767,10 @@ class AppUpdateAJAXHandler(RequestHandler):
         app_key = app_key or self.request.POST.get('app_key')
         if app_key:
             app = AppQueryManager.get(app_key)
+            create = False
         else:
             app = None
+            create = True
 
         app_form = AppForm(data = self.request.POST,
                            files = self.request.FILES,
@@ -778,8 +783,13 @@ class AppUpdateAJAXHandler(RequestHandler):
                 account = self.account
             else:
                 account = app_form.instance.account
+
             app = app_form.save(commit=False)
             app.account = account
+
+            if create:
+                network_config = NetworkConfig()
+                AppQueryManager.update_config_and_put(app, network_config)
 
             AppQueryManager.put(app)
 
@@ -847,8 +857,10 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
             adunit = AdUnitQueryManager.get(adunit_key)
             if adunit.account.key() != self.account.key():
                 raise Http404
+            create = False
         else:
             adunit = None
+            create = True
 
         adunit_form = AdUnitForm(data=self.request.POST,
                                  instance=adunit,
@@ -864,6 +876,11 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 
             adunit = adunit_form.save(commit=False)
             adunit.account = account
+
+            if create:
+                network_config = NetworkConfig()
+                AdUnitQueryManager.update_config_and_put(adunit, network_config)
+
             AdUnitQueryManager.put(adunit)
 
             # If the adunit already exists we don't need to enable the

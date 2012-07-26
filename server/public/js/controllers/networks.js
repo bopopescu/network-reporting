@@ -8,6 +8,22 @@
         Toast.error(message, "Error fetching app data.");
     };
 
+    function hashDiff(h1, h2) {
+        var d = {};
+        for (k in h2) {
+            if (h1[k] !== h2[k]) d[k] = h2[k];
+        }
+        return d;
+    }
+
+    function convertSerializedArrayToHash(a) { 
+        var r = {}; 
+        for (var i = 0;i<a.length;i++) { 
+            r[a[i].name] = a[i].value;
+        }
+        return r;
+    }
+
     function initialize_campaign_data(campaign_data, apps, include_adunits) {
         // create mopub campaign
         // endpoint=all
@@ -286,6 +302,7 @@
     var EditNetworkController = {
         initialize: function(bootstrapping_data) {
             var network_type = bootstrapping_data.network_type,
+                campaign_key = bootstrapping_data.campaign_key,
                 pretty_name = bootstrapping_data.pretty_name,
                 adunits_for_app = bootstrapping_data.adunits_for_app,
                 app_for_adunit = bootstrapping_data.app_for_adunit,
@@ -493,11 +510,17 @@
                 $('select[name="campaign_type"]').val(window.location.hash.substring(1));
             }
 
+            // initial form items saved in hash
+            if(campaign_key) {
+                var startItems = convertSerializedArrayToHash($('form#campaign_and_adgroup').serializeArray()); 
+            }
+
             var validator = $('form#campaign_and_adgroup').validate({
                 errorPlacement: function(error, element) {
                     element.parents('div').not(':hidden').first().append(error);
                 },
                 submitHandler: function(form) {
+                    // Submit only the fields that have changed using ajaxSubmit
                     $(form).ajaxSubmit({
                         data: {ajax: true},
                         dataType: 'json',
@@ -535,6 +558,33 @@
                             });
                         },
                         beforeSubmit: function(arr, $form, options) {
+                            if(campaign_key) {
+                                var currentItems = convertSerializedArrayToHash($form.serializeArray());
+                                var itemsToSubmit = hashDiff(startItems, currentItems);
+                                var extraItems = hashDiff(currentItems, startItems);
+
+                                // hack to remove items at arr location prior to
+                                // submit
+                                var k = 0;
+                                for(i=0; i < arr.length; i++) {
+                                    if(!(arr[i].name in itemsToSubmit)) {
+                                        arr.splice(k, 1);
+                                        i--;
+                                    } else {
+                                        k++;
+                                    }
+                                }
+
+                                for (k in extraItems) {
+                                    var value = extraItems[k];
+                                    if(k.indexOf('active') != -1) {
+                                        arr.push({'name': k,
+                                                  'value': ''});
+                                    }
+                                }
+
+                            }
+
                             $('#loading').css('display', 'inline');
                             $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
                                                                            disabled: true});

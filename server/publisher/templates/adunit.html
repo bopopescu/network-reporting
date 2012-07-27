@@ -175,7 +175,7 @@
       </td>
 
       <td class="name"
-          {% if not marketplace_adgroup.active %}{% opacity "0.2" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.2" %}{% endif %}>
         <a class="order-name"
            href="{% url marketplace_index %}"
            style="font-size:12px;">
@@ -189,27 +189,27 @@
       </td>
 
       <td class="advertiser stat"
-          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
         --
       </td>
       <td class="type stat"
-          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
         {{ marketplace_adgroup.adgroup_type_display }}
       </td>
       <td class="goal stat"
-          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
         --
       </td>
       <td class="rev stat"
-          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
         --
       </td>
       <td class="imp stat"
-          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
         --
       </td>
       <td class="stat"
-          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
         <div class="clk">
           --
         </div>
@@ -221,7 +221,7 @@
         --
       </td>
       <td class="stat"
-          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {% if not marketplace_adgroup.active or not marketplace_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
         <div class="conv">
           --
         </div>
@@ -239,7 +239,7 @@
         </td>
 
         <td class="name"
-            {% if not network_adgroup.active %}{% opacity "0.2" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.2" %}{% endif %}>
           <a class="order-name"
              href="{% url network_details network_adgroup.campaign.key %}"
              style="font-size:12px;">
@@ -253,27 +253,27 @@
         </td>
 
         <td class="advertiser stat"
-            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
           --
         </td>
         <td class="type stat"
-            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
           {{ network_adgroup.adgroup_type_display }}
         </td>
         <td class="goal stat"
-            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
           --
         </td>
         <td class="rev stat"
-            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
           --
         </td>
         <td class="imp stat"
-            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
           --
         </td>
         <td class="stat"
-            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
           <div class="clk">
             --
           </div>
@@ -285,7 +285,7 @@
           {{ network_adgroup.bid }}
         </td>
         <td class="stat"
-            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+            {% if not network_adgroup.active or not network_adgroup.campaign.active %}{% opacity "0.4" %}{% endif %}>
           <div class="conv">
             --
           </div>
@@ -368,6 +368,7 @@
 
 {% block extraScripts %}
   {% include_template "chart" %}
+  {% include_template "popover" %}
   {% include_template "daily-counts" %}
 
   {% include_script "models/inventory" %}
@@ -378,7 +379,11 @@
         DashboardController.initializeAdunitDetail({
             start_date: {{ start_date|js_date }},
             app_key: "{{ adunit.app.key }}",
-            adunit_key: "{{ adunit.key }}"
+            adunit_key: "{{ adunit.key }}",
+            start_date:  {{ start_date|js_date }},
+            date_range: {{ date_range }},
+            line_item_keys: [{% for line_item in line_items %}'{{ line_item.key }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            marketplace_adgroup_key: '{{ marketplace_adgroup.key }}'
         });
     });
   </script>

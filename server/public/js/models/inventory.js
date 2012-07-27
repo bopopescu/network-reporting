@@ -914,7 +914,11 @@ var mopub = mopub || {};
             fill_rate: 0,
             imp: 0,
             req: 0,
-            rev: 0
+            rev: 0,
+            allocation: null,
+            frequency_caps: null,
+            country_targeting: null,
+            device_targeting: []
         },
         url: function () {
             var url = '/api/adgroup/' + this.id + '?';

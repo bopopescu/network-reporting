@@ -86,9 +86,9 @@ var mopub = mopub || {};
         adunits.bind('reset', function(adunits_collection) {
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ 
-                    model: adunit, 
-                    el: '#dashboard-apps' 
+                var adunitView = new AdUnitView({
+                    model: adunit,
+                    el: '#dashboard-apps'
                 });
                 adunitView.renderInline();
             });
@@ -544,7 +544,7 @@ var mopub = mopub || {};
             search_modal.modal('show');
 
             // If they've entered some text, make the ajax call to apple
-            // searching for the app they typed in. 
+            // searching for the app they typed in.
             if (app_name_value.length) {
                 var itunes_search = $.ajax({
                     dataType: 'jsonp',
@@ -558,19 +558,19 @@ var mopub = mopub || {};
                 // If we get a response, hide the loading stuff
                 // and put a row in the modal for each app
                 itunes_search.success(function (response) {
-                    
+
                     loading_stuff.hide();
 
-                    // Add all of the apps to the modal if we got 
+                    // Add all of the apps to the modal if we got
                     // some search results.
                     if (response.resultCount > 0) {
 
-                        var message = "Found " 
-                            + response.resultCount 
+                        var message = "Found "
+                            + response.resultCount
                             + " results. " +
                             "Click on an app to use its data in the form.";
-                        var message_div = "<div class='alert-message block-message info'>" + 
-                            message + 
+                        var message_div = "<div class='alert-message block-message info'>" +
+                            message +
                             "</div>";
 
                         results_section.append(message_div);
@@ -584,7 +584,7 @@ var mopub = mopub || {};
                                 $("#appForm-url").val(result.trackViewUrl);
                                 $('#appForm input[name="img_url"]')
                                     .val(result.artworkUrl60);
-                                
+
                                 if (result.hasOwnProperty('primaryGenreName')) {
                                     $('#appForm select[name="primary_category"]')
                                         .val(result.primaryGenreName.toLowerCase());
@@ -610,31 +610,31 @@ var mopub = mopub || {};
                     } else {
                         var message = "No apps matching this name or description were " +
                             "found in the App Store.";
-                        var message_div = "<div class='alert-message block-message'>" + 
-                            message + 
+                        var message_div = "<div class='alert-message block-message'>" +
+                            message +
                             "</div>";
                         results_section.append(message_div);
                     }
 
                 });
-                
+
                 // If we got an error it's probably because we can't connect
                 itunes_search.error(function () {
                     var message = "We were unable to connect to the App Store to find your app. " +
                         "Sorry for the inconvenience.";
-                        var message_div = "<div class='alert-message block-message error'>" + 
-                            message + 
+                        var message_div = "<div class='alert-message block-message error'>" +
+                            message +
                             "</div>";
                         results_section.append(message_div);
                 });
-                
+
             } else {
                 // Hide the loading stuff, but show a "you did it wrong" message
                 loading_stuff.hide();
                 var message = "Please enter your app's name in the 'App name' " +
                     "field so we can search the App Store.";
-                var message_div = "<div class='alert-message block-message'>" + 
-                    message + 
+                var message_div = "<div class='alert-message block-message'>" +
+                    message +
                     "</div>";
                 results_section.append(message_div);
 
@@ -734,7 +734,7 @@ var mopub = mopub || {};
             initializeiOSAppSearch();
 
             console.log(bootstrapping_data.start_date);
-            
+
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdUnitsFromAppKeys(bootstrapping_data.app_key);
 
@@ -761,7 +761,7 @@ var mopub = mopub || {};
             initializeCommon();
             initializeDeleteForm();
             initializeEditAdunitForm();
-            
+
             // This usually happens in the model. We're doing it here
             // so as not to step on other people's feet. This eventually
             // should be changed to enforce some consistency.
@@ -783,11 +783,11 @@ var mopub = mopub || {};
             var adunit = new AdUnit();
             adunit.id = bootstrapping_data.adunit_key;
             adunit.app_id = bootstrapping_data.app_key;
-            
+
             adunit.bind('change', function () {
 
                 // fuck you
-                var adunits = new AdUnitCollection();                
+                var adunits = new AdUnitCollection();
                 adunits.add(adunit);
                 _.extend(AdUnitCollection.prototype, StatsMixin);
 
@@ -795,7 +795,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: adunits,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['rev', 'imp', 'cpm' ] 
+                    display_values: ['rev', 'imp', 'cpm' ]
                 });
                 chart_view.render();
 
@@ -807,7 +807,72 @@ var mopub = mopub || {};
 
             });
 
-            adunit.fetch();            
+            adunit.fetch();
+
+            _.each(bootstrapping_data.line_item_keys, function(line_item_key) {
+                var line_item = new LineItem({
+                    id: line_item_key,
+                    key: line_item_key
+                });
+                line_item.url = function () {
+                    url = '/api/adgroup/' + this.id + '/adunits/' + bootstrapping_data.adunit_key + '?';
+                    var start_date = bootstrapping_data.start_date;
+                    if(start_date) {
+                        url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                    }
+                    url += '&r=' + bootstrapping_data.date_range;
+                    url += '&endpoint=direct';
+                    return url;
+                };
+                line_item.parse = function (response) {
+                    return response[0];
+                }
+
+                var line_item_view = new LineItemView({
+                    model: line_item,
+                    el: '.advertiser_table'
+                });
+                line_item.bind('change', function () {
+                    line_item_view.renderInline();
+                })
+
+                line_item.fetch();
+            });
+
+            var marketplace = new AdGroup({
+                id: bootstrapping_data.marketplace_adgroup_key,
+                key: bootstrapping_data.marketplace_adgroup_key
+            });
+            marketplace.url = function () {
+                url = '/api/app/' + bootstrapping_data.app_key + '/adunits?';
+                var start_date = bootstrapping_data.start_date;
+                if(start_date) {
+                    url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                }
+                url += '&r=' + bootstrapping_data.date_range;
+                url += '&endpoint=mpx';
+                return url;
+            };
+            marketplace.parse = function (response) {
+                for(var index in response) {
+                    if(response[index].id == bootstrapping_data.adunit_key) {
+                        return response[index];
+                    }
+                }
+                return null;
+            }
+
+            var marketplace_view = new LineItemView({
+                model: marketplace,
+                el: '.advertiser_table'
+            });
+            marketplace.bind('change', function () {
+                marketplace_view.renderInline();
+            })
+
+            marketplace.fetch();
+
+
 
         },
 

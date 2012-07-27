@@ -80,7 +80,7 @@
 
 
 
-<table class="inventory_table">
+<table class="advertiser_table">
   <thead>
     <tr style="width: 230px;">
       <th style="width: 10px;"></th>
@@ -96,36 +96,26 @@
     </tr>
   </thead>
   <tbody>
+
+
     {% for line_item in line_items %}
         <tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
-            <td class="controls">
-              <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
-            </td>
+          <td class="controls">
+            <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+          </td>
 
           <td class="name"
               {% if not line_item.active %}{% opacity "0.2" %}{% endif %}>
             <a class="order-name"
-               href="
-                    {% if line_item.campaign.campaign_type == 'order' %}
-                        {% url advertiser_order_detail order_key=line_item.campaign.key %}
-                    {% else %}
-                        {% if line_item.campaign.campaign_type == 'marketplace' %}
-                            {% url marketplace_index %}
-                        {% else %}
-                            {% url network_details campaign_key=line_item.campaign.key %}
-                        {% endif %}
-                    {% endif %}
-                    "
+               href="{% url advertiser_order_detail order_key=line_item.campaign.key %}"
                style="font-size:12px;">
               {{ line_item.campaign.name }}
             </a>
-            {% if line_item.campaign.campaign_type == 'order' %}
             >
             <br />
             <a href='{% url advertiser_line_item_detail line_item_key=line_item.key %}'>
               {{ line_item.name }}
             </a>
-            {% endif %}
             <br />
             <span class="muted">
               {{ line_item.status|capitalize }}
@@ -144,7 +134,7 @@
           </td>
           <td class="goal stat"
               {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
-            {{ line_item.budget_goal_display|default:'--' }}
+            {{ line_item.budget_goal_display }}
           </td>
           <td class="rev stat"
               {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
@@ -180,13 +170,9 @@
 
 
     <tr class="sub lineitem-row {{ marketplace_adgroup.status }}" id="{{ marketplace_adgroup.key }}">
-      {% if show_status %}
-        <td class="controls">
-          <img id="status-{{ marketplace_adgroup.key }}" src="{{ marketplace_adgroup.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
-        </td>
-      {% else %}
-        <td></td>
-      {% endif %}
+      <td class="controls">
+        <img id="status-{{ marketplace_adgroup.key }}" src="{{ marketplace_adgroup.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+      </td>
 
       <td class="name"
           {% if not marketplace_adgroup.active %}{% opacity "0.2" %}{% endif %}>
@@ -202,7 +188,9 @@
         <img id="{{ marketplace_adgroup.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
       </td>
 
-      <td class="advertiser stat">
+      <td class="advertiser stat"
+          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+        --
       </td>
       <td class="type stat"
           {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
@@ -210,7 +198,7 @@
       </td>
       <td class="goal stat"
           {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
-        {{ marketplace_adgroup.budget_goal_display|default:'--' }}
+        --
       </td>
       <td class="rev stat"
           {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
@@ -245,7 +233,7 @@
 
 
     {% for network_adgroup in network_adgroups %}
-      <tr id="{{ network_adgroup.key }}">
+      <tr class="sub lineitem-row {{ network_adgroup.status }}" id="{{ network_adgroup.key }}">
         <td class="controls">
           <img id="status-{{ network_adgroup.key }}" src="{{ network_adgroup.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
         </td>
@@ -253,7 +241,7 @@
         <td class="name"
             {% if not network_adgroup.active %}{% opacity "0.2" %}{% endif %}>
           <a class="order-name"
-             href="{% url network network_adgroup.campaign.key %}"
+             href="{% url network_details network_adgroup.campaign.key %}"
              style="font-size:12px;">
             {{ network_adgroup.campaign.name }}
           </a>
@@ -265,6 +253,7 @@
         </td>
 
         <td class="advertiser stat">
+          --
         </td>
         <td class="type stat"
             {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
@@ -272,7 +261,7 @@
         </td>
         <td class="goal stat"
             {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
-          {{ network_adgroup.budget_goal_display|default:'--' }}
+          --
         </td>
         <td class="rev stat"
             {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>

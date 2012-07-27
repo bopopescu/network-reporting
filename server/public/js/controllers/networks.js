@@ -26,8 +26,20 @@
 
     function convertSerializedArrayToHash(a) { 
         var r = {}; 
-        for (var i = 0;i<a.length;i++) { 
-            r[a[i].name] = a[i].value;
+        for (var i = 0; i < a.length; i++) { 
+            // if the name is already in the dict append the value to a list
+            if(a[i].name in r) {
+                if(typeof a[i].value == 'string') {
+                    // if the value is a string
+                    r[a[i].name] = [r[a[i].name], a[i].value];
+                } else {
+                    // if the value is a list
+                    r[a[i].name].append(value);
+                }
+            } else {
+                r[a[i].name] = a[i].value;
+            }
+
         }
         return r;
     }
@@ -538,11 +550,6 @@
                 $('select[name="campaign_type"]').val(window.location.hash.substring(1));
             }
 
-            // initial form items saved in hash
-            if(campaign_key) {
-                var startItems = convertSerializedArrayToHash($('form#campaign_and_adgroup').serializeArray()); 
-            }
-
             var validator = $('form#campaign_and_adgroup').validate({
                 errorPlacement: function(error, element) {
                     element.parents('div').not(':hidden').first().append(error);
@@ -603,12 +610,19 @@
                                     }
                                 }
 
+                                // hack for making adgroups in-active
                                 for (k in extraItems) {
                                     var value = extraItems[k];
-                                    if(k.indexOf('active') != -1) {
+                                    if(k.indexOf('active') != -1 || k.indexOf('target') != -1) {
                                         arr.push({'name': k,
                                                   'value': ''});
                                     }
+                                }
+
+                                // hack for removing geo predicates
+                                if('geo_predicates' in extraItems) {
+                                    arr.push({'name': 'geo_predicates',
+                                              'value': ''});
                                 }
 
                             }
@@ -1207,6 +1221,11 @@
                     });
                 }
             }).filter(':checked').click();
+
+            // initial form items saved in hash
+            if(campaign_key) {
+                var startItems = convertSerializedArrayToHash($('form#campaign_and_adgroup').serializeArray()); 
+            }
 
         }
     };

@@ -75,7 +75,7 @@ SHORT_ACCT_DIR = 'account_data'
 
 NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.large'
-SLAVE_INSTANCE_TYPE = 'm1.large'
+SLAVE_INSTANCE_TYPE = 'c1.xlarge'
 KEEP_ALIVE = True
 
 MAX_RETRIES = 3
@@ -916,7 +916,7 @@ class ReportMessageHandler(MessageHandler):
                 )
         steps_to_add = [gen_report_step]
         jobid = get_waiting_jobflow(self.emr_conn, self.existing_jobflows)
-        instances = 10
+        instances = 21
         try:
             if jobid:
                 self.emr_conn.add_jobflow_steps(jobid, steps_to_add)

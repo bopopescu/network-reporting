@@ -437,6 +437,221 @@ class AdGroupQueryManager(QueryManager):
                                 limit=limit, archived=archived, deleted=deleted,
                                 **kwargs)
 
+    @staticmethod
+    def get_line_items_for_adunit(adunit):
+        adgroup_query = AdGroup.all().filter('account =', adunit._account)
+        adgroup_query = adgroup_query.filter('archived =', False)
+        adgroup_query = adgroup_query.filter('deleted =', False)
+        adgroup_query = adgroup_query.filter('adgroup_type IN', ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
+        adgroup_query = adgroup_query.filter('site_keys =', adunit.key())
+        return list(adgroup_query.run())
+
+    @classmethod
+    def get_sorted_line_items_for_app_and_date_range(cls, app, start_date, end_date):
+        line_item_dict = {}
+        for adunit in app.adunits:
+            # TODO: move to a real database so this case is impossible...
+            if not adunit._account == app._account:
+                logging.error("App %s AdUnit %s account mismatch." % (app._account, adunit._account))
+                continue
+            for line_item in cls.get_line_items_for_adunit(adunit):
+                line_item_dict[str(line_item.key())] = line_item
+        line_items = line_item_dict.values()
+
+        return cls._filter_and_sort_line_items(line_items, start_date, end_date)
+
+    @classmethod
+    def get_sorted_line_items_for_adunit_and_date_range(cls, adunit, start_date, end_date):
+        line_items = cls.get_line_items_for_adunit(adunit)
+
+        return cls._filter_and_sort_line_items(line_items, start_date, end_date)
+
+    @staticmethod
+    def _filter_and_sort_line_items(line_items, start_date, end_date):
+        gtee_high_line_items = []
+        gtee_line_items = []
+        gtee_low_line_items = []
+        promo_line_items = []
+        backfill_promo_line_items = []
+
+        for line_item in line_items:
+            if line_item.start_datetime.date() < end_date and (not line_item.end_datetime or line_item.end_datetime.date() > start_date):
+                if line_item.adgroup_type == 'gtee_high':
+                    gtee_high_line_items.append(line_item)
+                elif line_item.adgroup_type == 'gtee':
+                    gtee_line_items.append(line_item)
+                elif line_item.adgroup_type == 'gtee_low':
+                    gtee_low_line_items.append(line_item)
+                elif line_item.adgroup_type == 'promo':
+                    promo_line_items.append(line_item)
+                elif line_item.adgroup_type == 'backfill_promo':
+                    backfill_promo_line_items.append(line_item)
+                else:
+                    logging.error("AdGroup %s has adgroup_type %s but was in line_items list." % (
+                        line_item.key(), line_item.adgroup_type))
+
+        return (gtee_high_line_items + gtee_line_items + gtee_low_line_items +
+                promo_line_items + backfill_promo_line_items)
+
+    @staticmethod
+    def get_sorted_network_adgroups_for_adunit(adunit):
+        adgroup_query = AdGroup.all().filter('account =', adunit._account)
+        adgroup_query = adgroup_query.filter('archived =', False)
+        adgroup_query = adgroup_query.filter('deleted =', False)
+        adgroup_query = adgroup_query.filter('adgroup_type =', 'network')
+        adgroup_query = adgroup_query.filter('site_keys =', adunit.key())
+        return sorted(adgroup_query, key=lambda adgroup: adgroup.bid)
+
+    # @staticmethod
+    # def get_sorted_adgroups_for_app(app, start_date, end_date):
+    #     adgroups_query = AdGroup.all().filter('account =', app._account)
+    #     adgroups_query = adgroups_query.filter('archived =', False)
+    #     adgroups_query = adgroups_query.filter('deleted =', False)
+    #     adgroups_dict = {}
+    #     for adunit in app.adunits:
+    #         # TODO: move to a real database so this is impossible...
+    #         if not adunit._account == app._account:
+    #             logging.error("App %s AdUnit %s account mismatch." % (app._account, adunit._account))
+    #             continue
+    #         adgroups_subquery = copy.deepcopy(adgroups_query)
+    #         adgroups_subquery = adgroups_subquery.filter('site_keys =', adunit.key())
+    #         for adgroup in adgroups_subquery.run():
+    #             adgroups_dict[str(adgroup.key())] = adgroup
+    #     adgroups = adgroups_dict.values()
+
+    #     gtee_high_adgroups = []
+    #     gtee_adgroups = []
+    #     gtee_low_adgroups = []
+    #     promo_adgroups = []
+    #     backfill_promo_adgroups = []
+    #     network_adgroups = []
+
+    #     for adgroup in adgroups:
+    #         if adgroup.campaign.campaign_type == 'order':
+    #             if adgroup.start_datetime.date() < end_date and (not adgroup.end_datetime or adgroup.end_datetime.date() > start_date):
+    #                 if adgroup.adgroup_type == 'gtee_high':
+    #                     gtee_high_adgroups.append(adgroup)
+    #                 elif adgroup.adgroup_type == 'gtee':
+    #                     gtee_adgroups.append(adgroup)
+    #                 elif adgroup.adgroup_type == 'gtee_low':
+    #                     gtee_low_adgroups.append(adgroup)
+    #                 elif adgroup.adgroup_type == 'promo':
+    #                     promo_adgroups.append(adgroup)
+    #                 elif adgroup.adgroup_type == 'backfill_promo':
+    #                     backfill_promo_adgroups.append(adgroup)
+    #                 else:
+    #                     logging.error("AdGroup %s has adgroup_type %s but campaign_type %s" % (
+    #                         adgroup.key(), adgroup.adgroup_type, adgroup.campaign.campaign_type))
+    #         elif adgroup.campaign.campaign_type == 'network':
+    #             network_adgroups.append(adgroup)
+
+    #     return ((gtee_high_adgroups + gtee_adgroups + gtee_low_adgroups +
+    #              promo_adgroups + backfill_promo_adgroups), network_adgroups)
+
+    # @staticmethod
+    # def get_line_items_and_network_adgroups_for_adunit(adunit, start_date, end_date):
+    #     adgroups_query = AdGroup.all().filter('account =', adunit._account)
+    #     adgroups_query = adgroups_query.filter('archived =', False)
+    #     adgroups_query = adgroups_query.filter('deleted =', False)
+    #     adgroups_query = adgroups_query.filter('site_keys =', adunit.key())
+
+    #     gtee_high_adgroups = []
+    #     gtee_adgroups = []
+    #     gtee_low_adgroups = []
+    #     promo_adgroups = []
+    #     backfill_promo_adgroups = []
+    #     network_adgroups = []
+
+    #     for adgroup in adgroups_query.run():
+    #         if adgroup.campaign.campaign_type == 'order' and adgroup.start_datetime.date() < end_date and (not adgroup.end_datetime or adgroup.end_datetime.date() > start_date):
+    #             if adgroup.adgroup_type == 'gtee_high':
+    #                 gtee_high_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'gtee':
+    #                 gtee_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'gtee_low':
+    #                 gtee_low_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'promo':
+    #                 promo_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'backfill_promo':
+    #                 backfill_promo_adgroups.append(adgroup)
+    #             else:
+    #                 logging.error("AdGroup %s has adgroup_type %s but campaign_type %s" % (
+    #                     adgroup.key(), adgroup.adgroup_type, adgroup.campaign.campaign_type))
+    #         elif adgroup.campaign.campaign_type == 'network':
+    #             if adgroup.adgroup_type == 'network':
+    #                 network_adgroups.append(adgroup)
+    #             else:
+    #                 logging.error("AdGroup %s has adgroup_type %s but campaign_type %s" % (
+    #                     adgroup.key(), adgroup.adgroup_type, adgroup.campaign.campaign_type))
+
+    #     line_items = (gtee_high_adgroups + gtee_adgroups + gtee_low_adgroups +
+    #                   promo_adgroups + backfill_promo_adgroups)
+
+    #     return (line_items, network_adgroups)
+
+    # @classmethod
+    # def get_adgroups_for_app(cls, app):
+    #     adgroups_dict = {}
+    #     for adunit in app.adunits:
+    #         # TODO: move to a real database so this is impossible...
+    #         if not adunit._account == app._account:
+    #             logging.error("App %s AdUnit %s account mismatch." % (app._account, adunit._account))
+    #             continue
+    #         for adgroup in cls.get_adgroups_for_adunit(adunit):
+    #             adgroups_dict[str(adgroup.key())] = adgroup
+    #     return adgroups_dict.values()
+
+    # @staticmethod
+    # def get_adgroups_for_adunit(cls, adunit):
+    #     adgroups = AdGroup.all().filter('account =', adunit._account)
+    #     adgroups = adgroups.filter('archived =', False)
+    #     adgroups = adgroups.filter('deleted =', False)
+    #     adgroups = adgroups.filter('site_keys =', adunit.key())
+    #     # TODO: make sure all adgroups are in the adunit's account
+    #     return list(adgroups.run())
+
+    # @classmethod
+    # def get_sorted_adgroups_for_app(cls, app, start_date, end_date):
+    #     adgroups = cls.get_adgroups_for_app(app)
+    #     return cls._filter_and_sort_adgroups(adgroups, start_date, end_date)
+
+    # @classmethod
+    # def get_sorted_adgroups_for_adunit(cls, adunit, start_date, end_date):
+    #     adgroups = cls.get_adgroups_for_adunit(adunit)
+    #     return cls._filter_and_sort_adgroups(adgroups, start_date, end_date)
+
+    # @classmethod
+    # def _filter_and_sort_adgroups(cls, adgroups, start_date, end_date):
+    #     adgroups = filter(lambda adgroup: , adgroups)
+
+    #     gtee_high_adgroups = []
+    #     gtee_adgroups = []
+    #     gtee_low_adgroups = []
+    #     promo_adgroups = []
+    #     backfill_promo_adgroups = []
+    #     network_adgroups = [cls.get_marketplace_adgroup(adunit.key(), adunit._account, get_from_db=True)]
+
+    #     for adgroup in adgroups:
+    #         if adgroup.campaign.campaign_type == 'order':
+    #             if adgroup.adgroup_type == 'gtee_high':
+    #                 gtee_high_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'gtee':
+    #                 gtee_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'gtee_low':
+    #                 gtee_low_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'promo':
+    #                 promo_adgroups.append(adgroup)
+    #             elif adgroup.adgroup_type == 'backfill_promo':
+    #                 backfill_promo_adgroups.append(adgroup)
+    #             else:
+    #                 logging.error("AdGroup %s has adgroup_type %s but campaign_type %s" % (
+    #                     adgroup.key(), adgroup.adgroup_type, adgroup.campaign.campaign_type))
+    #         elif adgroup.campaign.campaign_type == 'network':
+    #             network_adgroups.append(adgroup)
+
+    #     return (gtee_high_adgroups + gtee_adgroups + gtee_low_adgroups +
+    #             promo_adgroups + backfill_promo_adgroups + network_adgroups)
+
     @classmethod
     def get_network_adgroup(cls, campaign,
                             adunit_key, account_key,

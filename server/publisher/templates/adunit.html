@@ -15,7 +15,7 @@
 {% block titleBarRight %}
   {% include "partials/datecontrols.html" %}
 {% endblock titleBarRight %}
-  
+
 {% block content %}
 
   {% if not adgroups %}
@@ -26,7 +26,7 @@
       <a href="{% url advertiser_order_index %}">Campaigns</a> page.
     </div>
   {% endif %}
-  
+
   <div id="dashboard-adunitEditForm" class="hidden">
     <div>
       <a name="adunitForm" class="hidden">anchor</a>
@@ -35,7 +35,7 @@
             accept-charset="utf-8"
             id="adunitAddForm"
             class="adunitEditForm validate">
-        
+
         <fieldset id="appForm-details" class="alt">
           <input type="hidden" name="adunit_key" value="{{adunit.key}}"/>
           <div id="adunitForm-fragment">
@@ -51,7 +51,7 @@
             <a href="#" class="btn" id="adunitEditForm-submit">
               {% button_icon "ok" %}
               Save
-            </a>            
+            </a>
           </div>
         </fieldset>
       </form>
@@ -61,7 +61,7 @@
   {% chart_placeholder start_date end_date %}
 
   <br />
-  
+
   <div id="app-ad-sources">
     <div class="clearfix">
       <div class="right">
@@ -72,14 +72,248 @@
         <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
           {% button_icon "pencil" %}
           Edit ad unit settings
-        </a>      
+        </a>
       </div>
       <h2 class="left">Ad sources for {{adunit.name}}</h2>
-      {% if targeted_adgroups %}
-        {% simple_line_item_table targeted_adgroups %}
+
+
+
+
+
+<table class="inventory_table">
+  <thead>
+    <tr style="width: 230px;">
+      <th style="width: 10px;"></th>
+      <th class="name" style="width: 230px;">Line Item Name</th>
+      <th class="advertiser" style="width: 150px;">Advertiser</th>
+      <th class="type" style="width: 90px;">Type</th>
+      <th class="goal" style="width: 90px;">Goal</th>
+      <th class="stat" style="width: 60px;">Revenue</th>
+      <th class="stat" style="width: 60px;">Impressions</th>
+      <th class="stat" style="width: 60px;">Clicks</th>
+      <th class="stat" style="width: 60px;">CPM</th>
+      <th class="stat" style="width: 60px;">Conv.</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for line_item in line_items %}
+        <tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
+            <td class="controls">
+              <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+            </td>
+
+          <td class="name"
+              {% if not line_item.active %}{% opacity "0.2" %}{% endif %}>
+            <a class="order-name"
+               href="
+                    {% if line_item.campaign.campaign_type == 'order' %}
+                        {% url advertiser_order_detail order_key=line_item.campaign.key %}
+                    {% else %}
+                        {% if line_item.campaign.campaign_type == 'marketplace' %}
+                            {% url marketplace_index %}
+                        {% else %}
+                            {% url network_details campaign_key=line_item.campaign.key %}
+                        {% endif %}
+                    {% endif %}
+                    "
+               style="font-size:12px;">
+              {{ line_item.campaign.name }}
+            </a>
+            {% if line_item.campaign.campaign_type == 'order' %}
+            >
+            <br />
+            <a href='{% url advertiser_line_item_detail line_item_key=line_item.key %}'>
+              {{ line_item.name }}
+            </a>
+            {% endif %}
+            <br />
+            <span class="muted">
+              {{ line_item.status|capitalize }}
+              {{ line_item.start_datetime|date:"m/d" }} to {{ line_item.end_datetime|date:"m/d" }}
+            </span>
+            <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
+          </td>
+
+          <td class="advertiser stat"
+              {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+            {{ line_item.campaign.advertiser }}
+          </td>
+          <td class="type stat"
+              {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+            {{ line_item.adgroup_type_display }}
+          </td>
+          <td class="goal stat"
+              {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+            {{ line_item.budget_goal_display|default:'--' }}
+          </td>
+          <td class="rev stat"
+              {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+            --
+          </td>
+          <td class="imp stat"
+              {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+            --
+          </td>
+          <td class="stat"
+              {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+            <div class="clk">
+              --
+            </div>
+            <div class="muted ctr">
+              --
+            </div>
+          </td>
+          <td class="stat cpm">
+            --
+          </td>
+          <td class="stat"
+              {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+            <div class="conv">
+              --
+            </div>
+            <div class="muted conv_rate">
+              --
+            </div>
+          </td>
+        </tr>
+    {% endfor %}
+
+
+    <tr class="sub lineitem-row {{ marketplace_adgroup.status }}" id="{{ marketplace_adgroup.key }}">
+      {% if show_status %}
+        <td class="controls">
+          <img id="status-{{ marketplace_adgroup.key }}" src="{{ marketplace_adgroup.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+        </td>
       {% else %}
-        No ad sources are currently targeting this adunit
+        <td></td>
       {% endif %}
+
+      <td class="name"
+          {% if not marketplace_adgroup.active %}{% opacity "0.2" %}{% endif %}>
+        <a class="order-name"
+           href="{% url marketplace_index %}"
+           style="font-size:12px;">
+          {{ marketplace_adgroup.campaign.name }}
+        </a>
+        <br />
+        <span class="muted">
+          {{ marketplace_adgroup.status|capitalize }}
+        </span>
+        <img id="{{ marketplace_adgroup.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
+      </td>
+
+      <td class="advertiser stat">
+      </td>
+      <td class="type stat"
+          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+        {{ marketplace_adgroup.adgroup_type_display }}
+      </td>
+      <td class="goal stat"
+          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+        {{ marketplace_adgroup.budget_goal_display|default:'--' }}
+      </td>
+      <td class="rev stat"
+          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+        --
+      </td>
+      <td class="imp stat"
+          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+        --
+      </td>
+      <td class="stat"
+          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+        <div class="clk">
+          --
+        </div>
+        <div class="muted ctr">
+          --
+        </div>
+      </td>
+      <td class="stat cpm">
+        --
+      </td>
+      <td class="stat"
+          {% if not marketplace_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+        <div class="conv">
+          --
+        </div>
+        <div class="muted conv_rate">
+          --
+        </div>
+      </td>
+    </tr>
+
+
+    {% for network_adgroup in network_adgroups %}
+      <tr id="{{ network_adgroup.key }}">
+        <td class="controls">
+          <img id="status-{{ network_adgroup.key }}" src="{{ network_adgroup.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+        </td>
+
+        <td class="name"
+            {% if not network_adgroup.active %}{% opacity "0.2" %}{% endif %}>
+          <a class="order-name"
+             href="{% url network network_adgroup.campaign.key %}"
+             style="font-size:12px;">
+            {{ network_adgroup.campaign.name }}
+          </a>
+          <br />
+          <span class="muted">
+            {{ network_adgroup.status|capitalize }}
+          </span>
+          <img id="{{ network_adgroup.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
+        </td>
+
+        <td class="advertiser stat">
+        </td>
+        <td class="type stat"
+            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {{ network_adgroup.adgroup_type_display }}
+        </td>
+        <td class="goal stat"
+            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          {{ network_adgroup.budget_goal_display|default:'--' }}
+        </td>
+        <td class="rev stat"
+            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          --
+        </td>
+        <td class="imp stat"
+            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          --
+        </td>
+        <td class="stat"
+            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          <div class="clk">
+            --
+          </div>
+          <div class="muted ctr">
+            --
+          </div>
+        </td>
+        <td class="stat cpm">
+          --
+        </td>
+        <td class="stat"
+            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
+          <div class="conv">
+            --
+          </div>
+          <div class="muted conv_rate">
+            --
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+
+
+  </tbody>
+</table>
+
+
+
+
+
     </div>
   </div>
 
@@ -87,21 +321,21 @@
     <h2>Daily Counts</h2>
     <img src="/images/loading2.gif" style='margin-left:450px' />
   </div>
-  
+
   </form>
- 
+
 
 
     <div class="right">
-    
+
     <div class="btn-group">
 
-      
+
     <a href="#" id="dashboard-delete-link" class="btn btn-danger">
       {% button_icon "trash" %}
       Remove adunit from app
     </a>
-      
+
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
         <i class="icon-download-alt"></i>
         Export
@@ -125,7 +359,7 @@
         <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=json"
                 data-toggle="running"> JSON </a> </li>
       </ul>
-      
+
     </div>
 
     <div id="dashboard-delete-modal" class="hidden">
@@ -137,15 +371,15 @@
           id="dashboard-deleteForm"
           action="{% url publisher_delete_adunit adunit_key=adunit.key %}">
     </form>
-    
+
     </div>
-  
+
 {% endblock content %}
 
 {% block extraScripts %}
   {% include_template "chart" %}
   {% include_template "daily-counts" %}
-  
+
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/publisher" %}

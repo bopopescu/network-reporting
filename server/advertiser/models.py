@@ -44,7 +44,7 @@ class Campaign(db.Model):
                              default='Order Name',
                              required=True)
     advertiser = db.StringProperty(verbose_name='Advertiser:',
-                                   default='Advertiser Name',
+                                   default='None',
                                    required=True)
     description = db.StringProperty(verbose_name='Description:',
                                     multiline=True)
@@ -203,13 +203,9 @@ class AdGroup(db.Model):
     start_datetime = db.DateTimeProperty()
     end_datetime = db.DateTimeProperty()
 
-    adgroup_type = db.StringProperty(choices=['gtee',
-                                              'gtee_high',
-                                              'gtee_low',
-                                              'promo',
-                                              'network',
-                                              'backfill_promo',
-                                              'marketplace'])
+    adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
+                                              'network', 'promo',
+                                              'backfill_promo', 'marketplace'])
 
     ##################################
     # /end moved from campaign class #

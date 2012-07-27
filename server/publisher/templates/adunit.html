@@ -384,6 +384,7 @@
             date_range: {{ date_range }},
             line_item_keys: [{% for line_item in line_items %}'{{ line_item.key }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             marketplace_adgroup_key: '{{ marketplace_adgroup.key }}'
+            network_adgroup_keys: [{% for network_adgroup in network_adgroups %}'{{ network_adgroup.key }}'{% if not forloop.last %},{% endif %}{% endfor %}],
         });
     });
   </script>

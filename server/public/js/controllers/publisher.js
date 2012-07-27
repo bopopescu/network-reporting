@@ -825,7 +825,12 @@ var mopub = mopub || {};
                     return url;
                 };
                 line_item.parse = function (response) {
-                    return response[0];
+                    for(var index in response) {
+                        if(response[index].id == bootstrapping_data.adunit_key) {
+                            return response[index];
+                        }
+                    }
+                    return null;
                 }
 
                 var line_item_view = new LineItemView({
@@ -872,6 +877,40 @@ var mopub = mopub || {};
 
             marketplace.fetch();
 
+            _.each(bootstrapping_data.network_adgroup_keys, function(network_adgroup_key) {
+                var network_adgroup = new LineItem({
+                    id: network_adgroup_key,
+                    key: network_adgroup_key
+                });
+                network_adgroup.url = function () {
+                    url = '/api/adgroup/' + this.id + '/adunits/' + bootstrapping_data.adunit_key + '?';
+                    var start_date = bootstrapping_data.start_date;
+                    if(start_date) {
+                        url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                    }
+                    url += '&r=' + bootstrapping_data.date_range;
+                    url += '&endpoint=network';
+                    return url;
+                };
+                network_adgroup.parse = function (response) {
+                    for(var index in response) {
+                        if(response[index].id == bootstrapping_data.adunit_key) {
+                            return response[index];
+                        }
+                    }
+                    return null;
+                }
+
+                var network_adgroup_view = new LineItemView({
+                    model: network_adgroup,
+                    el: '.advertiser_table'
+                });
+                network_adgroup.bind('change', function () {
+                    network_adgroup_view.renderInline();
+                })
+
+                network_adgroup.fetch();
+            });
 
 
         },

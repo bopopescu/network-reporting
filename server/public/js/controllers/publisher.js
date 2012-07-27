@@ -844,7 +844,7 @@ var mopub = mopub || {};
                 line_item.fetch();
             });
 
-            var marketplace = new AdGroup({
+            var marketplace = new LineItem({
                 id: bootstrapping_data.marketplace_adgroup_key,
                 key: bootstrapping_data.marketplace_adgroup_key
             });

@@ -652,7 +652,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
     @confirm_db(app=ADDED_1, adunit=ADDED_1, campaign={'added': 1, 'edited': 1},
                 adgroup={'added': 2}, creative={'added': 2},
-                account={'edited': 1})
+                account={'edited': 1}, network_config={'added': 2})
     def mptest_create_first_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -686,10 +686,10 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         # Compare the app/adunit to their expected models.
         expected_app = generate_app(self.account)
-        model_eq(app, expected_app, check_primary_key=False)
+        model_eq(app, expected_app, exclude=['network_config', 't'], check_primary_key=False)
 
         expected_adunit = generate_adunit(self.account, app)
-        model_eq(adunit, expected_adunit, check_primary_key=False)
+        model_eq(adunit, expected_adunit, exclude=['network_config', 't'], check_primary_key=False)
 
         # Make sure the app/adunit were created within the last minute.
         time_almost_eq(app.t,
@@ -804,7 +804,7 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
     @confirm_db(app={'added': 2}, adunit={'added': 2}, campaign=EDITED_1,
                 adgroup={'added': 1}, creative={'added': 1},
-                account={'edited': 1})
+                account={'edited': 1}, network_config={'added': 2})
     def mptest_create_additional_app_and_adunit(self):
         """
         Confirm the entire app creation workflow by submitting known good
@@ -848,10 +848,10 @@ class CreateAppViewTestCase(BaseViewTestCase):
 
         # Compare the app/adunit to their expected models.
         expected_app = generate_app(self.account)
-        model_eq(app, expected_app, check_primary_key=False)
+        model_eq(app, expected_app, exclude=['network_config', 't'], check_primary_key=False)
 
         expected_adunit = generate_adunit(self.account, app)
-        model_eq(adunit, expected_adunit, check_primary_key=False)
+        model_eq(adunit, expected_adunit, exclude=['network_config', 't'], check_primary_key=False)
 
         # Make sure the app/adunit were created within the last minute.
         time_almost_eq(app.t,
@@ -1136,7 +1136,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         post_data.update(kwargs)
         return post_data
 
-    @confirm_db(adunit=ADDED_1, adgroup=ADDED_1, creative=ADDED_1)
+    @confirm_db(adunit=ADDED_1, adgroup=ADDED_1, creative=ADDED_1, network_config=ADDED_1)
     def mptest_create_adunit(self):
         """
         Confirm that adunit creation works by submitting known good parameters,
@@ -1169,7 +1169,7 @@ class AdUnitUpdateAJAXViewTestCase(BaseViewTestCase):
         # Compare the adunit to its expected models.
         expected_adunit = generate_adunit(self.account, self.app,
                                 name=post_data['adunit-name'][0])
-        model_eq(adunit, expected_adunit, check_primary_key=False)
+        model_eq(adunit, expected_adunit, exclude=['network_config', 't'], check_primary_key=False)
 
         # Make sure the adunit was created within the last minute.
         time_almost_eq(adunit.t,

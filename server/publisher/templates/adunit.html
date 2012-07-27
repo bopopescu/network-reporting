@@ -252,7 +252,8 @@
           <img id="{{ network_adgroup.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
         </td>
 
-        <td class="advertiser stat">
+        <td class="advertiser stat"
+            {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>
           --
         </td>
         <td class="type stat"
@@ -281,7 +282,7 @@
           </div>
         </td>
         <td class="stat cpm">
-          --
+          {{ network_adgroup.bid }}
         </td>
         <td class="stat"
             {% if not network_adgroup.active %}{% opacity "0.4" %}{% endif %}>

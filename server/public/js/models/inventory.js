@@ -280,9 +280,20 @@ var mopub = mopub || {};
                 return memo;
             }, memo);
 
-            console.log(full_series);
-
             return full_series;
+        },
+
+        get_date_range: function() {
+            var dailies = this.models[0].get('daily_stats');
+
+            return _.map(dailies, function (day) {
+                var date = moment(day.date);
+                return date.unix();
+            });
+        },
+
+        get_epoch_date_range: function () {
+
         }
     };
 

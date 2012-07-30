@@ -809,6 +809,8 @@ var mopub = mopub || {};
 
             adunit.fetch();
 
+            /* Ad Sources Table */
+            // direct ad sources
             _.each(bootstrapping_data.line_item_keys, function(line_item_key) {
                 var line_item = new LineItem({
                     id: line_item_key,
@@ -844,6 +846,7 @@ var mopub = mopub || {};
                 line_item.fetch();
             });
 
+            // marketplace
             var marketplace = new LineItem({
                 id: bootstrapping_data.marketplace_adgroup_key,
                 key: bootstrapping_data.marketplace_adgroup_key
@@ -877,6 +880,7 @@ var mopub = mopub || {};
 
             marketplace.fetch();
 
+            // network ad sources
             _.each(bootstrapping_data.network_adgroup_keys, function(network_adgroup_key) {
                 var network_adgroup = new LineItem({
                     id: network_adgroup_key,

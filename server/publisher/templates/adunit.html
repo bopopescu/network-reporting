@@ -377,14 +377,13 @@
   <script type="text/javascript">
     $(function() {
         DashboardController.initializeAdunitDetail({
-            start_date: {{ start_date|js_date }},
-            app_key: "{{ adunit.app.key }}",
             adunit_key: "{{ adunit.key }}",
+            app_key: "{{ adunit.app.key }}",
             start_date:  {{ start_date|js_date }},
             date_range: {{ date_range }},
             line_item_keys: [{% for line_item in line_items %}'{{ line_item.key }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             marketplace_adgroup_key: '{{ marketplace_adgroup.key }}',
-            network_adgroup_keys: [{% for network_adgroup in network_adgroups %}'{{ network_adgroup.key }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            network_adgroup_keys: [{% for network_adgroup in network_adgroups %}'{{ network_adgroup.key }}'{% if not forloop.last %},{% endif %}{% endfor %}]
         });
     });
   </script>

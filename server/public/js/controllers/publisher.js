@@ -755,6 +755,113 @@ var mopub = mopub || {};
 
             });
 
+            /* Ad Sources Table */
+            // direct ad sources
+            _.each(bootstrapping_data.line_item_keys, function(line_item_key) {
+                var line_item = new LineItem({
+                    id: line_item_key,
+                    key: line_item_key
+                });
+                line_item.url = function () {
+                    url = '/api/adgroup/' + this.id + '/apps/' + bootstrapping_data.app_key + '?';
+                    var start_date = bootstrapping_data.start_date;
+                    if(start_date) {
+                        url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                    }
+                    url += '&r=' + bootstrapping_data.date_range;
+                    url += '&endpoint=direct';
+                    return url;
+                };
+                line_item.parse = function (response) {
+                    for(var index in response) {
+                        if(response[index].id == bootstrapping_data.app_key) {
+                            return response[index];
+                        }
+                    }
+                    return null;
+                }
+
+                var line_item_view = new LineItemView({
+                    model: line_item,
+                    el: '.advertiser_table'
+                });
+                line_item.bind('change', function () {
+                    line_item_view.renderInline();
+                })
+
+                line_item.fetch();
+            });
+
+            // marketplace
+            var marketplace = new LineItem({
+                id: bootstrapping_data.marketplace_campaign_key,
+                key: bootstrapping_data.marketplace_campaign_key
+            });
+            marketplace.url = function () {
+                url = '/api/app/' + bootstrapping_data.app_key + '?';
+                var start_date = bootstrapping_data.start_date;
+                if(start_date) {
+                    url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                }
+                url += '&r=' + bootstrapping_data.date_range;
+                url += '&endpoint=mpx';
+                return url;
+            };
+            marketplace.parse = function (response) {
+                for(var index in response) {
+                    if(response[index].id == bootstrapping_data.app_key) {
+                        return response[index];
+                    }
+                }
+                return null;
+            }
+
+            var marketplace_view = new LineItemView({
+                model: marketplace,
+                el: '.advertiser_table'
+            });
+            marketplace.bind('change', function () {
+                marketplace_view.renderInline();
+            })
+
+            marketplace.fetch();
+
+            // network ad sources
+            _.each(bootstrapping_data.network_campaign_keys, function(network_campaign_key) {
+                var network_campaign = new LineItem({
+                    id: network_campaign_key,
+                    key: network_campaign_key
+                });
+                network_campaign.url = function () {
+                    url = '/api/campaign/' + this.id + '/apps/' + bootstrapping_data.app_key + '?';
+                    var start_date = bootstrapping_data.start_date;
+                    if(start_date) {
+                        url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                    }
+                    url += '&r=' + bootstrapping_data.date_range;
+                    url += '&endpoint=all';
+                    return url;
+                };
+                network_campaign.parse = function (response) {
+                    for(var index in response) {
+                        if(response[index].id == bootstrapping_data.app_key) {
+                            return response[index];
+                        }
+                    }
+                    return null;
+                }
+
+                var network_campaign_view = new LineItemView({
+                    model: network_campaign,
+                    el: '.advertiser_table'
+                });
+                network_campaign.bind('change', function () {
+                    network_campaign_view.renderInline();
+                })
+
+                network_campaign.fetch();
+            });
+
         },
 
         initializeAdunitDetail: function (bootstrapping_data) {

@@ -582,14 +582,6 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
                 app_key=app_key, network=campaign.network_type)['sum']
         return app_stats
 
-    def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
-                                           start, end, *args, **kwargs):
-        # mongo
-        adunit = AdUnitQueryManager.get(adunit_key)
-        adgroup = AdGroupQueryManager.get(adgroup_key)
-        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
-                                                 advertiser=adgroup)
-        return adunit_stats
 
 # TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):

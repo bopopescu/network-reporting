@@ -1134,7 +1134,7 @@ Rickshaw.Graph.Axis.Time = function(args) {
 			if (self.graph.x(o.value) > self.graph.x.range()[1]) return;
 	
 			var element = document.createElement('div');
-			element.style.left = self.graph.x(o.value) + 'px';
+			element.style.left = (self.graph.x(o.value) + 15) + 'px';
 			element.classList.add('x_tick');
 			element.classList.add(self.ticksTreatment);
 

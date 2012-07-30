@@ -15,6 +15,7 @@ from django.utils import simplejson as json
 
 from country_codes import COUNTRY_CODE_DICT
 from common.utils.tzinfo import Pacific, utc
+from common.utils.timezones import Pacific_tzinfo
 
 register = template.Library()
 numeric_test = re.compile("^\d+$")
@@ -473,6 +474,7 @@ def include_template(template_name):
 
 @register.filter
 def js_date(date):
+
     return "new Date(%s, %s, %s)" % (date.year, date.month - 1, date.day)
 
 

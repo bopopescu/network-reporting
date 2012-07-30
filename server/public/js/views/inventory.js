@@ -37,27 +37,6 @@ var mopub = window.mopub || {};
         return copy;
     }
 
-    function generateEpochTimeSequence(start_date_time, tick_size, ticks, tick_type) {
-        console.log(arguments);
-        if (typeof tick_type === 'undefined') {
-            tick_type = 'days';
-        }
-
-        var sequence = [];
-        var new_date;
-
-        _.times(ticks, function (tick) {
-            var start = moment([start_date_time.getFullYear(),
-                                start_date_time.getMonth(),
-                                start_date_time.getDate()]);
-            start.add(tick_type, tick);
-            console.log(start);
-            sequence.push( start.unix() );
-        });
-
-        return sequence;
-    }
-
     function createDailyStatsChart(kind, datapoints, dates) {
 
         var element = "#stats-chart";
@@ -170,11 +149,8 @@ var mopub = window.mopub || {};
             // Render the template and the chart with the values we composed
             $(this_view.el).html(this_view.template(template_values));
 
-            console.log('statement');
             var series_length = series_list[this_view.options.display_values[0]].length;
-            var series_dates = generateEpochTimeSequence(this_view.options.start_date,
-                                                         1,
-                                                         series_length);
+            var series_dates = this_view.collection.get_date_range();
 
             $("#stats-breakdown-container tr", this_view.el).click(function() {
 
@@ -192,6 +168,8 @@ var mopub = window.mopub || {};
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_dates);
+
+                console.log(dates);
             });
 
             createDailyStatsChart(active_display_value,
@@ -208,7 +186,6 @@ var mopub = window.mopub || {};
             try {
                 this.template = _.template($('#daily-counts-template').html());
             } catch (e) {
-                console.log(e);
             }
         },
         render: function () {

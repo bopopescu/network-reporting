@@ -122,7 +122,7 @@
 #datepicker-custom-range {
     @include well;
     padding: 10px;
-    position: relative;
+    position: fixed;
     z-index: 2;
     border: 1px solid darken($light_gray, 5%);
     background: $white;

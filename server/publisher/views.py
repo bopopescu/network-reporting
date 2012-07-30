@@ -1165,6 +1165,8 @@ def enable_networks(adunit, account):
         # New adunits are initialized as paused for the account's network
         # campaigns
         adgroup.active = False
+        # Copy over global adgroup settings to new adgroup by copying them from
+        # the pre-exitsting ones
         adgroups = AdGroupQueryManager.get_adgroups(campaign=campaign)
         # Accounts should have adunits prior to creating campaigns but just in
         # case don't break

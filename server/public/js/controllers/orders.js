@@ -1,4 +1,4 @@
-(function ($, mopub) {
+(function () {
     "use strict";
 
     /*
@@ -80,7 +80,7 @@
 
         // Show the spinner for the ad source
         _.each(ad_sources, function(ad_source) {
-            $("#" + ad_source + "-img").removeClass('hidden');
+            $("#" + ad_source + "-img").removeClass('hidden').show();
         });
 
         // Set up
@@ -98,7 +98,7 @@
                     _.each(ad_sources, function(ad_source) {
 
                         // Hide the loading image
-                        $("#" + ad_source + "-img").toggleClass('hidden');
+                        $("#" + ad_source + "-img").hide();
 
                         // get the elements  we're going to edit
                         var status_img = $('#status-' + ad_source);
@@ -227,14 +227,35 @@
 
         $(".status_change.btn").click(function(e){
             e.preventDefault();
+
+            // Figure out which objects to change the status of,
+            // and what we should change the status to. If either one
+            // is undefined, stop.
+            var table_selector = $(this).attr('data-target');
             var status = $(this).attr('data-toggle');
-            var checked_adgroups = $(".status_change_control:checked");
+
+            if (typeof table_selector === "undefined") {
+                throw Error("Status change button's data-target attribute "
+                            + "cannot be undefined");
+            }
+
+            if (typeof status === "undefined") {
+                throw Error("Status change button's data-toggle "
+                            + "attribute cannot be undefined");
+            }
+
+            // Get the keys for the objects we're going to change
+            // the status of
+            var checked_adgroups = $(".status_change_control:checked", 
+                                     $(table_selector));
             var keys = _.map(checked_adgroups, function (row) {
                 return $(row).attr('id');
             });
 
+            // Do it
             changeStatus(keys, status);
 
+            // In some cases we don't want to uncheck the boxes.
             if (!keep_checked) {
                 $(".status_change_control").each(function(){
                     $(this).attr('checked', false);
@@ -300,7 +321,7 @@
             // Fetch stats for each order and render the row
             _.each(bootstrapping_data.order_keys, function (order_key) {
                 var order = new Order({
-                    id: order_key,
+                    id: order_key
                 });
 
                 order.bind('change', function() {
@@ -313,7 +334,7 @@
             // Fetch stats for each line item and render the row
             _.each(bootstrapping_data.line_item_keys, function (line_item_key) {
                 var line_item = new LineItem({
-                    id: line_item_key,
+                    id: line_item_key
                 });
 
                 line_item.bind('change', function() {
@@ -340,18 +361,39 @@
             });
 
             // Set up the quick jump dropdown
-            $("#line-item-quick-navigate")
-                .chosen()
-                .change(function() {
-                    window.location = $(this).val();
+            $("#line-item-quick-navigate").chosen().change(function() {
+                window.location = $(this).val();
+            });
+        },
+
+        initializeArchive: function (bootstrapping_data) {
+            $("#delete-button").click(function (event) {
+                event.preventDefault();
+
+                // Get the keys of the checked orders/line items
+                var checked_adgroups = $(".status_change_control:checked");
+                var keys = _.map(checked_adgroups, function (row) {
+                    return $(row).attr('id');
                 });
+                
+                // Show the modal
+                $("#confirm_delete_modal").modal("show");
+
+                // On click of the confirm delete buttons,
+                // delete the orders/line items
+                $("#confirm_delete_button").click(function () {                    
+                    changeStatus(keys, 'delete');
+                    $("#confirm_delete_modal").modal("hide");
+                });                
+            });
+            
         },
 
         initializeOrderDetail: function(bootstrapping_data) {
             initializeStatusControls();
             initializeLineItemFilters();
             initializeDateButtons();
-
+            
             /*
              * Set up the order form validator
              */
@@ -432,56 +474,6 @@
 
 
             /*
-             * Load the data in the targetting table
-             */
-
-            // Fill in stats for the targeted apps
-            // _.each(bootstrapping_data.targeted_apps, function(app_key) {
-            //     var app = new App({
-            //         id: app_key,
-            //         stats_endpoint: 'direct'
-            //     });
-
-            //     app.url = function () {
-            //         return '/api/campaign/'
-            //             + bootstrapping_data.order_key
-            //             + '/apps/'
-            //             + this.id
-            //             + "?"
-            //             + window.location.search.substring(1)
-            //             + '&endpoint=direct';
-            //     };
-
-            //     app.bind('change', function(current_app){
-            //         renderApp(current_app);
-            //     });
-            //     app.fetch();
-            // });
-
-            // Fill in the stats for the targeted adunits
-            // _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
-            //     var adunit = new AdUnit({
-            //         id: adunit_key,
-            //         stats_endpoint: 'direct'
-            //     });
-            //     adunit.url = function () {
-            //         return '/api/campaign/'
-            //             + bootstrapping_data.order_key
-            //             + '/adunits/'
-            //             + this.id
-            //             + "?"
-            //             + window.location.search.substring(1)
-            //             + '&endpoint=direct';
-            //     };
-            //     adunit.bind('change', function(current_adunit){
-            //         renderAdUnit(current_adunit);
-            //     });
-
-            //     adunit.fetch();
-            // });
-
-
-            /*
              * Click Handlers // Miscellaneous
              */
 
@@ -526,11 +518,6 @@
                 });
                 chart_view.render();
 
-                // // Load the daily counts
-                // var daily_counts_view = new DailyCountsView({
-                //     model: line_item
-                // });
-                // daily_counts_view.render();
             });
 
             line_item.fetch();
@@ -1104,6 +1091,6 @@
         }
     };
 
-    mopub.Controllers.OrdersController = OrdersController;
+    window.OrdersController = OrdersController;
 
-})(window.jQuery, window.mopub || { Controllers: {} });
+}).call(this);

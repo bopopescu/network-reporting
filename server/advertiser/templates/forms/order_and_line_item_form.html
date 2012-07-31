@@ -306,7 +306,6 @@
 {% include_script "controllers/orders" %}
 <script type="text/javascript">
     $(function() {
-        var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeOrderAndLineItemForm({
             priors: {{ line_item_form.geo_predicates|field_value|to_json|safe }},
             city_priors: {{ line_item_form.cities|field_value|to_json|safe }}

@@ -96,13 +96,19 @@
 
   <br />
   <div class="btn-group">
-    <button class="btn status_change" data-toggle="pause">
+    <button class="btn status_change"
+            data-target="#line_item_table"
+            data-toggle="pause">
       <i class="icon-pause"></i> Pause
     </button>
-    <button class="btn status_change" data-toggle="play">
+    <button class="btn status_change"
+            data-target="#line_item_table"
+            data-toggle="play">
       <i class="icon-play"></i> Resume
     </button>
-    <button class="btn status_change" data-toggle="archive">
+    <button class="btn status_change"
+            data-target="#line_item_table"
+            data-toggle="archive">
       <i class="icon-stop"></i> Archive
     </button>
   </div>
@@ -145,7 +151,6 @@
 
   <script type="text/javascript">
     $(function () {
-        var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeOrderDetail({
             order_key: "{{ order.key }}",
             start_date: {{ start_date|js_date}},

@@ -221,6 +221,13 @@ def targeting_table(targeted_adgroups):
         'targeted_adgroups': targeted_adgroups
     }
 
+
+@register.inclusion_tag("common/partials/line_item_status.html")
+def line_item_status(line_item):
+    return {
+        'line_item': line_item
+    }
+
     
 def isiterable(item):
     try:

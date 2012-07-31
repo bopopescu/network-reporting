@@ -92,54 +92,52 @@
  
 
 
-    <div class="right">
+  <div class="right">
     
-    <div class="btn-group">
-
-      
     <a href="#" id="dashboard-delete-link" class="btn btn-danger">
       {% button_icon "trash" %}
       Remove adunit from app
     </a>
+
+    <div class="dropdown" id="adunit-export" style='display:inline'>
+    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#adunit-export">
+      <i class="icon-download-alt"></i>
+      Export
+      <span class="caret"></span>
+    </a>
+
+    {# hack: the margin-left is to make the dropdown appear under the caret #}
+    <ul class="dropdown-menu" style='margin-top: 10px;'>
+      <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=xls"
+              data-toggle="running"> Excel XLS </a> </li>
+      <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=xlsx"
+              data-toggle="running"> Excel XLSX </a> </li>
+      <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=ods"
+              data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+      <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=csv"
+              data-toggle="running"> CSV </a> </li>
+      <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=tsv"
+              data-toggle="running"> TSV </a> </li>
+      <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=yaml"
+              data-toggle="running"> YAML </a> </li>
+      <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=json"
+              data-toggle="running"> JSON </a> </li>
+    </ul>
       
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        <i class="icon-download-alt"></i>
-        Export
-        <span class="caret"></span>
-      </a>
+  </div>
 
-      {# hack: the margin-left is to make the dropdown appear under the caret #}
-      <ul class="dropdown-menu" style='margin-left:150px;'>
-        <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=xls"
-                data-toggle="running"> Excel XLS </a> </li>
-        <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=xlsx"
-                data-toggle="running"> Excel XLSX </a> </li>
-        <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=ods"
-                data-toggle="running"> OpenOffice Spreadsheet </a> </li>
-        <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=csv"
-                data-toggle="running"> CSV </a> </li>
-        <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=tsv"
-                data-toggle="running"> TSV </a> </li>
-        <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=yaml"
-                data-toggle="running"> YAML </a> </li>
-        <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=json"
-                data-toggle="running"> JSON </a> </li>
-      </ul>
-      
-    </div>
-
-    <div id="dashboard-delete-modal" class="hidden">
-      <h2>Remove confirmation</h2>
-      <p>Are you sure you want to remove {{adunit.name}} from your app?</p>
-    </div>
-
-    <form method="post"
-          id="dashboard-deleteForm"
-          action="{% url publisher_delete_adunit adunit_key=adunit.key %}">
-    </form>
-    
-    </div>
+  <div id="dashboard-delete-modal" class="hidden">
+    <h2>Remove confirmation</h2>
+    <p>Are you sure you want to remove {{adunit.name}} from your app?</p>
+  </div>
   
+  <form method="post"
+        id="dashboard-deleteForm"
+        action="{% url publisher_delete_adunit adunit_key=adunit.key %}">
+  </form>
+  
+</div>
+
 {% endblock content %}
 
 {% block extraScripts %}

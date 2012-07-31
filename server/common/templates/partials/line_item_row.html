@@ -48,10 +48,10 @@
   <td class="stat">
     {{ line_item.bid|currency }}
     {% if line_item.bid_strategy == 'cpm' %}
-      CPM
+      <br />CPM
     {% else %}
       {% if line_item.bid_strategy == 'cpc' %}
-        CPC
+        <br />CPC
       {% endif %}
     {% endif %}
   </td>

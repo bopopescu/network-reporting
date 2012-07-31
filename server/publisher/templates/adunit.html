@@ -143,6 +143,29 @@
 
   </div>
 
+  <div class="modal hidden" id="adserverTest">
+
+    <div class="modal-header">
+	  <a href="#" type="btn" class="close" data-dismiss="modal">×</a>
+	  <h3> Adserver Test</h3>
+    </div>
+    
+    <div class="modal-body">
+      <div id="adserverTest">
+        <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
+        </iframe>
+        <div id="adserverTest-iFrame-src" style="display:none;">
+          {% url advertiser_adserver_test %}?id={{adunit.key}}
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+	  <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+    
+  </div>
+  
 {% endblock content %}
 
 {% block extraScripts %}

@@ -490,6 +490,12 @@ class AdGroupQueryManager(QueryManager):
                     logging.error("AdGroup %s has adgroup_type %s but was in line_items list." % (
                         line_item.key(), line_item.adgroup_type))
 
+        gtee_high_line_items = sorted(gtee_high_line_items, key=lambda line_item: line_item.name)
+        gtee_line_items = sorted(gtee_line_items, key=lambda line_item: line_item.name)
+        gtee_low_line_items = sorted(gtee_low_line_items, key=lambda line_item: line_item.name)
+        promo_line_items = sorted(promo_line_items, key=lambda line_item: line_item.name)
+        backfill_promo_line_items = sorted(backfill_promo_line_items, key=lambda line_item: line_item.name)
+
         return (gtee_high_line_items + gtee_line_items + gtee_low_line_items +
                 promo_line_items + backfill_promo_line_items)
 

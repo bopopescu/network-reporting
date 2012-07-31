@@ -1,11 +1,12 @@
 {% extends 'publisher/base.html' %}
-{% load filters %}
+
 {% load elements %}
+{% load filters %}
 
 {% block pageTitle %}
   <h1>Dashboard</h1>
 {% endblock pageTitle %}
-  
+
 {% block content %}
 
   {% comment %}
@@ -15,7 +16,7 @@
     analysis of everything that happens on the platform.
   </div>
   {% endcomment %}
-  
+
   {% ifequal account.status "step4" %}
     <div class="alert-message block-message">
       Start serving ads in your app by visiting the tabs at the top of
@@ -55,13 +56,13 @@
         Add an app
       </a>
     </div>
-    
+
     <h2>Apps and sites</h2>
 
     {% inventory_table apps %}
 
     <br />
-    
+
     <div class="right">
       <div class="dropdown" id="inventory-export">
         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#inventory-export">
@@ -87,7 +88,7 @@
       </div>
     </div>
 
-    
+
   </section>
 
 {% endblock content %}
@@ -97,7 +98,7 @@
   {% include_template "app" %}
   {% include_template "adunit" %}
   {% include_template "chart" %}
-  
+
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/publisher" %}
@@ -106,7 +107,7 @@
         DashboardController.initializeIndex({
             start_date: {{ start_date|js_date}},
             end_date: {{ end_date|js_date}},
-            app_keys: {{ app_keys|safe }},            
+            app_keys: {{ app_keys|safe }},
         });
     });
 </script>

@@ -34,64 +34,144 @@
     </div>
   {% endif %}
 
-  <div class="clearfix" style='margin-bottom: 5px;'>
-  <div class="left dropdown" id="copy-line-item">
-  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#copy-line-item">
-    <i class="icon-share"></i>
-    Copy Line Item
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu">
-    <li>
-      <a class="copy_option" href="#" data-toggle="copy_with">
-        Copy with creatives
-      </a>
-    </li>
-    <li>
-      <a class="copy_option" href="#" data-toggle="copy_without">
-        Copy without creatives
-      </a>
-    </li>
-    <li>
-      <a class="copy_option" href="#" data-toggle="copy_to_another">
-        Copy to another order
-      </a>
-    </li>
-  </ul>
+  <div class="left line_item" style="margin-bottom: 10px;">
+
+    <table class="advertiser_table" style="display: inline-block;">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Goal</th>
+          <th>Rate</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="type stat">
+            {{ line_item.adgroup_type_display }}
+          </td>
+          <td class="goal stat">
+            {{ line_item.budget_goal_display }}
+          </td>
+          <td class="stat">
+            {{ line_item.bid|currency }}
+            {% if line_item.bid_strategy == 'cpm' %}
+              CPM
+            {% else %}
+              {% if line_item.bid_strategy == 'cpc' %}
+                CPC
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="stat">
+            {{ line_item.start_datetime|pacific_time:"m/d" }}
+          </td>
+          <td class="stat">
+            {% if line_item.end_datetime %}
+              {{ line_item.end_datetime|pacific_time:"m/d" }}
+            {% else %}
+              None
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% if line_item.budget_goal %}
+      <div id="{{ line_item.key }}" style="display: inline-block; margin-left: 10px">
+        <div class="hidden progress progress-striped
+            {% if line_item.status == 'running' %}active{% endif %}
+            {% if line_item.status == 'paused' %}progress-info{% endif %}">
+          <div class="bar" style="width: {{ line_item.progress|percentage }}"></div>
+          <div id="progress-bar-text"></div>
+        </div>
+        <div class="hidden pace"></div>
+      </div>
+    {% endif %}
+
   </div>
 
-  <div class="right">
-  <a class="btn" href="{% url advertiser_line_item_form_edit line_item.key %}">
-    {% button_icon "pencil" %}
-    Edit Line Item
-  </a>
-
-
-  <div class="dropdown" id="export-menu" style='display:inline-block'>
-  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
-    <i class="icon-download-alt"></i> Export
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu">
-    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
-            data-toggle="running"> Excel XLS </a> </li>
-    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
-            data-toggle="running"> Excel XLSX </a> </li>
-    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
-            data-toggle="running"> OpenOffice Spreadsheet </a> </li>
-    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"
-            data-toggle="running"> CSV </a> </li>
-    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=tsv"
-                data-toggle="running"> TSV </a> </li>
-    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=yaml"
-            data-toggle="running"> YAML </a> </li>
-    <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=json"
-                data-toggle="running"> JSON </a> </li>
-  </ul>
-  </div>
+  <div class="right" style="margin-bottom: 10px;">
+    <div style="display: inline-block; margin-right: 10px;">
+      <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+      {{ line_item.status|capitalize }}
     </div>
-</div>
-<div style="clear: both;"></div>
+
+    <div class="btn-group" style="display: inline-block;">
+      <button class="btn status_change" data-toggle="pause">
+        {% button_icon "pause" %}
+        Pause
+      </button>
+      <button class="btn status_change" data-toggle="play">
+        {% button_icon "play" %}
+        Resume
+      </button>
+      <button class="btn status_change" data-toggle="archive">
+        {% button_icon "stop" %}
+        Archive
+      </button>
+    </div>
+  </div>
+
+  <div class="right" style="clear: both; margin-bottom: 10px;">
+
+    <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 10px;">
+      {% button_icon "pencil" %}
+      Edit Line Item
+    </a>
+
+    <div class="left dropdown" id="copy-line-item" style="margin-right: 10px;">
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#copy-line-item">
+        <i class="icon-share"></i>
+        Copy Line Item
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="copy_option" href="#" data-toggle="copy_with">
+            Copy with creatives
+          </a>
+        </li>
+        <li>
+          <a class="copy_option" href="#" data-toggle="copy_without">
+            Copy without creatives
+          </a>
+        </li>
+        <li>
+          <a class="copy_option" href="#" data-toggle="copy_to_another">
+            Copy to another order
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="left dropdown" id="export-menu">
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
+        <i class="icon-download-alt"></i> Export
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
+                data-toggle="running"> Excel XLS </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
+                data-toggle="running"> Excel XLSX </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
+                data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"
+                data-toggle="running"> CSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=tsv"
+                    data-toggle="running"> TSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=yaml"
+                data-toggle="running"> YAML </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=json"
+                    data-toggle="running"> JSON </a> </li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div style="clear: both;"></div>
 
 {# The stats breakdown and graph #}
 
@@ -99,6 +179,7 @@
 
 <br />
 
+{% comment %}
 <section>
   <div class="clearfix">
     <h3 class="left">
@@ -134,6 +215,7 @@
   {% endif %}
 
 </section>
+{% endcomment %}
 
 {% comment %}
 {# Table that shows all of the adunits being targeted #}

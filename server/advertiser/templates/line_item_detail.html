@@ -34,6 +34,7 @@
     </div>
   {% endif %}
 
+
   <div class="right" style="clear: both; margin-bottom: 10px;">
 
     <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 10px;">
@@ -101,7 +102,7 @@
 
 
 <section>
-  
+
   {% comment %}
   {% line_item_table line_item %}
   <br />
@@ -161,7 +162,7 @@
 
   {% creative_table line_item.creatives %}
   <br />
-    
+
   <div class="btn-group">
     <button class="btn status_change" data-toggle="pause" data-target="#creative_table">
       {% button_icon "pause" %}
@@ -176,7 +177,7 @@
       Delete
     </button>
   </div>
-  
+
 </section>
 
 {% comment %}

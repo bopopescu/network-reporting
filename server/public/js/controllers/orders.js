@@ -680,13 +680,22 @@
 
             /* EDIT CREATIVE FORMS */
             // creative preview button
-            $('#creative_preview_button').click(function(e) {
+            $('.creative_preview_button').click(function(e) {
                 e.preventDefault();
+
+                // Set up the iframe. The iframe is hidden by default,
+                // and displayed when its finished loading.
                 var modal = $(this).siblings('div#creative_preview');
                 var preview = modal.children('div.modal-body');
                 var src = preview.children('input[name="src"]').val();
                 var iframe = preview.children('iframe');
+
                 iframe.attr('src', src);
+                iframe.load(function () {
+                    iframe.css('background-image', 'none');
+                });
+
+                // Set up the modal that contains the iframe
                 var width = parseInt(iframe.attr("width"));
                 var height = parseInt(iframe.attr("height"));
                 modal.css({

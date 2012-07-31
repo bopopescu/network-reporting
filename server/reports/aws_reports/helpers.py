@@ -37,7 +37,7 @@ ACCOUNT_DIR = S3_BUCKET + '/account_data'
 SHORT_ACCT_DIR = 'account_data'
 
 MASTER_INSTANCE_TYPE = 'm1.large'
-SLAVE_INSTANCE_TYPE = 'c1.xlarge'
+SLAVE_INSTANCE_TYPE = 'm1.xlarge'
 KEEP_ALIVE = True
 
 ################## GAE Uploading Stuff ##############

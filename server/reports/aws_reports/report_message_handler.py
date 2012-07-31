@@ -75,7 +75,7 @@ SHORT_ACCT_DIR = 'account_data'
 
 NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.large'
-SLAVE_INSTANCE_TYPE = 'c1.xlarge'
+SLAVE_INSTANCE_TYPE = 'm1.xlarge'
 KEEP_ALIVE = True
 
 MAX_RETRIES = 3

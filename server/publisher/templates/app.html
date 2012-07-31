@@ -1,14 +1,16 @@
 {% extends 'publisher/base.html' %}
-{% load filters %}
+
 {% load elements %}
+{% load filters %}
 
 {% block pageTitle %}
   <h1>
-    <a href="{% url app_index %}">Apps</a> / {{app.name}}
+    <a href="{% url app_index %}">Apps</a> / {{ app.name }}
   </h1>
 {% endblock pageTitle %}
 
 {% block content %}
+
   <div id="dashboard-appEditForm" class="hidden" style="margin-bottom: 10px;">
     <a name="appForm" class="hidden">anchor</a>
     <form action="{% url publisher_app_update_ajax app_key=app.key %}"
@@ -40,8 +42,7 @@
 
   {% chart_placeholder start_date end_date %}
 
-  <div id="dashboard-apps">
-
+  <div id="ad-units">
     <div class="right">
       <a class="btn" id="dashboard-apps-editAppButton" href="#">
         <i class="icon-pencil"></i>
@@ -52,58 +53,52 @@
         Add an Ad Unit
       </a>
     </div>
+
+    <h2>Ad units for {{ app.name }}</h2>
+
+    {% comment %}
+      Form/buttons for adding a new adunit
+    {% endcomment %}
+    <div id="dashboard-adunitAddForm" class="hidden">
+      <form action="{% url publisher_adunit_update_ajax %}"
+            method="POST"
+            accept-charset="utf-8"
+            id="adunitAddForm">
+        <fieldset id="adunitForm-details" class="alt">
+          <div id="adunitForm-fragment">
+            {{ adunit_form_fragment }}
+          </div>
+
+          <div class="form-submit">
+            <span class="hidden" id="adunitForm-loading">
+              <img src="/images/icons-custom/spinner-12.gif"/>
+            </span>
+            <a href="#" class="btn" id="adunitAddForm-cancel">
+              Cancel
+            </a>
+            <a href="#" class="btn" id="adunitAddForm-submit">
+              {% button_icon "ok" %}
+              Save
+            </a>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+
+    {% comment %}
+      Table containing each adunit for the app
+    {% endcomment %}
+    <div id="dashboard-apps">
+      {% inventory_table app %}
+    </div>
   </div>
 
-  <h2>Ad units for {{ app.name }}</h2>
+  <div id="ad-sources">
+    <h2>Ad sources for {{ app.name }}</h2>
 
-
-  {% comment %}
-    Form/buttons for adding a new adunit
-  {% endcomment %}
-
-  <div id="dashboard-adunitAddForm" class="hidden">
-    <form action="{% url publisher_adunit_update_ajax %}"
-          method="POST"
-          accept-charset="utf-8"
-          id="adunitAddForm">
-      <fieldset id="adunitForm-details" class="alt">
-        <div id="adunitForm-fragment">
-          {{ adunit_form_fragment }}
-        </div>
-
-        <div class="form-submit">
-          <span class="hidden" id="adunitForm-loading">
-            <img src="/images/icons-custom/spinner-12.gif"/>
-          </span>
-          <a href="#" class="btn" id="adunitAddForm-cancel">
-            Cancel
-          </a>
-          <a href="#" class="btn" id="adunitAddForm-submit">
-            {% button_icon "ok" %}
-            Save
-          </a>
-        </div>
-      </fieldset>
-    </form>
-  </div>
-
-  {% comment %}
-    Table containing each adunit for the app
-  {% endcomment %}
-
-  <div id="dashboard-apps">
-    {% inventory_table app %}
-  </div>
-
-  <div class="divSpacer"></div>
-
-  {% comment %}
-      Tables containing targeting information for each campaign
-      the app is in
-  {% endcomment %}
-
-  <div id="app-ad-sources">
-
+    {% comment %}
+      Table containing each campaign/adgroup that targets the app
+    {% endcomment %}
     <table class="advertiser_table">
       <thead>
         <tr style="width: 230px;">
@@ -123,239 +118,59 @@
         </tr>
       </thead>
       <tbody>
-
         {% for line_item in line_items %}
-          <tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
-            <td class="controls">
-              <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
-            </td>
-
-            <td class="name">
-              <a class="order-name"
-                 href="{% url advertiser_order_detail order_key=line_item.campaign.key %}"
-                 style="font-size:12px;">
-                {{ line_item.campaign.name }}
-              </a>
-              >
-              <br />
-              <a href='{% url advertiser_line_item_detail line_item_key=line_item.key %}'>
-                {{ line_item.name }}
-              </a>
-              <br />
-              <span class="muted">
-                {{ line_item.status|capitalize }}
-              </span>
-              <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
-            </td>
-            <td class="type stat">
-              {{ line_item.adgroup_type_display }}
-            </td>
-            <td class="goal stat">
-              {{ line_item.budget_goal_display }}
-            </td>
-            <td class="stat">
-              {{ line_item.bid|currency }}
-              {% if line_item.bid_strategy == 'cpm' %}
-                <br />CPM
-              {% else %}
-                {% if line_item.bid_strategy == 'cpc' %}
-                  <br />CPC
-                {% endif %}
-              {% endif %}
-            </td>
-            <td class="stat">
-              {{ line_item.start_datetime|pacific_time:"m/d" }}
-            </td>
-            <td class="stat">
-              {% if line_item.end_datetime %}
-                {{ line_item.end_datetime|pacific_time:"m/d" }}
-              {% else %}
-                None
-              {% endif %}
-            </td>
-            <td class="imp stat">
-              --
-            </td>
-            <td class="clk stat">
-              --
-            </td>
-            <td class="ctr stat">
-              --
-            </td>
-            <td class="stat">
-              <div class="conv">
-                --
-              </div>
-              <div class="muted conv_rate">
-                --
-              </div>
-            </td>
-            <td class="delivery">
-              {% if line_item.budget_goal %}
-              <div class="hidden progress progress-striped
-                  {% if line_item.status == 'running' %}active{% endif %}
-                  {% if line_item.status == 'paused' %}progress-info{% endif %}">
-                <div class="bar" style="width: {{ line_item.progress|percentage }}"></div>
-                <div id="progress-bar-text"></div>
-              </div>
-              <div class="hidden pace"></div>
-              {% endif %}
-            </td>
-            <td class="popdown">
-              <i class="moreinfo icon-search" id="popover-{{line_item.key}}"></i>
-            </td>
-          </tr>
+          {% line_item_row line_item %}
         {% endfor %}
 
-        <tr class="sub lineitem-row {{ marketplace_campaign.status }}" id="{{ marketplace_campaign.key }}">
-          <td class="controls">
-            <img id="status-{{ marketplace_campaign.key }}" src="{{ marketplace_campaign.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
-          </td>
-
-          <td class="name">
-            <a class="order-name"
-               href="{% url marketplace_index %}"
-               style="font-size:12px;">
-              {{ marketplace_campaign.name }}
-            </a>
-            <br />
-            <span class="muted">
-              {{ marketplace_campaign.status|capitalize }}
-            </span>
-            <img id="{{ marketplace_campaign.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
-          </td>
-          <td class="type stat">
-            {{ marketplace_campaign.campaign_type|capitalize }}
-          </td>
-          <td class="stat"></td>
-          <td class="stat"></td>
-          <td class="stat"></td>
-          <td class="stat"></td>
-          <td class="imp stat">
-            --
-          </td>
-          <td class="clk stat">
-            --
-          </td>
-          <td class="ctr stat">
-            --
-          </td>
-          <td class="stat">
-            <div class="conv">
-              --
-            </div>
-            <div class="muted conv_rate">
-              --
-            </div>
-          </td>
-          <td class="stat"></td>
-          <td class="stat"></td>
-        </tr>
+        {% marketplace_campaign_row marketplace_campaign %}
 
         {% for network_campaign in network_campaigns %}
-          <tr class="sub lineitem-row {{ network_campaign.status }}" id="{{ network_campaign.key }}">
-            <td class="controls">
-              <img id="status-{{ network_campaign.key }}" src="{{ network_campaign.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
-            </td>
-            <td class="name">
-              <a class="order-name"
-                 href="{% url network_details network_campaign.key %}"
-                 style="font-size:12px;">
-                {{ network_campaign.name }}
-              </a>
-              <br />
-              <span class="muted">
-                {{ network_campaign.status|capitalize }}
-              </span>
-              <img id="{{ network_campaign.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
-            </td>
-            <td class="type stat">
-              {{ network_campaign.campaign_type|capitalize }}
-            </td>
-            <td class="stat"></td>
-            <td class="stat"></td>
-            <td class="stat"></td>
-            <td class="stat"></td>
-            <td class="imp stat">
-              --
-            </td>
-            <td class="clk stat">
-              --
-            </td>
-            <td class="ctr stat">
-              --
-            </td>
-            <td class="stat">
-              <div class="conv">
-                --
-              </div>
-              <div class="muted conv_rate">
-                --
-              </div>
-            </td>
-            <td class="stat"></td>
-            <td class="stat"></td>
-          </tr>
+          {% network_campaign_row network_campaign %}
         {% endfor %}
-
       </tbody>
     </table>
-
-  </div>
-  <br />
-
-  <div id="daily-counts">
-    <h2>Daily Counts</h2>
-    <img src="/images/loading2.gif" style='margin-left:450px' />
   </div>
 
-  <div class="dropdown right" id="export-menu" style='display:inline-block'>
+  <div class="right">
 
     <a href="#" id="dashboard-delete-link" class="btn btn-danger">
       {% button_icon "trash" %}
       Remove app from inventory
     </a>
+    <form class="hidden" method="post" id="dashboard-deleteForm" action="{% url publisher_delete_app app_key=app.key %}"></form>
+    <div id="dashboard-delete-modal" class="hidden">
+      <h2>Remove confirmation</h2>
+      <p>Are you sure you want to remove {{ app.name }} from the dashboard?</p>
+    </div>
 
-
-    {#<div class="btn-group">#}
+    <div class="dropdown" id="app-export" style="display: inline;">
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
         <i class="icon-download-alt"></i>
         Export
         <span class="caret"></span>
       </a>
 
-        {# hack: the margin-left is to make the dropdown appear under the caret #}
-        <ul class="dropdown-menu" style='margin-left:150px;'>
-          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xls"
-                  data-toggle="running"> Excel XLS </a> </li>
-          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xlsx"
-                  data-toggle="running"> Excel XLSX </a> </li>
-          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=ods"
-                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
-          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=csv"
-                  data-toggle="running"> CSV </a> </li>
-          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=tsv"
-                  data-toggle="running"> TSV </a> </li>
-          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=yaml"
-                  data-toggle="running"> YAML </a> </li>
-          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=json"
-                  data-toggle="running"> JSON </a> </li>
-        </ul>
-
-      </div>
-
-{#  </div>#}
-
-    <form method="post" id="dashboard-deleteForm" action="{% url publisher_delete_app app_key=app.key %}"> </form>
-
-    <div id="dashboard-delete-modal" class="hidden">
-      <h2>Remove confirmation</h2>
-      <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
+      <ul class="dropdown-menu">
+        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xls"
+                data-toggle="running"> Excel XLS </a> </li>
+        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xlsx"
+                data-toggle="running"> Excel XLSX </a> </li>
+        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=ods"
+                data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=csv"
+                data-toggle="running"> CSV </a> </li>
+        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=tsv"
+                data-toggle="running"> TSV </a> </li>
+        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=yaml"
+                data-toggle="running"> YAML </a> </li>
+        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=json"
+                data-toggle="running"> JSON </a> </li>
+      </ul>
     </div>
 
+  </div>
 
 {% endblock content %}
-
 
 {% block extraScripts %}
 
@@ -368,15 +183,15 @@
   {% include_script "controllers/publisher" %}
 
   <script type="text/javascript">
-    $(function() {
-        DashboardController.initializeAppDetail({
-            app_key: "{{ app.key }}",
-            start_date: {{ start_date|js_date }},
-            date_range: {{ date_range }},
-            line_item_keys: [{% for line_item in line_items %}'{{ line_item.key }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-            marketplace_campaign_key: '{{ marketplace_campaign.key }}',
-            network_campaign_keys: [{% for network_campaign in network_campaigns %}'{{ network_campaign.key }}'{% if not forloop.last %},{% endif %}{% endfor %}]
-        });
+    $(function () {
+      DashboardController.initializeAppDetail({
+        app_key: '{{ app.key }}',
+        start_date: {{ start_date|js_date }},
+        date_range: {{ date_range }},
+        line_item_keys: [{% for line_item in line_items %}'{{ line_item.key }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        marketplace_campaign_key: '{{ marketplace_campaign.key }}',
+        network_campaign_keys: [{% for network_campaign in network_campaigns %}'{{ network_campaign.key }}'{% if not forloop.last %}, {% endif %}{% endfor %}]
+      });
     });
   </script>
 

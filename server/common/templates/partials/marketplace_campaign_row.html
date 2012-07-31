@@ -1,0 +1,57 @@
+{% load elements %}
+{% load filters %}
+
+<tr class="sub lineitem-row {{ marketplace_campaign.status }}" id="{{ marketplace_campaign.key }}">
+  <td class="controls">
+    {% if show_control %}
+      <input class="status_change_control" id="{{ marketplace_campaign.key }}" type="checkbox" />
+    {% endif %}
+    <img id="status-{{ marketplace_campaign.key }}" src="{{ marketplace_campaign.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
+  </td>
+  <td class="name">
+    <a href="{% url marketplace_index %}">
+      {{ marketplace_campaign.name }}
+    </a>
+    <br />
+    <span class="muted">
+      {{ marketplace_campaign.status|capitalize }}
+    </span>
+    <img id="{{ marketplace_campaign.key }}-img" class="loading-img" src="/images/spin-small.gif" />
+  </td>
+  <td class="type stat">
+    {{ marketplace_campaign.campaign_type|capitalize }}
+  </td>
+  <td class="goal stat">
+  </td>
+  <td class="rate stat">
+  </td>
+  <td class="start_date stat">
+  </td>
+  <td class="end_date stat">
+  </td>
+  <td class="imp stat">
+    --
+  </td>
+  <td class="clk stat">
+    --
+  </td>
+  <td class="ctr stat">
+    --
+  </td>
+  <td class="stat">
+    <div class="conv">
+      --
+    </div>
+    <div class="muted conv_rate">
+      --
+    </div>
+  </td>
+  <td class="delivery">
+  </td>
+  <td class="popdown">
+    {% comment %}
+      TODO: implement popover for marketplace campaigns
+      <i class="moreinfo icon-search" id="popover-{{ marketplace_campaign.key }}"></i>
+    {% endcomment %}
+  </td>
+</tr>

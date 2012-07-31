@@ -125,12 +125,14 @@
 }
 
 .advertiser_table {
+    tr {
+        border-bottom: 1px solid #efefef;
+    }
     tbody {
         tr:nth-child(odd) {
-            background: #F7F7F7;
+            background: #f7f7f7;
             &:last-child {
-                border-bottom: 1px solid darken(#f7f7f7, 3%);
-                @include bottom-border-radius();
+                border-bottom: 1px solid #efefef;
             }
         }
     }

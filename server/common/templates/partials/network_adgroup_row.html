@@ -1,0 +1,58 @@
+{% load elements %}
+{% load filters %}
+
+<tr class="sub lineitem-row {{ network_adgroup.status }}" id="{{ network_adgroup.key }}">
+  <td class="controls">
+    {% if show_control %}
+      <input class="status_change_control" id="{{ network_adgroup.key }}" type="checkbox" />
+    {% endif %}
+    <img id="status-{{ network_adgroup.key }}" src="{{ network_adgroup.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
+  </td>
+  <td class="name">
+    <a href="{% url network_details network_adgroup.campaign.key %}">
+      {{ network_adgroup.name }}
+    </a>
+    <br />
+    <span class="muted">
+      {{ network_adgroup.status|capitalize }}
+    </span>
+    <img id="{{ network_adgroup.key }}-img" class="loading-img" src="/images/spin-small.gif" />
+  </td>
+  <td class="type stat">
+    {{ network_adgroup.campaign.campaign_type|capitalize }}
+  </td>
+  <td class="goal stat">
+  </td>
+  <td class="rate stat">
+    {{ network_adgroup.bid|currency }}
+  </td>
+  <td class="start_date stat">
+  </td>
+  <td class="end_date stat">
+  </td>
+  <td class="imp stat">
+    --
+  </td>
+  <td class="clk stat">
+    --
+  </td>
+  <td class="ctr stat">
+    --
+  </td>
+  <td class="stat">
+    <div class="conv">
+      --
+    </div>
+    <div class="muted conv_rate">
+      --
+    </div>
+  </td>
+  <td class="delivery">
+  </td>
+  <td class="popdown">
+    {% comment %}
+      TODO: implement popover for network adgroups
+      <i class="moreinfo icon-search" id="popover-{{ network_adgroup.key }}"></i>
+    {% endcomment %}
+  </td>
+</tr>

@@ -662,7 +662,17 @@ class AdGroup(db.Model):
                 else:
                     return str(goal) + ' USD Total'
         else:
-            return "Unlimited budget"
+            if self.bid_strategy == 'cpm':
+                return "Unlimited Impressions"
+            else:
+                return "Unlimited Clicks"
+
+    @property
+    def rate_display(self):
+        rate_display = "$%.2f" % self.bid
+        if self.bid_strategy in ['cpm', 'cpc']:
+            rate_display += " %s" % self.bid_strategy.upper()
+        return rate_display
 
     @property
     def individual_cost(self):

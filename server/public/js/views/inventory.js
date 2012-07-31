@@ -45,10 +45,10 @@ var mopub = window.mopub || {};
 
 
         // HACK:
-        // Rickshaw doesn't handle single-point time sequences well. 
+        // Rickshaw doesn't handle single-point time sequences well.
         // If we're showing just one day of data, then we push an identical
         // datapoint on to the datapoints list, and then we push a +24hour
-        // date onto the dates list, so that we have two datapoints for 
+        // date onto the dates list, so that we have two datapoints for
         // the 24 hour span, and the graph renders correctly.
         if (datapoints[kind].length === 1) {
             datapoints[kind].push(datapoints[kind][0]);
@@ -753,7 +753,6 @@ var mopub = window.mopub || {};
 
     });
 
-
     var LineItemView = Backbone.View.extend({
         initialize: function () {
             try {
@@ -767,6 +766,7 @@ var mopub = window.mopub || {};
         renderInline: function () {
             var current_model = this.model;
             var row = $('#' + current_model.get('key'), this.el);
+
             var display_fields = [
                 'rev',
                 'imp',
@@ -779,16 +779,6 @@ var mopub = window.mopub || {};
             ];
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
-            });
-
-            var popover_template = _.template($("#popover-template").html());
-            var popover_content = popover_template(current_model.toJSON());
-
-            $(".moreinfo", row).popover({
-                placement: 'left',
-                title: current_model.get('name'),
-                content: popover_content,
-                delay: { hide: 250 }
             });
 
             var percent_delivered = current_model.get('percent_delivered');
@@ -807,6 +797,16 @@ var mopub = window.mopub || {};
                 $pace.show();
             }
 
+            var popover_template = _.template($("#popover-template").html());
+            var popover_content = popover_template(current_model.toJSON());
+            $(".moreinfo", row).popover({
+                placement: 'left',
+                title: current_model.get('name'),
+                content: popover_content,
+                delay: { hide: 250 }
+            });
+
+            $(".loading-img", row).hide();
         }
     });
 

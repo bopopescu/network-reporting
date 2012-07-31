@@ -1,64 +1,44 @@
-{% load filters %}
 {% load elements %}
+{% load filters %}
 
 <tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
-  {% if show_status %}
-    <td class="controls">
-      <input class="status_change_control"
-             id="{{line_item.key}}"
-             type="checkbox"></input>
-      <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
-    </td>
-  {% else %}
-    <td></td>
-  {% endif %}
-
+  <td class="controls">
+    {% if show_control %}
+      <input class="status_change_control" id="{{ line_item.key }}" type="checkbox" />
+    {% endif %}
+    <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
+  </td>
   <td class="name">
-    {% comment %}
+    {% if show_order %}
     <a class="order-name"
        href='{% url advertiser_order_detail order_key=line_item.campaign.key %}'
        style="font-size:12px;">
       {{ line_item.campaign.name }}
     </a> >
     <br />
-    {% endcomment %}
-    <a href='{% url advertiser_line_item_detail line_item_key=line_item.key %}'>
+    {% endif %}
+    <a href="{% url advertiser_line_item_detail line_item_key=line_item.key %}">
       {{ line_item.name }}
     </a>
     <br />
     <span class="muted">
       {{ line_item.status|capitalize }}
-      {% comment %}
-      {{ line_item.start_datetime|date:"m/d" }} to {{ line_item.end_datetime|date:"m/d" }}
-      {% endcomment %}
     </span>
-    <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
+    <img id="{{ line_item.key }}-img" class="loading-img" src="/images/spin-small.gif" />
   </td>
-  {% comment %}
-  <td class="advertiser stat">
-    {{ line_item.campaign.advertiser }}
-  </td>
-  {% endcomment %}
   <td class="type stat">
     {{ line_item.adgroup_type_display }}
   </td>
   <td class="goal stat">
     {{ line_item.budget_goal_display }}
   </td>
-  <td class="stat">
-    {{ line_item.bid|currency }}
-    {% if line_item.bid_strategy == 'cpm' %}
-      <br />CPM
-    {% else %}
-      {% if line_item.bid_strategy == 'cpc' %}
-        <br />CPC
-      {% endif %}
-    {% endif %}
+  <td class="rate stat">
+    {{ line_item.rate_display }}
   </td>
-  <td class="stat">
+  <td class="start_date stat">
     {{ line_item.start_datetime|pacific_time:"m/d" }}
   </td>
-  <td class="stat">
+  <td class="end_date stat">
     {% if line_item.end_datetime %}
       {{ line_item.end_datetime|pacific_time:"m/d" }}
     {% else %}
@@ -83,7 +63,6 @@
     </div>
   </td>
   <td class="delivery">
-    {% if line_item.budget_goal %}
     <div class="hidden progress progress-striped
         {% if line_item.status == 'running' %}active{% endif %}
         {% if line_item.status == 'paused' %}progress-info{% endif %}">
@@ -92,9 +71,8 @@
     </div>
 
     <div class="hidden pace"></div>
-    {% endif %}
   </td>
   <td class="popdown">
-    <i class="moreinfo icon-search" id="popover-{{line_item.key}}"></i>
+    <i class="moreinfo icon-search" id="popover-{{ line_item.key }}"></i>
   </td>
 </tr>

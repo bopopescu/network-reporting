@@ -1,0 +1,57 @@
+{% load elements %}
+{% load filters %}
+
+<tr class="sub lineitem-row {{ marketplace_adgroup.status }}" id="{{ marketplace_adgroup.key }}">
+  <td class="controls">
+    {% if show_control %}
+      <input class="status_change_control" id="{{ marketplace_adgroup.key }}" type="checkbox" />
+    {% endif %}
+    <img id="status-{{ marketplace_adgroup.key }}" src="{{ marketplace_adgroup.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
+  </td>
+  <td class="name">
+    <a href="{% url marketplace_index %}">
+      {{ marketplace_adgroup.name }}
+    </a>
+    <br />
+    <span class="muted">
+      {{ marketplace_adgroup.status|capitalize }}
+    </span>
+    <img id="{{ marketplace_adgroup.key }}-img" class="loading-img" src="/images/spin-small.gif" />
+  </td>
+  <td class="type stat">
+    {{ marketplace_adgroup.campaign.campaign_type|capitalize }}
+  </td>
+  <td class="goal stat">
+  </td>
+  <td class="rate stat">
+  </td>
+  <td class="start_date stat">
+  </td>
+  <td class="end_date stat">
+  </td>
+  <td class="imp stat">
+    --
+  </td>
+  <td class="clk stat">
+    --
+  </td>
+  <td class="ctr stat">
+    --
+  </td>
+  <td class="stat">
+    <div class="conv">
+      --
+    </div>
+    <div class="muted conv_rate">
+      --
+    </div>
+  </td>
+  <td class="delivery">
+  </td>
+  <td class="popdown">
+    {% comment %}
+      TODO: implement popover for marketplace adgroups
+      <i class="moreinfo icon-search" id="popover-{{ marketplace_adgroup.key }}"></i>
+    {% endcomment %}
+  </td>
+</tr>

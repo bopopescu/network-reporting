@@ -14,13 +14,29 @@ def inventory_table(inventory, include_targeting=False):
     if isiterable(inventory):
         return {
             'inventory': inventory,
-            'singular': False
+            'singular': False,
         }
     else:
         return {
             'inventory': [inventory],
-            'singular': True
+            'singular': True,
         }
+
+
+@register.inclusion_tag("common/partials/app_row.html")
+def app_row(app, singular=False):
+    return {
+        'app': app,
+        'singular': singular,
+    }
+
+
+@register.inclusion_tag("common/partials/adunit_row.html")
+def adunit_row(adunit, include_icon_placeholder=True):
+    return {
+        'adunit': adunit,
+        'include_icon_placeholder': include_icon_placeholder
+    }
 
 
 @register.inclusion_tag("common/partials/order_table.html")
@@ -44,83 +60,62 @@ def order_table(orders, show_status=True):
     }
 
 
+@register.inclusion_tag("common/partials/line_item_table.html")
+def line_item_table(line_items):
+    """
+    Renders an line_item or a group of line_items in a table.
+    If include_targeting is true, it'll include
+    """
+
+    # If the object isn't iterable (for instance, a single line_item), put
+    # it in a list so that we can iterate over it in the template
+    if not isiterable(line_items):
+        line_items = [line_items]
+
+    return {
+        'line_items': line_items,
+    }
+
+
 @register.inclusion_tag("common/partials/order_row.html")
-def order_row(order, show_status=True):
+def order_row(order):
     return {
         'order': order,
-        'show_status': show_status,
     }
-
-@register.inclusion_tag("common/partials/app_row.html")
-def app_row(app, singular=False):
-    return {
-        'app': app,
-        'singular': singular
-    }
-
-    
-@register.inclusion_tag("common/partials/adunit_row.html")
-def adunit_row(adunit, include_icon_placeholder=True):
-    return {
-        'adunit': adunit,
-        'include_icon_placeholder': include_icon_placeholder
-    }
-
-
-@register.inclusion_tag("common/partials/line_item_table.html")
-def line_item_table(line_items, show_status=True):
-    """
-    Renders an line_item or a group of line_items in a table.
-    If include_targeting is true, it'll include
-    """
-    singular = False
-
-    # If the object isn't iterable (for instance, a single line_item), put
-    # it in a list so that we can iterate over it in the template
-    if not isiterable(line_items):
-        singular = True
-        line_items = [line_items]
-
-    return {
-        'line_items': line_items,
-        'singular': singular,
-        'show_status': show_status
-    }
-
-@register.inclusion_tag("common/partials/simple_line_item_table.html")
-def simple_line_item_table(line_items, show_status=True):
-    """
-    Renders an line_item or a group of line_items in a table.
-    If include_targeting is true, it'll include
-    """
-    singular = False
-
-    # If the object isn't iterable (for instance, a single line_item), put
-    # it in a list so that we can iterate over it in the template
-    if not isiterable(line_items):
-        singular = True
-        line_items = [line_items]
-
-    return {
-        'line_items': line_items,
-        'singular': singular,
-        'show_status': show_status
-    }
-
 
 
 @register.inclusion_tag("common/partials/line_item_row.html")
-def line_item_row(line_item, show_status=False):
+def line_item_row(line_item):
     return {
         'line_item': line_item,
-        'show_status': show_status
     }
 
-@register.inclusion_tag("common/partials/simple_line_item_row.html")
-def simple_line_item_row(line_item, show_status=False):
+
+@register.inclusion_tag("common/partials/network_campaign_row.html")
+def network_campaign_row(network_campaign):
     return {
-        'line_item': line_item,
-        'show_status': show_status
+        'network_campaign': network_campaign,
+    }
+
+
+@register.inclusion_tag("common/partials/network_adgroup_row.html")
+def network_adgroup_row(network_adgroup):
+    return {
+        'network_adgroup': network_adgroup,
+    }
+
+
+@register.inclusion_tag("common/partials/marketplace_campaign_row.html")
+def marketplace_campaign_row(marketplace_campaign):
+    return {
+        'marketplace_campaign': marketplace_campaign,
+    }
+
+
+@register.inclusion_tag("common/partials/marketplace_adgroup_row.html")
+def marketplace_adgroup_row(marketplace_adgroup):
+    return {
+        'marketplace_adgroup': marketplace_adgroup,
     }
 
 
@@ -204,7 +199,7 @@ def button_icon(name):
     """
     return {'name': name}
 
-    
+
 @register.inclusion_tag("common/partials/chart_placeholder.html")
 def chart_placeholder(start_date, end_date):
     """
@@ -228,12 +223,10 @@ def line_item_status(line_item):
         'line_item': line_item
     }
 
-    
+
 def isiterable(item):
     try:
         iter(item)
     except TypeError:
         return False
     return True
-
-    

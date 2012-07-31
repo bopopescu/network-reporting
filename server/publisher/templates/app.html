@@ -340,40 +340,42 @@
     <img src="/images/loading2.gif" style='margin-left:450px' />
   </div>
 
+  <div class="dropdown right" id="export-menu" style='display:inline-block'>
 
-  <div class="right">
-
-    <div class="btn-group">
     <a href="#" id="dashboard-delete-link" class="btn btn-danger">
       {% button_icon "trash" %}
       Remove app from inventory
-    </a>
-
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+    </a>      
+    
+    
+    {#<div class="btn-group">#}
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
         <i class="icon-download-alt"></i>
         Export
         <span class="caret"></span>
       </a>
-
-      {# hack: the margin-left is to make the dropdown appear under the caret #}
-      <ul class="dropdown-menu" style='margin-left:150px;'>
-        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xls"
-                data-toggle="running"> Excel XLS </a> </li>
-        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xlsx"
-                data-toggle="running"> Excel XLSX </a> </li>
-        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=ods"
-                data-toggle="running"> OpenOffice Spreadsheet </a> </li>
-        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=csv"
-                data-toggle="running"> CSV </a> </li>
-        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=tsv"
-                data-toggle="running"> TSV </a> </li>
-        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=yaml"
-                data-toggle="running"> YAML </a> </li>
-        <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=json"
-                data-toggle="running"> JSON </a> </li>
-      </ul>
-
-    </div>
+        
+        {# hack: the margin-left is to make the dropdown appear under the caret #}
+        <ul class="dropdown-menu" style='margin-left:150px;'>
+          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
+        </ul>
+        
+      </div>
+    
+{#  </div>#}
 
     <form method="post" id="dashboard-deleteForm" action="{% url publisher_delete_app app_key=app.key %}"> </form>
 
@@ -381,8 +383,6 @@
       <h2>Remove confirmation</h2>
       <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
     </div>
-
-  </div>
 
 
 {% endblock content %}

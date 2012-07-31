@@ -43,8 +43,16 @@ var mopub = window.mopub || {};
 
         $(element).html("");
 
+
+        // HACK:
+        // Rickshaw doesn't handle single-point time sequences well. 
+        // If we're showing just one day of data, then we push an identical
+        // datapoint on to the datapoints list, and then we push a +24hour
+        // date onto the dates list, so that we have two datapoints for 
+        // the 24 hour span, and the graph renders correctly.
         if (datapoints[kind].length === 1) {
             datapoints[kind].push(datapoints[kind][0]);
+            dates.push(dates[0] + (60*60*24));
         }
 
         var graph = new Rickshaw.Graph({

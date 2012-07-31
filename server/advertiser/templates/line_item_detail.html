@@ -181,31 +181,13 @@
 
 {% comment %}
 <section>
-  <div class="clearfix">
-    <h3 class="left">
-      Status {# for {{ line_item.name }}#}
-      {# (part of <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a>) #}
-    </h3>
-  </div>
-
+  
+  {% comment %}
   {% line_item_table line_item %}
-
   <br />
+  {% endcomment %}
 
-  <div class="btn-group">
-    <button class="btn status_change" data-toggle="pause">
-      {% button_icon "pause" %}
-      Pause
-    </button>
-    <button class="btn status_change" data-toggle="play">
-      {% button_icon "play" %}
-      Resume
-    </button>
-    <button class="btn status_change" data-toggle="archive">
-      {% button_icon "stop" %}
-      Archive
-    </button>
-  </div>
+  {% line_item_status line_item %}
 
   {% if user.is_admin %}
     <a class="btn right" href="/budget/view/{{line_item.key}}">
@@ -233,49 +215,49 @@
 
 <section>
 
-  <button class="btn right {% if not line_item.creatives.count %}hidden{% endif %}" id="new_creative_button">
+  <button class="btn right {% if not line_item.creatives.count %}hidden{% endif %}"
+          id="new_creative_button">
     {% button_icon "plus" %}
     Add a creative
   </button>
 
   <h3>Creatives</h3>
-
   <form action="{% url advertiser_creative_form_new line_item.key %}"
     {% if line_item.creatives.count %}class="hidden"{% endif %}
     enctype="multipart/form-data"
     id="new_creative_form"
     method="post">
 
-      {% creative_form %}
+    {% creative_form %}
 
-      <button class="btn right submit">
-        {% button_icon "check" %}
-        Save
-      </button>
-      <button class="btn right cancel">
-        Cancel
-      </button>
-      <div class="clear"></div>
-    </form>
+    <button class="btn right submit">
+      {% button_icon "check" %}
+      Save
+    </button>
+    <button class="btn right cancel">
+      Cancel
+    </button>
+    <div class="clear"></div>
+  </form>
 
-    {% creative_table line_item.creatives %}
-
-    <br />
-
-    <div class="btn-group">
-      <button class="btn status_change" data-toggle="pause">
-        {% button_icon "pause" %}
-        Pause
-      </button>
-      <button class="btn status_change" data-toggle="play">
-        {% button_icon "play" %}
-        Resume
-      </button>
-      <button class="btn status_change" data-toggle="delete">
-        {% button_icon "trash" %}
-        Delete
-      </button>
-    </div>
+  {% creative_table line_item.creatives %}
+  <br />
+    
+  <div class="btn-group">
+    <button class="btn status_change" data-toggle="pause">
+      {% button_icon "pause" %}
+      Pause
+    </button>
+    <button class="btn status_change" data-toggle="play">
+      {% button_icon "play" %}
+      Resume
+    </button>
+    <button class="btn status_change" data-toggle="delete">
+      {% button_icon "trash" %}
+      Delete
+    </button>
+  </div>
+  
 </section>
 
 {% comment %}

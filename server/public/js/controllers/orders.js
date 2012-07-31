@@ -214,8 +214,17 @@
      * Sets up the click handler for the status control button. This
      * is the button group that pauses, resumes, and archives
      * orders/line items/creatives.
+     *
+     * `keep_checked` -- if True, status change control check boxes
+     * will stay checked after their status is changed. Default is
+     * False.
      */
-    function initializeStatusControls() {
+    function initializeStatusControls(keep_checked) {
+        
+        if (typeof keep_checked === 'undefined') {
+            keep_checked = false;
+        }
+
         $(".status_change.btn").click(function(e){
             e.preventDefault();
             var status = $(this).attr('data-toggle');
@@ -225,9 +234,12 @@
             });
 
             changeStatus(keys, status);
-            $(".status_change_control").each(function(){
-                $(this).attr('checked', false);
-            });
+
+            if (!keep_checked) {
+                $(".status_change_control").each(function(){
+                    $(this).attr('checked', false);
+                });
+            }
         });
     }
 
@@ -489,7 +501,7 @@
         initializeLineItemDetail: function(bootstrapping_data) {
 
             initializeDateButtons();
-            initializeStatusControls();
+            initializeStatusControls(true);
 
             /*
              * Load the stats for the line item
@@ -533,64 +545,6 @@
 
             line_item.fetch();
 
-            /*
-             * Load the data in the targetting table
-             */
-
-            // Get all of the apps that are targeted by this line item
-            // and fill in their stats in the targeted table.
-            // _.each(bootstrapping_data.targeted_apps, function(app_key) {
-            //     var app = new App({
-            //         id: app_key,
-            //         stats_endpoint: 'direct'
-            //     });
-
-            //     app.url = function () {
-            //         var stats_endpoint = this.get('stats_endpoint');
-            //         return '/api/adgroup/'
-            //             + bootstrapping_data.line_item_key
-            //             + '/apps/'
-            //             + this.id
-            //             + "?"
-            //             + window.location.search.substring(1)
-            //             + '&endpoint='
-            //             + stats_endpoint;
-            //     };
-
-            //     app.bind('change', function(current_app){
-            //         renderApp(current_app);
-            //     });
-            //     app.fetch();
-            // });
-
-            // Same deal with the adunits. Get all of the adunits that are
-            // targeted by this line item and fill in their stats in the
-            // targeted table.
-            // _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
-            //     var adunit = new AdUnit({
-            //         id: adunit_key,
-            //         stats_endpoint: 'direct'
-            //     });
-
-            //     adunit.url = function () {
-            //         var stats_endpoint = this.get('stats_endpoint');
-            //         return '/api/adgroup/'
-            //             + bootstrapping_data.line_item_key
-            //             + '/adunits/'
-            //             + this.id
-            //             + "?"
-            //             + window.location.search.substring(1)
-            //             + '&endpoint='
-
-            //             + stats_endpoint;
-            //     };
-
-            //     adunit.bind('change', function(current_adunit){
-            //         renderAdUnit(current_adunit);
-            //     });
-
-            //     adunit.fetch();
-            // });
 
             // Set up the handler for the copy button
             var copy_modal = $("#copy_modal").modal({

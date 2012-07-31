@@ -1,4 +1,3 @@
-import logging
 import sys
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
@@ -976,7 +975,7 @@ class EjamCreative(Creative):
     #ServerSide = EjamServerSide
     @property
     def multi_format(self):
-        return ('320x50', 'full',)
+        return ('320x50', 'full', '300x250', '728x90', '320x480')
 
 
 class InMobiCreative(Creative):

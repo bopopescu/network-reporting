@@ -5,22 +5,21 @@
 
 {% block pageTitle %}
   <h1>
-    <a href="{% url publisher_app_show app_key=adunit.app.key %}">AdUnits</a> / {{ adunit.name }}
+    <a href="{% url publisher_app_show app_key=adunit.app.key %}"> {{adunit.app.name}}</a> / {{ adunit.name }}
   </h1>
 {% endblock pageTitle %}
 
 {% block content %}
 
-  {% comment %}
   {% if not adgroups %}
     <div class="alert-message block-message">
       There are no ad sources targeting this ad unit.
-      To show ads here, set up a new ad campaign or
-      add this ad unit to an existing campaign on the
-      <a href="{% url advertiser_order_index %}">Campaigns</a> page.
+      To show ads here, set up a new line item, or
+      add this ad unit to an existing line item on the
+      <a href="{% url advertiser_order_index %}">Orders</a> page.
     </div>
   {% endif %}
-  {% endcomment %}
+
 
   <div id="dashboard-adunitEditForm" class="hidden">
     <div>
@@ -70,7 +69,7 @@
     <h2 class="left">Ad sources for {{ adunit.name }}</h2>
 
     {% comment %}
-      Table containing each campaign/adgroup that targets the adunit
+      Table containing each order/line item that targets the adunit
     {% endcomment %}
     <table class="advertiser_table">
       <thead>

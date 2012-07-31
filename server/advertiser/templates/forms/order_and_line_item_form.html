@@ -66,11 +66,11 @@
                     {% endif %}
                     <a href="#" id="adgroup_type-helpLink">What's this?</a>
                     <div class="hidden" id="adgroup_type-helpContent">
-                      <h3>Campaign Type</h3>
+                      <h3>Line Item Type</h3>
                       <h4>Guaranteed</h4>
-                      <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
+                      <p>A <strong>Guaranteed</strong> line item is typically a direct sold line item with a set CPM for a certain number of impressions and a start and end date.</p>
                       <h4>Promotional</h4>
-                      <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
+                      <p>A <strong>Promotional</strong> line item is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" line item.</p>
                     </div>
             </div>
             </li>
@@ -82,7 +82,9 @@
                     <a href="#" id="gtee_priority-helpLink">What's this?</a>
                     <div id="gtee_priority-helpContent" class="hidden">
                         <h3>Priority</h3>
-                        <p>Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level.</p>
+                        <p>
+                          Line items are set to run before other line items at lower priorities. Line Items within the same priority level are run in order of CPM.
+                        </p>
                     </div>
                 </div>
             </li>
@@ -94,7 +96,7 @@
                     <a href="#" id="promo_priority-helpLink">What's this?</a>
                     <div id="promo_priority-helpContent" class="hidden">
                         <h3>Priority</h3>
-                        <p>For a promotional campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
+                        <p>You may pick whether line items are prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
                     </div>
                 </div>
             </li>
@@ -127,7 +129,7 @@
                     <a class="adgroup_type_dependant promo whatsthis" id="bid-helpLink" href="#">What's this?</a>
                     <div id="bid-helpContent" class="hidden">
                         <h3>Promotional CPM</h3>
-                        <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
+                        <p>MoPub uses CPM to prioritize which promotional line item will be displayed.  Increase the CPM of a line item to run it before other line items within the same priority.</p>
                     </div>
                 </div>
             </li>
@@ -159,7 +161,7 @@
     <fieldset>
         <legend>
             <h2>Targeting</h2>
-            <p>Choose which ad units this campaign will target.</p>
+            <p>Choose which ad units this line item will target.</p>
         </legend>
 
         <span id="apps_label">

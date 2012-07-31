@@ -220,7 +220,7 @@
      * False.
      */
     function initializeStatusControls(keep_checked) {
-        
+
         if (typeof keep_checked === 'undefined') {
             keep_checked = false;
         }
@@ -514,17 +514,7 @@
             });
 
             line_item.bind('change', function (current_line_item) {
-
-                var line_item_view = new LineItemView({
-                    model: current_line_item,
-                    el: 'line_item'
-                });
-                line_item_view.renderInline();
-
-                var creatives = new CreativeCollection(current_line_item.get('creatives'));
-                creatives.each(function(creative){
-                    renderCreative(creative, false);
-                });
+                renderLineItem(current_line_item);
 
                 var line_items = new LineItemCollection();
                 line_items.add(line_item);

@@ -34,6 +34,7 @@
     </div>
   {% endif %}
 
+  {% comment %}
   <div class="left line_item" style="margin-bottom: 10px;">
 
     <table class="advertiser_table" style="display: inline-block;">
@@ -113,6 +114,7 @@
       </button>
     </div>
   </div>
+  {% endcomment %}
 
   <div class="right" style="clear: both; margin-bottom: 10px;">
 
@@ -179,9 +181,8 @@
 
 <br />
 
-{% comment %}
 <section>
-  
+
   {% comment %}
   {% line_item_table line_item %}
   <br />
@@ -197,7 +198,6 @@
   {% endif %}
 
 </section>
-{% endcomment %}
 
 {% comment %}
 {# Table that shows all of the adunits being targeted #}
@@ -242,7 +242,7 @@
 
   {% creative_table line_item.creatives %}
   <br />
-    
+
   <div class="btn-group">
     <button class="btn status_change" data-toggle="pause">
       {% button_icon "pause" %}
@@ -257,7 +257,7 @@
       Delete
     </button>
   </div>
-  
+
 </section>
 
 {% comment %}

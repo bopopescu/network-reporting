@@ -1,9 +1,31 @@
+# Deployed Tuesday, July 31, 2012 at 05:20PM PST
+### Deployed by John Pena
+### Tagged deploy-167
+### Bugs Fixed: []
+### Included Commits: 
+ * ee422ea change reporting cluster instance type to m1.xlarge
+ * d0ab96f merge conflict
+ * 1b8eee4 Merge
+ * 4a37249 Added comment to enable_networks in publisher views
+ * 1488d26 creatives now for network adgroups are created upon adgroup creation
+ * db99e18 added raven, an error tracking library for sentry in javascript
+ * 9bd7462 added parseuri to raven
+ * be50c13 updated plugins with raven
+ * b55f784 Merge branch 'master' of github.com:mopub/mopub
+ * 6c14e8b increasing machine count to 1+20; increase instance type to c1.xlarge
+ * 8458395 Fixed publisher tests
+ * e1568e7 Deployed without finding any bug fixes.
+ * c548efe Merge branch 'master' of https://github.com/mopub/mopub
+ * 1a003b2 added a webkit pushstack fix js file and added it to edit network page
+ * ec2e773 Merge branch 'master' of https://github.com/mopub/mopub
+ * db7f8ba More logging in aws_reports
+ 
 # Deployed Friday, July 27, 2012 at 12:57AM PST
 ### Deployed by tiags
 ### Tagged deploy-166
 ### Bugs Fixed: []
-### Included Commits: 
- 
+### Included Commits:
+
 # Deployed Tuesday, July 24, 2012 at 01:09AM PST
 ### Deployed by John Pena
 ### Tagged deploy-165

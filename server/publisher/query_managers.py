@@ -84,11 +84,16 @@ class AdUnitContextQueryManager(CachedQueryManager):
             trace_logging.warning("memcache miss: fetching adunit_context from db")
             try:
                 adunit_context = cls.get_context(adunit_key)
-                memcache.set(adunit_context_key,
-                             adunit_context,
-                             time=CACHE_TIME)
+                try:
+                    memcache.set(adunit_context_key,
+                                 adunit_context,
+                                 time=CACHE_TIME)
+                except ValueError:
+                    logging.warning("%s is too big" % adunit_key)
+
                 new_timestamp = datetime.datetime.now()
                 memcache.set("ts:%s" % adunit_context_key, new_timestamp)
+
             except db.Timeout, e: # Datastore timeouts usually
                 logging.warning("Datastore timeout for wrapping context for: %s" % adunit_key)
                 return TO_ERR

@@ -3,13 +3,13 @@
 
 <tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
   <td class="controls">
-    {% if show_control %}
+    {% if show_controls %}
       <input class="status_change_control" id="{{ line_item.key }}" type="checkbox" />
     {% endif %}
     <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
   </td>
   <td class="name">
-    {% if show_order %}
+    {% if show_order_names %}
     <a class="order-name"
        href='{% url advertiser_order_detail order_key=line_item.campaign.key %}'
        style="font-size:12px;">

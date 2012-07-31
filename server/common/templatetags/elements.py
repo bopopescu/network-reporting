@@ -40,7 +40,7 @@ def adunit_row(adunit, include_icon_placeholder=True):
 
 
 @register.inclusion_tag("common/partials/order_table.html")
-def order_table(orders, show_status=True):
+def order_table(orders):
     """
     Renders an order or a group of orders in a table.
     If include_targeting is true, it'll include
@@ -56,12 +56,11 @@ def order_table(orders, show_status=True):
     return {
         'orders': orders,
         'singular': singular,
-        'show_status': show_status,
     }
 
 
 @register.inclusion_tag("common/partials/line_item_table.html")
-def line_item_table(line_items):
+def line_item_table(line_items, show_controls=True, show_order_names=True):
     """
     Renders an line_item or a group of line_items in a table.
     If include_targeting is true, it'll include
@@ -74,6 +73,8 @@ def line_item_table(line_items):
 
     return {
         'line_items': line_items,
+        'show_controls': show_controls,
+        'show_order_names': show_order_names,
     }
 
 
@@ -85,9 +86,11 @@ def order_row(order):
 
 
 @register.inclusion_tag("common/partials/line_item_row.html")
-def line_item_row(line_item):
+def line_item_row(line_item, show_controls=True, show_order_names=True):
     return {
         'line_item': line_item,
+        'show_controls': show_controls,
+        'show_order_names': show_order_names,
     }
 
 

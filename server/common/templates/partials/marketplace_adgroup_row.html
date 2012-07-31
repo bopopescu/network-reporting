@@ -3,9 +3,6 @@
 
 <tr class="sub lineitem-row {{ marketplace_adgroup.status }}" id="{{ marketplace_adgroup.key }}">
   <td class="controls">
-    {% if show_control %}
-      <input class="status_change_control" id="{{ marketplace_adgroup.key }}" type="checkbox" />
-    {% endif %}
     <img id="status-{{ marketplace_adgroup.key }}" src="{{ marketplace_adgroup.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
   </td>
   <td class="name">

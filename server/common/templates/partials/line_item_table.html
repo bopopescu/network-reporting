@@ -22,7 +22,7 @@
 
   {% for line_item in line_items %}
     <tbody class="{% cycle 'alt' 'primary' %}">
-      {% line_item_row line_item %}
+      {% line_item_row line_item show_controls show_order_names %}
     </tbody>
   {% endfor %}
 </table>

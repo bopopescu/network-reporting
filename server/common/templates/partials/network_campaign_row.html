@@ -3,9 +3,6 @@
 
 <tr class="sub lineitem-row {{ network_campaign.status }}" id="{{ network_campaign.key }}">
   <td class="controls">
-    {% if show_control %}
-      <input class="status_change_control" id="{{ network_campaign.key }}" type="checkbox" />
-    {% endif %}
     <img id="status-{{ network_campaign.key }}" src="{{ network_campaign.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
   </td>
   <td class="name">

@@ -119,7 +119,7 @@
       </thead>
       <tbody>
         {% for line_item in line_items %}
-          {% line_item_row line_item %}
+          {% line_item_row line_item False %}
         {% endfor %}
 
         {% marketplace_campaign_row marketplace_campaign %}

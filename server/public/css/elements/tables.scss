@@ -45,14 +45,14 @@
             }
             td {
                 font-weight: 600;
-                padding: 10px 10px 4px 0;
+                padding: 10px 10px 4px 4px;
                 &.name {
                     font-size: 14px;
                 }
             }
         }
         tr.sub td {
-            padding: 4px 10px 4px 0;
+            padding: 4px 10px 4px 4px;
             &.name, &.stat, &.text {
                 border-top: 1px solid #EEE;
             }

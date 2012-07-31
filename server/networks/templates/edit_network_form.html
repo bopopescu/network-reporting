@@ -26,7 +26,7 @@
         {% if not network.show_login %}
         <fieldset class="alt login-fields" style="padding-top:20px">
             <legend>
-                <h2>
+                <h2 style="padding-top:20px">
                     Revenue Reporting
                     {% if network.name == "admob" or network.name == "inmobi" %}
                     <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
@@ -44,30 +44,38 @@
                 </div>
 
                 {% if network.name != "mobfox" %}
-                <ul class="form_fields">
-                    <li>
-                    {{ login_form.username_str.label_tag }}
-                    {{ login_form.username_str }}
-                    <span id="username"></span>
-                    </li>
+                    <div>
+                        <dl class="formFields" style="padding-top: 20px">
+                            <dt>
+                            {{ login_form.username_str.label_tag }}
+                            </dt>
+                            <dd>
+                            {{ login_form.username_str }}
+                            <span id="username"></span>
+                            </dd>
 
-                    <li>
-                    {{ login_form.password_str.label_tag }}
-                    {{ login_form.password_str }}
-                    <span id="password"></span>
-                    </li>
+                            <dt>
+                            {{ login_form.password_str.label_tag }}
+                            </dt>
+                            <dd>
+                            {{ login_form.password_str }}
+                            <span id="password"></span>
+                            </dd>
 
-                    {% if network.name == "admob" %}
-                    <li>
-                    {{ login_form.client_key.label_tag }}
-                    {{ login_form.client_key }}
-                    <span id="client_key"></span>
-                    </li>
-                    {% endif %}
-                </ul>
+                            {% if network.name == "admob" %}
+                            <dt>
+                            {{ login_form.client_key.label_tag }}
+                            </dt>
+                            <dd>
+                            {{ login_form.client_key }}
+                            <span id="client_key"></span>
+                            </dd>
+                            {% endif %}
+                        </dl>
+                    </div>
                 {% endif %}
 
-                <div class="form-submit login-credentials-submit">
+                <div class="form-submit login-credentials-submit" style="clear: both">
                     <a class="submit btn">
                         {% if network.name == "mobfox" %} 
                         Turn on Reporting
@@ -123,7 +131,10 @@
             </dl>
 
             <div style="margin-top:15px">
-                <a class="btn" id="advanced">Show Advanced Targeting</a>
+                <a class="btn" id="advanced">
+                    <i class="icon-eye-open"></i>
+                    Show Advanced Targeting
+                </a>
             </div>
         </div>
     </fieldset>
@@ -299,7 +310,6 @@
         <table class="inventory_table">
             <thead>
                 <tr>
-                    <td class="icon"></td>
                     <td class="name"></td>
                     <td class="name">
                         Enabled
@@ -361,8 +371,6 @@
             </thead>
             <tbody class="global-settings">
                 <tr id="global-row" class="main sub global-row">
-                    <td class="icon">
-                    </td>
                     <td class="title">
                         Global Settings
                     </td>
@@ -417,13 +425,6 @@
             {% for app in apps %}
             <tbody class="{% cycle 'alt' '' %} app-tbody">
                 <tr id="{{ app.key }}-row" class="main app-targeting app-row">
-                    <td class="icon">
-                        <div>
-                        <a href="/inventory/app/{{app.key_}}">
-                            <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
-                        </a>
-                        </div>
-                    </td>
                     <td class="name">
                         {{ app.name }} <span class="muted">({{ app.type }})</span>
                     </td>
@@ -487,7 +488,6 @@
                 </tr>
                 {% for adunit in app.adunits %}
                 <tr id="{{ adunit.key }}-row" class="sub adunit-row" style="height:33px">
-                    <td class="icon"></td>
                     <td class="name">
                         {{ adunit.name }}
                     </td>

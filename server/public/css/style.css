@@ -4722,11 +4722,11 @@ form#order_and_line_item_form #id_included_apps_chzn, form#order_and_line_item_f
     height: 40px; }
   .inventory_table tbody tr.main td, .advertiser_table tbody tr.main td {
     font-weight: 600;
-    padding: 10px 10px 4px 0; }
+    padding: 10px 10px 4px 4px; }
     .inventory_table tbody tr.main td.name, .advertiser_table tbody tr.main td.name {
       font-size: 14px; }
   .inventory_table tbody tr.sub td, .advertiser_table tbody tr.sub td {
-    padding: 4px 10px 4px 0; }
+    padding: 4px 10px 4px 4px; }
     .inventory_table tbody tr.sub td.name, .inventory_table tbody tr.sub td.stat, .inventory_table tbody tr.sub td.text, .advertiser_table tbody tr.sub td.name, .advertiser_table tbody tr.sub td.stat, .advertiser_table tbody tr.sub td.text {
       border-top: 1px solid #EEE; }
   .inventory_table tbody tr.thick td, .advertiser_table tbody tr.thick td {

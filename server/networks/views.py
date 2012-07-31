@@ -878,8 +878,6 @@ class EditNetworkHandler(RequestHandler):
                         #and delete the old creative just marks as deleted!
                         CreativeQueryManager.delete(old_creative)
 
-                    # the creative should always have the same account as the adgroup
-                    creative.account = adgroup.account
                     #put the creative so we can reference it
                     CreativeQueryManager.put(creative)
 

@@ -222,17 +222,25 @@ class AppDetailHandler(RequestHandler):
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
 
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
-        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
+        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(
+            app=app)
 
-        targeted_adgroups = AdGroupQueryManager.get_adgroups(app=app,
-                                                             active=True)
+        line_items = AdGroupQueryManager.get_sorted_line_items_for_app_and_date_range(
+            app, self.start_date, self.end_date)
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(app._account, from_db=True)
+
+        # TODO: what should we sort on?
+        network_campaigns = CampaignQueryManager.get_network_campaigns(app.account, is_new=True)
 
         return {
             'app': app,
             'app_form_fragment': app_form_fragment,
             'adunit_form_fragment': adunit_form_fragment,
             'helptext': help_text,
-            'targeted_adgroups': targeted_adgroups
+            'line_items': line_items,
+            'marketplace_campaign': marketplace_campaign,
+            'network_campaigns': network_campaigns,
         }
 
 
@@ -249,16 +257,24 @@ class AdUnitDetailHandler(RequestHandler):
         adunit = AdUnitQueryManager.get(adunit_key)
 
         # get the form to allow the adunit to be edited
-        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
+        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(
+            adunit=adunit)
 
-        targeted_adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit,
-                                                             active=True)
+        line_items = AdGroupQueryManager.get_sorted_line_items_for_adunit_and_date_range(
+            adunit, self.start_date, self.end_date)
+
+        marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), adunit._account, get_from_db=True)
+
+        network_adgroups = AdGroupQueryManager.get_sorted_network_adgroups_for_adunit(
+            adunit)
 
         return {
             'site': adunit,
             'adunit': adunit,
             'adunit_form_fragment': adunit_form_fragment,
-            'targeted_adgroups': targeted_adgroups,
+            'line_items': line_items,
+            'marketplace_adgroup': marketplace_adgroup,
+            'network_adgroups': network_adgroups,
         }
 
 
@@ -584,7 +600,7 @@ class InventoryExporter(RequestHandler):
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
                    ("MoPub inventory", export_type)
-        
+
         return response
 
 
@@ -631,9 +647,9 @@ class AppExporter(RequestHandler):
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
                    (app.name, export_type)
-        
+
         return response
-        
+
 
 
 @login_required
@@ -679,7 +695,7 @@ class AdunitExporter(RequestHandler):
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
                    (adunit.name, export_type)
-        
+
         return response
 
 

@@ -582,6 +582,7 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
                 app_key=app_key, network=campaign.network_type)['sum']
         return app_stats
 
+
 # TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):
     @classmethod

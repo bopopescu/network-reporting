@@ -52,23 +52,23 @@
   
   <div class="appData">
     <table class="dataTable appData-main">
-      <tbody>
-        <tr id="{{network.key}}-row">
-          <td class="networkData-icon">
-            <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-            <div>
-              {% if network.active %}
-                <select id='network-editActive' class='selectmenu'>
-                  <option value="active"> Running </option>
-                  <option value="">Paused</option>
-                </select>
-              {% else %}
-                            <select id='network-editActive' class='selectmenu'>
-                              <option value="">Paused</option>
-                              <option value="active">Running</option>
-                            </select>
-                            {% endif %}
-                        </div>
+        <tbody>
+            <tr id="{{network.key}}-row">
+                <td class="networkData-icon">
+                    <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+                    <div>
+                    {% if network.active %}
+                    <select id='network-editActive' class='selectmenu'>
+                        <option value="active"> Running </option>
+                        <option value="">Paused</option>
+                    </select>
+                    {% else %}
+                    <select id='network-editActive' class='selectmenu'>
+                        <option value="">Paused</option>
+                        <option value="active">Running</option>
+                    </select>
+                    {% endif %}
+                    </div>
                     </td>
                     <td class="dataTable-name">
                         {{network.pretty_name}}

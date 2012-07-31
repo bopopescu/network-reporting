@@ -8,7 +8,7 @@
  */
 
 
-.inventory_table {
+.inventory_table, .advertiser_table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
@@ -45,14 +45,14 @@
             }
             td {
                 font-weight: 600;
-                padding: 10px 10px 4px 0;
+                padding: 10px 10px 4px 4px;
                 &.name {
                     font-size: 14px;
                 }
             }
         }
         tr.sub td {
-            padding: 4px 10px 4px 0;
+            padding: 4px 10px 4px 4px;
             &.name, &.stat, &.text {
                 border-top: 1px solid #EEE;
             }
@@ -67,7 +67,7 @@
     }
     td.advertiser, th.advertiser {
         text-align: right;
-        width: 130px;            
+        width: 130px;
         text-overflow: ellipsis;
         overflow: hidden;
     }
@@ -82,16 +82,16 @@
     }
     td.text {
         width: 65px;
-        &.pub-id-data { 
+        &.pub-id-data {
             width: 170px
         }
-        &.advanced-options { 
+        &.advanced-options {
             width: 100px
         }
     }
     td.icon, th.icon {
         padding: 0 11px 0 10px;
-        width: 45px;
+        width: 70px;
         > div {
             position: relative;
             img {
@@ -121,6 +121,18 @@
     // Padding between sections if there arent any sub rows
     tbody tr:only-child td {
         padding-bottom: 37px;
+    }
+}
+
+.advertiser_table {
+    tbody {
+        tr:nth-child(odd) {
+            background: #F7F7F7;
+            &:last-child {
+                border-bottom: 1px solid darken(#f7f7f7, 3%);
+                @include bottom-border-radius();
+            }
+        }
     }
 }
 

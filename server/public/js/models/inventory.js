@@ -245,10 +245,13 @@ var mopub = mopub || {};
          */
         get_full_stat_series: function(stat) {
 
+            var models_in_collection = this.models.length;
+
             // Go through each of the daily stats for each of the
             // models in the collection and pull them out.
             // At the end of this we'll have an array of arrays, where
-            // each inner array has the daily values for the particular stat
+            // each inner array has the daily values for the particular stat,
+            // one inner array per model
             var dailies_for_stat = this.map(function(model) {
                 var daily_stats = model.get('daily_stats');
 
@@ -277,6 +280,7 @@ var mopub = mopub || {};
                 _.times(memo.length, function (iter){
                     memo[iter] += day_stats[iter];
                 });
+                
                 return memo;
             }, memo);
 

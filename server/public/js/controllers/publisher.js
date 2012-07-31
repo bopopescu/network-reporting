@@ -708,7 +708,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['imp', 'clk', 'ctr']
+                    display_values: ['req', 'imp', 'clk', 'ctr']
                 });
                 chart_view.render();
             });
@@ -743,7 +743,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['rev', 'imp', 'cpm' ] //TODO include cpm
+                    display_values: ['req', 'imp', 'clk', 'ctr']
                 });
                 chart_view.render();
 
@@ -896,7 +896,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: adunits,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['rev', 'imp', 'cpm' ]
+                    display_values: ['req', 'imp', 'clk', 'ctr']
                 });
                 chart_view.render();
 

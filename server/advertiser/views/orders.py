@@ -12,7 +12,7 @@ Whenever you see "Campaign", think "Order", and wherever you see
 """
 
 import datetime
-
+import simplejson
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -953,6 +953,73 @@ def export_single_line_item(request, *args, **kwargs):
     return handler(request, *args, **kwargs)
 
 
+class AdServerTestHandler(RequestHandler):
+    def get(self):
+        devices = [('iphone', 'iPhone'),
+                   ('ipad', 'iPad'),
+                   ('nexus_s', 'Nexus S')]
+        device_to_user_agent = {
+            'iphone': 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; %s) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7',
+            'ipad': 'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; %s) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.10',
+            'nexus_s': 'Mozilla/5.0 (Linux; U; Android 2.1; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
+            'chrome': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13',
+        }
+        
+        country_to_locale_ip = {
+            'US': ('en-US', '204.28.127.10'),
+            'FR': ('fr-FR', '96.20.81.147'),
+            'HR': ('hr-HR', '93.138.74.115'),
+            'DE': ('de-DE', '212.183.113.32'),
+            'DA': ('dk-DA', '62.107.177.124'),
+            'FI': ('fi-FI', '91.152.79.118'),
+            'JA': ('jp-JA', '110.163.227.87'),
+            'HD': ('us-HD', '59.181.77.74'),
+            'HE': ('il-HE', '99.8.113.207'),
+            'RU': ('ru-RU', '83.149.3.32'),
+            'NL': ('nl-NL', '77.251.143.68'),
+            'PT': ('br-PT', '189.104.89.115'),
+            'NB': ('no-NB', '88.89.244.197'),
+            'TR': ('tr-TR', '78.180.93.4'),
+            'NE': ('go-NE', '0.1.0.2'),
+            'TH': ('th-TH', '24.52.71.42'),
+            'RO': ('ro-RO', '85.186.180.111'),
+            'IS': ('is-IS', '194.144.110.171'),
+            'PL': ('pl-PL', '193.34.3.100'),
+            'EL': ('gr-EL', '62.38.244.73'),
+            'EN': ('us-EN', '174.255.120.125'),
+            'ZH': ('tw-ZH', '124.190.51.251'),
+            'MS': ('my-MS', '120.141.166.6'),
+            'CA': ('es-CA', '95.17.76.100'),
+            'IT': ('it-IT', '151.56.174.44'),
+            'AR': ('sa-AR', '188.55.13.170'),
+            'IN': ('id-IN', '114.57.226.18'),
+            'CS': ('cz-CS', '90.180.148.68'),
+            'HU': ('hu-HU', '85.66.221.12'),
+            'ID': ('id-ID', '180.214.232.8'),
+            'ES': ('ec-ES', '190.10.214.187'),
+            'KO': ('kr-KO', '112.170.242.147'),
+            'SV': ('se-SV', '90.225.96.11'),
+            'SK': ('sk-SK', '213.151.218.130'),
+            'UK': ('ua-UK', '92.244.103.199'),
+            'SL': ('si-SL', '93.103.136.7'),
+            'AU': ('en-AU', '114.30.96.10'),
+        }
+
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+
+        return render_to_response(self.request,
+                                  'advertiser/adserver_test.html',
+                                  {'adunits': adunits,
+                                   'devices': devices,
+                                   'countries': sorted(country_to_locale_ip.keys()),
+                                   'device_to_user_agent': simplejson.dumps(device_to_user_agent),
+                                   'country_to_locale_ip': simplejson.dumps(country_to_locale_ip)})
+
+
+@login_required
+def adserver_test(request, *args, **kwargs):
+    return AdServerTestHandler()(request, *args, **kwargs)
+    
 ###########
 # Helpers #
 ###########
@@ -971,10 +1038,3 @@ def get_targeted_apps(adunits):
             targeted_apps[app_key] = app
         targeted_apps[app_key].adunits += [adunit]
     return targeted_apps
-
-def downloadable_file(contents):
-    buffer= StringIO.StringIO()
-    wrapper = FileWrapper(file(filename))
-    response = HttpResponse(wrapper, content_type='text/plain')
-    response['Content-Length'] = os.path.getsize(filename)
-    return response

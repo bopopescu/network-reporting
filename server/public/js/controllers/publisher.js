@@ -876,15 +876,9 @@ var mopub = mopub || {};
 
             $('#advertisers-testAdServer').click(function(e) {
                 e.preventDefault();
-                $('#adserverTest').dialog({
-                    buttons: {
-                        "Close": function() {
-                            $(this).dialog("close");
-                        }
-                    }
-                });
+                $('#adserverTest').modal('show');
                 $('#adserverTest-iFrame')
-                    .attr('src', $('#adserverTest-iFrame-src').text());
+                    .attr('src', $('#adserverTest-iFrame-src').text()).show();
             });
 
             var adunit = new AdUnit();

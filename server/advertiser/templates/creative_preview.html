@@ -1,21 +1,30 @@
 <div class="modal hidden" id="creative_preview">
-    <div class="modal-header">
-	    <a href="#" type="btn" class="close" data-dismiss="modal" style="margin-top: 0px;">×</a>
-	    <h3 style="margin: 4px 4px 0px 0px;">{{ creative.name }}</h3>
-	</div>
-	<div class="modal-body" style="max-height: 500px;">
-	    <input type="hidden" name="src" value="{% url advertiser_creative_html creative.key %}">
-	    <iframe frameborder="0" scrolling="no" {% if creative.width %}
-	    											width="{{ creative.width }}" height="{{ creative.height }}"
-	    									   {% else %}{% if creative.landscape %}
-	    									   		width="480" height="320"
-	    									   {% else %}
-	    									   		width="320" height="480"
-	    									   {% endif %}{% endif %}>
-	        <p>Your browser does not support iframes.</p>
-	    </iframe>
-	</div>
-	<div class="modal-footer">
-		<a href="#" class="btn" data-dismiss="modal">Close</a>
-	</div>
-</div>
+
+  <div class="modal-header">
+	<a href="#" type="btn" class="close" data-dismiss="modal" style="margin-top: 0px;">×</a>
+	<h3 style="margin: 4px 4px 0px 0px;">{{ creative.name }}</h3>
+  </div>
+  
+  <div class="modal-body" style="max-height: 500px;">
+    
+	<input type="hidden" name="src" value="{% url advertiser_creative_html creative.key %}">
+	  <iframe frameborder="0"
+              scrolling="no"
+              {% if creative.width %}
+	            width="{{ creative.width }}"
+                height="{{ creative.height }}"
+	            {% else %}
+                  {% if creative.landscape %}
+	                width="480" height="320"
+	              {% else %}
+	                width="320" height="480"
+	              {% endif %}
+                {% endif %}
+                style='background: url(/images/report-preloader.gif) center no-repeat;'>
+	     <p>Your browser does not support iframes.</p>
+	   </iframe>
+	 </div>
+	 <div class="modal-footer">
+	   <a href="#" class="btn" data-dismiss="modal">Close</a>
+	 </div>
+   </div>

@@ -140,4 +140,10 @@ urlpatterns = patterns(
     url('^export/lineitem/(?P<line_item_key>[-\w\.]+)/$',
         'export_single_line_item',
         name='advertiser_export_single_line_item'),
+    
+    #################
+    # Adserver Test #
+    #################
+    
+    url(r'^adserver_test/$', 'adserver_test', name='advertiser_adserver_test'),
 )

@@ -79,17 +79,7 @@ var mopub = mopub || {};
     // Records an event in all of the metrics tracking services we
     // use.
     function record_metric (name, args) {
-        try {
-            _kmq.push(['record', name, args]);
-        } catch (x) {
-            console.log(x);
-        }
 
-        try {
-            mixpanel.track(name, args);
-        } catch (x) {
-            console.log(x);
-        }
     }
 
     

@@ -37,7 +37,7 @@ ACCOUNT_DIR = S3_BUCKET + '/account_data'
 SHORT_ACCT_DIR = 'account_data'
 
 MASTER_INSTANCE_TYPE = 'm1.large'
-SLAVE_INSTANCE_TYPE = 'c1.xlarge'
+SLAVE_INSTANCE_TYPE = 'm1.xlarge'
 KEEP_ALIVE = True
 
 ################## GAE Uploading Stuff ##############
@@ -138,6 +138,8 @@ def setup_remote_api():
 def get_waiting_jobflow(conn, jobflow_ids):
     waiting_jobflows = conn.describe_jobflows(jobflow_ids= jobflow_ids)
     for jobflow in waiting_jobflows:
+        if not hasattr(jobflow, 'name'):
+            continue
         if jobflow.name != JOBFLOW_NAME or jobflow.state not in [u'WAITING', u'RUNNING', u'STARTING']:
             continue
         jid = jobflow.jobflowid

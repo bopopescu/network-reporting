@@ -98,8 +98,14 @@ class AdUnitContext(object):
         # accumulate the creatives one adgroup at a time
         creatives = []
         for adgroup in adgroups:
-            creatives += Creative.all().filter('ad_group =', adgroup).\
+            sub_creatives = Creative.all().filter('ad_group =', adgroup).\
                                 fetch(limit)
+
+            # HACK: attach account to creative based on adgroup
+            for creative in sub_creatives:
+                creative._account = adgroup._account
+
+            creatives += sub_creatives
 
         # Return only the creatives that are active (i.e. not paused)
         # and not deleted

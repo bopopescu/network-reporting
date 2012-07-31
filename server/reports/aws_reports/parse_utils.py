@@ -46,7 +46,7 @@ def gen_days(start, end):
     dt = timedelta(days=1)
     temp = start
     days = [temp]
-    while temp != end:
+    while temp < end:
         temp = temp + dt
         days.append(temp)
     return days

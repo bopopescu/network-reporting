@@ -40,24 +40,6 @@
 
   {% block extraScripts %}{% endblock extraScripts %}
 
-  {# Mixpanel #}
-
-  <script type="text/javascript">
-    (function(d,c){var a,b,g,e;a=d.createElement("script");a.type="text/javascript";
-    a.async=!0;a.src=("https:"===d.location.protocol?"https:":"http:")+
-    '//api.mixpanel.com/site_media/js/api/mixpanel.2.js';b=d.getElementsByTagName("script")[0];
-    b.parentNode.insertBefore(a,b);c._i=[];c.init=function(a,d,f){var b=c;
-    "undefined"!==typeof f?b=c[f]=[]:f="mixpanel";g=['disable','track','track_pageview',
-    'track_links','track_forms','register','register_once','unregister','identify',
-    'name_tag','set_config'];
-    for(e=0;e<g.length;e++)(function(a){b[a]=function(){b.push([a].concat(
-    Array.prototype.slice.call(arguments,0)))}})(g[e]);c._i.push([a,d,f])};window.mixpanel=c}
-    )(document,[]);
-    mixpanel.init("2941bda924fcaaff6ec23f27b41f0129");
-    mixpanel.name_tag('{{ user.email }}');
-  </script>
-
-  {#  End Mixpanel #}
 
   <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -72,19 +54,6 @@
       })();
   </script>
 
-  <script type="text/javascript">
-    var _kmq = _kmq || [];
-    function _kms(u){
-        setTimeout(function(){
-            var s = document.createElement('script'); var f = document.getElementsByTagName('script')[0]; s.type = 'text/javascript'; s.async = true;
-            s.src = u; f.parentNode.insertBefore(s, f);
-        }, 1);
-    }
-    _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/df1cac838b87437e951e9a26136cc8ae203e052e.1.js');
-
-    _kmq.push(['identify', '{{ user.email }}']);
-
-  </script>
 </head>
 
 <input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>

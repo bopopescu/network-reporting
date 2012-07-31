@@ -383,7 +383,7 @@ class AdGroup(db.Model):
             return "deleted"
         elif self.archived:
             return "archived"
-        elif self.active:
+        elif self.active and self.campaign.active:
             now = datetime.datetime.now()
             if (self.start_datetime <= now if self.start_datetime else True) and \
                (now <= self.end_datetime if self.end_datetime else True):

@@ -88,9 +88,6 @@ class OrderArchiveHandler(RequestHandler):
         archived_line_items = [line_item for line_item in line_items \
                                if line_item.archived or line_item.campaign.archived]
 
-        logging.warn(archived_line_items)
-
-
         return {
             'orders': archived_orders,
             'line_items': archived_line_items
@@ -436,7 +433,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             for key, value in order_form.errors.items():
                 # TODO: just join value?
                 logging.warn(key)
-                errors[key] = ' '.join([error for error in value])
+                errors['order-' + key] = ' '.join([error for error in value])
 
         return JSONResponse({
             'errors': errors,

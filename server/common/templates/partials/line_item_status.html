@@ -80,15 +80,21 @@
         <div class="right">
         
           <div class="btn-group">
-            <button class="btn status_change" data-toggle="pause" style='display:inline-block'>
+            <button class="btn status_change"
+                    data-toggle="pause"
+                    data-target="#line_item_table">
               {% button_icon "pause" %}
               Pause
             </button>
-            <button class="btn status_change" data-toggle="play" style='display:inline-block'>
+            <button class="btn status_change"
+                    data-toggle="play"
+                    data-target="#line_item_table">
               {% button_icon "play" %}
               Resume
             </button>
-            <button class="btn status_change" data-toggle="archive" style='display:inline-block'>
+            <button class="btn status_change"
+                    data-toggle="archive"
+                    data-target="#line_item_table">
               {% button_icon "stop" %}
               Archive
             </button>

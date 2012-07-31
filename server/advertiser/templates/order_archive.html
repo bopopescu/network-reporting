@@ -25,6 +25,11 @@
         {% button_icon "play" %}
         Resume
       </button>
+
+      <button id="delete-button" class="btn btn-danger">
+        {% button_icon "trash" %}
+        Delete
+      </button>
     </div>
     
     {% order_table orders %}
@@ -57,6 +62,30 @@
 
   </div>
 
+
+
+  <div class="modal hidden" id="confirm_delete_modal" style='overflow: visible;'>
+
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">×</a>
+    <h3> Confirm deletion </h3>
+  </div>
+
+  <div class="modal-body" style='overflow: visible;'>
+    <p> Are you sure you want to delete the items you have selected? This cannot be undone. </p>
+  </div>
+
+  <div class="modal-footer">
+    <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
+    <a href="#" class="btn" data-dismiss="modal">Don't delete</a>
+    <a id="confirm_delete_button" href="#" class="btn btn-danger">
+      {% button_icon "trash" %}
+      <span style='color:white;'>Delete</span>
+    </a>
+  </div>
+
+</div>
+  
 {% endblock content %}
 
 {% block extraScripts %}
@@ -68,8 +97,11 @@
   
   <script type="text/javascript">
     $(function() {
-        var OrdersController = mopub.Controllers.OrdersController;
-        OrdersController.initializeIndex({});
+        OrdersController.initializeIndex({
+            order_keys: [ {% for order in orders %}"{{order.key}}", {% endfor %} ],
+            line_item_keys: [ {% for line_item in line_items %} "{{ line_item.key }}", {% endfor %}]
+        });
+        OrdersController.initializeArchive();
     });
   </script>
 {% endblock extraScripts %}

@@ -176,8 +176,6 @@ var mopub = window.mopub || {};
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_dates);
-
-                console.log(dates);
             });
 
             createDailyStatsChart(active_display_value,
@@ -795,7 +793,7 @@ var mopub = window.mopub || {};
             if(percent_delivered >= 0) {
                 var $percent_delivered = $('.progress', row);
                 $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100 + '%');
-                $('div#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
+                $('#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
                 $percent_delivered.show();
             }
 
@@ -807,6 +805,7 @@ var mopub = window.mopub || {};
                 $pace.show();
             }
 
+            $(".loading-img", row).hide();
         }
     });
 

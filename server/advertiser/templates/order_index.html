@@ -22,15 +22,21 @@
     {# Order activity controls #}
     <div class="left">
       <div class="btn-group">
-        <button class="btn status_change" data-toggle="pause">
+        <button class="btn status_change"
+                data-toggle="pause"
+                data-target="#order_table">
           {% button_icon "pause" %}
           Pause
         </button>
-        <button class="btn status_change" data-toggle="play">
+        <button class="btn status_change"
+                data-toggle="play"
+                data-target="#order_table">
           {% button_icon "play" %}
           Resume
         </button>
-        <button class="btn status_change" data-toggle="archive">
+        <button class="btn status_change"
+                data-toggle="archive"
+                data-target="#order_table">
           {% button_icon "inbox" %}
           Archive
         </button>
@@ -106,15 +112,21 @@
 
     {# Line item activity controls #}
     <div class="left btn-group">
-      <button class="btn status_change" data-toggle="pause">
+      <button class="btn status_change"
+              data-target="#line_item_table"
+              data-toggle="pause">
         {% button_icon "pause" %}
         Pause
       </button>
-      <button class="btn status_change" data-toggle="play">
+      <button class="btn status_change"
+              data-target="#line_item_table"
+              data-toggle="play">
         {% button_icon "play" %}
         Resume
       </button>
-      <button class="btn status_change" data-toggle="archive">
+      <button class="btn status_change"
+              data-target="#line_item_table"
+              data-toggle="archive">
         {% button_icon "inbox" %}
         Archive
       </button>
@@ -196,7 +208,6 @@
   
   <script type="text/javascript">
     $(function() {
-        var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeIndex({
             order_keys: [ {% for order in orders %}"{{order.key}}", {% endfor %} ],
             line_item_keys: [ {% for line_item in line_items %} "{{ line_item.key }}", {% endfor %}]

@@ -238,11 +238,13 @@ class AdSourceStatusChangeHandler(RequestHandler):
                 if ad_source.account.key() == self.account.key():
                     if status == 'run' or status == 'play':
                         ad_source.active = True
+                        ad_source.deleted = False
                         if manager_used != CreativeQueryManager:
                             ad_source.archived = False
                         updated = True
                     elif status == 'pause':
                         ad_source.active = False
+                        ad_source.deleted = False
                         if manager_used != CreativeQueryManager:
                             ad_source.archived = False
                         updated = True
@@ -252,11 +254,13 @@ class AdSourceStatusChangeHandler(RequestHandler):
                         # a creative, it gets paused instead. Maybe this isn't
                         # the right thing to do.
                         ad_source.active = False
+                        ad_source.deleted = False
                         if manager_used != CreativeQueryManager:
                             ad_source.archived = True
                         updated = True
                     elif status == 'delete':
                         ad_source.deleted = True
+                        ad_source.archived = False
                         ad_source.active = False
                         updated = True
 

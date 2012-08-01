@@ -804,7 +804,7 @@ var mopub = window.mopub || {};
                 placement: 'left',
                 title: current_model.get('name'),
                 content: popover_content,
-                delay: { hide: 250 }
+                delay: { hide: 500 }
             });
 
             $(".loading-img", row).hide();

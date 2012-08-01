@@ -169,7 +169,7 @@ header {
     }
     a, a:active, a:visited {
         padding: 3px 7px 4px 7px;
-        @include border-radius;
+        //@include border-radius;
         display: inline-block;
         color: $light_blue;
         text-shadow: $dark_gray 0 1px 0;
@@ -199,7 +199,7 @@ header {
         border-color: rgba(0,0,0,.2);
         border-style: solid;
         border-width: 1px;
-        @include border-radius(0 0 5px 5px);
+        //@include border-radius(0 0 5px 5px);
         @include box-shadow(0 5px 10px rgba(0,0,0,.2));
         -webkit-background-clip: padding-box;
         -moz-background-clip: padding;
@@ -636,7 +636,7 @@ a {
             text-align: left;
             .inner {
                 display: block;
-                padding: 8px 10px 0 0;
+                padding: 7px 10px 1px 0;
                 height: 29px;
                 background: url(../images/layout/stats-breakdown-pointer.png) no-repeat 100% -3px;
             }

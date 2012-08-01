@@ -531,16 +531,13 @@
 
             // set up 'show advanced settings' button
             $('#advanced')
-                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
                 .click(function() {
                     if ($('.advanced').is(':hidden')) {
                         $('.advanced').slideDown();
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                        $('.ui-button-text', this).text('Hide Advanced Settings');
+                        $('#advanced').html('<i class="icon-eye-close"></i>Hide Advanced Settings');
                     } else {
                         $('.advanced').slideUp();
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                        $('.ui-button-text', this).text('Show Advanced Settings');
+                        $('#advanced').html('<i class="icon-eye-open"></i>Show Advanced Settings');
                     }
                 });
 
@@ -1274,8 +1271,7 @@
 
             initialize_show_network();
 
-            $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" }});
+            $('.chzn-select').chosen({no_results_text: "No results matched"});
 
             $('#delete-network')
                 .click(function () {

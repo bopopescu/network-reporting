@@ -156,40 +156,60 @@
             {{ adgroup_form.device_targeting.label_tag }}
             </dt>
             <dd>
-                {% comment %}
-                This field should be rendered using a Django widget, but
-                there is no good option in 1.2 for a Boolean RadioSelect.
-                {% endcomment %}
-                <span class="radios">
-                    <ul>
-                        <li><label for="id_device_targeting_0"><input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> All</label></li>
-                        <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
+                <div class="device-targeting" style="display: inline-block;">
+                    {% comment %}
+                    This field should be rendered using a Django widget, but
+                    there is no good option in 1.2 for a Boolean RadioSelect.
+                    {% endcomment %}
+                    <span class="radios">
+                        <ul style="height: 17px">
+                            <li style="display: inline-block;">
+                                <label for="id_device_targeting_0">
+                                    <input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}>
+                                    All
+                                </label>
+                            </li>
+                            <li style="display: inline-block;">
+                                <label for="id_device_targeting_1">
+                                    <input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}>
+                                    Filter by device and OS
+                                </label>
+                            </li>
+                        </ul>
+                    </span>
+                    <ul id="device_targeting" class="{% if not adgroup_form.device_targeting|display_value %}hidden{% endif %}">
+                        <li class="inline">
+                            <ul class="devices inline">
+                                <li class="inline">
+                                    <label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label>
+                                </li>
+                                <li class="inline">
+                                    <label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label>
+                                </li>
+                                <li class="inline">
+                                    <label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label>
+                                </li>
+                            </ul>
+                            <div class="inline">
+                                {{ adgroup_form.ios_version_min.label_tag }}
+                                {{ adgroup_form.ios_version_min }}
+                                {{ adgroup_form.ios_version_max.label_tag }}
+                                {{ adgroup_form.ios_version_max }}
+                            </div>
+                        </li>
+                        <li>
+                            <div class="devices inline">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</div>
+                            {{ adgroup_form.android_version_min.label_tag }}
+                            {{ adgroup_form.android_version_min }}
+                            {{ adgroup_form.android_version_max.label_tag }}
+                            {{ adgroup_form.android_version_max }}
+                        </li>
+                        <li>
+                            <div class="devices inline">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</div>
+                            <span class="muted">(All versions)</span>
+                        </li>
                     </ul>
-                </span>
-                <ul id="device_targeting" class="{% if not adgroup_form.device_targeting|display_value %}hidden{% endif %}">
-                    <li>
-                    <ul class="device_type">
-                        <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>
-                        <li><label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label></li>
-                        <li><label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label></li>
-                    </ul>
-                    {{ adgroup_form.ios_version_min.label_tag }}
-                    {{ adgroup_form.ios_version_min }}
-                    {{ adgroup_form.ios_version_max.label_tag }}
-                    {{ adgroup_form.ios_version_max }}
-                    </li>
-                    <li>
-                    <label class="device_type">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</label>
-                    {{ adgroup_form.android_version_min.label_tag }}
-                    {{ adgroup_form.android_version_min }}
-                    {{ adgroup_form.android_version_max.label_tag }}
-                    {{ adgroup_form.android_version_max }}
-                    </li>
-                    <li>
-                    <label class="device_type">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</label>
-                    <span class="muted">(All versions)</span>
-                    </li>
-                </ul>
+                </div>
             </dd>
             <dt>
                 <label>Country Targeting:</label>
@@ -197,21 +217,23 @@
             <dd>
                 <div id="geo_pred_ta" name="geo_predicates"></div>
             </dd>
-            <dt class="countryNumDependent 0 1" style="display: none;">
-                {{ adgroup_form.region_targeting.label_tag }}
-            </dt>
-            <dd>
-                <span class="radios">{{ adgroup_form.region_targeting }}</span>
-            </dd>
-            <dt class="locationDependent city" style="display: none;">
-                <label>City Targeting:</label>
-            </dt>
-            <dt>
-                <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country:</div>
-            </dt>
-            <dd>
-                <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
-            </dd>
+            <div class="countryNumDependent 0 1" style="display: none;">
+                <dt>
+                    {{ adgroup_form.region_targeting.label_tag }}
+                </dt>
+                <dd>
+                    <span class="radios">{{ adgroup_form.region_targeting }}</span>
+                </dd>
+            </div>
+            <div class="locationDependent city" style="display: none;"> 
+                <dt>
+                    <label>City Targeting:</label>
+                </dt>
+                <dd>
+                    <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
+                    <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
+                </dd>
+            </div>
             <dt>
             {{ adgroup_form.keywords.label_tag }}
             </dt>
@@ -579,19 +601,18 @@
             </div>
             <div class="modal-body">
                 <fieldset class="dialog global-options">
-                    <ul class="form_fields">
-                        <li>
-                        <label for="id_global-allocation_percentage">Allocation:</label>
-                        <div>
+                    <dl class="formFields">
+                        <dt>
+                            <label for="id_global-allocation_percentage">Allocation:</label>
+                        </dt>
+                        <dd>
                             <input id="id_global-allocation_percentage" type="text" class="float">
                             % of all requests
-                        </div>
-                        </li>
-                        <li>
-                        <label for="id_global-daily_frequency_cap">
-                            Frequency Caps:
-                        </label>
-                        <div>
+                        </dd>
+                        <dt>
+                            <label for="id_global-daily_frequency_cap">Frequency Caps:</label>
+                        </dt>
+                        <dd>
                             <div>
                                 <input id="id_global-daily_frequency_cap" type="text" class="float">
                                 daily impressions per user
@@ -600,14 +621,13 @@
                                 <input id="id_global-hourly_frequency_cap" type="text" class="float">
                                 hourly impressions per user
                             </div>
-                        </div>
-                        </li>
-                    </ul>
+                        </dd>
+                    </dl>
                 </fieldset>
             </div>
             <div class="modal-footer">
                 <a class="btn save" href="#">Ok</a>
-                <a class="btn close" href="#">Cancel</a>
+                <a class="btn cancel" href="#">Cancel</a>
             </div>
         </div>
         {% for app in apps %}
@@ -618,19 +638,18 @@
                 </div>
                 <div class="modal-body">
                     <fieldset class="dialog app-options">
-                        <ul class="form_fields">
-                            <li>
-                            <label for="id_{{ app.key }}-allocation_percentage">Allocation:</label>
-                            <div>
+                        <dl class="formFields">
+                            <dt>
+                                <label for="id_{{ app.key }}-allocation_percentage">Allocation:</label>
+                            </dt>
+                            <dd>
                                 <input id="id_{{ app.key }}-allocation_percentage" type="text" class="float">
                                 % of all requests
-                            </div>
-                            </li>
-                            <li>
-                            <label for="id_{{ app.key }}-daily_frequency_cap">
-                                Frequency Caps:
-                            </label>
-                            <div>
+                            </dd>
+                            <dt>
+                                <label for="id_{{ app.key }}-daily_frequency_cap">Frequency Caps:</label>
+                            </dt>
+                            <dd>
                                 <div>
                                     <input id="id_{{ app.key }}-daily_frequency_cap" type="text" class="float">
                                     daily impressions per user
@@ -639,14 +658,13 @@
                                     <input id="id_{{ app.key }}-hourly_frequency_cap" type="text" class="float">
                                     hourly impressions per user
                                 </div>
-                            </div>
-                            </li>
-                        </ul>
+                            </dd>
+                        </dl>
                     </fieldset>
                 </div>
                 <div class="modal-footer">
                     <a class="btn save" href="#">Ok</a>
-                    <a class="btn close" href="#">Cancel</a>
+                    <a class="btn cancel" href="#">Cancel</a>
                 </div>
             </div>
             {% for adunit in app.adunits %}
@@ -656,30 +674,30 @@
                 </div>
                 <div class="modal-body">
                     <fieldset class="dialog adunit-options">
-                        <ul class="form_fields">
-                            <li>
-                            {{ adunit.adgroup_form.allocation_percentage.label_tag }}
-                            <div>
+                        <dl class="formFields">
+                            <dt>
+                                {{ adunit.adgroup_form.allocation_percentage.label_tag }}
+                            </dt>
+                            <dd>
                                 {{ adunit.adgroup_form.allocation_percentage }} % of all requests
-                            </div>
-                            </li>
-                            <li>
-                            {{ adunit.adgroup_form.daily_frequency_cap.label_tag }}
-                            <div>
+                            </dd>
+                            <dt>
+                                {{ adunit.adgroup_form.daily_frequency_cap.label_tag }}
+                            </dt>
+                            <dd>
                                 <div>
                                 {{ adunit.adgroup_form.daily_frequency_cap }} daily impressions per user
                                 </div>
                                 <div>
                                 {{ adunit.adgroup_form.hourly_frequency_cap }} hourly impressions per user
                                 </div>
-                            </div>
-                            </li>
-                        </ul>
+                            </dd>
+                        </dl>
                     </fieldset>
                 </div>
                 <div class="modal-footer">
                     <a class="btn save" href="#">Ok</a>
-                    <a class="btn close" href="#">Cancel</a>
+                    <a class="btn cancel" href="#">Cancel</a>
                 </div>
             </div>
             {% endfor %}

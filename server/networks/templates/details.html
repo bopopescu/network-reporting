@@ -31,6 +31,20 @@
   Edit Network Settings
 </a>
 
+<div class="right">
+    {% if network.active %}
+    <select id='network-editActive' class='selectmenu chzn-select'>
+        <option value="active"> Running </option>
+        <option value="">Paused</option>
+    </select>
+    {% else %}
+    <select id='network-editActive' class='selectmenu chzn-select'>
+        <option value="">Paused</option>
+        <option value="active">Running</option>
+    </select>
+    {% endif %}
+</div>
+
 <section id="aggregate-stats">
   <div class="appData-columnHeaders">
     <table class="dataTable" width=100%>
@@ -56,19 +70,6 @@
             <tr id="{{network.key}}-row">
                 <td class="networkData-icon">
                     <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                    <div>
-                    {% if network.active %}
-                    <select id='network-editActive' class='selectmenu'>
-                        <option value="active"> Running </option>
-                        <option value="">Paused</option>
-                    </select>
-                    {% else %}
-                    <select id='network-editActive' class='selectmenu'>
-                        <option value="">Paused</option>
-                        <option value="active">Running</option>
-                    </select>
-                    {% endif %}
-                    </div>
                     </td>
                     <td class="dataTable-name">
                         {{network.pretty_name}}

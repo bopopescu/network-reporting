@@ -8,14 +8,10 @@
     either the order or line item needs controls, otherwise the table
     wont render correctly.
   {% endcomment %}
-  {% if show_status %}
-    <td class="controls">
-      <input class="status_change_control" id="{{order.key}}" type="checkbox" />
-      <img id="status-{{ order.key }}" src="{{ order.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
-    </td>
-  {% else %}
-    <td></td>
-  {% endif %}
+  <td class="controls">
+    <input class="status_change_control" id="{{order.key}}" type="checkbox" />
+    <img id="status-{{ order.key }}" src="{{ order.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+  </td>
 
   {% comment %}
     If we're rendering a single order, then we just display "Totals"
@@ -27,9 +23,9 @@
         {{ order.name }}
       </a>
     {% endif %}
-    <img id="{{ order.key }}-img" class="loading-img" src="/images/spin-small.gif" /> 
+    <img id="{{ order.key }}-img" class="loading-img" src="/images/spin-small.gif" />
   </td>
-        
+
   {% comment %}
     These stats will be loaded over ajax.
   {% endcomment %}

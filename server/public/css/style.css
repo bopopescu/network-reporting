@@ -1657,12 +1657,15 @@ div#advertiser_filters, div#publisher_filters {
 .stats-chart {
   height: 185px; }
 
-#marketplace-apps, #dashboard-apps, #dashboard-campaign {
+#marketplace-apps, #dashboard-campaign {
   margin: 30px 0 0 0; }
 
 #marketplace-apps h2, #dashboard-apps h2 {
   font-size: 20px;
   margin: 0; }
+
+#dashboard-apps, #ad-units, #ad-sources {
+  margin: 30px 0; }
 
 /* App and ad setup forms */
 .mweb .android,
@@ -4785,21 +4788,13 @@ form#campaign_and_adgroup div.modal {
     padding-left: 0 !important;
     padding-right: 0 !important;
     width: 10px !important; }
-  .inventory_table tbody tr.sub:last-child td, .advertiser_table tbody tr.sub:last-child td {
-    padding-bottom: 11px; }
-  .inventory_table tbody tr:only-child td, .advertiser_table tbody tr:only-child td {
-    padding-bottom: 37px; }
 
+.advertiser_table tr {
+  border-bottom: 1px solid #efefef; }
 .advertiser_table tbody tr:nth-child(odd) {
-  background: #F7F7F7; }
+  background: #f7f7f7; }
   .advertiser_table tbody tr:nth-child(odd):last-child {
-    border-bottom: 1px solid #efefef;
-    border-bottom-left-radius: 5px;
-    -moz-border-radius-bottomleft: 5px;
-    -webkit-border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-    -moz-border-radius-bottomright: 5px;
-    -webkit-border-bottom-right-radius: 5px; }
+    border-bottom: 1px solid #efefef; }
 
 /* Data table */
 .dataTable thead th {

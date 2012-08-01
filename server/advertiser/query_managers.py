@@ -490,17 +490,24 @@ class AdGroupQueryManager(QueryManager):
                     logging.error("AdGroup %s has adgroup_type %s but was in line_items list." % (
                         line_item.key(), line_item.adgroup_type))
 
+        gtee_high_line_items = sorted(gtee_high_line_items, key=lambda line_item: line_item.name.lower())
+        gtee_line_items = sorted(gtee_line_items, key=lambda line_item: line_item.name.lower())
+        gtee_low_line_items = sorted(gtee_low_line_items, key=lambda line_item: line_item.name.lower())
+        promo_line_items = sorted(promo_line_items, key=lambda line_item: line_item.name.lower())
+        backfill_promo_line_items = sorted(backfill_promo_line_items, key=lambda line_item: line_item.name.lower())
+
         return (gtee_high_line_items + gtee_line_items + gtee_low_line_items +
                 promo_line_items + backfill_promo_line_items)
 
-    @staticmethod
-    def get_sorted_network_adgroups_for_adunit(adunit):
-        adgroup_query = AdGroup.all().filter('account =', adunit._account)
-        adgroup_query = adgroup_query.filter('archived =', False)
-        adgroup_query = adgroup_query.filter('deleted =', False)
-        adgroup_query = adgroup_query.filter('adgroup_type =', 'network')
-        adgroup_query = adgroup_query.filter('site_keys =', adunit.key())
-        return sorted(adgroup_query, key=lambda adgroup: adgroup.bid, reverse=True)
+    @classmethod
+    def get_network_adgroups_for_adunit(cls, adunit):
+        network_campaigns = CampaignQueryManager.get_network_campaigns(adunit.account, is_new=True)
+        network_adgroups = []
+        for network_campaign in network_campaigns:
+            network_adgroup = cls.get_network_adgroup(network_campaign, adunit.key(), adunit.account.key(), get_from_db=True)
+            network_adgroup.campaign = network_campaign
+            network_adgroups.append(network_adgroup)
+        return network_adgroups
 
     @classmethod
     def get_network_adgroup(cls, campaign,

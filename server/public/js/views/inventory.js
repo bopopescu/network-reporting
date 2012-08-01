@@ -25,7 +25,8 @@ var mopub = window.mopub || {};
         att: "Attempts",
         cpm: "CPM",
         fill_rate: "Fill Rate",
-        ctr: "CTR"
+        ctr: "CTR",
+        conv: "Conversions"
     };
 
     function clone(obj) {
@@ -43,8 +44,16 @@ var mopub = window.mopub || {};
 
         $(element).html("");
 
+
+        // HACK:
+        // Rickshaw doesn't handle single-point time sequences well.
+        // If we're showing just one day of data, then we push an identical
+        // datapoint on to the datapoints list, and then we push a +24hour
+        // date onto the dates list, so that we have two datapoints for
+        // the 24 hour span, and the graph renders correctly.
         if (datapoints[kind].length === 1) {
             datapoints[kind].push(datapoints[kind][0]);
+            dates.push(dates[0] + (60*60*24));
         }
 
         var graph = new Rickshaw.Graph({
@@ -86,7 +95,6 @@ var mopub = window.mopub || {};
             xFormatter: function(x, y) {
                 return '' + moment.unix(x).format("dddd MMMM Do") +
                     "<br />" +
-                    "Total: " +
                     ModelHelpers.format_stat(kind, y) + ' ' +
                     ATTRIBUTE_LABELS[kind];
 
@@ -152,6 +160,8 @@ var mopub = window.mopub || {};
             var series_length = series_list[this_view.options.display_values[0]].length;
             var series_dates = this_view.collection.get_date_range();
 
+            console.log(series_list);
+
             $("#stats-breakdown-container tr", this_view.el).click(function() {
 
                 // Remove the active class from the previously active row
@@ -164,12 +174,11 @@ var mopub = window.mopub || {};
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
 
-
+                console.log(stats_type);
+                
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_dates);
-
-                console.log(dates);
             });
 
             createDailyStatsChart(active_display_value,
@@ -745,7 +754,6 @@ var mopub = window.mopub || {};
 
     });
 
-
     var LineItemView = Backbone.View.extend({
         initialize: function () {
             try {
@@ -759,6 +767,7 @@ var mopub = window.mopub || {};
         renderInline: function () {
             var current_model = this.model;
             var row = $('#' + current_model.get('key'), this.el);
+
             var display_fields = [
                 'rev',
                 'imp',
@@ -773,21 +782,11 @@ var mopub = window.mopub || {};
                 $("." + field, row).text(current_model.get_formatted_stat(field));
             });
 
-            var popover_template = _.template($("#popover-template").html());
-            var popover_content = popover_template(current_model.toJSON());
-
-            $(".moreinfo", row).popover({
-                placement: 'left',
-                title: current_model.get('name'),
-                content: popover_content,
-                delay: { hide: 250 }
-            });
-
             var percent_delivered = current_model.get('percent_delivered');
             if(percent_delivered >= 0) {
                 var $percent_delivered = $('.progress', row);
                 $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100 + '%');
-                $('div#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
+                $('#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
                 $percent_delivered.show();
             }
 
@@ -799,6 +798,16 @@ var mopub = window.mopub || {};
                 $pace.show();
             }
 
+            var popover_template = _.template($("#popover-template").html());
+            var popover_content = popover_template(current_model.toJSON());
+            $(".moreinfo", row).popover({
+                placement: 'left',
+                title: current_model.get('name'),
+                content: popover_content,
+                delay: { hide: 250 }
+            });
+
+            $(".loading-img", row).hide();
         }
     });
 

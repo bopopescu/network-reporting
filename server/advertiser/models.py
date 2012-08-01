@@ -13,6 +13,7 @@ from common.constants import (MIN_IOS_VERSION,
                               ISO_COUNTRY_LOOKUP_TABLE,
                               NETWORKS)
 from common.utils.helpers import to_uni
+from common.templatetags.filters import withsep
 from simple_models import (SimpleAdGroup,
                            SimpleCampaign,
                            SimpleCreative,
@@ -651,6 +652,7 @@ class AdGroup(db.Model):
         goal = self.budget_goal
 
         if goal:
+            goal = withsep(goal) # add commas
             if self.bid_strategy == 'cpm':
                 if self.budget_type == 'daily':
                     return str(goal) + ' Impressions Daily'
@@ -662,7 +664,17 @@ class AdGroup(db.Model):
                 else:
                     return str(goal) + ' USD Total'
         else:
-            return "Unlimited budget"
+            if self.bid_strategy == 'cpm':
+                return "Unlimited Impressions"
+            else:
+                return "Unlimited Clicks"
+
+    @property
+    def rate_display(self):
+        rate_display = "$%.2f" % self.bid
+        if self.bid_strategy in ['cpm', 'cpc']:
+            rate_display += " %s" % self.bid_strategy.upper()
+        return rate_display
 
     @property
     def individual_cost(self):

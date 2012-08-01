@@ -708,7 +708,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['imp', 'clk', 'ctr']
+                    display_values: ['req', 'imp', 'clk', 'ctr']
                 });
                 chart_view.render();
             });
@@ -743,7 +743,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: apps,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['rev', 'imp', 'cpm' ] //TODO include cpm
+                    display_values: ['req', 'imp', 'clk', 'ctr']
                 });
                 chart_view.render();
 
@@ -876,15 +876,9 @@ var mopub = mopub || {};
 
             $('#advertisers-testAdServer').click(function(e) {
                 e.preventDefault();
-                $('#adserverTest').dialog({
-                    buttons: {
-                        "Close": function() {
-                            $(this).dialog("close");
-                        }
-                    }
-                });
+                $('#adserverTest').modal('show');
                 $('#adserverTest-iFrame')
-                    .attr('src', $('#adserverTest-iFrame-src').text());
+                    .attr('src', $('#adserverTest-iFrame-src').text()).show();
             });
 
             var adunit = new AdUnit();
@@ -902,7 +896,7 @@ var mopub = mopub || {};
                 var chart_view = new CollectionChartView({
                     collection: adunits,
                     start_date: bootstrapping_data.start_date,
-                    display_values: ['rev', 'imp', 'cpm' ]
+                    display_values: ['req', 'imp', 'clk', 'ctr']
                 });
                 chart_view.render();
 

@@ -230,8 +230,8 @@ class AppDetailHandler(RequestHandler):
 
         marketplace_campaign = CampaignQueryManager.get_marketplace(app._account, from_db=True)
 
-        # TODO: what should we sort on?
         network_campaigns = CampaignQueryManager.get_network_campaigns(app.account, is_new=True)
+        network_campaigns = sorted(network_campaigns, key=lambda campaign: campaign.name.lower())
 
         return {
             'app': app,
@@ -265,8 +265,8 @@ class AdUnitDetailHandler(RequestHandler):
 
         marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), adunit._account, get_from_db=True)
 
-        network_adgroups = AdGroupQueryManager.get_sorted_network_adgroups_for_adunit(
-            adunit)
+        network_adgroups = AdGroupQueryManager.get_network_adgroups_for_adunit(adunit)
+        network_adgroups = sorted(network_adgroups, key=lambda adgroup: adgroup.name.lower())
 
         return {
             'site': adunit,

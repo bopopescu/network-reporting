@@ -4,9 +4,7 @@
 <table class="inventory_table" id="order_table">
   <thead>
     <tr>
-      {% if show_status %}
-        <th style="width: 24px;"></th>
-      {% endif %}
+      <th style="width: 24px;"></th>
       <th class="name">Order Name</th>
       <th class="stat" style="width: 150px;">Advertiser</th>
       <th class="stat">Line Items</th>
@@ -20,7 +18,7 @@
 
   {% for order in orders %}
     <tbody class="{% cycle 'alt' 'primary' %}">
-      {% order_row order show_status %}
+      {% order_row order %}
     </tbody>
   {% endfor %}
 </table>

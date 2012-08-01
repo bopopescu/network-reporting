@@ -113,24 +113,17 @@
         width: 10px !important;
     }
 
-    // Padding between sections if there are sub rows
-    tbody tr.sub:last-child td {
-        padding-bottom: 11px;
-    }
-
-    // Padding between sections if there arent any sub rows
-    tbody tr:only-child td {
-        padding-bottom: 37px;
-    }
 }
 
 .advertiser_table {
+    tr {
+        border-bottom: 1px solid #efefef;
+    }
     tbody {
         tr:nth-child(odd) {
-            background: #F7F7F7;
+            background: #f7f7f7;
             &:last-child {
-                border-bottom: 1px solid darken(#f7f7f7, 3%);
-                @include bottom-border-radius();
+                border-bottom: 1px solid #efefef;
             }
         }
     }

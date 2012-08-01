@@ -21,13 +21,17 @@
     height: 185px;
 }
 
-#marketplace-apps, #dashboard-apps, #dashboard-campaign {
+#marketplace-apps, #dashboard-campaign {
     margin: 30px 0 0 0;
 }
 
 #marketplace-apps h2, #dashboard-apps h2 {
     font-size: 20px;
     margin: 0;
+}
+
+#dashboard-apps, #ad-units, #ad-sources {
+    margin: 30px 0;
 }
 
 /* App and ad setup forms */

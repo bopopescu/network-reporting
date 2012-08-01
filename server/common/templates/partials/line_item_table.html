@@ -4,11 +4,7 @@
 <table class="inventory_table" id="line_item_table">
   <thead>
     <tr style="width: 230px;">
-      {% if show_status %}
-        <th style="width: 10px;">{# Status icon and checkbox #}</th>
-      {% else %}
-        <th></th>
-      {% endif %}
+      <th style="width: 10px;">{# (Checkbox) Status Icon #}</th>
       <th class="name" style="width: 230px;">Line Item Name</th>
       <th class="type" style="width: 90px;">Type</th>
       <th class="goal" style="width: 90px;">Goal</th>
@@ -26,7 +22,7 @@
 
   {% for line_item in line_items %}
     <tbody class="{% cycle 'alt' 'primary' %}">
-      {% line_item_row line_item show_status %}
+      {% line_item_row line_item show_controls show_order_names %}
     </tbody>
   {% endfor %}
 </table>

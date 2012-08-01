@@ -41,7 +41,7 @@ class Campaign(db.Model):
     They have a name, advertiser, and description, some basic state,
     and an account. All other information should be added to AdGroup.
     """
-    name = db.StringProperty(verbose_name='Name',
+    name = db.StringProperty(verbose_name='Name:',
                              default='Order Name',
                              required=True)
     advertiser = db.StringProperty(verbose_name='Advertiser:',
@@ -383,7 +383,7 @@ class AdGroup(db.Model):
             return "deleted"
         elif self.archived:
             return "archived"
-        elif self.active:
+        elif self.active and self.campaign.active:
             now = datetime.datetime.now()
             if (self.start_datetime <= now if self.start_datetime else True) and \
                (now <= self.end_datetime if self.end_datetime else True):

@@ -21,7 +21,7 @@
   {% endif %}
 
 
-  <div id="dashboard-adunitEditForm" class="hidden">
+  <div id="dashboard-adunitEditForm" class="hidden" style="margin-bottom: 10px;">
     <div>
       <a name="adunitForm" class="hidden">anchor</a>
       <form action="{% url publisher_adunit_update_ajax %}"
@@ -148,7 +148,7 @@
 	  <a href="#" type="btn" class="close" data-dismiss="modal">×</a>
 	  <h3> Adserver Test</h3>
     </div>
-    
+
     <div class="modal-body">
       <div id="adserverTest">
         <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
@@ -158,13 +158,13 @@
         </div>
       </div>
     </div>
-    
+
     <div class="modal-footer">
 	  <a href="#" class="btn" data-dismiss="modal">Close</a>
     </div>
-    
+
   </div>
-  
+
 {% endblock content %}
 
 {% block extraScripts %}

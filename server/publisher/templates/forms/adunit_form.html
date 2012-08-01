@@ -4,43 +4,49 @@
   <input type="hidden"
          name="{% if form.prefix %}{{form.prefix}}-{% endif %}{{form.app_key.name}}"
          value="{{form.app_key.value}}"/>
-  
+
   <dl class="formFields formatDependent" id="adunitFormFields">
-    {% comment %}
+
     {{ form.name|attrs:'{"id":"appForm-adUnitName"}' }}
-    {{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
+    {% comment %}
+      <dt>
+        Name:
+      </dt>
+      <dd>
+        <input type="text"
+               name="adunit-name"
+               class="required input-text"
+               id="appForm-adUnitName"
+               value="Banner Ad" />
+      </dd>
     {% endcomment %}
-    <dt>
-      Name:
-    </dt>
-    <dd>
-      <input type="text"
-             name="adunit-name"
-             class="required input-text"
-             id="appForm-adUnitName"
-             value="Banner Ad" /> 
-    </dd>
 
-    <dt>
-      Description:
-    </dt>
-    <dd>
-      <textarea name="adunit-description"
-                id="appForm-adUnitDescription"
-                class="input-text"
-                cols="50" rows="3"></textarea>
-   </dd>
+    {{ form.description|attrs:'{"id":"appForm-adUnitDescription"}' }}
+    {% comment %}
+      <dt>
+        Description:
+      </dt>
+      <dd>
+        <textarea name="adunit-description"
+                  id="appForm-adUnitDescription"
+                  class="input-text"
+                  cols="50" rows="3"></textarea>
+     </dd>
 
-    <dt>
-      Device format:
-    </dt>
-    <dd>
-      {% comment %}
+      <dt>
+        Device format:
+      </dt>
+      <dd>
+    {% endcomment %}
+
+    {{ form.device_format }}
+    {% comment %}
       <div class="btn-group">
         <input type="button" class="btn" name="adunit-device_format" id="adunit-device_format_phone" value="Phone" checked="checked" />
         <input type="button" class="btn" name="adunit-device_format" id="adunit-device_format_tablet" value="Tablet" />
       </div>
-      {% endcomment %}
+    {% endcomment %}
+    {% comment %}
       <div class="btn-group" data-toggle="buttons-radio" >
         <button type="button" class="active btn" data-toggle="button">
           Phone
@@ -52,7 +58,8 @@
         </button>
       </div>
     </dd>
-    
+    {% endcomment %}
+
     {{ form.format|raw }}
 
     <div class="full_only hidden">
@@ -63,7 +70,7 @@
         {{ form.landscape|raw }}
       </dd>
     </div>
-    
+
     <div class="custom_only hidden">
       <dt>
         Custom size:
@@ -74,16 +81,20 @@
         {{ form.custom_height|raw|attrs:'{"placeholder":"Height"}' }}
       </dd>
     </div>
+
     <!-- {{ form.animation_type }}  -->
+
     <dt class="banner_only">
       Refresh interval:
     </dt>
     <dd class="banner_only">
       {{ form.refresh_interval|raw|attrs:'{"style":"width:50px;","suffix":"seconds (default: 0 for no refresh)"}' }}
     </dd>
+
     {# <dt>Default keywords:</dt>  #}
-    {# <dd>  #} 
+    {# <dd>  #}
     {#   <textarea name="{{form.keywords.name}}" id="appForm-adUnitKeywords" rows="3" cols="40" placeholder="e.g. coffee, espresso, cafe, iced tea">{{form.keywords.value}}</textarea>  #}
     {# </dd>  #}
+
   </dl>
 </div>

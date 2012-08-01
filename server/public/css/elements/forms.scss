@@ -313,9 +313,14 @@ form#new_creative_form {
 }
 
 form#order_and_line_item_form {
-    #order_header {
-        position: absolute;
-        top: 15px;
+    #order_fieldset {
+        legend {
+            position: relative;
+            top: 20px;
+            h2 {
+                margin: 0;
+            }
+        }
     }
 }
 

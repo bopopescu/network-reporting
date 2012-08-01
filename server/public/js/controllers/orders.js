@@ -246,7 +246,7 @@
 
             // Get the keys for the objects we're going to change
             // the status of
-            var checked_adgroups = $(".status_change_control:checked", 
+            var checked_adgroups = $(".status_change_control:checked",
                                      $(table_selector));
             var keys = _.map(checked_adgroups, function (row) {
                 return $(row).attr('id');
@@ -375,25 +375,25 @@
                 var keys = _.map(checked_adgroups, function (row) {
                     return $(row).attr('id');
                 });
-                
+
                 // Show the modal
                 $("#confirm_delete_modal").modal("show");
 
                 // On click of the confirm delete buttons,
                 // delete the orders/line items
-                $("#confirm_delete_button").click(function () {                    
+                $("#confirm_delete_button").click(function () {
                     changeStatus(keys, 'delete');
                     $("#confirm_delete_modal").modal("hide");
-                });                
+                });
             });
-            
+
         },
 
         initializeOrderDetail: function(bootstrapping_data) {
             initializeStatusControls();
             initializeLineItemFilters();
             initializeDateButtons();
-            
+
             /*
              * Set up the order form validator
              */
@@ -1097,6 +1097,33 @@
                     });
                 }
             }).filter(':checked').click();
+
+            // Negative User Targeting
+            $('[name="included_apps"]').chosen();
+            $('[name="excluded_apps"]').chosen();
+
+            if($('[name="included_apps"] option:selected').length > 0) {
+                $('#user_targeting_type').val('included_apps');
+            }
+            else {
+                $('#user_targeting_type').val('excluded_apps');
+            }
+
+            $('#user_targeting_type').change(function() {
+                var $this = $(this);
+                if($this.val() == 'included_apps') {
+                    $('#id_excluded_apps_chzn').hide();
+                    $('[name="excluded_apps"] option:selected').removeAttr('selected');
+                    $('[name="excluded_apps"]').trigger("liszt:updated");
+                    $('#id_included_apps_chzn').show();
+                }
+                else {
+                    $('#id_included_apps_chzn').hide();
+                    $('[name="included_apps"] option:selected').removeAttr('selected');
+                    $('[name="included_apps"]').trigger("liszt:updated");
+                    $('#id_excluded_apps_chzn').show();
+                }
+            }).change();
         }
     };
 

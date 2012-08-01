@@ -33,7 +33,8 @@ from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
+                                      AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 import logging
 
@@ -88,9 +89,6 @@ class OrderArchiveHandler(RequestHandler):
         archived_line_items = [line_item for line_item in line_items \
                                if line_item.archived or line_item.campaign.archived]
 
-        logging.warn(archived_line_items)
-
-
         return {
             'orders': archived_orders,
             'line_items': archived_line_items
@@ -119,19 +117,20 @@ class OrderDetailHandler(RequestHandler):
                                                         order=order,
                                                         archived=False)
 
-        self.start_date = None
-        self.end_date = None
+        if line_items:
+            self.start_date = None
+            self.end_date = None
 
-        for line_item in line_items:
-            if not self.start_date or line_item.start_datetime.date() < self.start_date:
-                self.start_date = line_item.start_datetime.date()
+            for line_item in line_items:
+                if not self.start_date or line_item.start_datetime.date() < self.start_date:
+                    self.start_date = line_item.start_datetime.date()
 
-            if not line_item.end_datetime:
-                self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
-            elif not self.end_date or line_item.end_datetime.date() > self.end_date:
-                self.end_date = line_item.end_datetime.date()
+                if not line_item.end_datetime:
+                    self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
+                elif not self.end_date or line_item.end_datetime.date() > self.end_date:
+                    self.end_date = line_item.end_datetime.date()
 
-        self.date_range = (self.end_date - self.start_date).days + 1
+            self.date_range = (self.end_date - self.start_date).days + 1
 
         # Get the targeted adunits and group them by their app.
         targeted_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
@@ -180,6 +179,7 @@ class LineItemDetailHandler(RequestHandler):
         # Get the targeted adunits and apps
         targeted_adunits = AdUnitQueryManager.get(line_item.site_keys)
         targeted_apps = get_targeted_apps(targeted_adunits)
+        apps_without_global_id = get_targeted_apps_without_global_id(line_item)
 
         # We need all the other orders for the copy line item functionality
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
@@ -191,7 +191,8 @@ class LineItemDetailHandler(RequestHandler):
             'creative_form': creative_form,
             'targeted_apps': targeted_apps.values(),
             'targeted_app_keys': targeted_apps.keys(),
-            'targeted_adunits': targeted_adunits
+            'targeted_adunits': targeted_adunits,
+            'apps_without_global_id': apps_without_global_id,
         }
 
 
@@ -345,9 +346,10 @@ class OrderAndLineItemFormHandler(RequestHandler):
             raise Http404
 
         order_form = OrderForm(instance=order, prefix='order')
-        line_item_form = LineItemForm(instance=line_item)
+        line_item_form = LineItemForm(instance=line_item, apps_choices=get_apps_choices(self.account))
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        apps_without_global_id = get_targeted_apps_without_global_id(line_item) if line_item else []
 
         return {
             'apps': apps,
@@ -355,8 +357,8 @@ class OrderAndLineItemFormHandler(RequestHandler):
             'order_form': order_form,
             'line_item': line_item,
             'line_item_form': line_item_form,
+            'apps_without_global_id': apps_without_global_id,
         }
-
 
     def post(self, order_key=None, line_item_key=None):
         if not self.request.is_ajax():
@@ -389,7 +391,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
         # TODO: do this in the form? maybe pass the account in?
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-        line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
+        line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys, apps_choices=get_apps_choices(self.account))
 
         order_form_is_valid = order_form.is_valid() if not order else True
         line_item_form_is_valid = line_item_form.is_valid()
@@ -436,7 +438,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             for key, value in order_form.errors.items():
                 # TODO: just join value?
                 logging.warn(key)
-                errors[key] = ' '.join([error for error in value])
+                errors['order-' + key] = ' '.join([error for error in value])
 
         return JSONResponse({
             'errors': errors,
@@ -967,7 +969,7 @@ class AdServerTestHandler(RequestHandler):
             'nexus_s': 'Mozilla/5.0 (Linux; U; Android 2.1; %s) AppleWebKit/522+ (KHTML, like Gecko) Safari/419.3',
             'chrome': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13',
         }
-        
+
         country_to_locale_ip = {
             'US': ('en-US', '204.28.127.10'),
             'FR': ('fr-FR', '96.20.81.147'),
@@ -1022,7 +1024,7 @@ class AdServerTestHandler(RequestHandler):
 @login_required
 def adserver_test(request, *args, **kwargs):
     return AdServerTestHandler()(request, *args, **kwargs)
-    
+
 ###########
 # Helpers #
 ###########
@@ -1041,3 +1043,19 @@ def get_targeted_apps(adunits):
             targeted_apps[app_key] = app
         targeted_apps[app_key].adunits += [adunit]
     return targeted_apps
+
+def get_apps_choices(account):
+    apps = PublisherQueryManager.get_apps_dict_for_account(account).values()
+    apps = [app for app in apps if app.app_type != 'mweb']
+    apps.sort(key=lambda app: app.name.lower())
+    return [(str(app.key()), "%s (%s)" % (app.name, app.type)) for app in apps]
+
+
+def get_targeted_apps_without_global_id(adgroup):
+    app_keys = list(adgroup.included_apps) + list(adgroup.excluded_apps)
+    apps_without_global_id = []
+    for app_key in app_keys:
+        app = AppQueryManager.get_app_by_key(app_key)
+        if not app.global_id:
+            apps_without_global_id.append(app)
+    return apps_without_global_id

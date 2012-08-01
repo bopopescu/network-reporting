@@ -40,6 +40,20 @@ class OrderForm(forms.ModelForm):
 
         return order
 
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '')
+        name = name.strip()
+        if not name:
+            raise forms.ValidationError("This field is required.")
+        return name
+
+    def clean_advertiser(self):
+        advertiser = self.cleaned_data.get('advertiser', '')
+        advertiser = advertiser.strip()
+        if not advertiser:
+            raise forms.ValidationError("This field is required.")
+        return advertiser
+
     class Meta:
         model = Order
         fields = ('name', 'advertiser', 'description')
@@ -191,14 +205,13 @@ class LineItemForm(forms.ModelForm):
         # TODO: can we do this a nicer way so we can declare this field with the other fields?
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
-
         self.fields['included_apps'] = forms.MultipleChoiceField(
             choices=apps_choices, required=False, widget=forms.SelectMultiple(
                 attrs={'data-placeholder': ' '}))
         self.fields['excluded_apps'] = forms.MultipleChoiceField(
             choices=apps_choices, required=False, widget=forms.SelectMultiple(
                 attrs={'data-placeholder': ' '}))
-        
+
     def _init_gtee_line_item(self, instance, initial):
         if 'high' in instance.adgroup_type:
             initial['gtee_priority'] = 'high'
@@ -219,6 +232,13 @@ class LineItemForm(forms.ModelForm):
             return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
         else:
             return budget
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '')
+        name = name.strip()
+        if not name:
+            raise forms.ValidationError("This field is required.")
+        return name
 
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)

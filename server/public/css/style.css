@@ -1040,7 +1040,7 @@ p {
 ul, ol {
   margin: 0 0 1.33em 0;
   line-height: 1.33em;
-  padding: 0 0 0 30px; }
+  padding: 0 0 0 0; }
 
 li {
   margin: 0 0 10px 0; }
@@ -3638,6 +3638,19 @@ form#order_and_line_item_form #id_included_apps_chzn, form#order_and_line_item_f
 .chzn-select {
   width: 120px;
   z-index: 5; }
+
+form#campaign_and_adgroup fieldset.advanced ul {
+  list-style-type: none; }
+form#campaign_and_adgroup fieldset.advanced .devices {
+  width: 150px; }
+form#campaign_and_adgroup fieldset.advanced .device-targeting li {
+  height: 17px; }
+form#campaign_and_adgroup fieldset.advanced .inline {
+  display: inline-block; }
+form#campaign_and_adgroup fieldset.advanced .radios li {
+  display: inline-block; }
+form#campaign_and_adgroup div.modal {
+  width: 700px; }
 
 /*
  * Lightswitch

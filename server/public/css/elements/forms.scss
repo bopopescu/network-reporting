@@ -593,3 +593,28 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
     width: 120px;
     z-index: 5;
 }
+
+form#campaign_and_adgroup {
+    fieldset.advanced {
+        ul {
+        list-style-type: none;
+        }
+        .devices {
+            width: 150px;
+        }
+        .device-targeting {
+            li {
+                height: 17px;
+            }
+        }
+        .inline {
+            display: inline-block;
+        }
+        .radios li {
+            display: inline-block;
+        }
+    }
+    div.modal {
+        width: 700px;
+    }
+}

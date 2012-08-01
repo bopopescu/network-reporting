@@ -1040,7 +1040,7 @@ p {
 ul, ol {
   margin: 0 0 1.33em 0;
   line-height: 1.33em;
-  padding: 0 0 0 0; }
+  padding: 0 0 0 30px; }
 
 li {
   margin: 0 0 10px 0; }
@@ -3406,9 +3406,11 @@ form#new_creative_form {
  *
  * TODO: consolidate all the form styles
  */
-form#order_and_line_item_form #order_header {
-  position: absolute;
-  top: 15px; }
+form#order_and_line_item_form #order_fieldset legend {
+  position: relative;
+  top: 20px; }
+  form#order_and_line_item_form #order_fieldset legend h2 {
+    margin: 0; }
 
 form#order_and_line_item_form fieldset, form#order_form fieldset, form#new_creative_form fieldset, form.edit_creative_form fieldset {
   padding: 25px 25px 25px 25px; }
@@ -3930,6 +3932,10 @@ form#campaign_and_adgroup div.modal {
       margin-right: 30px; }
     .alert-message.block-message ul {
       margin-bottom: 0; }
+      .alert-message.block-message ul.simple {
+        list-style-type: none;
+        margin-top: 15px;
+        margin-bottom: 15px; }
     .alert-message.block-message li {
       color: #444444; }
     .alert-message.block-message .alert-actions {

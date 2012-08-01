@@ -15,12 +15,23 @@
 {% endblock titleBarRight %}
 
 {% block content %}
+
+  {% if apps_without_global_id %}
+    <div class="alert-message block-message error">
+      <p>Error: You must have a complete iTunes URL or Android package name for the app(s) that you are using for user targeting.  Access the apps below and add the iTunes URL or Android package name.</p>
+      <ul class="simple">
+        {% for app in apps_without_global_id %}
+          <li><a href="{% url publisher_app_show app.key %}">{{ app.name }}</a></li>
+        {% endfor %}
+      </ul>
+      <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+    </div>
+  {% endif %}
+
 <form id="order_and_line_item_form" method="post">
     {% if order %}
         <fieldset id="order_fieldset">
-            <legend>
-                <h2 id="order_header">Order Details</h2>
-            </legend>
+            <legend><h2>Order Details</h2></legend>
 
             <ul class="form_fields">
                 <li>
@@ -52,7 +63,7 @@
             <h2>Line Item Details</h2>
             <p>Each Order has one or more Line Items.  A Line Item is a set of creatives and targeting parameters that runs with a specific budget.</p>
         </legend>
-    
+
         <ul class="form_fields">
           <li>
             {{ line_item_form.adgroup_type.label_tag }}
@@ -74,7 +85,7 @@
                     </div>
             </div>
             </li>
-            
+
             <li class="adgroup_type_dependent gtee">
               {{ line_item_form.gtee_priority.label_tag }}
               <div>
@@ -254,6 +265,45 @@
                 </div>
             </li>
             <li>
+                <label>User Targeting:</label>
+                <div>
+                    <div>
+                        Target users that
+                        <select id="user_targeting_type">
+                            <option value="excluded_apps">don't have</option>
+                            <option value="included_apps">have</option>
+                        </select>
+                        these apps
+                    </div>
+                    <div>
+                        {{ line_item_form.included_apps }}
+                        {{ line_item_form.excluded_apps }}
+                        <a href="#" id="campaignForm-apps-helpLink">What's this?</a>
+                        <div id="campaignForm-apps-helpContent" class="hidden">
+                            <h3>User targeting</h3>
+                            <p>User targeting enables you to specify certain groups of users for each ad campaign that will or will not be shown an ad. This feature is especially useful for cross-promotional install campaigns where you may want to exclude users that already have certain apps installed.</p>
+                            <p>
+                                For example, if you would like to drive installs for the "Tic-tac-toe" application with a cross-promotional campaign for users that do not currently have "Tic-tac-toe" installed, you would do the following:
+                                <ol>
+                                    <li>Select "Target users that don't have these apps"</li>
+                                    <li>Enter "Tic-tac-toe" in the field directly below</li>
+                                    <li>Select Continue to save your inputs</li>
+                                </ol>
+                            </p>
+                            <p>
+                                Note: User targeting only works when the following conditions are met:
+                                <ul>
+                                    <li>You have the app(s) with users you want to include/exclude on your MoPub dashboard</li>
+                                    <li>You have enabled conversion tracking on the app</li>
+                                    <li>You have input a complete iTunes URL or Android package name for the app</li>
+                                </ul>
+                            </p>
+                            <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li>
                 <label>Country Targeting:</label>
                 <div>
                     <div id="geo_pred_ta" name="geo_predicates"></div>
@@ -270,7 +320,7 @@
                 <div>
                     <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
                     <div class="countryNumDependent 1" style="display: none;"><div id="city_ta"></div></div>
-                </div>  
+                </div>
             </li>
             <li>
                 {{ line_item_form.keywords.label_tag }}

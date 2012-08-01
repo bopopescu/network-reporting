@@ -191,14 +191,13 @@ class LineItemForm(forms.ModelForm):
         # TODO: can we do this a nicer way so we can declare this field with the other fields?
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
-
         self.fields['included_apps'] = forms.MultipleChoiceField(
             choices=apps_choices, required=False, widget=forms.SelectMultiple(
                 attrs={'data-placeholder': ' '}))
         self.fields['excluded_apps'] = forms.MultipleChoiceField(
             choices=apps_choices, required=False, widget=forms.SelectMultiple(
                 attrs={'data-placeholder': ' '}))
-        
+
     def _init_gtee_line_item(self, instance, initial):
         if 'high' in instance.adgroup_type:
             initial['gtee_priority'] = 'high'

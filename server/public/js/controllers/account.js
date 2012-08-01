@@ -75,15 +75,15 @@ var mopub = mopub || {};
 			    function didShowContainer(container) {
 				    container.removeClass('hide');
 				    container.addClass('show');
-				    //container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-				    setButtonTextElement(container.togglebutton, container.togglebutton.hideText);
+				    setButtonTextElement(container.togglebutton, 
+                                         container.togglebutton.hideText);
 			    }
 			    
 			    function didHideContainer(container) {
 				    container.removeClass('show');
 				    container.addClass('hide');
-				    //container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-				    setButtonTextElement(container.togglebutton, container.togglebutton.showText);
+				    setButtonTextElement(container.togglebutton, 
+                                         container.togglebutton.showText);
 			    }
                 
 			    if (data.hasClass('show')) {
@@ -146,10 +146,105 @@ var mopub = mopub || {};
 
     var AccountController = {
         initializePaymentDetails: function (bootstrapping_data) {
+            var paypal_required_fields = ['#id_paypal_email'];
+            var us_required_fields = ['#id_us_tax_id'];
+            var non_us_required_fields = [];
+            var wire_required_fields = ['#id_beneficiary_name',
+                                        '#id_bank_name',
+                                        '#id_bank_address',
+                                        '#id_account_number'];
+            var us_wire_required_fields = ['#id_ach_routing_number'];
+            var non_us_wire_required_fields = ['#id_bank_swift_code'];
             
-        },
+            var all_wire_fields = wire_required_fields
+                .concat(us_wire_required_fields)
+                .concat(non_us_wire_required_fields);
+            
+            if ($("#payment_preference_paypal").is(":checked")) {
+                $("#wire_only").hide();
+            } else {
+                $("#paypal_only").hide();
+            }
+            
+            $("#payment_preference_paypal").click(function(){
+                $("#wire_only").fadeOut(10);
+                $("#paypal_only").fadeIn();
+                $.each(paypal_required_fields, function(i, field){
+                    $(field).addClass("required");
+                });
+                $.each(all_wire_fields, function(i, field) {
+                    $(field).removeClass("required");
+                });
+            });
+
+            $("#payment_preference_wire").click(function(){
+
+                $("#paypal_only").fadeOut(10);
+                $("#wire_only").fadeIn();
+
+                $.each(paypal_required_fields, function(i, field){
+                    $(field).removeClass("required");
+                });
+
+                $.each(wire_required_fields, function(i, field) {
+                    $(field).addClass("required");
+                });
+
+                if ($("#id_country").val() == "US") {
+                    $.each(us_wire_required_fields, function(i, field) {
+                        $(field).addClass("required");
+                    });
+                    $.each(non_us_wire_required_fields, function(i, field) {
+                        $(field).removeClass("required");
+                    });
+                } else {
+                    $.each(us_wire_required_fields, function(i, field) {
+                                    $(field).removeClass("required");
+                    });
+                    $.each(non_us_wire_required_fields, function(i, field) {
+                        $(field).addClass("required");
+                    });
+                }
+            });
+
+            $("#id_country").change(function() {
+
+                if ($("#id_country").val() == "US") {
+                    $(".us_only").show();
+                    $(".non_us_only").hide();
+                    $.each(us_required_fields, function(i, field) {
+                        $(field).addClass("required");
+                    });
+                    $.each(non_us_required_fields, function(i, field) {
+                        $(field).removeClass("required");
+                    });
+                } else {
+                    $(".us_only").hide();
+                    $(".non_us_only").show();
+                    $.each(us_required_fields, function(i, field) {
+                        $(field).removeClass("required");
+                    });
+                    $.each(non_us_required_fields, function(i, field) {
+                        $(field).addClass("required");
+                    });
+                }
+
+                if ($("#payment_preference_paypal").is(":checked")) {
+                    $("#payment_preference_paypal").click();
+                } else {
+                    $("#payment_preference_wire").click();
+                }
+            }).change();
+
+            $('#paymentchange-submit').click(function(e) {
+			    e.preventDefault();
+			    $('#paymentchange').submit();
+		    });
+        }
     };
     
     window.LoginController = LoginController;
     window.RegistrationController = RegistrationController;
+    window.AccountController = AccountController;
+
 })(this.jQuery);

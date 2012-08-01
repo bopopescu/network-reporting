@@ -313,7 +313,6 @@
                 });
 
             $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" } })
                 .click(function(e) {
                     e.preventDefault();
                     if ($('#network-settingsForm').is(':visible')) {
@@ -324,15 +323,12 @@
                 });
 
             $('.dailyCount-toggleButton')
-                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
                 .click(function(e) {
                     e.preventDefault();
                     if ($('#dailyCounts-individual').is(':hidden')) {
                         $('#dailyCounts-individual').slideDown('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
                     } else {
                         $('#dailyCounts-individual').slideUp('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
                     }
                 });
 
@@ -391,7 +387,6 @@
             });
 
             $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" } })
                 .click(function(e) {
                     e.preventDefault();
                     if ($('#network-settingsForm').is(':visible')) {
@@ -569,25 +564,19 @@
                                     });
                                 }
                                 window.location = jsonData.redirect;
-                                $('form#campaign_and_adgroup #submit').button({
-                                    label: 'Success...',
-                                    disabled: true
-                                });
+                                $('form#campaign_and_adgroup #submit').text('Success...');
+                                $('form#campaign_and_adgroup #submit').attr('disabled', 'disabled');
                             } else {
                                 console.log(jsonData.errors);
                                 validator.showErrors(jsonData.errors);
-                                $('form#campaign_and_adgroup #submit').button({
-                                    label: 'Try Again',
-                                    disabled: false
-                                });
+                                $('form#campaign_and_adgroup #submit').text('Try Again');
+                                $('form#campaign_and_adgroup #submit').attr('disabled', '');
                             }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             $('#loading').hide();
-                            $('form#campaign_and_adgroup #submit').button({
-                                label: 'Try Again',
-                                disabled: false
-                            });
+                            $('form#campaign_and_adgroup #submit').text('Try Again');
+                            $('form#campaign_and_adgroup #submit').attr('disabled', '');
                         },
                         beforeSubmit: function(arr, $form, options) {
                             if(campaign_key) {
@@ -625,15 +614,14 @@
                             }
 
                             $('#loading').css('display', 'inline');
-                            $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                           disabled: true});
+                            $('form#campaign_and_adgroup #submit').text('Submitting...');
+                            $('form#campaign_and_adgroup #submit').attr('disabled', 'disabled');
                         }
                     });
                 }
             });
 
             $('form#campaign_and_adgroup #submit')
-                .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
                 .click(function(e) {
                     e.preventDefault();
                     $('form#campaign_and_adgroup').submit();
@@ -707,12 +695,6 @@
 
                 $(this).removeClass('ui-state-hover');
                 $('#network-login-form').html(fieldset.clone());
-
-                // rebuild buttons
-                // TODO: remove terrible designer buttons so hacks like this
-                // aren't needed
-                $('form#network-login-form .button').addClass('button-small');
-                $('form#network-login-form .button').button();
 
                 fieldset.slideUp(400, function () {
                     fieldset.remove();

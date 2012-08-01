@@ -495,14 +495,23 @@ class EditNetworkHandler(RequestHandler):
             adgroups.append(adgroup)
 
             # special case custom and custom native networks
+            #
+            # NOTE: There should only be one creative per adgroup but for some
+            # adgroups there are multiple creatives which isn't correct but we
+            # can't delete them because mongo stats relies on it in order to
+            # work. 'for creative in adgroup.creatives' is a hack to make sure
+            # the custom_html gets copied over the right creative if some of
+            # the creatives are marked as deleted and one isn't (how the data
+            # should be if it's not one-to-one). The data most likely became
+            # corrupted durring one or more migration scripts being run.
             if campaign.network_type == 'custom' and key + '-custom_html' in self.request.POST:
-                creative = adgroup.creatives.get()
-                creative.html_data = adgroup_form.cleaned_data['custom_html']
-                creatives.append(creative)
+                for creative in adgroup.creatives:
+                    creative.html_data = adgroup_form.cleaned_data['custom_html']
+                    creatives.append(creative)
             elif campaign.network_type == 'custom_native' and key + '-custom_method' in self.request.POST:
-                creative = adgroup.creatives.get()
-                creative.html_data = adgroup_form.cleaned_data['custom_method']
-                creatives.append(creative)
+                for creative in adgroup.creatives:
+                    creative.html_data = adgroup_form.cleaned_data['custom_method']
+                    creatives.append(creative)
 
         # save all modified adgroups
         AdGroupQueryManager.put(adgroups)
@@ -878,8 +887,6 @@ class EditNetworkHandler(RequestHandler):
                         #and delete the old creative just marks as deleted!
                         CreativeQueryManager.delete(old_creative)
 
-                    # the creative should always have the same account as the adgroup
-                    creative.account = adgroup.account
                     #put the creative so we can reference it
                     CreativeQueryManager.put(creative)
 

@@ -303,25 +303,32 @@ class AdGroupServiceHandler(RequestHandler):
         # adgroup dict
         adgroup_dict = adgroup.toJSON()
 
-        # stats
-        stats_dict = stats_fetcher.get_adgroup_stats(
-            adgroup, self.start_date, self.end_date, True)
-        adgroup_dict.update(stats_dict)
-
         # progress
         adgroup_dict.update(get_progress_dict(adgroup.key()))
 
-        # creatives
-        adgroup_dict['creatives'] = []
-        for creative in adgroup.creatives:
-            # adgroup dict
-            creative_dict = creative.toJSON()
+        # stats
+        if self.request.GET.get('app', ''):
+            stats_dict = stats_fetcher.get_adgroup_specific_app_stats(
+                self.request.GET['app'], adgroup, self.start_date, self.end_date, True)
+        elif self.request.GET.get('adunit', ''):
+            stats_dict = stats_fetcher.get_adgroup_specific_adunit_stats(
+                self.request.GET['adunit'], adgroup, self.start_date, self.end_date, True)
+        else:
+            stats_dict = stats_fetcher.get_adgroup_stats(
+                adgroup, self.start_date, self.end_date, True)
 
-            # stats
-            creative_dict.update(stats_fetcher.get_creative_stats(
-                creative, self.start_date, self.end_date, False))
+            # creatives
+            adgroup_dict['creatives'] = []
+            for creative in adgroup.creatives:
+                # adgroup dict
+                creative_dict = creative.toJSON()
 
-            adgroup_dict['creatives'].append(creative_dict)
+                # stats
+                creative_dict.update(stats_fetcher.get_creative_stats(
+                    creative, self.start_date, self.end_date, False))
+
+                adgroup_dict['creatives'].append(creative_dict)
+        adgroup_dict.update(stats_dict)
 
         return JSONResponse(adgroup_dict)
 

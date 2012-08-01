@@ -160,8 +160,6 @@ var mopub = window.mopub || {};
             var series_length = series_list[this_view.options.display_values[0]].length;
             var series_dates = this_view.collection.get_date_range();
 
-            console.log(series_list);
-
             $("#stats-breakdown-container tr", this_view.el).click(function() {
 
                 // Remove the active class from the previously active row
@@ -174,8 +172,6 @@ var mopub = window.mopub || {};
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
 
-                console.log(stats_type);
-                
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_dates);

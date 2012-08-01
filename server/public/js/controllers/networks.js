@@ -1271,8 +1271,7 @@
 
             initialize_show_network();
 
-            $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" }});
+            $('.chzn-select').chosen({no_results_text: "No results matched"});
 
             $('#delete-network')
                 .click(function () {

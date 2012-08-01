@@ -346,9 +346,9 @@ var mopub = window.mopub || {};
                 '</img> ';
             $('.price_floor', adunit_row).html(price_floor_html);
 
-            var targeting_html = '<input class="targeting-box" type="checkbox">' +
-                '<img class="loading-img hidden" ' +
-                'src="/images/icons-custom/spinner-12.gif"></img> ';
+            var targeting_html = '<img class="loading-img hidden" ' +
+                'src="/images/icons-custom/spinner-12.gif"></img> ' +
+                '<input class="targeting-box" type="checkbox">';
 
 
             $('.targeting', adunit_row).html(targeting_html);

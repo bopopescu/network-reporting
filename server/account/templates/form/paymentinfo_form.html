@@ -21,8 +21,10 @@
 
    <div id="paypal_only">
      {{form.paypal_email|attrs:'{"label":"Paypal Email"}'}}
-     <div class="warning notice" style="margin: 10px 220px 0 105px;">
-       Please note that Paypal charges transaction fees based on transfer volume. See <a href="https://www.paypal.com/us/cgi-bin/webscr?cmd=_display-receiving-fees-outside">here</a> for more information.
+     <div class="block-message alert-message" style="margin: 10px 220px 0 105px;">
+       Please note that Paypal charges transaction fees based on transfer volume.
+       See <a href="https://www.paypal.com/us/cgi-bin/webscr?cmd=_display-receiving-fees-outside">here</a>
+       for more information.
      </div>
    </div>
 

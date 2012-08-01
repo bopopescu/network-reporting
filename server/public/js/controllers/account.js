@@ -142,6 +142,13 @@ var mopub = mopub || {};
 		    });
         }
     };
+
+
+    var AccountController = {
+        initializePaymentDetails: function (bootstrapping_data) {
+            
+        },
+    };
     
     window.LoginController = LoginController;
     window.RegistrationController = RegistrationController;

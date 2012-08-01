@@ -496,13 +496,17 @@ class EditNetworkHandler(RequestHandler):
 
             # special case custom and custom native networks
             if campaign.network_type == 'custom' and key + '-custom_html' in self.request.POST:
-                creative = adgroup.creatives.get()
-                creative.html_data = adgroup_form.cleaned_data['custom_html']
-                creatives.append(creative)
+                # there should only be one creative per adgroup but the data is fucked so who
+                # knows
+                for creative in adgroup.creatives:
+                    creative.html_data = adgroup_form.cleaned_data['custom_html']
+                    creatives.append(creative)
             elif campaign.network_type == 'custom_native' and key + '-custom_method' in self.request.POST:
-                creative = adgroup.creatives.get()
-                creative.html_data = adgroup_form.cleaned_data['custom_method']
-                creatives.append(creative)
+                # there should only be one creative per adgroup but the data is fucked so who
+                # knows
+                for creative in adgroup.creatives:
+                    creative.html_data = adgroup_form.cleaned_data['custom_method']
+                    creatives.append(creative)
 
         # save all modified adgroups
         AdGroupQueryManager.put(adgroups)

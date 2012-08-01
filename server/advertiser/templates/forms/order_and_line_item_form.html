@@ -4,11 +4,11 @@
 {% load forms %}
 
 {% block pageTitleTag %}
-{% comment %}TODO: title{% endcomment %}
+{% if order %}New Line Item{% else %}New Order{% endif %}
 {% endblock %}
 
 {% block pageTitle %}
-<h1>{% comment %}TODO: title{% endcomment %}</h1>
+<h1>{% if order %}New Line Item{% else %}New Order{% endif %}</h1>
 {% endblock pageTitle %}
 
 {% block titleBarRight %}

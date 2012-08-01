@@ -67,7 +67,7 @@ header {
     width: 100%;
     height: 60px;
     background: $dark_gray url(../images/layout/header-bg.gif) repeat-x top left;
-    
+
     #nav1 {
         ul {
             display: inline;
@@ -162,7 +162,7 @@ header {
         height: 5px;
         display: inline-block;
     }
-    
+
     li {
         display: inline;
         padding: 0 0 0 3px;
@@ -212,13 +212,13 @@ header {
             margin: 0;
             padding: 0;
         }
-        
+
         // Links within the dropdown menu
         a {
             i {
                 display: inline;
             }
-            display: block;            
+            display: block;
             clear: both;
             font-weight: normal;
             color: $dark_gray;
@@ -262,7 +262,7 @@ header {
         margin-top: 8px;
         margin-left: 2px;
     }
-    
+
 }
 
 
@@ -463,7 +463,7 @@ p {
 ul, ol {
     margin: 0 0 1.33em 0;
     line-height: 1.33em;
-    padding: 0 0 0 0;
+    padding: 0 0 0 30px;
 }
 
 li {

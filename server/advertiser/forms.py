@@ -40,6 +40,20 @@ class OrderForm(forms.ModelForm):
 
         return order
 
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '')
+        name = name.strip()
+        if not name:
+            raise forms.ValidationError("This field is required.")
+        return name
+
+    def clean_advertiser(self):
+        advertiser = self.cleaned_data.get('advertiser', '')
+        advertiser = advertiser.strip()
+        if not advertiser:
+            raise forms.ValidationError("This field is required.")
+        return advertiser
+
     class Meta:
         model = Order
         fields = ('name', 'advertiser', 'description')
@@ -218,6 +232,13 @@ class LineItemForm(forms.ModelForm):
             return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
         else:
             return budget
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '')
+        name = name.strip()
+        if not name:
+            raise forms.ValidationError("This field is required.")
+        return name
 
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)

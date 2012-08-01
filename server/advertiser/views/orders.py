@@ -117,19 +117,20 @@ class OrderDetailHandler(RequestHandler):
                                                         order=order,
                                                         archived=False)
 
-        self.start_date = None
-        self.end_date = None
+        if line_items:
+            self.start_date = None
+            self.end_date = None
 
-        for line_item in line_items:
-            if not self.start_date or line_item.start_datetime.date() < self.start_date:
-                self.start_date = line_item.start_datetime.date()
+            for line_item in line_items:
+                if not self.start_date or line_item.start_datetime.date() < self.start_date:
+                    self.start_date = line_item.start_datetime.date()
 
-            if not line_item.end_datetime:
-                self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
-            elif not self.end_date or line_item.end_datetime.date() > self.end_date:
-                self.end_date = line_item.end_datetime.date()
+                if not line_item.end_datetime:
+                    self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
+                elif not self.end_date or line_item.end_datetime.date() > self.end_date:
+                    self.end_date = line_item.end_datetime.date()
 
-        self.date_range = (self.end_date - self.start_date).days + 1
+            self.date_range = (self.end_date - self.start_date).days + 1
 
         # Get the targeted adunits and group them by their app.
         targeted_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \

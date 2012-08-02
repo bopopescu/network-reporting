@@ -4828,6 +4828,8 @@ form#campaign_and_adgroup div.modal {
   text-align: left;
   vertical-align: top;
   padding: 8px 0 7px 0; }
+.dataTable td.numeric {
+  text-align: right; }
 
 table.dataTable {
   width: 100%; }

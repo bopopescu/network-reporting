@@ -80,11 +80,11 @@ var mopub = window.mopub || {};
         graph.render();
 
         var time = new Rickshaw.Fixtures.MoPubTime();
-        var timeUnit; = time.unit('days');
+        var timeUnit = time.unit('days');
         
         var xaxes = new Rickshaw.Graph.Axis.Time({
 	        graph: graph,
-            timeUnit: timeUnit
+            //timeUnit: timeUnit
         });
         xaxes.render();
 

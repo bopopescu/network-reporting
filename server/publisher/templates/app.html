@@ -11,7 +11,10 @@
 
 {% block content %}
 
-  <div id="dashboard-appEditForm" class="hidden" style="margin-bottom: 10px;">
+
+  {% chart_placeholder start_date end_date %}
+  
+  <div id="dashboard-appEditForm" class="hidden" style="margin-top: 10px;">
     <a name="appForm" class="hidden">anchor</a>
     <form action="{% url publisher_app_update_ajax app_key=app.key %}"
           enctype='multipart/form-data'
@@ -39,9 +42,7 @@
       </fieldset>
     </form>
   </div>
-
-  {% chart_placeholder start_date end_date %}
-
+  
   <div id="ad-units">
     <div class="right">
       <a class="btn" id="dashboard-apps-editAppButton" href="#">

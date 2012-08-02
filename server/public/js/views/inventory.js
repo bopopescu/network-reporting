@@ -778,19 +778,18 @@ var mopub = window.mopub || {};
                 $("." + field, row).text(current_model.get_formatted_stat(field));
             });
 
-            var percent_delivered = current_model.get('percent_delivered');
-            if(percent_delivered >= 0) {
+            if(current_model.has('percent_delivered')) {
+                var percent_delivered = current_model.get('percent_delivered');
                 var $percent_delivered = $('.progress', row);
                 $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100 + '%');
                 $('#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
                 $percent_delivered.show();
             }
 
-            var pace = current_model.get('pace');
-            if(pace >= 0) {
+            if(current_model.has('pace') && current_model.has('pace_type')) {
                 var $pace = $('.pace', row);
                 $pace.addClass(current_model.get('pace_type'));
-                $pace.text('Pace: ' + Math.round(pace*100) + '%')
+                $pace.text('Pace: ' + Math.round(current_model.get('pace')*100) + '%')
                 $pace.show();
             }
 

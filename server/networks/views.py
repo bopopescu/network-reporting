@@ -609,9 +609,8 @@ class EditNetworkHandler(RequestHandler):
 
             if not adgroup_form.is_valid():
                 for key, value in adgroup_form.errors.items():
-                    if adgroup_form.prefix and key in set(AdUnitAdGroupForm.
-                            base_fields.keys()):
-                        key = adgroup_form.prefix + '-' + key
+                    if key in set(AdUnitAdGroupForm.base_fields.keys()):
+                        key = adunit_key + '-' + key
                     errors[key] = ' '.join([error for error in value])
             else:
                 self.user_entered_pub_id(adgroup_form, adunit_key, campaign.network_type, errors)

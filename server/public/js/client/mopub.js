@@ -9,7 +9,7 @@ function redo_tags(div) {
         if (curr.href != '#') {
             curr.href = mopub_click_url + '&r=' + encodeURIComponent(curr.href);
         }
-        if (window.mopub_click_prepend) {
+        if (typeof window.mopub_click_prepend !== 'undefined' && window.mopub_click_prepend !== null) {
             curr.href = window.mopub_click_prepend + curr.href;
         }
     }

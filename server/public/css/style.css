@@ -1,4 +1,3 @@
-@charset "UTF-8";
 /*
  * Nullify all of the preset styles
  */
@@ -4074,7 +4073,6 @@ form#campaign_and_adgroup div.modal {
 .progress {
   overflow: hidden;
   height: 18px;
-  position: relative;
   background-color: #bababa;
   background-repeat: repeat-x;
   background-image: -khtml-gradient(linear, left top, left bottom, from(#e5e5e5), to(#bababa));
@@ -4138,9 +4136,9 @@ form#campaign_and_adgroup div.modal {
 #progress-bar-text {
   position: absolute;
   text-align: center;
-  left: 0px;
-  right: 0px;
-  top: 2px; }
+  left: 4px;
+  right: 10px;
+  top: 6px; }
 
 .progress-danger .bar {
   background-color: #dd514b;
@@ -4830,6 +4828,8 @@ form#campaign_and_adgroup div.modal {
   text-align: left;
   vertical-align: top;
   padding: 8px 0 7px 0; }
+.dataTable td.numeric {
+  text-align: right; }
 
 table.dataTable {
   width: 100%; }
@@ -5538,7 +5538,7 @@ div.pub-id-edit, span.pub_id.muted {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 140px;
+  width: 100%;
   cursor: pointer; }
 
 div.editable {

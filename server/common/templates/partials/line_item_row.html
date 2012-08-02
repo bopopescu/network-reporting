@@ -3,9 +3,9 @@
 
 <tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
   <td class="controls">
-    {% if show_controls %}
+    {% if show_status %}
       <input class="status_change_control" id="{{ line_item.key }}" type="checkbox" />
-    {% endif %}
+      {% endif %}
     <img id="status-{{ line_item.key }}" src="{{ line_item.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
   </td>
   <td class="name">
@@ -21,7 +21,7 @@
       {{ line_item.name }}
     </a>
     <br />
-    <span class="muted">
+    <span id="text-{{line_item.key}}" class="muted">
       {{ line_item.status|capitalize }}
     </span>
     <img id="{{ line_item.key }}-img" class="loading-img" src="/images/spin-small.gif" />
@@ -72,7 +72,7 @@
 
     <div class="hidden pace"></div>
   </td>
-  <td class="popdown">
-    <i class="moreinfo icon-search" id="popover-{{ line_item.key }}"></i>
+  <td class="moreinfo popdown">
+    <i class="icon-search" id="popover-{{ line_item.key }}"></i>
   </td>
 </tr>

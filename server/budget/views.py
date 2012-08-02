@@ -6,6 +6,7 @@ from urllib import urlencode
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
+from django.conf import settings
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.timezones import Pacific_tzinfo
@@ -125,9 +126,12 @@ def budget_view(request, adgroup_key):
                               key=str(camp.key()))
 
 
-    data_qs = urlencode(default_query_dict)
-    data_full_url = DEF_BUDGET_DATA_URL + '?' + data_qs
-    remote_data_dict = simplejson.loads(urllib2.urlopen(data_full_url).read())
+    if settings.DEBUG:
+        remote_data_dict = {}
+    else:
+        data_qs = urlencode(default_query_dict)
+        data_full_url = DEF_BUDGET_DATA_URL + '?' + data_qs
+        remote_data_dict = simplejson.loads(urllib2.urlopen(data_full_url).read())
 
     if remote_data_dict:
         remaining = remote_data_dict['remaining']

@@ -48,7 +48,7 @@
   {% endif %}
 
   <div class="right" style="clear: both; margin-bottom: 10px;">
-
+    
     <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 10px;">
       {% button_icon "pencil" %}
       Edit Line Item
@@ -121,13 +121,6 @@
   {% endcomment %}
 
   {% line_item_status line_item %}
-
-  {% if user.is_admin %}
-    <a class="btn right" href="/budget/view/{{line_item.key}}">
-      {% button_icon "wrench" %}
-      Admin Budget View
-    </a>
-  {% endif %}
 
 </section>
 

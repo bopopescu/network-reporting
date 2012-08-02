@@ -4,6 +4,9 @@ import sys
 
 sys.path.append(os.environ['PWD'])
 
+from nose.tools import make_decorator
+from nose.plugins.skip import SkipTest
+
 from google.appengine.ext import db
 import common.utils.test.setup
 from common.utils.test.views import BaseViewTestCase
@@ -24,11 +27,13 @@ from advertiser.models import Campaign, \
         NetworkStates
 from ad_network_reports.models import AdNetworkLoginCredentials
 
+from networks.views import NETWORKS_WITH_PUB_IDS
 from networks.forms import NetworkCampaignForm, \
         NetworkAdGroupForm, \
         AdUnitAdGroupForm
 
-from common.constants import NETWORKS
+from common.constants import NETWORKS, \
+        REPORTING_NETWORKS
 
 DEFAULT_BID = 0.05
 DEFAULT_HTML = 'html_data1'
@@ -171,3 +176,51 @@ class NetworkTestCase(BaseViewTestCase):
         login.put()
         return login
 
+
+# -------------------- >> begin test decorators << --------------------
+# These methods allow for conditionally skipping tests based on network type.
+# For example, applying @requires_network_with_reporting to a test method will
+# cause the test to run only for network types that support revenue reporting.
+# For all other types, the test will show up as an 'S' in the nose output.
+
+def requires_network_with_reporting(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type not in REPORTING_NETWORKS:
+            raise SkipTest('Skipping test... requires reporting network')
+        return test_method(self, *args, **kwargs)
+    return wrapper
+
+def requires_network_with_mappers(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type not in REPORTING_NETWORKS or self.network_type == 'iad':
+            raise SkipTest('Skipping test... requires reporting network')
+        return test_method(self, *args, **kwargs)
+    return wrapper
+
+def requires_network_with_pub_ids(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type not in NETWORKS_WITH_PUB_IDS:
+            raise SkipTest('Skipping test... requires network with pub IDs')
+        return test_method(self, *args, **kwargs)
+    return wrapper
+
+def requires_network_without_pub_ids(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type in NETWORKS_WITH_PUB_IDS:
+            raise SkipTest('Skipping test... requires network without pub IDs')
+        return test_method(self, *args, **kwargs)
+    return wrapper
+
+def requires_non_custom_network_type(test_method):
+    @make_decorator(test_method)
+    def wrapper(self, *args, **kwargs):
+        if self.network_type in ['custom', 'custom_native']:
+            raise SkipTest('Skipping test... requires non-custom network type')
+        return test_method(self, *args, **kwargs)
+    return wrapper
+
+# -------------------- >> end test decorators << --------------------

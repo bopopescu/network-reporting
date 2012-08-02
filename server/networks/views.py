@@ -641,7 +641,7 @@ class EditNetworkHandler(RequestHandler):
             pub_id_query_dict = '%s-%s' % (network_config.key(), pub_id_field)
 
             query_dict = self.request.POST
-            if (pub_id_query_dict not in query_dict and not hasattr(network_config, pub_id_field)) \
+            if (pub_id_query_dict not in query_dict and not getattr(network_config, pub_id_field, False)) \
                     or (pub_id_query_dict in query_dict and not query_dict[pub_id_query_dict]):
                 errors['%s-%s_pub_id' % (network_config.key(), network_type)] = "MoPub requires an" \
                         " ad network id for enabled adunits."

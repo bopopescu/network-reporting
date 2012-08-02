@@ -194,7 +194,7 @@
         // copied line item. Otherwise, show the error message.
         copy_promise.success(function(response) {
             if (response.success) {
-                var message = "Your line  was successfully copied."
+                var message = "Your line item was successfully copied."
                     + "You can see your new line item <a href='" + response.url
                     + "'>here</a>.";
                 Toast.success(message);

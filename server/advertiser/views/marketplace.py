@@ -290,7 +290,7 @@ class MarketplaceExportHandler(RequestHandler):
                     adunit_stats.rev,
                     adunit_stats.imp,
                     adunit_stats.cpm,
-                    marketplace_adgroup.mktplace_price_floor,
+                    marketplace_adgroup.bid,
                     marketplace_adgroup.active,
                 )
                 export_data.append(adunit_row)

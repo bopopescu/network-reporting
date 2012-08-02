@@ -602,7 +602,8 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
 form#campaign_and_adgroup {
     fieldset.advanced {
         ul {
-        list-style-type: none;
+            list-style-type: none;
+            padding: 0 0 0 0;
         }
         .devices {
             width: 150px;

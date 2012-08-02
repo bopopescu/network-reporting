@@ -3645,7 +3645,8 @@ form#order_and_line_item_form #id_included_apps_chzn, form#order_and_line_item_f
   z-index: 5; }
 
 form#campaign_and_adgroup fieldset.advanced ul {
-  list-style-type: none; }
+  list-style-type: none;
+  padding: 0 0 0 0; }
 form#campaign_and_adgroup fieldset.advanced .devices {
   width: 150px; }
 form#campaign_and_adgroup fieldset.advanced .device-targeting li {

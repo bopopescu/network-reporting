@@ -570,13 +570,13 @@
                                 console.log(jsonData.errors);
                                 validator.showErrors(jsonData.errors);
                                 $('form#campaign_and_adgroup #submit').text('Try Again');
-                                $('form#campaign_and_adgroup #submit').attr('disabled', '');
+                                $('form#campaign_and_adgroup #submit').removeAttr('disabled');
                             }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             $('#loading').hide();
                             $('form#campaign_and_adgroup #submit').text('Try Again');
-                            $('form#campaign_and_adgroup #submit').attr('disabled', '');
+                                $('form#campaign_and_adgroup #submit').removeAttr('disabled');
                         },
                         beforeSubmit: function(arr, $form, options) {
                             if(campaign_key) {

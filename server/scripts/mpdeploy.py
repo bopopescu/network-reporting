@@ -297,7 +297,9 @@ def write_changelog(deploy_tag, fixed_tickets, new_commits):
 
 
 def minify_javascript():
-
+    """
+    Uses juicer to minify all of our javascript plugin code.
+    """
     # we use juicer for minification, alert them if they dont have it
     has_juicer = envoy.run('which juicer')
     if has_juicer.std_out == '':
@@ -344,6 +346,43 @@ def post_to_hipchat(message, room_id=None):
     return response
 
 
+def run_production_steps():
+    # Update the repo with tags that might have been made from other deploys
+    puts("Updating the tag list from origin")
+    git_fetch()
+    git_fetch_tags()
+    
+    # Get a list of tickets that were fixed.
+    puts("Getting a list of the tickets that were fixed in this deploy")
+    fixed_tickets = git_list_resolved_tickets()
+    if len(fixed_tickets) == 0:
+        puts(colored.yellow("Didn't find any ticket fixes"))
+    else:
+        puts("Found " + str(len(fixed_tickets)) + \
+             " bug fixes in this deploy: " + colored.green(str(fixed_tickets)))
+        
+    # Get the commits that will go into the changelog
+    new_commits = git_get_logs_for_changelog()
+        
+    # Tag the commit with the deploy number
+    deploy_tag_name = git_tag_current_deploy()
+    puts("Tagged this deploy's commits as " + colored.green(deploy_tag_name))
+    
+    # Push all tags
+    puts("Updating origin with the new tag")
+    git_push_tag(deploy_tag_name)
+    
+    # Write to the changelog
+    puts("Writing changelog")
+    write_changelog(deploy_tag_name, fixed_tickets, new_commits)
+
+    # Update the repository with the new changelog
+    # Lighthouse will notice this and will update everyone with the new
+    puts("Updating origin with the changelog")
+    commit_message = " ".join(['[#%s state:resolved]' % str(ticket) for ticket in fixed_tickets])
+    git_commit(commit_message)
+    git_push()
+    
 
 def main():
     """
@@ -377,13 +416,16 @@ def main():
             active_branch_name = git_branch_name()
             deploy_server = clint.args.get(0)
             deployer = git_get_user()
-            
+
+
+            # Warn if the current branch isn't master
             if active_branch_name != "master" and deploy_server in PRODUCTION_SERVERS:
                 puts(colored.yellow("Careful! You're deploying a non-master branch."))
                 y_or_n = raw_input('Are you sure you want to deploy ' + active_branch_name + '? (y/n) >> ')
                 if y_or_n == 'n':
                     sys.exit(1)
 
+<<<<<<< HEAD
             if deploy_server in PRODUCTION_SERVERS and not skip_tagging:
                 # Update the repo with tags that might have been made from other deploys
                 puts("Updating the tag list from origin")
@@ -430,6 +472,8 @@ def main():
             if deploy_server == None:
                 puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
                 deploy_server = 'frontend-staging'
+=======
+>>>>>>> master
 
             # Minify all javascript
             puts("Minifying Javascript")
@@ -438,6 +482,16 @@ def main():
             # Updating version numbers
             puts("Updating Version Numbers")
             update_static_version_numbers()
+
+            # Set the deploy server to frontend-staging if it hasn't been set.
+            if deploy_server == None:
+                puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
+                deploy_server = 'frontend-staging'
+            
+            if deploy_server in PRODUCTION_SERVERS:
+                run_production_steps()
+            else:
+                puts("Skipping ticket update process because you're not deploying to production")                
 
             # Launch the deploy process. If --production, --staging or
             # --beta was passed, go through each of the production/staging/beta

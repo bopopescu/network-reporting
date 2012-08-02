@@ -33,7 +33,6 @@
 .progress {
   overflow: hidden;
   height: 18px;
-  position: relative;
   @include vertical-gradient(#e5e5e5, #BABABA);
   @include box-shadow(inset 0 1px 2px rgba(0,0,0,.1));
   @include border-radius(4px);
@@ -69,9 +68,9 @@
 #progress-bar-text {
   position: absolute;
   text-align: center;
-  left: 0px;
-  right: 0px;
-  top: 2px;
+  left: 4px;
+  right: 10px;
+  top: 6px;
 }
 
 

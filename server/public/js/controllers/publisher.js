@@ -733,8 +733,6 @@ var mopub = mopub || {};
             initializeDeleteForm();
             initializeiOSAppSearch();
 
-            console.log(bootstrapping_data.start_date);
-
             var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
             fetchAdUnitsFromAppKeys(bootstrapping_data.app_key);
 
@@ -763,23 +761,14 @@ var mopub = mopub || {};
                     key: line_item_key
                 });
                 line_item.url = function () {
-                    url = '/api/adgroup/' + this.id + '/apps/' + bootstrapping_data.app_key + '?';
+                    url = '/api/adgroup/' + this.id + '?app=' + bootstrapping_data.app_key;
                     var start_date = bootstrapping_data.start_date;
                     if(start_date) {
-                        url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                        url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                     }
                     url += '&r=' + bootstrapping_data.date_range;
-                    url += '&endpoint=direct';
                     return url;
                 };
-                line_item.parse = function (response) {
-                    for(var index in response) {
-                        if(response[index].id == bootstrapping_data.app_key) {
-                            return response[index];
-                        }
-                    }
-                    return null;
-                }
 
                 var line_item_view = new LineItemView({
                     model: line_item,
@@ -918,23 +907,14 @@ var mopub = mopub || {};
                     key: line_item_key
                 });
                 line_item.url = function () {
-                    url = '/api/adgroup/' + this.id + '/adunits/' + bootstrapping_data.adunit_key + '?';
+                    url = '/api/adgroup/' + this.id + '?adunit=' + bootstrapping_data.adunit_key;
                     var start_date = bootstrapping_data.start_date;
                     if(start_date) {
                         url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                     }
                     url += '&r=' + bootstrapping_data.date_range;
-                    url += '&endpoint=direct';
                     return url;
                 };
-                line_item.parse = function (response) {
-                    for(var index in response) {
-                        if(response[index].id == bootstrapping_data.adunit_key) {
-                            return response[index];
-                        }
-                    }
-                    return null;
-                }
 
                 var line_item_view = new LineItemView({
                     model: line_item,
@@ -988,23 +968,14 @@ var mopub = mopub || {};
                     key: network_adgroup_key
                 });
                 network_adgroup.url = function () {
-                    url = '/api/adgroup/' + this.id + '/adunits/' + bootstrapping_data.adunit_key + '?';
+                    url = '/api/adgroup/' + this.id + '?adunit=' + bootstrapping_data.adunit_key;
                     var start_date = bootstrapping_data.start_date;
                     if(start_date) {
                         url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                     }
                     url += '&r=' + bootstrapping_data.date_range;
-                    url += '&endpoint=all';
                     return url;
                 };
-                network_adgroup.parse = function (response) {
-                    for(var index in response) {
-                        if(response[index].id == bootstrapping_data.adunit_key) {
-                            return response[index];
-                        }
-                    }
-                    return null;
-                }
 
                 var network_adgroup_view = new LineItemView({
                     model: network_adgroup,

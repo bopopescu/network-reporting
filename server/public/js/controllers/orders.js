@@ -102,32 +102,36 @@
 
                         // get the elements  we're going to edit
                         var status_img = $('#status-' + ad_source);
-                        var status_change_controls = $('.status_change_control');
-                        var ad_source_tds = $('#' +ad_source + ' td:not(.controls)');
+                        var status_text = $("#text-" + ad_source);
+                        var ad_source_row = $("#" + ad_source);
+                        var ad_source_tds = $('#' + ad_source + ' td:not(.controls)');
 
                         if (status == 'play' || status == 'run') {
-                            $(ad_source_tds).fadeTo(500, 1);
-                            $('#' + ad_source).addClass('running')
+                            ad_source_row.addClass('running')
                                 .removeClass('archived')
                                 .removeClass('paused');
-                            $(status_img).attr('src', '/images/active.gif');
+                            status_img.attr('src', '/images/active.gif');
+                            status_text.text("Running");
 
                         } else if (status == 'pause') {
-                            $('#' + ad_source).addClass('paused')
+                            ad_source_row.addClass('paused')
                                 .removeClass('archived')
                                 .removeClass('running');
-                            $(status_img).attr('src', '/images/paused.gif');
+                            status_img.attr('src', '/images/paused.gif');
+                            status_text.text("Paused");
 
                         } else if (status == 'archive') {
-                            $('#' + ad_source).addClass('archived')
+                            ad_source_row.addClass('archived')
                                 .removeClass('running')
                                 .removeClass('paused');
-                            $(ad_source_tds).fadeTo(500, 0.4);
-                            $(status_img).attr('src', '/images/archived.gif');
+                            ad_source_tds.fadeTo(500, 0.4);
+                            status_img.attr('src', '/images/archived.gif');
+                            status_text.text("Archived");
 
                         } else if (status == 'delete') {
-                            $(ad_source_tds).fadeTo(500, 0.4);
-                            $(status_img).attr('src', '/images/deleted.gif');
+                            ad_source_tds.fadeTo(500, 0.4);
+                            status_img.attr('src', '/images/deleted.gif');
+                            status_text.text("Deleted");
                         }
                     });
                 } else {

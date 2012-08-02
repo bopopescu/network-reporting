@@ -551,7 +551,7 @@ var mopub = mopub || {};
                         addToBlocklist(domain);
                     });
                     $("textarea[name='blocklist']").val('');
-                    $("#none_currently_blocked").fadeOut()
+                    $("#none_currently_blocked").fadeOut();
                 });
 
                 blocklist_xhr.error(function (response) {

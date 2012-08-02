@@ -1,25 +1,62 @@
+# Deployed Thursday, August 02, 2012 at 06:58PM PST
+### Deployed by John Pena
+### Tagged deploy-169
+### Bugs Fixed: []
+### Included Commits: 
+ * 3e97a57 Merge branch 'master' of github.com:mopub/mopub
+ * 1462e46 Merge branch 'ADS-63'
+ * 6ccb642 fixed stupid JS bug for mobile web ADS-63
+ * d071431 fixed stupid JS bug for mobile web ADS-63
+ * 4f35701 fixed stupid JS bug for mobile web ADS-63
+ * 456687e fixed stupid JS bug for mobile web ADS-63
+ * 3b5125d fixed stupid js bug ADS-63
+ * fe3c3aa fixed some mpdeploy committing issues
+ * 6ee24a7 versions
+ * 4fd3035 Deployed without finding any bug fixes.
+ 
+# Deployed Thursday, August 02, 2012 at 05:56PM PST
+### Deployed by John Pena
+### Tagged deploy-168
+### Bugs Fixed: []
+### Included Commits:
+* d428b62 alert message for upcoming order launch
+* 05d2f16 Merge branch 'master' of github.com:mopub/mopub
+* f651be3 Added a more descriptive comment
+* c1edbf0 if multiple creatives exist for a network adgroup (messed up state) don't break
+* f62289d Fix for big AUCs
+* e1e860a Merge branch 'master' of github.com:mopub/mopub
+* ef3001a fixed creative.account gotcha in adgroup.defualt_creative method
+* 8a8c402 Merge branch 'master' of https://github.com/mopub/mopub
+* de1d6b0 I thought this was fixed forever ago? Don't check for equality when genning days, just make sure you're past the end
+* 59489e5 Merge branch 'master' of github.com:mopub/mopub
+* 2cbe8b2 try catch around memcache
+* 184b6c9 Merge branch 'master' of github.com:mopub/mopub
+* ed39bb7 removed mixpanel and kissmetrics
+* 9178ea0 added hack to attach account to creative object
+* 023c21a Deployed without finding any bug fixes.
+
 # Deployed Tuesday, July 31, 2012 at 05:20PM PST
 ### Deployed by John Pena
 ### Tagged deploy-167
 ### Bugs Fixed: []
-### Included Commits: 
- * ee422ea change reporting cluster instance type to m1.xlarge
- * d0ab96f merge conflict
- * 1b8eee4 Merge
- * 4a37249 Added comment to enable_networks in publisher views
- * 1488d26 creatives now for network adgroups are created upon adgroup creation
- * db99e18 added raven, an error tracking library for sentry in javascript
- * 9bd7462 added parseuri to raven
- * be50c13 updated plugins with raven
- * b55f784 Merge branch 'master' of github.com:mopub/mopub
- * 6c14e8b increasing machine count to 1+20; increase instance type to c1.xlarge
- * 8458395 Fixed publisher tests
- * e1568e7 Deployed without finding any bug fixes.
- * c548efe Merge branch 'master' of https://github.com/mopub/mopub
- * 1a003b2 added a webkit pushstack fix js file and added it to edit network page
- * ec2e773 Merge branch 'master' of https://github.com/mopub/mopub
- * db7f8ba More logging in aws_reports
- 
+### Included Commits:
+* ee422ea change reporting cluster instance type to m1.xlarge
+* d0ab96f merge conflict
+* 1b8eee4 Merge
+* 4a37249 Added comment to enable_networks in publisher views
+* 1488d26 creatives now for network adgroups are created upon adgroup creation
+* db99e18 added raven, an error tracking library for sentry in javascript
+* 9bd7462 added parseuri to raven
+* be50c13 updated plugins with raven
+* b55f784 Merge branch 'master' of github.com:mopub/mopub
+* 6c14e8b increasing machine count to 1+20; increase instance type to c1.xlarge
+* 8458395 Fixed publisher tests
+* e1568e7 Deployed without finding any bug fixes.
+* c548efe Merge branch 'master' of https://github.com/mopub/mopub
+* 1a003b2 added a webkit pushstack fix js file and added it to edit network page
+* ec2e773 Merge branch 'master' of https://github.com/mopub/mopub
+* db7f8ba More logging in aws_reports
+
 # Deployed Friday, July 27, 2012 at 12:57AM PST
 ### Deployed by tiags
 ### Tagged deploy-166

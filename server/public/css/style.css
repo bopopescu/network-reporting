@@ -2018,8 +2018,8 @@ table.reportData-table {
   padding: 5px 40px; }
 
 .pace {
-  position: absolute;
-  top: 22px; }
+  font-size: 12px;
+  white-space: nowrap; }
 
 .pace-success {
   color: #53a600; }
@@ -3659,7 +3659,8 @@ form#order_and_line_item_form #id_included_apps_chzn, form#order_and_line_item_f
   z-index: 5; }
 
 form#campaign_and_adgroup fieldset.advanced ul {
-  list-style-type: none; }
+  list-style-type: none;
+  padding: 0 0 0 0; }
 form#campaign_and_adgroup fieldset.advanced .devices {
   width: 150px; }
 form#campaign_and_adgroup fieldset.advanced .device-targeting li {
@@ -4073,7 +4074,7 @@ form#campaign_and_adgroup div.modal {
 .progress {
   overflow: hidden;
   height: 18px;
-  margin-bottom: 18px;
+  position: relative;
   background-color: #bababa;
   background-repeat: repeat-x;
   background-image: -khtml-gradient(linear, left top, left bottom, from(#e5e5e5), to(#bababa));
@@ -4137,9 +4138,9 @@ form#campaign_and_adgroup div.modal {
 #progress-bar-text {
   position: absolute;
   text-align: center;
-  left: -3px;
+  left: 0px;
   right: 0px;
-  top: 5px; }
+  top: 2px; }
 
 .progress-danger .bar {
   background-color: #dd514b;

@@ -711,11 +711,9 @@ def adunit_exporter(request, *args, **kwargs):
 def enable_networks(adunit, account):
     """
     Create network adgroups for this adunit for all ad networks.
-
-    NOTE: The campaigns' creatives are created when the adgroups are set to
-    active in the EditNetwork handler in networks/view
     """
     ntwk_adgroups = []
+    creatives = []
     for campaign in CampaignQueryManager.get_network_campaigns(account,
             is_new=True):
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
@@ -723,6 +721,8 @@ def enable_networks(adunit, account):
         # New adunits are initialized as paused for the account's network
         # campaigns
         adgroup.active = False
+        # Copy over global adgroup settings to new adgroup by copying them from
+        # the pre-exitsting ones
         adgroups = AdGroupQueryManager.get_adgroups(campaign=campaign)
         # Accounts should have adunits prior to creating campaigns but just in
         # case don't break
@@ -734,8 +734,10 @@ def enable_networks(adunit, account):
                 setattr(adgroup, 'target_' + device, getattr(
                     preexisting_adgroup, 'target_' + device, False))
             adgroup.target_other = preexisting_adgroup.target_other
+        creatives.append(adgroup.default_creative())
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
+    CreativeQueryManager.put(creatives)
 
 
 def enable_marketplace(adunit, account):

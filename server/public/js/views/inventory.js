@@ -160,8 +160,6 @@ var mopub = window.mopub || {};
             var series_length = series_list[this_view.options.display_values[0]].length;
             var series_dates = this_view.collection.get_date_range();
 
-            console.log(series_list);
-
             $("#stats-breakdown-container tr", this_view.el).click(function() {
 
                 // Remove the active class from the previously active row
@@ -174,8 +172,6 @@ var mopub = window.mopub || {};
                 // Create the new chart from the row that was clicked on
                 var stats_type = $this.attr('id').replace('stats-breakdown-', '');
 
-                console.log(stats_type);
-                
                 createDailyStatsChart(stats_type,
                                       series_list,
                                       series_dates);
@@ -782,19 +778,18 @@ var mopub = window.mopub || {};
                 $("." + field, row).text(current_model.get_formatted_stat(field));
             });
 
-            var percent_delivered = current_model.get('percent_delivered');
-            if(percent_delivered >= 0) {
+            if(current_model.has('percent_delivered')) {
+                var percent_delivered = current_model.get('percent_delivered');
                 var $percent_delivered = $('.progress', row);
                 $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100 + '%');
                 $('#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
                 $percent_delivered.show();
             }
 
-            var pace = current_model.get('pace');
-            if(pace >= 0) {
+            if(current_model.has('pace') && current_model.has('pace_type')) {
                 var $pace = $('.pace', row);
                 $pace.addClass(current_model.get('pace_type'));
-                $pace.text('Pace: ' + Math.round(pace*100) + '%')
+                $pace.text('Pace: ' + Math.round(current_model.get('pace')*100) + '%')
                 $pace.show();
             }
 

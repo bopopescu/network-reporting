@@ -64,9 +64,9 @@
   </td>
   <td class="delivery">
     <div class="hidden progress progress-striped
-        {% if line_item.status == 'running' %}active{% endif %}
-        {% if line_item.status == 'paused' %}progress-info{% endif %}">
-      <div class="bar" style="width: {{ line_item.progress|percentage }}"></div>
+                {% if line_item.status == 'running' %}active{% endif %}
+                {% if line_item.status == 'paused' %}progress-info{% endif %}">
+      <div class="bar" style="width: {{ line_item.progress|percentage }};"></div>
       <div id="progress-bar-text"></div>
     </div>
 

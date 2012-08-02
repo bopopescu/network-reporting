@@ -303,25 +303,32 @@ class AdGroupServiceHandler(RequestHandler):
         # adgroup dict
         adgroup_dict = adgroup.toJSON()
 
-        # stats
-        stats_dict = stats_fetcher.get_adgroup_stats(
-            adgroup, self.start_date, self.end_date, True)
-        adgroup_dict.update(stats_dict)
-
         # progress
         adgroup_dict.update(get_progress_dict(adgroup.key()))
 
-        # creatives
-        adgroup_dict['creatives'] = []
-        for creative in adgroup.creatives:
-            # adgroup dict
-            creative_dict = creative.toJSON()
+        # stats
+        if self.request.GET.get('app', ''):
+            stats_dict = stats_fetcher.get_adgroup_specific_app_stats(
+                self.request.GET['app'], adgroup.key(), self.start_date, self.end_date, True)
+        elif self.request.GET.get('adunit', ''):
+            stats_dict = stats_fetcher.get_adgroup_specific_adunit_stats(
+                self.request.GET['adunit'], adgroup.key(), self.start_date, self.end_date, True)
+        else:
+            stats_dict = stats_fetcher.get_adgroup_stats(
+                adgroup, self.start_date, self.end_date, True)
 
-            # stats
-            creative_dict.update(stats_fetcher.get_creative_stats(
-                creative, self.start_date, self.end_date, False))
+            # creatives
+            adgroup_dict['creatives'] = []
+            for creative in adgroup.creatives:
+                # adgroup dict
+                creative_dict = creative.toJSON()
 
-            adgroup_dict['creatives'].append(creative_dict)
+                # stats
+                creative_dict.update(stats_fetcher.get_creative_stats(
+                    creative, self.start_date, self.end_date, False))
+
+                adgroup_dict['creatives'].append(creative_dict)
+        adgroup_dict.update(stats_dict)
 
         return JSONResponse(adgroup_dict)
 
@@ -413,9 +420,13 @@ def get_progress_dict(adgroup_key):
 
     pacing_url = adserver_url + REMOTE_PACING_PATH + '?' + query_string
     try:
-        pacing_data = simplejson.loads(urllib2.urlopen(pacing_url).read())['pacing']
-        if pacing_data[0] == 'Pacing':
-            progress_dict['pace'] = pacing_data[1]
+        pacing_dict = simplejson.loads(urllib2.urlopen(pacing_url).read())
+    except:
+        pass
+    else:
+        pacing_tuple = pacing_dict['pacing']
+        if pacing_tuple is not None and pacing_tuple[0] == 'Pacing':
+            progress_dict['pace'] = float(pacing_tuple[1])
             if progress_dict['pace'] < .5:
                 progress_dict['pace_type'] = "pace-failure"
             elif progress_dict['pace'] < .85:
@@ -424,15 +435,15 @@ def get_progress_dict(adgroup_key):
                 progress_dict['pace_type'] = "pace-success"
         else:
             progress_dict['pace_type'] = "delivery"
-    except:
-        pass
 
     delivered_url = adserver_url + REMOTE_DELIVERED_PATH + '?' + query_string
     try:
-        delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
-        progress_dict['percent_delivered'] = delivered_data['percent_delivered']
+        delivered_dict = simplejson.loads(urllib2.urlopen(delivered_url).read())
     except:
         pass
+    else:
+        if delivered_dict['percent_delivered'] is not None:
+            progress_dict['percent_delivered'] = float(delivered_dict['percent_delivered'])
 
     return progress_dict
 

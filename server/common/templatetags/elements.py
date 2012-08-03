@@ -148,6 +148,13 @@ def creative_row(creative):
     }
 
 
+@register.inclusion_tag("advertiser/edit_creative_modal.html")
+def edit_creative_modal(creative):
+    return {
+        'creative': creative,
+    }
+
+
 @register.simple_tag
 def creative_form(creative=None):
     if creative:

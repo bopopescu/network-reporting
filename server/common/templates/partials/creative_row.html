@@ -8,25 +8,18 @@
   </td>
   <td class="name">
     {{ creative.name }}
-    <button class="btn btn-mini creative_preview_button" href="#">
+
+    <button class="btn btn-mini preview" data-toggle="modal" href="#preview-{{ creative.key }}">
       <i class="icon-picture"></i>
       Preview
     </button>
-    <button class="btn btn-mini edit_creative_button">
+    {% creative_preview creative %}
+
+    <button class="btn btn-mini edit" data-toggle="modal" href="#edit-{{ creative.key }}">
       <i class="icon-pencil"></i>
       Edit
     </button>
-    <form action="{% url advertiser_creative_form_edit creative.key %}"
-          class="edit_creative_form hidden"
-          enctype="multipart/form-data"
-          method="post">
-
-      {% creative_form creative %}
-        <button class="btn right submit">Continue</button>
-        <button class="btn right cancel">Cancel</button>
-        <div class="clear"></div>
-    </form>
-    {% creative_preview creative %}
+    {% edit_creative_modal creative %}
   </td>
   <td class="imp stat">--</td>
   <td class="clk stat">--</td>

@@ -521,13 +521,12 @@ class AbstractCreativeForm(forms.ModelForm):
     def clean_name(self):
         return self.cleaned_data.get('name', '').strip()
 
-    # def clean_url(self):
-    #     url = self.cleaned_data.get('url', None)
-    #     if url:
-    #         if url.find("://") == -1:
-    #             raise forms.ValidationError("You need to specify a protocol \
-    #                                         (like http://) at the beginning of your url")
-    #     return url
+    def clean_url(self):
+        url = self.cleaned_data.get('url', None)
+        if url:
+            if url.find("://") == -1:
+                raise forms.ValidationError("You need to specify a protocol (like http://) at the beginning of your url")
+        return url
 
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)

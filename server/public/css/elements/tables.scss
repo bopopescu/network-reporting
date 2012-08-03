@@ -1,4 +1,3 @@
-
 /* iconTable
  *
  * This is the table class for tables that have "main" rows
@@ -76,6 +75,7 @@
     th.delivery, td.delivery {
         text-align: right;
         width: 55px;
+        position: relative;
     }
     td.name, th.name {
         width: 230px;

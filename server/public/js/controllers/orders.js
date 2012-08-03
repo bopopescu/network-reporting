@@ -682,27 +682,22 @@
                 $('form#new_creative_form').submit();
             });
 
-            /* EDIT CREATIVE FORMS */
-            // creative preview button
-            $('.creative_preview_button').click(function(e) {
-                e.preventDefault();
-
-                // Set up the iframe. The iframe is hidden by default,
-                // and displayed when its finished loading.
-                var modal = $(this).siblings('div#creative_preview');
-                var preview = modal.children('div.modal-body');
-                var src = preview.children('input[name="src"]').val();
-                var iframe = preview.children('iframe');
-
-                iframe.attr('src', src);
-                iframe.load(function () {
-                    iframe.css('background-image', 'none');
-                });
+            // Creative Preview
+            $('#creative_table button.preview').click(function () {
+                var $modal = $(this).siblings('div.modal.preview');
+                var $iframe = $modal.find('iframe');
+                if(!$iframe.attr('src')) {
+                    var src = $modal.find('input').val();
+                    $iframe.attr('src', src);
+                    $iframe.load(function () {
+                        $iframe.css('background-image', 'none');
+                    })
+                }
 
                 // Set up the modal that contains the iframe
-                var width = parseInt(iframe.attr("width"));
-                var height = parseInt(iframe.attr("height"));
-                modal.css({
+                var width = parseInt($iframe.attr("width"));
+                var height = parseInt($iframe.attr("height"));
+                $modal.css({
                     'width': 'auto',
                     'height': 'auto',
                     'margin-left': function () {
@@ -712,35 +707,9 @@
                         return -($(this).height() / 2);
                     }
                 });
-                modal.modal('show');
             });
 
-            $('.advertiser-inLineCreativePreview')
-                .button({ icons : { primary : 'ui-icon-search' }})
-                .click(function(e){
-                    e.preventDefault();
-                    var creative_key = $(this).attr("id");
-                    var creative_src = $('#'+creative_key+'-preview-src').val();
-                    var width = parseInt($("#"+creative_key+"-preview iframe").attr("width"));
-                    var height = parseInt($("#"+creative_key+"-preview iframe").attr("height"));
-                    $("#"+creative_key+"-preview iframe").attr('src', creative_src);
-                    $("#"+creative_key+"-preview").dialog({
-                        buttons: [{
-                            text: 'Close',
-                            click: function() { $(this).dialog("close"); }
-                        }],
-                        width: width+100,
-                        height: height+130
-                    });
-                });
-
-            // edit creative button
-            $('button.edit_creative_button').click(function() {
-                $(this).hide();
-                $(this).siblings('form.edit_creative_form').slideDown();
-            });
-
-            // TODO: a lot of this is duplicated from above
+            // Edit Creative
             _.each($('form.edit_creative_form'), function(form) {
                 var validator = $(form).validate({
                     errorPlacement: function(error, element) {
@@ -777,19 +746,6 @@
                         });
                     }
                 });
-            });
-
-            // cancel button
-            $('form.edit_creative_form button.cancel').click(function(evt) {
-                evt.preventDefault();
-                $(this).closest('form.edit_creative_form').siblings('button.edit_creative_button').show();
-                $(this).closest('form.edit_creative_form').slideUp();
-            });
-
-            // submit button
-            $('form.edit_creative_form .submit').click(function(evt) {
-                evt.preventDefault();
-                $(this).closest('form.edit_creative_form').submit();
             });
         },
 

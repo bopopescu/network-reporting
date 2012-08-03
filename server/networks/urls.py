@@ -25,5 +25,9 @@ urlpatterns = patterns('networks.views',
         url(r'^delete$',
             'delete_network',
             name='delete_network'),
+
+        url(r'^export$',
+            'network_exporter',
+            name='network_exporter'),
         )
 

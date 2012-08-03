@@ -281,6 +281,7 @@ class MarketplaceExportHandler(RequestHandler):
                 marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(str(adunit.key()),
                                                                                   str(self.account.key()),
                                                                                   get_from_db=True)
+                logging.warn(marketplace_adgroup)
                 adunit_stats = stats.get_stats_sum(publisher=adunit,
                                                    advertiser=marketplace_campaign,
                                                    num_days=self.date_range)
@@ -290,8 +291,8 @@ class MarketplaceExportHandler(RequestHandler):
                     adunit_stats.rev,
                     adunit_stats.imp,
                     adunit_stats.cpm,
-                    marketplace_adgroup.bid,
-                    marketplace_adgroup.active,
+                    marketplace_adgroup.mktplace_price_floor if marketplace_adgroup else 'Not activated',
+                    'Activated' if marketplace_adgroup and marketplace_adgroup.active else 'Not activated',
                 )
                 export_data.append(adunit_row)
                 

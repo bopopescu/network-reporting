@@ -4828,6 +4828,8 @@ form#campaign_and_adgroup div.modal {
   text-align: left;
   vertical-align: top;
   padding: 8px 0 7px 0; }
+.dataTable td.numeric {
+  text-align: right; }
 
 table.dataTable {
   width: 100%; }
@@ -5536,7 +5538,7 @@ div.pub-id-edit, span.pub_id.muted {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 140px;
+  width: 100%;
   cursor: pointer; }
 
 div.editable {

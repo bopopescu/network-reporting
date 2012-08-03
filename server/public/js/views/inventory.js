@@ -79,8 +79,12 @@ var mopub = window.mopub || {};
         graph.renderer.unstack = true;
         graph.render();
 
+        var time = new Rickshaw.Fixtures.MoPubTime();
+        var timeUnit = time.unit('days');
+        
         var xaxes = new Rickshaw.Graph.Axis.Time({
-	        graph: graph
+	        graph: graph,
+            //timeUnit: timeUnit
         });
         xaxes.render();
 

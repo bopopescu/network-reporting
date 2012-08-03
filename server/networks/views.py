@@ -29,6 +29,7 @@ from common.constants import NETWORKS, \
 from common.utils.date_magic import gen_last_days
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, \
+        HttpResponse, \
         render_to_string, \
         TextResponse, \
         JSONResponse
@@ -59,9 +60,12 @@ from advertiser.query_managers import AdGroupQueryManager, \
         CreativeQueryManager
 from advertiser.models import NetworkStates
 from reporting.models import StatsModel
+from reporting.query_managers import StatsModelQueryManager
 
 # Form imports
 from publisher.query_managers import AdUnitQueryManager
+
+from common.utils import tablib
 
 DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 
@@ -1171,8 +1175,64 @@ class DeleteNetworkHandler(RequestHandler):
 def delete_network(request, *args, **kwargs):
     return DeleteNetworkHandler()(request, *args, **kwargs)
 
-## Helpers
-#
+
+#############
+# Exporting #
+#############
+
+class NetworkExporter(RequestHandler):
+
+    def get(self):
+        export_type = self.request.GET.get('type', 'html')
+        stats = StatsModelQueryManager(self.account)
+
+        stats_per_day = []
+        for campaign in CampaignQueryManager.get_network_campaigns(self.account, is_new=True):
+            stats_per_day.append(stats.get_stats_for_days(advertiser=campaign, num_days=self.date_range))
+
+        network_data = []
+        for day_stats in zip(*stats_per_day):
+            req = sum([stat.req for stat in day_stats])
+            imp = sum([stat.imp for stat in day_stats])
+            fill_rate = float(imp) / req if req else 0
+            clk = sum([stat.clk for stat in day_stats])
+            ctr = float(clk) / imp if imp else 0
+
+            row = (
+                day_stats[0].date,
+                req,
+                imp,
+                fill_rate,
+                clk,
+                ctr,
+            )
+            network_data.append(row)
+
+        # Put together the header list
+        headers = (
+            'Date', 'Requests', 'Impressions',
+            'Fill Rate', 'Clicks', 'CTR'
+        )
+
+        # Create the data to export from all of the rows
+        data_to_export = tablib.Dataset(headers=headers)
+        data_to_export.extend(network_data)
+
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=networks.%s' %\
+                   export_type
+
+        return response
+
+@login_required
+def network_exporter(request, *args, **kwargs):
+    return NetworkExporter()(request, *args, **kwargs)
+
+###########
+# Helpers #
+###########
+
 def get_bid_range(adgroups):
     adgroup_bids = [adgroup.bid for adgroup in adgroups if adgroup.active]
 

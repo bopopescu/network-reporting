@@ -263,10 +263,23 @@ class AdUnitDetailHandler(RequestHandler):
         line_items = AdGroupQueryManager.get_sorted_line_items_for_adunit_and_date_range(
             adunit, self.start_date, self.end_date)
 
+        untargeted = True
+        for line_item in line_items:
+            if line_item.active:
+                untargeted = False
+                break
+
         marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), adunit._account, get_from_db=True)
+        if untargeted:
+            untargeted = not (marketplace_adgroup.campaign.active and marketplace_adgroup.active)
 
         network_adgroups = AdGroupQueryManager.get_network_adgroups_for_adunit(adunit)
         network_adgroups = sorted(network_adgroups, key=lambda adgroup: adgroup.name.lower())
+        if untargeted:
+            for adgroup in network_adgroups:
+                if adgroup.campaign.active and adgroup.active:
+                    untargeted = False
+                    break
 
         return {
             'site': adunit,
@@ -275,6 +288,7 @@ class AdUnitDetailHandler(RequestHandler):
             'line_items': line_items,
             'marketplace_adgroup': marketplace_adgroup,
             'network_adgroups': network_adgroups,
+            'untargeted': untargeted,
         }
 
 

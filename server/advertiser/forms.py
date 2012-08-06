@@ -430,7 +430,8 @@ class AbstractCreativeForm(forms.ModelForm):
     tracking_url = forms.CharField(
         label='Impression Tracking URL:', required=False,
         widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
-    url = forms.CharField(label='Click URL:', required=False)
+    url = forms.CharField(label='Click URL:', required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
     # display_url
     conv_appid = forms.CharField(
         label='Conversion Tracking URL:', required=False,

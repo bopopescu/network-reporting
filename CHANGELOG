@@ -1,19 +1,25 @@
+# Deployed Monday, August 06, 2012 at 08:34PM PST
+### Deployed by tiags
+### Tagged deploy-170
+### Bugs Fixed: []
+### Included Commits: 
+ 
 # Deployed Thursday, August 02, 2012 at 06:58PM PST
 ### Deployed by John Pena
 ### Tagged deploy-169
 ### Bugs Fixed: []
-### Included Commits: 
- * 3e97a57 Merge branch 'master' of github.com:mopub/mopub
- * 1462e46 Merge branch 'ADS-63'
- * 6ccb642 fixed stupid JS bug for mobile web ADS-63
- * d071431 fixed stupid JS bug for mobile web ADS-63
- * 4f35701 fixed stupid JS bug for mobile web ADS-63
- * 456687e fixed stupid JS bug for mobile web ADS-63
- * 3b5125d fixed stupid js bug ADS-63
- * fe3c3aa fixed some mpdeploy committing issues
- * 6ee24a7 versions
- * 4fd3035 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 3e97a57 Merge branch 'master' of github.com:mopub/mopub
+* 1462e46 Merge branch 'ADS-63'
+* 6ccb642 fixed stupid JS bug for mobile web ADS-63
+* d071431 fixed stupid JS bug for mobile web ADS-63
+* 4f35701 fixed stupid JS bug for mobile web ADS-63
+* 456687e fixed stupid JS bug for mobile web ADS-63
+* 3b5125d fixed stupid js bug ADS-63
+* fe3c3aa fixed some mpdeploy committing issues
+* 6ee24a7 versions
+* 4fd3035 Deployed without finding any bug fixes.
+
 # Deployed Thursday, August 02, 2012 at 05:56PM PST
 ### Deployed by John Pena
 ### Tagged deploy-168

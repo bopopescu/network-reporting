@@ -156,10 +156,11 @@ var mopub = mopub || {};
                 case 'att':
                 case 'rev':
                     var stat_val = this.get("sum")[stat];
-                    if (stat_val)
-                        return stat_val
-                    else
-                        return 0
+                    if (stat_val) {
+                        return stat_val;
+                    } else {
+                        return 0;
+                    }                        
                 default:
                     throw 'Unsupported stat "' + stat + '".';
             }
@@ -247,47 +248,48 @@ var mopub = mopub || {};
 
             var models_in_collection = this.models.length;
 
-            // Go through each of the daily stats for each of the
-            // models in the collection and pull them out.
-            // At the end of this we'll have an array of arrays, where
-            // each inner array has the daily values for the particular stat,
-            // one inner array per model
-            var dailies_for_stat = this.map(function(model) {
-                var daily_stats = model.get('daily_stats');
+            if (stat === "ctr") {
+                var imp_series = this.get_full_stat_series('imp');
+                var clk_series = this.get_full_stat_series('clk');
 
-                return _.map(daily_stats, function (day) {
-                    switch(stat) {
-                      case 'ctr':
-                        return calculate_ctr(day['imp'], day['clk']);
-                      case 'fill_rate':
-                        return calculate_fill_rate(day['req'], day['imp']);
-                      case 'cpm':
-                        return day[stat] || calculate_cpm(day['imp'], day['rev']);
-                      case 'conv_rate':
-                        return day[stat] || calculate_conv_rate(day['conv'],day['clk']);
-                    default:
-                        return day[stat];
-                    }
+                var ctr_series = [];
+                _.each(_.zip(imp_series, clk_series), function (pair) {
+                    ctr_series.push(calculate_ctr(pair[0], pair[1]));
                 });
-            });
 
-            // Now sum by day
-            var memo = [];
-            _.times(dailies_for_stat[0].length, function (t) { memo.push(0); });
+                return ctr_series;
+            } else {
 
-            // Turn this 2D Array into a 1D array
-            var full_series = _.reduce(dailies_for_stat, function (memo, day_stats){
-                _.times(memo.length, function (iter){
-                    memo[iter] += day_stats[iter];
+                // Go through each of the daily stats for each of the
+                // models in the collection and pull them out.
+                // At the end of this we'll have an array of arrays, where
+                // each inner array has the daily values for the particular stat,
+                // one inner array per model
+                var dailies_for_stat = this.map(function(model) {
+                    var daily_stats = model.get('daily_stats');                    
+                    return _.map(daily_stats, function (day) {
+                        return day[stat];                        
+                    });
                 });
                 
-                return memo;
-            }, memo);
-
-            return full_series;
-        },
-
-        get_date_range: function() {
+                // Now sum by day
+                var memo = [];
+                _.times(dailies_for_stat[0].length, function (t) { memo.push(0); });
+                
+                // Turn this 2D Array into a 1D array
+                var full_series = _.reduce(dailies_for_stat, function (memo, day_stats){
+                    _.times(memo.length, function (iter){
+                        memo[iter] += day_stats[iter];
+                    });
+                    
+                    return memo;
+                }, memo);
+                
+                return full_series;
+            }
+            },
+            
+            get_date_range: function() {
             var dailies = this.models[0].get('daily_stats');
 
             return _.map(dailies, function (day) {

@@ -741,7 +741,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                                               network_type=network_type,
                                               network_state=network_state)
 
-        model_eq(campaign, expected_campaign, check_primary_key=False)
+        model_eq(campaign, expected_campaign, exclude=['created'], check_primary_key=False)
 
         if network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
             # Default network campaigns should have a key name.

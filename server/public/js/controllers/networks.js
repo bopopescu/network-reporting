@@ -265,8 +265,6 @@
 
 
 
-            $('#network-editSelect-menu').find('li').first().hide();
-
             // taken from mopub-dashboard.js #appEditForm (could be combined)
             $('#networkSettingsForm-submit')
                 .click(function(e) {

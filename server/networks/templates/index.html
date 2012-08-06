@@ -60,8 +60,7 @@ Make a table for ad networks that are active
     <a class="btn" id="network-settingsButton" href="#">Daily report settings</a>
     {% endif %}
 
-    <select id='network-editSelect'>
-        <option value="">Add a Network</option>
+    <select id='network-editSelect' data-placeholder="Add a Network" class="chzn-select">
         {% for network in additional_networks %}
         <option id="network-editSelect-{{ network.name }}"
         value="{% url edit_network network=network.name %}">

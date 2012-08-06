@@ -408,39 +408,83 @@ class LineItemForm(forms.ModelForm):
 
 
 class AbstractCreativeForm(forms.ModelForm):
-    format        = forms.ChoiceField(label='Format:', initial='320x50',
-                                      choices=(('320x50', '320 x 50 (Banner)'),
-                                               ('300x250', '300 x 250 (MRect)'),
-                                               ('full', 'Phone Full Screen'),
-                                               ('728x90', '728 x 90 (Tablet Leaderboard)'),
-                                               ('160x600', '160 x 600 (Tablet Skyscraper)'),
-                                               ('full_tablet', 'Tablet Full Screen'),
-                                               ('custom', 'Custom')))
+    # Creative
+    name = forms.CharField(
+        initial='Creative', label='Creative Name:', required=True)
+    custom_width = forms.IntegerField(
+        label='Custom Size:', required=False,
+        widget=forms.TextInput(attrs={'class': 'number'}))
+    custom_height = forms.IntegerField(
+        required=False, widget=forms.TextInput(attrs={'class': 'number'}))
+    landscape = forms.BooleanField(label='Landscape:', required=False)
+    # ad_group
+    # active
+    # was_active
+    # deleted
+    ad_type = forms.ChoiceField(
+        choices=(('image', 'Image'),
+                 ('text_icon', 'Text and Tile'),
+                 ('html', 'HTML')),
+        initial='image', label='Creative Type:', required=False,
+        widget=forms.RadioSelect)
+    tracking_url = forms.CharField(
+        label='Impression Tracking URL:', required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
+    url = forms.CharField(label='Click URL:', required=False)
+    # display_url
+    conv_appid = forms.CharField(
+        label='Conversion Tracking URL:', required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
+    # format_predicates
+    format = forms.ChoiceField(
+        choices=(('320x50', '320 x 50 (Banner)'),
+                 ('300x250', '300 x 250 (MRect)'),
+                 ('full', 'Phone Full Screen'),
+                 ('728x90', '728 x 90 (Tablet Leaderboard)'),
+                 ('160x600', '160 x 600 (Tablet Skyscraper)'),
+                 ('full_tablet', 'Tablet Full Screen'),
+                 ('custom', 'Custom')),
+        initial='320x50', label='Format:', required=False)
+    launchpage = forms.CharField(
+        label='Intercept URL:', required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
+    # account
+    # t
 
-    ad_type       = forms.ChoiceField(label='Creative Type:', initial='image',
-                                      choices=(('image', 'Image'),
-                                               ('text_icon', 'Text and Tile'),
-                                               ('html', 'HTML')),
-                                      widget=forms.RadioSelect)
+    # TextAndTileCreative
+    line1 = forms.CharField(label='Line 1:', required=False)
+    line2 = forms.CharField(label='Line 2:', required=False)
+    # image_blog
+    # image_serve_url
+    action_icon = forms.ChoiceField(
+        choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
+                 ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
+                 ('none', 'None')),
+        initial='download_arrow4', label='Action Icon:', required=False,
+        widget=forms.RadioSelect)
+    color = forms.CharField(
+        initial='000000', label='Background Color:', required=False)
+    font_color = forms.CharField(
+        initial='FFFFFF', label='Font Color:', required=False)
+    gradient = forms.BooleanField(
+        initial=True, label='Gradient:', required=False)
 
-    custom_width  = forms.IntegerField(label='Custom Size:', required=False,
-                                       widget=forms.TextInput(attrs={'class': 'number'}))
-    custom_height = forms.IntegerField(required=False,
-                                       widget=forms.TextInput(attrs={'class': 'number'}))
+    # HtmlCreative
+    html_data = forms.CharField(
+        label='HTML Body:', required=False,
+        widget=forms.Textarea(attrs={'placeholder': 'HTML Body Content',
+                                     'rows': 10}))
+    ormma_html = forms.BooleanField(label='MRAID Ad:', required=False)
 
-    image_file  = forms.FileField(label='Image File:', required=False)
+    # ImageCreative
+    # image_blog
+    # image_serve_url
+    # image_width
+    # image_height
 
-    action_icon = forms.ChoiceField(label='Action Icon:', initial='download_arrow4',
-                                    choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
-                                             ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
-                                             ('none', 'None')),
-                                    widget=forms.RadioSelect, required=False)
-
-    html_data   = forms.CharField(label='HTML Body:', required=False,
-                                  widget=forms.Textarea(attrs={
-                                                                'placeholder': 'HTML Body Content',
-                                                                'rows': 10
-                                                               }))
+    # This field is used to populate image_blob, image_serve_url, image_width,
+    # and image_height.
+    image_file = forms.FileField(label='Image File:', required=False)
 
     def _init_image_form(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
@@ -554,18 +598,18 @@ class AbstractCreativeForm(forms.ModelForm):
         return data
 
 
-SHARED_CREATIVE_FIELDS = ('format', 'custom_width', 'custom_height',
-                          'landscape', 'ad_type', 'name',
-                          'url', 'launchpage', 'conv_appid', 'tracking_url', )
+SHARED_CREATIVE_FIELDS = ('name', 'custom_width', 'custom_height', 'landscape',
+                          'ad_type', 'tracking_url', 'url', 'conv_appid',
+                          'format', 'launchpage')
 
 
 class NewCreativeForm(AbstractCreativeForm):
     class Meta:
         model = Creative
-        fields = SHARED_CREATIVE_FIELDS + \
-                 ('line1', 'line2', 'image_file', 'action_icon',
-                  'color', 'font_color', 'gradient', 'html_data',
-                  'ormma_html', )
+        fields = SHARED_CREATIVE_FIELDS + ('line1', 'line2', 'action_icon',
+                                           'color', 'font_color', 'gradient',
+                                           'html_data', 'ormma_html',
+                                           'image_file')
 
 
 class ImageCreativeForm(AbstractCreativeForm):
@@ -595,9 +639,9 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = TextAndTileCreative
-        fields = SHARED_CREATIVE_FIELDS + \
-                 ('line1', 'line2', 'image_file',
-                  'action_icon', 'color', 'font_color', 'gradient', )
+        fields = SHARED_CREATIVE_FIELDS + ('line1', 'line2', 'action_icon',
+                                           'color', 'font_color', 'gradient',
+                                           'image_file')
 
 
 class HtmlCreativeForm(AbstractCreativeForm):
@@ -607,7 +651,7 @@ class HtmlCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = HtmlCreative
-        fields = SHARED_CREATIVE_FIELDS + ('html_data', 'ormma_html', )
+        fields = SHARED_CREATIVE_FIELDS + ('html_data', 'ormma_html')
 
 
 MPX_FILTER_LEVELS = (

@@ -11,11 +11,10 @@
 
 {% block content %}
 
-  {% if not adgroups %}
+  {% if untargeted %}
     <div class="alert-message block-message">
-      There are no ad sources targeting this ad unit.
-      To show ads here, set up a new line item, or
-      add this ad unit to an existing line item on the
+      There are no ad sources targeting this ad unit.  To show ads here, set up
+      a new line item, or add this ad unit to an existing line item on the
       <a href="{% url advertiser_order_index %}">Orders</a> page.
     </div>
   {% endif %}

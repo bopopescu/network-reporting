@@ -4778,7 +4778,8 @@ form#campaign_and_adgroup div.modal {
   .inventory_table td.goal, .inventory_table th.goal,
   .inventory_table th.delivery, .inventory_table td.delivery, .advertiser_table td.type, .advertiser_table th.type, .advertiser_table td.goal, .advertiser_table th.goal, .advertiser_table th.delivery, .advertiser_table td.delivery {
     text-align: right;
-    width: 55px; }
+    width: 55px;
+    position: relative; }
   .inventory_table td.name, .inventory_table th.name, .advertiser_table td.name, .advertiser_table th.name {
     width: 230px; }
   .inventory_table td.text, .advertiser_table td.text {

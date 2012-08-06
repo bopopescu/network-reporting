@@ -238,12 +238,8 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    #NC.username = 'chesscom'
-    #NC.password = 'Faisal1Chess'
-    #NC.username = '2_acrossair@acrossair.com'
-    #NC.password = 'imano@314'
-    NC.username = 'franklin@mopub.com'
-    NC.password = 'MoPub512'
+    NC.username = '2_acrossair@acrossair.com'
+    NC.password = 'imano@314'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date(2012,4,9))

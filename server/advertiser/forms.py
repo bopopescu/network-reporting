@@ -430,7 +430,8 @@ class AbstractCreativeForm(forms.ModelForm):
     tracking_url = forms.CharField(
         label='Impression Tracking URL:', required=False,
         widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
-    url = forms.CharField(label='Click URL:', required=False)
+    url = forms.CharField(label='Click URL:', required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
     # display_url
     conv_appid = forms.CharField(
         label='Conversion Tracking URL:', required=False,
@@ -563,7 +564,10 @@ class AbstractCreativeForm(forms.ModelForm):
         return None
 
     def clean_name(self):
-        return self.cleaned_data.get('name', '').strip()
+        name = self.cleaned_data.get('name', '').strip()
+        if not name:
+            raise forms.ValidationError("This field is required.")
+        return name
 
     def clean_url(self):
         url = self.cleaned_data.get('url', None)

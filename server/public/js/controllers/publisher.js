@@ -910,7 +910,7 @@ var mopub = mopub || {};
                     url = '/api/adgroup/' + this.id + '?adunit=' + bootstrapping_data.adunit_key;
                     var start_date = bootstrapping_data.start_date;
                     if(start_date) {
-                        url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                        url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                     }
                     url += '&r=' + bootstrapping_data.date_range;
                     return url;
@@ -971,7 +971,7 @@ var mopub = mopub || {};
                     url = '/api/adgroup/' + this.id + '?adunit=' + bootstrapping_data.adunit_key;
                     var start_date = bootstrapping_data.start_date;
                     if(start_date) {
-                        url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                        url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                     }
                     url += '&r=' + bootstrapping_data.date_range;
                     return url;

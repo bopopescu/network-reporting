@@ -64,3 +64,27 @@ echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --
 # NetworkConfig
 echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=NetworkConfig --filename=datastore_networkconfig
 echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_networkconfig
+
+# AdNetworkAppMapper
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=AdNetworkAppMapper --filename=datastore_adnetworkappmapper
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=datastore_adnetworkappmapper
+
+# AdNetworkAppStats
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=AdNetworkAppStats --filename=AdNetworkAppStats
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=AdNetworkAppStats
+
+# AdNetworkLoginCredentials
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=AdNetworkLoginCredentials --filename=AdNetworkLoginCredentials
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=AdNetworkLoginCredentials
+
+# AdNetworkManagementStats
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=AdNetworkManagementStats --filename=AdNetworkManagementStats
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=AdNetworkManagementStats
+
+# AdNetworkNetworkStats
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=AdNetworkNetworkStats --filename=AdNetworkNetworkStats
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=AdNetworkNetworkStats
+
+# AdNetworkScrapeStats
+echo $SOURCE_PASSWORD | appcfg.py download_data --email=$SOURCE_EMAIL --passin --application=$SOURCE_APP --url=$SOURCE_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --kind=AdNetworkScrapeStats --filename=AdNetworkScrapeStats
+echo $DESTINATION_PASSWORD | appcfg.py upload_data --email=$DESTINATION_EMAIL --passin --application=$DESTINATION_APP --url=$DESTINATION_URL --num_threads=$NUM_THREADS --batch_size=$BATCH_SIZE --bandwidth_limit=$BANDWIDTH_LIMIT --rps_limit=$RPS_LIMIT --filename=AdNetworkScrapeStats

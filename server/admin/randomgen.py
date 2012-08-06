@@ -317,8 +317,13 @@ def generate_stats_model(publisher, advertiser, account, date):
                              request_user_count = request_user_count,
                              impression_user_count = impression_user_count,
                              click_user_count = click_user_count)
-
-    return stats_model
+    
+    req_model = StatsModel(publisher=publisher,
+                           account=account,
+                           date=date,
+                           request_count = request_count)
+                           
+    return stats_model, req_model
 
 
 def generate_creative(account, adgroup):
@@ -367,8 +372,9 @@ def main():
         for day in days:
             for site_key in creative.ad_group.site_keys:                
                 adunit = AdUnitQueryManager.get(site_key)                             
-                stats = generate_stats_model(adunit, creative, account, day)
+                stats, reqs = generate_stats_model(adunit, creative, account, day)
                 stats_manager.put_stats(stats=stats)
+                stats_manager.put_stats(stats=reqs)
         
 if __name__=="__main__":
     main()

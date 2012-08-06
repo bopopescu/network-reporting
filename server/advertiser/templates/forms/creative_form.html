@@ -8,7 +8,7 @@
       {{ creative_form.format }}
     </div>
   </li>
-  
+
   <li class="format_dependent custom">
     {{ creative_form.custom_width.label_tag }}
     <div>
@@ -17,14 +17,14 @@
       {{ creative_form.custom_height }} <span class="muted">px</span>
     </div>
   </li>
-  
+
   <li class="format_dependent full full_tablet">
     {{ creative_form.landscape.label_tag }}
     <div>
       {{ creative_form.landscape }}
     </div>
   </li>
-  
+
   <li>
     {{ creative_form.ad_type.label_tag }}
     <div>
@@ -87,7 +87,7 @@
       </div>
     </div>
   </li>
-  
+
   <li>
     {{ creative_form.conv_appid.label_tag }}
     <div>
@@ -120,7 +120,7 @@
         {{ creative_form.line1 }}
       </div>
     </li>
-    
+
     <li>
       {{ creative_form.line2.label_tag }}
       <div>
@@ -139,13 +139,14 @@
                 <br />
                 <span class="ad_type_dependent text_icon muted">(40 x 40)</span>
                 Available formats: PNG, JPEG, GIF
+
+                {% if creative_form.instance %}
+                <br />
+                <img src="{{ creative_form.instance.image_serve_url }}"/>
+                {% endif %}
             </div>
         </li>
     </ul>
-
-    {% if creative_form.instance %}
-    <img src="{{ creative_form.instance.image_serve_url }}"/>
-    {% endif %}
 {% endif %}
 
 {% if not creative_form.instance or creative_form.instance.ad_type == 'text_icon' %}

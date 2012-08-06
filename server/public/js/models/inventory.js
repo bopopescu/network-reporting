@@ -441,17 +441,17 @@ var mopub = mopub || {};
         get_stat: function(stat) {
             switch(stat) {
                 case 'ctr':
-                    return calculate_ctr(this.get('imp'),
-                                         this.get('clk'));
+                    return calculate_ctr(this.get_stat('imp'),
+                                         this.get_stat('clk'));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get('req'),
-                                               this.get('imp'));
+                    return calculate_fill_rate(this.get_stat('req'),
+                                               this.get_stat('imp'));
                 case 'conv_rate':
-                    return calculate_conv_rate(this.get('conv'),
-                                               this.get('clk'));
+                    return calculate_conv_rate(this.get_stat('conv'),
+                                               this.get_stat('clk'));
                 case 'cpm':
-                    return this.get(stat) || calculate_cpm(this.get('imp'),
-                                                           this.get('rev'));
+                    return this.get(stat) || calculate_cpm(this.get_stat('imp'),
+                                                           this.get_stat('rev'));
                 case 'clk':
                 case 'conv':
                 case 'imp':
@@ -466,10 +466,13 @@ var mopub = mopub || {};
                     } catch (e) {
                         stat_val = this.get(stat);
                     }
-                    if (stat_val)
-                        return stat_val
-                    else
-                        return 0
+
+                    if (stat_val){
+                        return stat_val;
+                    } else {
+                        return 0;
+                    }
+                        
                 default:
                     throw 'Unsupported stat "' + stat + '".';
             }

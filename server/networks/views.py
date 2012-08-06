@@ -327,7 +327,8 @@ class EditNetworkHandler(RequestHandler):
                             self.account.key(), True)
 
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
-                        prefix=str(adunit.key()))
+                                                        network_type=network,
+                                                        prefix=str(adunit.key()))
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
                         ' bid'
 
@@ -605,7 +606,9 @@ class EditNetworkHandler(RequestHandler):
 
             self.copy_fields(AdUnitAdGroupForm, adgroup_field_dict, adgroup)
             # create form
-            adgroup_form = AdUnitAdGroupForm(adgroup_field_dict, instance=adgroup)
+            adgroup_form = AdUnitAdGroupForm(adgroup_field_dict,
+                                             network_type=adgroup.network_type,
+                                             instance=adgroup)
 
             if not adgroup_form.is_valid():
                 for key, value in adgroup_form.errors.items():
@@ -804,6 +807,7 @@ class EditNetworkHandler(RequestHandler):
                 adgroup_forms = []
                 for adunit in adunits:
                     adgroup_form = AdUnitAdGroupForm(query_dict,
+                            network_type=network,
                             prefix=str(adunit.key()))
                     if not adgroup_form.is_valid():
                         adgroup_forms_are_valid = False

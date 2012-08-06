@@ -165,9 +165,11 @@ class AdUnitAdGroupForm(forms.ModelForm):
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
 
     def __init__(self, *args, **kwargs):
+        # network type is required for __init__
+        self.network_type = kwargs.pop('network_type')
+
         initial = kwargs.get('initial', {})
         adgroup = kwargs.get('instance', None)
-        self.adgroup = adgroup
 
         if adgroup:
             if adgroup.network_type == 'custom' and adgroup.creatives.get():
@@ -195,14 +197,14 @@ class AdUnitAdGroupForm(forms.ModelForm):
 
     def clean_custom_html(self):
         custom_html = self.cleaned_data.get('custom_html', None)
-        if self.adgroup.network_type == 'custom' and self.cleaned_data.get('active', False) and \
+        if self.network_type == 'custom' and self.cleaned_data.get('active', False) and \
                 not custom_html:
             raise forms.ValidationError("This field is required if this adunit is turned on.")
         return custom_html
 
     def clean_custom_method(self):
         custom_method = self.cleaned_data.get('custom_method', None)
-        if self.adgroup.network_type == 'custom_native' and self.cleaned_data.get('active', False) and \
+        if self.network_type == 'custom_native' and self.cleaned_data.get('active', False) and \
                 not custom_method:
             raise forms.ValidationError("This field is required if this adunit is turned on.")
         return custom_method

@@ -153,7 +153,8 @@ class NetworkTestCase(BaseViewTestCase):
 
                 adgroup_form_data['hourly_frequency_cap'] = '0'
                 adgroup_form_data['daily_frequency_cap'] = '0'
-                adgroup_form = AdUnitAdGroupForm(adgroup_form_data)
+                adgroup_form = AdUnitAdGroupForm(adgroup_form_data,
+                                                 network_type=network_type)
 
                 for key, item in adgroup_form.data.items():
                     prefixed_key = '%s-%s' % (adunit.key(), key)

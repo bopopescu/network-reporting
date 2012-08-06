@@ -327,7 +327,8 @@ class EditNetworkHandler(RequestHandler):
                             self.account.key(), True)
 
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
-                        prefix=str(adunit.key()))
+                                                        network_type=network,
+                                                        prefix=str(adunit.key()))
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
                         ' bid'
 
@@ -495,14 +496,23 @@ class EditNetworkHandler(RequestHandler):
             adgroups.append(adgroup)
 
             # special case custom and custom native networks
+            #
+            # NOTE: There should only be one creative per adgroup but for some
+            # adgroups there are multiple creatives which isn't correct but we
+            # can't delete them because mongo stats relies on it in order to
+            # work. 'for creative in adgroup.creatives' is a hack to make sure
+            # the custom_html gets copied over the right creative if some of
+            # the creatives are marked as deleted and one isn't (how the data
+            # should be if it's not one-to-one). The data most likely became
+            # corrupted durring one or more migration scripts being run.
             if campaign.network_type == 'custom' and key + '-custom_html' in self.request.POST:
-                creative = adgroup.creatives.get()
-                creative.html_data = adgroup_form.cleaned_data['custom_html']
-                creatives.append(creative)
+                for creative in adgroup.creatives:
+                    creative.html_data = adgroup_form.cleaned_data['custom_html']
+                    creatives.append(creative)
             elif campaign.network_type == 'custom_native' and key + '-custom_method' in self.request.POST:
-                creative = adgroup.creatives.get()
-                creative.html_data = adgroup_form.cleaned_data['custom_method']
-                creatives.append(creative)
+                for creative in adgroup.creatives:
+                    creative.html_data = adgroup_form.cleaned_data['custom_method']
+                    creatives.append(creative)
 
         # save all modified adgroups
         AdGroupQueryManager.put(adgroups)
@@ -596,13 +606,14 @@ class EditNetworkHandler(RequestHandler):
 
             self.copy_fields(AdUnitAdGroupForm, adgroup_field_dict, adgroup)
             # create form
-            adgroup_form = AdUnitAdGroupForm(adgroup_field_dict, instance=adgroup)
+            adgroup_form = AdUnitAdGroupForm(adgroup_field_dict,
+                                             network_type=adgroup.network_type,
+                                             instance=adgroup)
 
             if not adgroup_form.is_valid():
                 for key, value in adgroup_form.errors.items():
-                    if adgroup_form.prefix and key in set(AdUnitAdGroupForm.
-                            base_fields.keys()):
-                        key = adgroup_form.prefix + '-' + key
+                    if key in set(AdUnitAdGroupForm.base_fields.keys()):
+                        key = adunit_key + '-' + key
                     errors[key] = ' '.join([error for error in value])
             else:
                 self.user_entered_pub_id(adgroup_form, adunit_key, campaign.network_type, errors)
@@ -796,6 +807,7 @@ class EditNetworkHandler(RequestHandler):
                 adgroup_forms = []
                 for adunit in adunits:
                     adgroup_form = AdUnitAdGroupForm(query_dict,
+                            network_type=network,
                             prefix=str(adunit.key()))
                     if not adgroup_form.is_valid():
                         adgroup_forms_are_valid = False
@@ -878,8 +890,6 @@ class EditNetworkHandler(RequestHandler):
                         #and delete the old creative just marks as deleted!
                         CreativeQueryManager.delete(old_creative)
 
-                    # the creative should always have the same account as the adgroup
-                    creative.account = adgroup.account
                     #put the creative so we can reference it
                     CreativeQueryManager.put(creative)
 

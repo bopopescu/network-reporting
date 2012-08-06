@@ -264,10 +264,12 @@ class CreateAppHandler(RequestHandler):
         account = self.account  # attach account info
         app = app_form.save(commit=False)
         app.account = account
+        AppQueryManager.update_config_and_put(app, NetworkConfig())
 
         account = self.account
         adunit = adunit_form.save(commit=False)
         adunit.account = account
+        AdUnitQueryManager.update_config_and_put(adunit, NetworkConfig())
 
         # update the database
         AppQueryManager.put(app)
@@ -764,8 +766,10 @@ class AppUpdateAJAXHandler(RequestHandler):
         app_key = app_key or self.request.POST.get('app_key')
         if app_key:
             app = AppQueryManager.get(app_key)
+            create = False
         else:
             app = None
+            create = True
 
         app_form = AppForm(data = self.request.POST,
                            files = self.request.FILES,
@@ -778,8 +782,12 @@ class AppUpdateAJAXHandler(RequestHandler):
                 account = self.account
             else:
                 account = app_form.instance.account
+
             app = app_form.save(commit=False)
             app.account = account
+
+            if create:
+                AppQueryManager.update_config_and_put(app, NetworkConfig())
 
             AppQueryManager.put(app)
 
@@ -847,8 +855,10 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
             adunit = AdUnitQueryManager.get(adunit_key)
             if adunit.account.key() != self.account.key():
                 raise Http404
+            create = False
         else:
             adunit = None
+            create = True
 
         adunit_form = AdUnitForm(data=self.request.POST,
                                  instance=adunit,
@@ -864,6 +874,10 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 
             adunit = adunit_form.save(commit=False)
             adunit.account = account
+
+            if create:
+                AdUnitQueryManager.update_config_and_put(adunit, NetworkConfig())
+
             AdUnitQueryManager.put(adunit)
 
             # If the adunit already exists we don't need to enable the
@@ -1141,11 +1155,9 @@ def table_export(request, *args, **kwargs):
 def enable_networks(adunit, account):
     """
     Create network adgroups for this adunit for all ad networks.
-
-    NOTE: The campaigns' creatives are created when the adgroups are set to
-    active in the EditNetwork handler in networks/view
     """
     ntwk_adgroups = []
+    creatives = []
     for campaign in CampaignQueryManager.get_network_campaigns(account,
             is_new=True):
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
@@ -1153,6 +1165,8 @@ def enable_networks(adunit, account):
         # New adunits are initialized as paused for the account's network
         # campaigns
         adgroup.active = False
+        # Copy over global adgroup settings to new adgroup by copying them from
+        # the pre-exitsting ones
         adgroups = AdGroupQueryManager.get_adgroups(campaign=campaign)
         # Accounts should have adunits prior to creating campaigns but just in
         # case don't break
@@ -1164,8 +1178,10 @@ def enable_networks(adunit, account):
                 setattr(adgroup, 'target_' + device, getattr(
                     preexisting_adgroup, 'target_' + device, False))
             adgroup.target_other = preexisting_adgroup.target_other
+        creatives.append(adgroup.default_creative())
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
+    CreativeQueryManager.put(creatives)
 
 
 def enable_marketplace(adunit, account):

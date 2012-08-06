@@ -466,6 +466,8 @@ class AdGroup(db.Model):
 
         if c:
             c.ad_group = self
+
+        c.account = self._account
         return c
 
     def __repr__(self):

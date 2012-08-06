@@ -16,6 +16,9 @@ from collections import defaultdict
 from google.appengine.ext import db
 
 from networks.mptests.network_test_case import NetworkTestCase, \
+        requires_network_with_mappers, \
+        requires_network_with_pub_ids, \
+        requires_non_custom_network_type, \
         DEFAULT_BID, \
         DEFAULT_HTML, \
         DEFAULT_PUB_ID
@@ -187,6 +190,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
 
+    @requires_non_custom_network_type
     def mptest_activates_adgroup(self):
         """Setting adgroup.active to True should work.
 
@@ -210,6 +214,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
+    @requires_network_with_pub_ids
     def mptest_only_allows_activating_adgroups_with_pub_ids(self):
         """Setting adgroup.active to True should not work if there's no pub ID.
 
@@ -268,15 +273,13 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
+    @requires_network_with_pub_ids
     def mptest_updates_network_configs(self):
         """All network config objects should be updated with correct pub IDs.
 
         Author: Andrew He
                 Tiago Bandeira (6/4/2012)
         """
-        if self.network_type not in NETWORKS_WITH_PUB_IDS:
-            return
-
         # Prepare a request that changes the pub IDs for one app and one adunit.
         app_to_modify = self.existing_apps[0]
         adunit_to_modify = app_to_modify.adunits[0]
@@ -303,12 +306,15 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
+    @requires_network_with_mappers
     def mptest_updates_mapper_when_updating_pub_id(self):
         """If an app is given a new pub ID, a new mapper should be created.
 
         Author: Andrew He
                 Tiago Bandeira (6/4/2012)
         """
+        print self.network_type
+
         # Prepare a request that changes the pub ID for one app.
         app = self.existing_apps[0]
         adunit = app.adunits[0]
@@ -495,3 +501,171 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            response_code=404)
+
+class EditJumptapNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'jumptap'
+
+class EditIAdNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'iad'
+
+
+class EditInmobiNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'inmobi'
+
+
+class EditMobfoxNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'mobfox'
+
+
+class EditMillennialNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'millennial'
+
+
+class EditAdsenseNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'adsense'
+
+
+class EditEjamNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'ejam'
+
+
+class EditBrightrollNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'brightroll'
+
+
+class EditCustomNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'custom'
+
+    def mptest_modify_custom_html(self):
+        """Set custom_html and turn on the adgroup.
+
+        Author: Tiago Bandeira (6/4/2012)
+        """
+        custom_html = 'custom_html'
+
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adunit_custom_html_key = '%s-custom_html' % adunit.key()
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_custom_html_key] = custom_html
+        self.post_data[adunit_active_key] = True
+
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                self.existing_campaign, adunit.key(), self.account.key(),
+                get_from_db=True)
+
+        self.edited[adgroup.key()]['active'] = True
+        for creative in adgroup.creatives:
+            self.edited[creative.key()]['html_data'] = custom_html
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
+
+    def mptest_only_allows_activating_adgroups_with_custom_html(self):
+        """Setting adgroup.active to True should not work if there's no custom_html.
+
+        Author: Tiago Bandeira (6/4/2012)
+        """
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adunit_custom_html_key = '%s-custom_html' % adunit.key()
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_custom_html_key] = ''
+        self.post_data[adunit_active_key] = True
+
+        # Send the request.
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH':
+                                          'XMLHttpRequest'})
+
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error for the
+        # specific adunit.
+        eq_(response_json['success'], False)
+        ok_(adunit_custom_html_key in response_json['errors'])
+
+
+class EditCustomNativeNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'custom_native'
+
+    def mptest_modify_custom_method(self):
+        """Set custom_method and turn on the adgroup.
+
+        Author: Tiago Bandeira (6/4/2012)
+        """
+        custom_method = 'custom_method'
+
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adunit_custom_method_key = '%s-custom_method' % adunit.key()
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_custom_method_key] = custom_method
+        self.post_data[adunit_active_key] = True
+
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                self.existing_campaign, adunit.key(), self.account.key(),
+                get_from_db=True)
+
+        self.edited[adgroup.key()]['active'] = True
+        for creative in adgroup.creatives:
+            self.edited[creative.key()]['html_data'] = custom_method
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
+    def mptest_only_allows_activating_adgroups_with_custom_method(self):
+        """Setting adgroup.active to True should not work if there's no custom_method.
+
+        Author: Tiago Bandeira (6/4/2012)
+        """
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adunit_custom_method_key = '%s-custom_method' % adunit.key()
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_custom_method_key] = ''
+        self.post_data[adunit_active_key] = True
+
+        # Send the request.
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH':
+                                          'XMLHttpRequest'})
+
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error for the
+        # specific adunit.
+        eq_(response_json['success'], False)
+        ok_(adunit_custom_method_key in response_json['errors'])
+

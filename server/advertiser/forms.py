@@ -564,7 +564,10 @@ class AbstractCreativeForm(forms.ModelForm):
         return None
 
     def clean_name(self):
-        return self.cleaned_data.get('name', '').strip()
+        name = self.cleaned_data.get('name', '').strip()
+        if not name:
+            raise forms.ValidationError("This field is required.")
+        return name
 
     def clean_url(self):
         url = self.cleaned_data.get('url', None)

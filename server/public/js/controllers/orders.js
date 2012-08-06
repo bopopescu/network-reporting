@@ -178,6 +178,8 @@
             + "If this error persists, please contact "
             + "support@mopub.com";
 
+        $("#copy-button").addClass('disabled');
+        
         // Hit the copy endpoint with our form data
         var copy_promise = $.ajax({
             url: '/advertise/line_item_copy/',
@@ -209,6 +211,12 @@
         copy_promise.error(function(response) {
             console.log(response);
             Toast.error(error_message);
+        });
+
+        // Re-enable the button no matter what
+        copy_promise.done(function(response) {
+            console.log('reenabling');
+            $("#copy-button").removeClass('disabled');
         });
 
         return copy_promise;

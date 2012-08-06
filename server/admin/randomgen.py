@@ -218,10 +218,10 @@ def generate_line_item(account, order, site_keys,
                        budget=None):
     
     if not start_date:
-        start_date = get_random_date()
+        start_date = get_random_datetime()
         
     if not end_date:
-        end_date = get_random_date()
+        end_date = get_random_datetime()
 
     if start_date> end_date:
         temp = start_date
@@ -231,6 +231,8 @@ def generate_line_item(account, order, site_keys,
     line_item = AdGroup(campaign=order,
                         adgroup_type='gtee',
                         name = get_random_name(),
+                        start_datetime = start_date,
+                        end_datetime = end_date,
                         site_keys = site_keys,
                         account = account)
     line_item.put()
@@ -375,7 +377,8 @@ def main():
                 stats, reqs = generate_stats_model(adunit, creative, account, day)
                 stats_manager.put_stats(stats=stats)
                 stats_manager.put_stats(stats=reqs)
-        
+
+                
 if __name__=="__main__":
     main()
 

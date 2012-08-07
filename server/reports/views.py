@@ -1,11 +1,12 @@
+
 import logging
 
 from urllib import urlencode
 from datetime import datetime, date
 import urllib
 
-
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.utils import simplejson
@@ -27,9 +28,9 @@ from reports.forms import ReportForm
 from reports.models import ScheduledReport, \
         Report
 from reports.query_managers import ReportQueryManager
-
-
 from reports.forms import ReportForm
+
+import report_server_api
 
 
 class ReportIndexHandler(RequestHandler):
@@ -213,13 +214,18 @@ def sched_runner(request, *args, **kwargs):
     return ScheduledRunner(login=False)(request, *args, **kwargs)
 
 
-
 class ReportExporter(RequestHandler):
     def get(self, report_key):
         if db.Key(report_key).kind() == 'ScheduledReport':
             manager = ReportQueryManager(self.account)
             report_key = str(manager.get_report_data_by_sched_key(report_key).key())
-        return sswriter.write_report('csv', report_key, self.account.key())
+
+        report = Report.get(report_key)
+
+        if report.report_data_link:
+            return HttpResponseRedirect(report_server_api.get_report_data_url(report_key))
+        else:
+            return sswriter.write_report('csv', report_key, self.account.key())
 
 def exporter(request, *args, **kwargs):
     return ReportExporter()(request, *args, **kwargs)
@@ -244,3 +250,52 @@ def update_report(report, action):
     if action == 'delete':
         report.deleted = True
     return report
+
+
+class ReportDoneHandler(RequestHandler):
+    """Handle callback from report server.
+
+       During the testing phase, we should comment out the 'put' statement and notifications
+       so that it doesn't interfere with the existing system.
+    """
+    def post(self, report_id='', results_url='', status='', reason=''):
+        logging.info('Got callback from reporting system: ' +
+            str([report_id, results_url, status, reason]))
+
+        report_query_manager = ReportQueryManager(self.account)
+        report = report_query_manager.get_report_data_by_key(report_id)
+
+        if status == 'done':
+            # Reporting system was successful
+            report.report_data_link = results_url
+
+            report.completed_at = datetime.now()
+            report.status = 'Completed'
+
+            logging.info('Successfully got report')
+
+            if settings.WRITE_REPORT_SERVER_RESULTS:
+                # Only send email if we're using report server as canonical source
+                report.notify_complete()
+        elif status == 'error':
+            # Reporting system had a problem; translate reason to appropriate status here
+            if reason == 'no_data':
+                report_status = 'No Data'
+            else:
+                report_status = 'Failed'
+
+            report.status = report_status
+
+            if settings.WRITE_REPORT_SERVER_RESULTS:
+                # Only send email if we're using report server as canonical source
+                report.notify_failure(report_status)
+
+        if settings.WRITE_REPORT_SERVER_RESULTS:
+            # Only persist results if we're using report server as canonical source
+            report.put()
+
+        return JSONResponse({'status': 'ok'})
+
+
+def report_done(request, *args, **kwargs):
+    return ReportDoneHandler()(request, *args, **kwargs)

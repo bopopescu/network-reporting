@@ -17,6 +17,8 @@ from common.utils.helpers import clone_entity
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager, BlobLogQueryManager
 
+from reports import report_server_api
+
 from reports.models import Report, ScheduledReport
 from reports.aws_reports.parse_utils import AWS_ACCESS_KEY, AWS_SECRET_KEY
 
@@ -219,6 +221,8 @@ class ReportQueryManager(CachedQueryManager):
         report.last_run = datetime.datetime.now()
         report.put()
 
+        # Send report request to both old and new systems
+        report_server_api.submit_report_request(new_report)
         fire_report_sqs(new_report)
 
         return new_report
@@ -241,6 +245,8 @@ class ReportQueryManager(CachedQueryManager):
         scheduled_report.last_run = datetime.datetime.now()
         scheduled_report.put()
 
+        # Send report request to both old and new systems
+        report_server_api.submit_report_request(report)
         fire_report_sqs(report)
 
     def clone_report(self, report, sched=False):

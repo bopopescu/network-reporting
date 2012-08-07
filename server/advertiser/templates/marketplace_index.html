@@ -349,8 +349,8 @@
          marketplace_active: {% if marketplace.active %}true{% else %}false{% endif %},
          blocklist: {{ blocklist|safe }},
          pub_key: "{{ pub_key }}",
-         start_date: "{{start_date|js_date}}",
-         end_date: "{{end_date|js_date}}"
+         start_date: {{start_date|js_date}},
+         end_date: {{end_date|js_date}}
       };
 
       MarketplaceController.initializeIndex(bootstrapping_data);

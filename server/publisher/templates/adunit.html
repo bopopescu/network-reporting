@@ -124,8 +124,10 @@
       <ul class="dropdown-menu">
         <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
+        {% comment %}
         <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=xlsx"
                 data-toggle="running"> Excel XLSX </a> </li>
+                {% endcomment %}
         <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=ods"
                 data-toggle="running"> OpenOffice Spreadsheet </a> </li>
         <li> <a href="{% url publisher_adunit_exporter adunit_key=adunit.key %}?type=csv"

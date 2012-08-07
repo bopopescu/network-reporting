@@ -180,8 +180,10 @@
         <ul class="dropdown-menu">
           <li> <a href="{% url marketplace_export %}?type=xls"
                   data-toggle="running"> Excel XLS </a> </li>
+          {% comment %}
           <li> <a href="{% url marketplace_export %}?type=xlsx"
                   data-toggle="running"> Excel XLSX </a> </li>
+                  {% endcomment %}
           <li> <a href="{% url marketplace_export %}?type=ods"
                   data-toggle="running"> OpenOffice Spreadsheet </a> </li>
           <li> <a href="{% url marketplace_export %}?type=csv"

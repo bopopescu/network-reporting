@@ -107,6 +107,7 @@
                         var ad_source_tds = $('#' + ad_source + ' td:not(.controls)');
 
                         if (status == 'play' || status == 'run') {
+                            ad_source_tds.fadeTo(500, 1);
                             ad_source_row.addClass('running')
                                 .removeClass('archived')
                                 .removeClass('paused');
@@ -114,6 +115,7 @@
                             status_text.text("Running");
 
                         } else if (status == 'pause') {
+                            ad_source_tds.fadeTo(500, 1);
                             ad_source_row.addClass('paused')
                                 .removeClass('archived')
                                 .removeClass('running');
@@ -178,6 +180,8 @@
             + "If this error persists, please contact "
             + "support@mopub.com";
 
+        $("#copy-button").addClass('disabled');
+        
         // Hit the copy endpoint with our form data
         var copy_promise = $.ajax({
             url: '/advertise/line_item_copy/',
@@ -209,6 +213,12 @@
         copy_promise.error(function(response) {
             console.log(response);
             Toast.error(error_message);
+        });
+
+        // Re-enable the button no matter what
+        copy_promise.done(function(response) {
+            console.log('reenabling');
+            $("#copy-button").removeClass('disabled');
         });
 
         return copy_promise;

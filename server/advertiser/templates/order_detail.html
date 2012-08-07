@@ -34,8 +34,10 @@
       <ul class="dropdown-menu">
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
+        {% comment %}
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xlsx"
                 data-toggle="running"> Excel XLSX </a> </li>
+                {% endcomment %}
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=ods"
                 data-toggle="running"> OpenOffice Spreadsheet </a> </li>
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=csv"

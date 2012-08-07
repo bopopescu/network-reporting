@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block pageTitle %}
-<h1>{% if order %}New Line Item{% else %}New Order{% endif %}</h1>
+<h1>{% if order %}{% if line_item %}Edit Line Item{% else %}New Line Item{% endif %}{% else %}New Order{% endif %}</h1>
 {% endblock pageTitle %}
 
 {% block titleBarRight %}

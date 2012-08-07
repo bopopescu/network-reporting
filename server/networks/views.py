@@ -98,6 +98,8 @@ class NetworksHandler(RequestHandler):
         apps = PublisherQueryManager.get_objects_dict_for_account(
                 self.account).values()
 
+        #adunit_keys = AdUnitQueryManager.get_adunit_keys(self.account)
+
         campaigns = CampaignQueryManager.get_network_campaigns(self.account,
                 is_new=True)
 
@@ -108,10 +110,16 @@ class NetworksHandler(RequestHandler):
             # we calculate it here instead of over ajax
             #campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
             # Get adgroup by key name
-            campaign_adgroups = AdGroupQueryManager.get([AdGroupQueryManager.
-                get_network_adgroup(campaign, adunit.key(),
-                    self.account.key()).key() for app in apps for
-                    adunit in app.adunits])
+            campaign_adgroups = []
+            for app in apps:
+                for adunit in app.adunits:
+                    adunit_key = adunit.key()
+                    adgroup_key = db.Key.from_path('AdGroup', AdGroupQueryManager._get_network_key_name(campaign.key(), adunit_key))
+                    adgroup = AdGroupQueryManager.get(adgroup_key)
+                    if adgroup:
+                        campaign_adgroups.append(adgroup)
+                    else:
+                        logging.error("AdGroup %s for Campaign %s and AdUnit %s does not exist." % (adgroup_key, campaign.key(), adunit_key))
             bid_range = get_bid_range(campaign_adgroups)
             network_data = {'name': network,
                             'pretty_name': campaign.name,
@@ -154,7 +162,6 @@ class NetworksHandler(RequestHandler):
             network_data['apps'] = zip(apps, app_bids)
             network_data['apps'] = sorted(network_data['apps'], key=lambda
                     app_and_bid: app_and_bid[0].identifier)
-
 
             # Add this network to the list that goes in the page
             networks.append(network_data)

@@ -107,6 +107,7 @@
                         var ad_source_tds = $('#' + ad_source + ' td:not(.controls)');
 
                         if (status == 'play' || status == 'run') {
+                            ad_source_tds.fadeTo(500, 1);
                             ad_source_row.addClass('running')
                                 .removeClass('archived')
                                 .removeClass('paused');
@@ -114,6 +115,7 @@
                             status_text.text("Running");
 
                         } else if (status == 'pause') {
+                            ad_source_tds.fadeTo(500, 1);
                             ad_source_row.addClass('paused')
                                 .removeClass('archived')
                                 .removeClass('running');

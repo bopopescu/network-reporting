@@ -73,8 +73,10 @@
         <ul class="dropdown-menu">
           <li> <a href="{% url publisher_inventory_exporter %}?type=xls"
                   data-toggle="running"> Excel XLS </a> </li>
+          {% comment %}
           <li> <a href="{% url publisher_inventory_exporter %}?type=xlsx"
                   data-toggle="running"> Excel XLSX </a> </li>
+          {% endcomment %}
           <li> <a href="{% url publisher_inventory_exporter %}?type=ods"
                   data-toggle="running"> OpenOffice Spreadsheet </a> </li>
           <li> <a href="{% url publisher_inventory_exporter %}?type=csv"

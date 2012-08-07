@@ -86,8 +86,10 @@
         <ul class="dropdown-menu">
           <li> <a href="{% url advertiser_export_multiple_orders %}?type=xls"
                   data-toggle="running"> Excel XLS </a> </li>
+          {% comment %}
           <li> <a href="{% url advertiser_export_multiple_orders %}?type=xlsx"
                   data-toggle="running"> Excel XLSX </a> </li>
+                  {% endcomment %}
           <li> <a href="{% url advertiser_export_multiple_orders %}?type=ods"
                   data-toggle="running"> OpenOffice Spreadsheet </a> </li>
           <li> <a href="{% url advertiser_export_multiple_orders %}?type=csv"

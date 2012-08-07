@@ -87,8 +87,9 @@
       <ul class="dropdown-menu">
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
+{% comment %}
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
-                data-toggle="running"> Excel XLSX </a> </li>
+                data-toggle="running"> Excel XLSX </a> </li>{% endcomment %}
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
                 data-toggle="running"> OpenOffice Spreadsheet </a> </li>
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"

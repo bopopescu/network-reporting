@@ -68,7 +68,9 @@
              height="9"
              width="9"
              style="margin-top: 4px;" />
-        {{ line_item.status|capitalize }}
+        <span id="text-{{line_item.key}}" class="muted">
+          {{ line_item.status|capitalize }}
+        </span>
       </td>
 
       <td>

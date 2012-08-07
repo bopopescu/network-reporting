@@ -639,7 +639,7 @@ class AppExporter(RequestHandler):
 
         for day in stats_per_day:
             row = (
-                day.date,
+                str(day.date),
                 day.req,
                 day.imp,
                 day.fill_rate,
@@ -682,12 +682,13 @@ class AdunitExporter(RequestHandler):
 
         export_type = self.request.GET.get('type', 'html')
         stats = StatsModelQueryManager(self.account)
-        stats_per_day = stats.get_stats_for_days(publisher=adunit, num_days=self.date_range)
+        stats_per_day = stats.get_stats_for_days(publisher=adunit,
+                                                 num_days=self.date_range)
         adunit_data = []
 
         for day in stats_per_day:
             row = (
-                day.date,
+                str(day.date),
                 day.req,
                 day.imp,
                 day.fill_rate,

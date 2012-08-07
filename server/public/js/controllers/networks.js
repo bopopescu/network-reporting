@@ -597,15 +597,21 @@
                                 // hack for making adgroups in-active
                                 for (k in extraItems) {
                                     var value = extraItems[k];
-                                    if(k.indexOf('active') != -1 || k.indexOf('target') != -1) {
+                                    if(k.indexOf('active') != -1 || k.indexOf('target_') != -1) {
                                         arr.push({'name': k,
                                                   'value': ''});
                                     }
                                 }
 
                                 // hack for removing geo predicates
-                                if('geo_predicates' in extraItems) {
+                                if('geo_predicates' in extraItems && !('geo_predicates' in currentItems)) {
                                     arr.push({'name': 'geo_predicates',
+                                              'value': ''});
+                                }
+
+                                // hack for removing cities
+                                if('cities' in extraItems && !('cities' in currentItems)) {
+                                    arr.push({'name': 'cities',
                                               'value': ''});
                                 }
 

@@ -1261,32 +1261,22 @@
 
             $('#delete-network')
                 .click(function () {
-                    var key = $(this).attr('id');
-                    var div = $('.' + key);
-                    div.dialog({
-                        buttons: {
-                            "Delete": function() {
                                 $.post('/networks/delete',
                                     {campaign_key: campaign_data.id},
                                     function() {
                                       window.location = '/networks';
                                 });
-                                },
-                            "Cancel": function() { $(this).dialog('close');} }
-                    });
-                });
-
-            $('#network-editActive').change(function () {
-                var hidden_li = $('#network-editActive-menu').find('li:hidden');
-                var shown_li = $('#network-editActive-menu').find('li:not(:hidden)');
-                hidden_li.show();
-                shown_li.hide();
-
-                $.post('/networks/pause', { campaign_key: campaign_data.id,
-                                             active: $(this).val() } );
             });
 
-            $('#network-editActive-menu').find('li').first().hide();
+            $('#network-editActive').change(function () {
+                $('#active-spinner').show();
+                $.post('/networks/pause',
+                       { campaign_key: campaign_data.id,
+                         active: $(this).val() } ,
+                       function(data) {
+                           $('#active-spinner').hide();
+                       });
+            });
 
             }
     };

@@ -4,6 +4,8 @@ from django.utils import simplejson
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from google.appengine.api import urlfetch
+from google.appengine.api.urlfetch import DownloadError
+from urllib2 import urlopen
 
 from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
@@ -241,8 +243,8 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
         url = "http://mpx.mopub.com/stats/creatives"
         query = "?" + "&".join([key + '=' + value for key, value in
             self.request.GET.items()])
-        url += query
-        response = urlfetch.fetch(url, method=urlfetch.GET, deadline=30).content
+        url += query            
+        response = urlopen(url).read()
 
         return HttpResponse(response)
 

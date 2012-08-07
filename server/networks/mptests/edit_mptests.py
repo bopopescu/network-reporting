@@ -31,7 +31,8 @@ from networks.views import NETWORKS_WITH_PUB_IDS
 
 from account.query_managers import NetworkConfigQueryManager
 from advertiser.query_managers import AdGroupQueryManager, \
-        AdvertiserQueryManager
+        AdvertiserQueryManager, \
+        CreativeQueryManager
 from publisher.query_managers import AppQueryManager, \
         AdUnitQueryManager
 
@@ -450,6 +451,98 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
+    def mptest_updates_geo_predicates_with_region_targeting(self):
+        """Set up geo predicates with a mallicios post to try and set cities when region_targeting is set to all
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['geo_predicates'] = [u'AD', u'US']
+        self.post_data['region_targeting'] = 'all'
+        self.post_data['cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+
+        for adgroup in self.existing_campaign.adgroups:
+            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
+    def mptest_updates_cities_with_region_targeting(self):
+        """Set up cities when geo predicates is already set
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        # adgroups are already targeting brazil
+        adgroups = list(self.existing_campaign.adgroups)
+        for adgroup in adgroups:
+            adgroup.geo_predicates = [u'country_name=BR']
+        AdGroupQueryManager.put(adgroups)
+
+        # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['region_targeting'] = 'city'
+        self.post_data['cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+
+        for adgroup in self.existing_campaign.adgroups:
+            self.edited[adgroup.key()]['cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
+    def mptest_clear_cities(self):
+        """Set up cities when geo predicates is already set
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        # adgroups are already targeting brazil
+        adgroups = list(self.existing_campaign.adgroups)
+        for adgroup in adgroups:
+            adgroup.geo_predicates = [u'country_name=BR']
+            adgroup.cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        AdGroupQueryManager.put(adgroups)
+
+        # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['geo_predicates'] = [u'AD', u'US']
+
+        for adgroup in self.existing_campaign.adgroups:
+            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
+            self.edited[adgroup.key()]['cities'] = []
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
+    def mptest_modify_cities(self):
+        """Modify the list of cities
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        # adgroups are already targeting brazil
+        adgroups = list(self.existing_campaign.adgroups)
+        for adgroup in adgroups:
+            adgroup.geo_predicates = [u'country_name=BR']
+            adgroup.cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        AdGroupQueryManager.put(adgroups)
+
+        # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['cities'] = [u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+
+        for adgroup in self.existing_campaign.adgroups:
+            self.edited[adgroup.key()]['cities'] = [u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+
+        # Send the request.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=self.edited)
+
     def mptest_updates_allocation_and_fcaps(self):
         """Update allocation and frequency capping on an adgroup
 
@@ -576,7 +669,6 @@ class EditCustomNetworkTestCase(EditNetworkPostTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
-
     def mptest_only_allows_activating_adgroups_with_custom_html(self):
         """Setting adgroup.active to True should not work if there's no custom_html.
 
@@ -605,6 +697,64 @@ class EditCustomNetworkTestCase(EditNetworkPostTestCase):
         eq_(response_json['success'], False)
         ok_(adunit_custom_html_key in response_json['errors'])
 
+    def mptest_target_preexisting_html(self):
+        """Setting adgroup.active to True should work if there is custom_html.
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_active_key] = True
+
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                self.existing_campaign, adunit.key(), self.account.key())
+        self.edited[adgroup.key()]['active'] = True
+
+        # Send the request.
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                                      edited=self.edited)
+
+    def mptest_invalid_target_preexisting_html(self):
+        """Setting adgroup.active to True should not work if there's no custom_html.
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        custom_html = ''
+
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                self.existing_campaign, adunit.key(), self.account.key(),
+                get_from_db=True)
+        creatives = list(adgroup.creatives)
+        for cr in creatives:
+            cr.html_data = custom_html
+        CreativeQueryManager.put(creatives)
+
+        adunit_custom_html_key = '%s-custom_html' % adunit.key()
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_active_key] = True
+
+        # Send the request.
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
+
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error for the
+        # specific adunit.
+        eq_(response_json['success'], False)
+        ok_(adunit_custom_html_key in response_json['errors'])
 
 class EditCustomNativeNetworkTestCase(EditNetworkPostTestCase):
     def network_type_to_test(self):
@@ -668,4 +818,63 @@ class EditCustomNativeNetworkTestCase(EditNetworkPostTestCase):
         # specific adunit.
         eq_(response_json['success'], False)
         ok_(adunit_custom_method_key in response_json['errors'])
+
+    def mptest_target_preexisting_html(self):
+        """Setting adgroup.active to True should work if there is custom_html.
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_active_key] = True
+
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                self.existing_campaign, adunit.key(), self.account.key())
+        self.edited[adgroup.key()]['active'] = True
+
+        # Send the request.
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                                      edited=self.edited)
+
+    def mptest_invalid_target_preexisting_html(self):
+        """Setting adgroup.active to True should not work if there's no custom_html.
+
+        Author: Tiago Bandeira (8/7/2012)
+        """
+        custom_html = ''
+
+        # Prepare a request that marks one of the adunits as 'enabled' without
+        # giving it a pub ID.
+        app = self.existing_apps[0]
+        adunit = app.adunits[0]
+
+        adgroup = AdGroupQueryManager.get_network_adgroup(
+                self.existing_campaign, adunit.key(), self.account.key(),
+                get_from_db=True)
+        creatives = list(adgroup.creatives)
+        for cr in creatives:
+            cr.html_data = custom_html
+        CreativeQueryManager.put(creatives)
+
+        adunit_custom_html_key = '%s-custom_method' % adunit.key()
+        adunit_active_key = '%s-active' % adunit.key()
+        self.post_data[adunit_active_key] = True
+
+        # Send the request.
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'})
+
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error for the
+        # specific adunit.
+        eq_(response_json['success'], False)
+        ok_(adunit_custom_html_key in response_json['errors'])
 

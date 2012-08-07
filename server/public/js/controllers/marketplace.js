@@ -216,6 +216,20 @@ var mopub = mopub || {};
     }
 
     /*
+     * Converts a date to a string in the form MM-DD-YYYY
+     * e.g. dateToMDYString(new Date()) (assuming today is July 25 2012)
+     * will produce "07-25-2012".
+     */      
+    function dateToMDYString(date) {
+        var d = date.getDate();
+        var m = date.getMonth()+1;
+        var y = date.getFullYear();
+        return '' + (m <= 9 ? '0' + m : m) + // MM
+        '-' + (d <= 9 ? '0' + d : d) + // DD        
+        '-' + y; // YYYY
+    }
+
+    /*
      * Makes the Creatives Performance tab's datatable
      */
     function makeCreativePerformanceTable (pub_id, blocklist, start_date, end_date) {
@@ -229,6 +243,10 @@ var mopub = mopub || {};
             origin = window.location.origin;
         }
 
+        // MM-DD-YYYY
+        var start_date_str = dateToMDYString(start_date);
+        var end_date_str = dateToMDYString(end_date);
+        
         var creative_data_url = origin
             + "/advertise/marketplace/creatives/";
         var table = $("#report-table").dataTable({
@@ -263,8 +281,8 @@ var mopub = mopub || {};
                     url: sUrl,
                     data: {
                         pub_id: pub_id,
-                        start: start_date,
-                        end: end_date,
+                        start: start_date_str,
+                        end: end_date_str,
                         format:'jsonp'
                     },
                     // When the data returns from the endpoint, we have to format it the way

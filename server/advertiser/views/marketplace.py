@@ -243,15 +243,8 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
         url = "http://mpx.mopub.com/stats/creatives"
         query = "?" + "&".join([key + '=' + value for key, value in
             self.request.GET.items()])
-        url += query
-
-        try:
-            response = urlfetch.fetch(url,
-                                      method=urlfetch.GET,
-                                      deadline=30,
-                                      follow_redirects=True).content
-        except DownloadError:
-            response = urlopen(url).read()
+        url += query            
+        response = urlopen(url).read()
 
         return HttpResponse(response)
 

@@ -94,7 +94,8 @@
     </div>
   </div>
 
-  {% line_item_table line_items True False %}
+  {# shoe_controls:True, show_order_names: False, show_archived: False #}
+  {% line_item_table line_items True False False %}
 
   <br />
   <div class="btn-group">

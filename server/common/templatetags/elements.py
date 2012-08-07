@@ -60,7 +60,8 @@ def order_table(orders):
 
 
 @register.inclusion_tag("common/partials/line_item_table.html")
-def line_item_table(line_items, show_controls=True, show_order_names=True):
+def line_item_table(line_items, show_controls=True, show_order_names=True,
+                    show_archived=True):
     """
     Renders an line_item or a group of line_items in a table.
     If include_targeting is true, it'll include
@@ -71,9 +72,21 @@ def line_item_table(line_items, show_controls=True, show_order_names=True):
     if not isiterable(line_items):
         line_items = [line_items]
 
+    import logging
+    logging.warn(show_archived)
+    logging.warn(show_archived)
+    logging.warn(show_archived)
+    logging.warn(show_archived)
+    logging.warn(show_archived)
+    logging.warn(show_archived)
+    logging.warn(show_archived)
+    logging.warn(line_items)
+        
+        
     return {
         'line_items': line_items,
         'show_controls': show_controls,
+        'show_archived': show_archived,
         'show_order_names': show_order_names,
     }
 
@@ -86,11 +99,12 @@ def order_row(order):
 
 
 @register.inclusion_tag("common/partials/line_item_row.html")
-def line_item_row(line_item, show_controls=True, show_order_names=True):
+def line_item_row(line_item, show_controls=True, show_order_names=True, show_archived=True):
     return {
         'line_item': line_item,
         'show_controls': show_controls,
         'show_order_names': show_order_names,
+        'show_archived': show_archived,
     }
 
 

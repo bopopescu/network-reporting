@@ -115,7 +115,7 @@ class NetworksHandler(RequestHandler):
                     if adgroup:
                         campaign_adgroups.append(adgroup)
                     else:
-                        logging.error("AdGroup %s for Campaign %s and AdUnit %s does not exist." % (adgroup.key(), campaign.key(), adunit.key()))
+                        logging.error("AdGroup for Campaign %s and AdUnit %s does not exist." % (campaign.key(), adunit.key()))
             bid_range = get_bid_range(campaign_adgroups)
             network_data = {'name': network,
                             'pretty_name': campaign.name,

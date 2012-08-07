@@ -475,7 +475,7 @@ class AdGroupQueryManager(QueryManager):
         backfill_promo_line_items = []
 
         for line_item in line_items:
-            if (not line_item.start_datetime or line_item.start_datetime.date() < end_date) and (not line_item.end_datetime or line_item.end_datetime.date() > start_date):
+            if (not line_item.start_datetime or line_item.start_datetime.date() <= end_date) and (not line_item.end_datetime or line_item.end_datetime.date() >= start_date):
                 if line_item.adgroup_type == 'gtee_high':
                     gtee_high_line_items.append(line_item)
                 elif line_item.adgroup_type == 'gtee':

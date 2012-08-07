@@ -749,7 +749,9 @@ class EditNetworkHandler(RequestHandler):
                     query_dict[key] = value
             elif key == 'region_targeting':
                 # hack to get derived property region targeting working
-                if len(instance.geo_predicates) == 1 and len(instance.cities):
+                if ('geo_predicates' in query_dict and len(query_dict['geo_predicates']) == 1) or \
+                        ('geo_predicates' not in query_dict and len(instance.geo_predicates) == 1 \
+                        and len(instance.cities)):
                     query_dict[key] = 'city'
                 else:
                     query_dict[key] = 'all'

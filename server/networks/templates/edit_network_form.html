@@ -1,5 +1,12 @@
 {% extends 'advertiser/base.html' %}
 
+{% block navLinks %}
+<li><a href="{% url app_index %}">Dashboard</a></li>
+<li><a href="{% url advertiser_order_index %}">Orders</a></li>
+<li><a href="{% url marketplace_index %}">Marketplace</a></li>
+<li class="active"><a href="{% url networks %}">Networks</a></li>
+{% endblock navLinks %}
+
 {% load filters %}
 
 {% block dateButtons %}

@@ -154,8 +154,10 @@
       <ul class="dropdown-menu">
         <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
+        {% comment %}
         <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=xlsx"
                 data-toggle="running"> Excel XLSX </a> </li>
+                {% endcomment %}
         <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=ods"
                 data-toggle="running"> OpenOffice Spreadsheet </a> </li>
         <li> <a href="{% url publisher_app_exporter app_key=app.key %}?type=csv"

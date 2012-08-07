@@ -9,8 +9,8 @@
 
 {% block pageTitle %}
 <h1>
-    <a href='{% url advertiser_order_index %}'> Orders </a> /
-    <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a> /
+    <a href='{% url advertiser_order_index %}'>Orders</a> /
+    <a href='{% url advertiser_order_detail order_key=order.key %}'>{{ order.name }}</a> /
     {{ line_item.name }}
 </h1>
 {% endblock pageTitle %}
@@ -55,7 +55,7 @@
     </a>
 
     <div class="left dropdown" id="copy-line-item" style="margin-right: 10px;">
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#copy-line-item">
+      <a id="copy-button" class="btn dropdown-toggle" data-toggle="dropdown" href="#copy-line-item">
         <i class="icon-share"></i>
         Copy Line Item
         <span class="caret"></span>
@@ -87,8 +87,9 @@
       <ul class="dropdown-menu">
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
+{% comment %}
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
-                data-toggle="running"> Excel XLSX </a> </li>
+                data-toggle="running"> Excel XLSX </a> </li>{% endcomment %}
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
                 data-toggle="running"> OpenOffice Spreadsheet </a> </li>
         <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"

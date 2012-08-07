@@ -4,6 +4,7 @@ Views that handle pages for Apps and AdUnits.
 
 import logging
 import urllib
+import datetime
 # hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
 
@@ -638,7 +639,7 @@ class AppExporter(RequestHandler):
 
         for day in stats_per_day:
             row = (
-                day.date,
+                str(day.date),
                 day.req,
                 day.imp,
                 day.fill_rate,
@@ -681,12 +682,13 @@ class AdunitExporter(RequestHandler):
 
         export_type = self.request.GET.get('type', 'html')
         stats = StatsModelQueryManager(self.account)
-        stats_per_day = stats.get_stats_for_days(publisher=adunit, num_days=self.date_range)
+        stats_per_day = stats.get_stats_for_days(publisher=adunit,
+                                                 num_days=self.date_range)
         adunit_data = []
 
         for day in stats_per_day:
             row = (
-                day.date,
+                str(day.date),
                 day.req,
                 day.imp,
                 day.fill_rate,
@@ -776,7 +778,7 @@ def add_demo_campaign(site):
     Use this to create a default campaign when a user just signed up.
     """
     # Set up a test campaign that returns a demo ad
-    demo_description = "Demo campaign for checking that MoPub works for your application"
+    demo_description = "Demo Order for checking that MoPub works for your application"
     c = Campaign(name="MoPub Demo Order",
                  u=site.account.user,
                  account=site.account,
@@ -789,6 +791,7 @@ def add_demo_campaign(site):
     ag = AdGroup(name="MoPub Demo Line Item",
                  campaign=c,
                  adgroup_type="backfill_promo",
+                 start_datetime=datetime.datetime.now(),
                  account=site.account,
                  priority_level=3,
                  bid=1.0,

@@ -34,8 +34,10 @@
       <ul class="dropdown-menu">
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
                 data-toggle="running"> Excel XLS </a> </li>
+        {% comment %}
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xlsx"
                 data-toggle="running"> Excel XLSX </a> </li>
+                {% endcomment %}
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=ods"
                 data-toggle="running"> OpenOffice Spreadsheet </a> </li>
         <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=csv"
@@ -92,7 +94,8 @@
     </div>
   </div>
 
-  {% line_item_table line_items True False %}
+  {# shoe_controls:True, show_order_names: False, show_archived: False #}
+  {% line_item_table line_items True False False %}
 
   <br />
   <div class="btn-group">

@@ -17,8 +17,6 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
-from django.core.servers.basehttp import FileWrapper
-import cStringIO as StringIO
 from google.appengine.ext import db
 
 from common.ragendja.template import render_to_response, JSONResponse
@@ -60,6 +58,12 @@ class OrderIndexHandler(RequestHandler):
                       if not (line_item.archived or line_item.deleted) and
                       not (line_item.campaign.archived or line_item.campaign.deleted)]
 
+
+
+        # Sort by multiple keys - case sensitive
+        # from operator import itemgetter
+        # mylist = sorted(mylist, key=itemgetter('priority', 'name'))
+        
         gtee_high_line_items = []
         gtee_line_items = []
         gtee_low_line_items = []
@@ -147,7 +151,12 @@ class OrderDetailHandler(RequestHandler):
         line_items = AdGroupQueryManager.get_line_items(account=self.account,
                                                         order=order,
                                                         archived=False)
-
+        archived_line_items = AdGroupQueryManager.get_line_items(account=self.account,
+                                                        order=order,
+                                                        archived=True)
+        line_items.extend(archived_line_items)
+        logging.warn(line_items)
+        
         if line_items:
             self.start_date = None
             self.end_date = None
@@ -713,7 +722,6 @@ class MultipleOrderExporter(RequestHandler):
                                                self.start_date,
                                                self.end_date,
                                                daily=False)['sum']
-            logging.info(stats)
 
             order_data = (
                 order.name,
@@ -798,11 +806,11 @@ class MultipleLineItemExporter(RequestHandler):
                     stats['rev'],
                     ctr(stats['clk'],stats['imp']),
                     stats['conv_rate'],
-                    line_item.allocation_percentage,
-                    line_item.frequency_cap_display,
-                    line_item.country_targeting_display,
-                    line_item.device_targeting_display,
-                    line_item.keywords,
+                    str(line_item.allocation_percentage),
+                    str(line_item.frequency_cap_display),
+                    str(line_item.country_targeting_display),
+                    str(line_item.device_targeting_display),
+                    str(line_item.keywords),
                 )
             data_to_export.extend([order_data])
 
@@ -843,9 +851,9 @@ class SingleOrderExporter(RequestHandler):
                         line_item.name,
                         order.advertiser,
                         line_item.adgroup_type_display,
-                        line_item.start_datetime,
-                        line_item.end_datetime,
-                        day.date,
+                        str(line_item.start_datetime),
+                        str(line_item.end_datetime),
+                        str(day.date),
                         creative.name,
                         creative.format,
                         creative.ad_type,
@@ -857,10 +865,10 @@ class SingleOrderExporter(RequestHandler):
                         day.rev,
                         day.ctr,
                         day.conv_rate,
-                        line_item.frequency_cap_display,
-                        line_item.country_targeting_display,
-                        line_item.device_targeting_display,
-                        line_item.keywords
+                        str(line_item.frequency_cap_display),
+                        str(line_item.country_targeting_display),
+                        str(line_item.device_targeting_display),
+                        str(line_item.keywords)
                     )
                     export_rows.append(row)
 
@@ -929,9 +937,9 @@ class SingularLineItemExporter(RequestHandler):
                     line_item.name,
                     order.advertiser,
                     line_item.adgroup_type_display,
-                    line_item.start_datetime,
-                    line_item.end_datetime,
-                    day.date,
+                    str(line_item.start_datetime),
+                    str(line_item.end_datetime),
+                    str(day.date),
                     creative.name,
                     creative.format,
                     creative.ad_type,
@@ -943,10 +951,10 @@ class SingularLineItemExporter(RequestHandler):
                     day.rev,
                     day.ctr,
                     day.conv_rate,
-                    line_item.frequency_cap_display,
-                    line_item.country_targeting_display,
-                    line_item.device_targeting_display,
-                    line_item.keywords
+                    str(line_item.frequency_cap_display),
+                    str(line_item.country_targeting_display),
+                    str(line_item.device_targeting_display),
+                    str(line_item.keywords)
                 )
                 export_rows.append(row)
 

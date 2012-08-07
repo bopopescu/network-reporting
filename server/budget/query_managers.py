@@ -1,4 +1,3 @@
-import logging
 import urllib
 import urllib2
 
@@ -11,11 +10,8 @@ from common.utils.tzinfo import Pacific, utc
 from common.utils.query_managers import QueryManager
 
 from budget.helpers import (build_budget_update_string,
-                            parse_budget_update_string,
-                            get_datetime_from_slice,
                             get_slice_from_datetime,
-                            get_slice_budget_from_daily,
-                            )
+                            parse_budget_update_string)
 
 from adserver_constants import BUDGET_UPDATE_URL, ADSERVER_ADMIN_HOSTNAME
 from advertiser.query_managers import AdGroupQueryManager
@@ -28,22 +24,23 @@ BUDGET_UPDATE_DATE_FMT = '%Y/%m/%d %H:%M'
 ADSERVER = 'adserver.mopub.com'
 TEST_ADSERVER = 'localhost:8000'
 
+
 class BudgetQueryManager(QueryManager):
 
     Model = Budget
 
     @classmethod
-    def update_or_create_budgets_for_adgroup_keys(cls, adgroup_keys, total_spent=0.0, 
-                                                  testing=False, fetcher=None, migrate_total=False):
+    def update_or_create_budgets_for_adgroup_keys(
+            cls, adgroup_keys, total_spent=0.0, testing=False, fetcher=None,
+            migrate_total=False):
         adgroups = AdGroupQueryManager.get(adgroup_keys)
         for adgroup in adgroups:
-            budget_obj = cls.update_or_create_budget_for_adgroup(adgroup, total_spent=total_spent, 
-                                                                 testing=False, fetcher=None, 
-                                                                 migrate_total=False)
-            adgroup.budget_obj = budget_obj
+            cls.update_or_create_budget_for_adgroup(
+                adgroup, total_spent=total_spent, testing=False, fetcher=None,
+                migrate_total=False)
 
-        # Use db.put() instead of AdGroupQueryManager.put(). The latter calls this method, which
-        # would cause an infinite loop!
+        # Use db.put() instead of AdGroupQueryManager.put(). The latter calls
+        # this method, which would cause an infinite loop!
         db.put(adgroups)
 
     @classmethod
@@ -64,14 +61,13 @@ class BudgetQueryManager(QueryManager):
             remote_end = ag.end_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
         else:
             remote_end = None
-        remote_update_dict = dict(adgroup_key = str(ag.key()),
-                                  start_datetime = remote_start,
-                                  end_datetime = remote_end,
-                                  static_total_budget = ag.full_budget,
-                                  static_daily_budget = ag.daily_budget,
-                                  active = ag.active,
-                                  delivery_type = ag.budget_strategy,
-                                  )
+        remote_update_dict = dict(adgroup_key=str(ag.key()),
+                                  start_datetime=remote_start,
+                                  end_datetime=remote_end,
+                                  static_total_budget=ag.full_budget,
+                                  static_daily_budget=ag.daily_budget,
+                                  active=ag.active,
+                                  delivery_type=ag.budget_strategy)
         if ag.has_daily_budget:
             remote_update_dict['static_total_budget'] = None
         elif ag.has_full_budget:
@@ -94,94 +90,6 @@ class BudgetQueryManager(QueryManager):
                 # This isn't implemented yet
                 #TODO(tornado): need to implement this and things
                 pass
-
-        if ag.budget_obj:
-            budget = ag.budget_obj
-            # if the budget and the adgroup have differing activity levels sync them
-            if ag.active != budget.active:
-                remote_update_dict['active'] = ag.active
-                budget.active = ag.active
-                budget.put()
-            # if the adgroup is now deleted and the budget says it's still active,
-            # make the budget not active.  This will be fine if the adgroup becomes undeleted
-            # because then the activity levels will differ and everything will be right again
-            if ag.deleted and budget.active:
-                budget.active = False
-                budget.put()
-
-            update_dict = {}
-            # Camp datetimes will either be PST/PDT and aware of it, or UTC and unaware of it
-            # budget datetimes will always be UTC and unaware
-
-            # if AdGroups are aware of their tz, set them to UTC and make them unaware of it
-            # doesn't matter if we put budgets at this point because when it gets put it'll fix itself
-            if ag.start_datetime is None:
-                ag.start_datetime = datetime.utcnow()
-            elif str(ag.start_datetime.tzinfo) == str(Pacific):
-                ag.start_datetime = ag.start_datetime.astimezone(utc).replace(tzinfo=None)
-            if ag.end_datetime and str(ag.end_datetime.tzinfo) == str(Pacific):
-                ag.end_datetime = ag.end_datetime.astimezone(utc).replace(tzinfo=None)
-
-            #Do the same thing above, but for budgets
-            budget_start = ag.budget_obj.start_datetime
-            budget_end = ag.budget_obj.end_datetime
-
-            if budget_start.tzinfo is not None:
-                budget_start = budget_start.astimezone(utc).replace(tzinfo=None)
-            if budget_end and budget_end.tzinfo is not None:
-                budget_end = budget_end.astimezone(utc).replace(tzinfo=None)
-
-            if not ag.start_datetime == budget_start:
-                update_dict['start_datetime'] = ag.start_datetime
-            if not ag.end_datetime == budget_end:
-                update_dict['end_datetime'] = ag.end_datetime
-
-            if not ag.budget_strategy == ag.budget_obj.delivery_type:
-                update_dict['delivery_type'] = ag.budget_strategy
-
-            if ag.has_daily_budget:
-                slice_budget = get_slice_budget_from_daily(ag.daily_budget)
-                # Only update the update dict if new values
-                if not slice_budget == ag.budget_obj.static_slice_budget:
-                    update_dict['static_total_budget'] = None
-                    update_dict['static_slice_budget'] = slice_budget
-            elif ag.has_full_budget:
-                if not ag.full_budget == ag.budget_obj.static_total_budget:
-                    update_dict['static_total_budget'] = ag.full_budget
-                    update_dict['static_slice_budget'] = None
-            else:
-                return None
-
-            if update_dict:
-                cls.prep_update_budget(ag.budget_obj, **update_dict)
-            return ag.budget_obj
-        # Create budget
-        elif ag.has_full_budget:
-            budget = Budget(start_datetime = ag.start_datetime,
-                            end_datetime = ag.end_datetime,
-                            active = ag.active,
-                            delivery_type = ag.budget_strategy,
-                            static_total_budget = ag.full_budget,
-                            total_spent = total_spent,
-                            day_tz = 'Pacific',
-                            )
-            budget.put()
-            return budget
-
-        elif ag.has_daily_budget:
-            budget = Budget(start_datetime = ag.start_datetime,
-                            end_datetime = ag.end_datetime,
-                            active = ag.active,
-                            delivery_type = ag.budget_strategy,
-                            static_slice_budget = get_slice_budget_from_daily(ag.daily_budget),
-                            total_spent = total_spent,
-                            day_tz = 'Pacific',
-                            )
-            budget.put()
-            return budget
-        # No budget
-        else:
-            return None
 
     @classmethod
     def migrate_adgroup(cls, adgroup):

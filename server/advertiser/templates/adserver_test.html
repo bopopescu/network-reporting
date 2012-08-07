@@ -2,11 +2,12 @@
 
 {% block extraMeta %}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
+<<meta name="apple-mobile-web-app-capable" content="yes" />
 <meta names="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 {% endblock %}
 
-{% block extraScripts %}
+
+{% block body_content %}
     <script type="text/javascript">
         var base_url = 'http://ads.mopub.com/m/ad?debug_mode=1';
         var admin = {% if user.is_admin %}true{% else %}false{% endif %};
@@ -28,7 +29,7 @@
             return null;
         }
 
-        $(document).ready(function() {
+        $(function() {
             // selects the appropriate adunit if specified
             if (adunit_id) {
                  $("#adunit option").each(function(){
@@ -39,7 +40,7 @@
                  });
              }
 
-            $("#run").button('option', {icons: { secondary: 'ui-icon-circle-triangle-e' }}).click(function(e) {
+            $("#run").click(function(e) {
                 $("#adunit option:selected").each(function(){
                     adunit = $(this).val();
                 });
@@ -64,11 +65,17 @@
                 ip = locale_ip[1];
                 udid = user_to_udid[user];
                 user_agent = device_to_user_agent[device].replace('%s',locale);
-                var url = base_url + '&id=' + adunit +'&ua=' + escape(user_agent) + '&ip=' + ip + '&q=' + escape(keywords) + '&udid=' + udid + '&exclude=' + exclude + '&country=' + country;
+                var url = base_url + '&id=' + adunit
+                    +'&ua=' + escape(user_agent)
+                    + '&ip=' + ip
+                    + '&q=' + escape(keywords)
+                    + '&udid=' + udid
+                    + '&exclude=' + exclude
+                    + '&country=' + country;
                 if (admin){
                     url += '&admin_debug_mode=1';
                 }
-                $("#frame").attr("src",url);
+                $("#frame").attr("src", url);
             }).click(); // initial run
 
             function pageY(elem) {
@@ -87,9 +94,7 @@
             resizeIframe();
         });
     </script>
-{% endblock extraScripts %}
-
-{% block body_content %}
+  
 <body>
     <br/>
     <dl class="formFields thin">
@@ -150,12 +155,15 @@
     </dl>
     <div class="clear"></div>
     <div class="form-submit-left">
-        <span class="buttonWrap"><a class="button" id="run">Run Again</a></span>
+      <a class="btn" id="run">
+        Run Again
+        <i class="icon-run-circle"></i>
+      </a>
     </div>
     <div style="height:10px"></div>
     <div>
-        <iframe id="frame" src="" style="width:100%;" frameBorder="0" scrolling="yes">
-        </iframe>
+      <iframe id="frame" src="" style="width:100%;" frameBorder="0" scrolling="yes">
+      </iframe>
     </div>
 </body>
 {% endblock body_content %}

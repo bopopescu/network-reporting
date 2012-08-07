@@ -51,7 +51,8 @@ class AdNetworkSettingsHandler(RequestHandler):
             return HttpResponseRedirect(reverse('advertiser_order_index'))
 
         account_form = account_form or AccountForm(instance=self.account)
-        apps_for_account = AppQueryManager.get_apps(account=self.account)
+        apps_for_account = sorted(AppQueryManager.get_apps(account=self.account),
+                                  key=lambda app: app.name)
         user = self.account.mpuser
 
         networks = ['admob_status',

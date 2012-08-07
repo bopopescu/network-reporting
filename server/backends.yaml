@@ -36,7 +36,7 @@ backends:
   instances: 2
 
 - name: frontend-boom
-  instances: 2
+  instances: 20
   options: public
   class: B2
 

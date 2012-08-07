@@ -9,8 +9,8 @@
 
 {% block pageTitle %}
 <h1>
-    <a href='{% url advertiser_order_index %}'> Orders </a> /
-    <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a> /
+    <a href='{% url advertiser_order_index %}'>Orders</a> /
+    <a href='{% url advertiser_order_detail order_key=order.key %}'>{{ order.name }}</a> /
     {{ line_item.name }}
 </h1>
 {% endblock pageTitle %}

@@ -425,55 +425,6 @@ def main():
                 if y_or_n == 'n':
                     sys.exit(1)
 
-<<<<<<< HEAD
-            if deploy_server in PRODUCTION_SERVERS and not skip_tagging:
-                # Update the repo with tags that might have been made from other deploys
-                puts("Updating the tag list from origin")
-                git_fetch()
-                git_fetch_tags()
-
-                # Get a list of tickets that were fixed.
-                puts("Getting a list of the tickets that were fixed in this deploy")
-                fixed_tickets = git_list_resolved_tickets()
-                if len(fixed_tickets) == 0:
-                    puts(colored.yellow("Didn't find any ticket fixes"))
-                else:
-                    puts("Found " + str(len(fixed_tickets)) + \
-                         " bug fixes in this deploy: " + colored.green(str(fixed_tickets)))
-
-                # Get the commits that will go into the changelog
-                new_commits = git_get_logs_for_changelog()
-
-                # Tag the commit with the deploy number
-                deploy_tag_name = git_tag_current_deploy()
-                puts("Tagged this deploy's commits as " + colored.green(deploy_tag_name))
-
-                # Push all tags
-                puts("Updating origin with the new tag")
-                git_push_tag(deploy_tag_name)
-
-                # Write to the changelog
-                puts("Writing changelog")
-                write_changelog(deploy_tag_name, fixed_tickets, new_commits)
-
-                # Update the repository with the new changelog
-                # Lighthouse will notice this and will update everyone with the new
-                puts("Updating origin with the changelog")
-                commit_message = " ".join(['[#%s state:resolved]' % str(ticket) for ticket in fixed_tickets])
-                git_commit(commit_message)
-                git_push()
-
-            else:
-                if skip_tagging:
-                    puts("Skipping ticket update process because you said to.")
-                else:
-                    puts("Skipping ticket update process because you're not deploying to production")
-            # Set the deploy server to frontend-staging if it hasn't been set.
-            if deploy_server == None:
-                puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
-                deploy_server = 'frontend-staging'
-=======
->>>>>>> master
 
             # Minify all javascript
             puts("Minifying Javascript")
@@ -488,10 +439,13 @@ def main():
                 puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
                 deploy_server = 'frontend-staging'
             
-            if deploy_server in PRODUCTION_SERVERS:
+            if deploy_server in PRODUCTION_SERVERS and not skip_tagging:
                 run_production_steps()
             else:
-                puts("Skipping ticket update process because you're not deploying to production")                
+                if skip_tagging:
+                    puts("Skipping ticket update process because you said to.")
+                else:
+                    puts("Skipping ticket update process because you're not deploying to production")
 
             # Launch the deploy process. If --production, --staging or
             # --beta was passed, go through each of the production/staging/beta

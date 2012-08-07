@@ -753,6 +753,10 @@ class EditNetworkHandler(RequestHandler):
                     query_dict[key] = 'city'
                 else:
                     query_dict[key] = 'all'
+            elif (field == 'custom_method' and instance.network_type == 'custom_native') or \
+                    (field == 'custom_html' and instance.network_type == 'custom'):
+                creative = instance.creatives.filter('deleted =', False).get()
+                query_dict[key] = creative.html_data
 
     def create(self, network):
         """Create a network campaign.

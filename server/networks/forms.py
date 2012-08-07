@@ -134,7 +134,6 @@ class NetworkAdGroupForm(forms.ModelForm):
                   'android_version_max',
                   'target_other',
                   'geo_predicates',
-                  'region_targeting',
                   'cities',
                   'keywords')
 

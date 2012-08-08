@@ -82,8 +82,6 @@ class App(db.Model):
 
     use_proxy_bids = db.BooleanProperty(default=True)
 
-    force_marketplace = db.BooleanProperty(default=True)
-
     def simplify(self):
         return SimpleApp(key = str(self.key()),
                          account = self.account,

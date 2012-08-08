@@ -98,8 +98,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
                        experimental_fraction=0.01,
                        network_config=self.net_cfg,
                        primary_category=u'sports',
-                       secondary_category=u'travel',
-                       force_marketplace=False)
+                       secondary_category=u'travel')
         self.app.put()
 
         self.au = AdUnit(name='MCDERPUNIT',
@@ -278,7 +277,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
                                          campaigns = [simple_campaign],
                                          adgroups = [simple_adgroup],
                                          creatives = [simple_creative1, simple_creative2])
-        
+
         basic_obj = simple_auc.to_basic_dict()
         new_simple_auc = from_basic_type(basic_obj)
 

@@ -125,20 +125,6 @@
 
 </section>
 
-{% comment %}
-{# Table that shows all of the adunits being targeted #}
-<section>
-  <h3 class="left"> Inventory targeted by {{ line_item.name }} </h3>
-
-    <a class="btn right" href="#">
-      <i class="icon-random"></i>
-      Change targeting
-    </a>
-
-    {% inventory_table targeted_apps %}
-</section>
-{% endcomment %}
-
 <section>
 
   <button class="btn right {% if not line_item.creatives.count %}hidden{% endif %}"
@@ -185,6 +171,21 @@
   </div>
 
 </section>
+
+{# Table that shows all of the adunits being targeted #}
+<section>
+  <h3 class="left"> Inventory targeted by {{ line_item.name }} </h3>
+
+  {% comment %}
+    <a class="btn right" href="#">
+      <i class="icon-random"></i>
+      Change targeting
+    </a>
+  {% endcomment %}
+    {% inventory_table targeted_apps %}
+</section>
+
+
 
 {% comment %}
 <div id="daily-counts">

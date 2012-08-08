@@ -150,6 +150,7 @@ Order = Campaign
 
 
 class AdGroup(db.Model):
+
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     # net_creative is not set for new network campaigns due to circular
     # reference redundancy, use the creatives collection instead
@@ -412,61 +413,68 @@ class AdGroup(db.Model):
             return kinds[self.adgroup_type]
         return ''
 
-    def simplify(self):
-        if self.start_date and not self.start_datetime:
-            strt = self.start_date
-            start_datetime = datetime.datetime(strt.year, strt.month, strt.day)
-        else:
-            start_datetime = self.start_datetime
-        if self.end_date and not self.end_datetime:
-            end = self.end_date
-            end_datetime = datetime.datetime(end.year, end.month, end.day)
-        else:
-            end_datetime = self.end_datetime
+    def simplify(self):        
 
-        return SimpleAdGroup(key=str(self.key()),
-                             campaign=self.campaign,
-                             account=self.account,
-                             name=self.name,
-                             bid=self.bid,
-                             bid_strategy=self.bid_strategy,
-                             active=self.active,
-                             deleted=self.deleted,
-                             minute_frequency_cap=self.minute_frequency_cap,
-                             hourly_frequency_cap=self.hourly_frequency_cap,
-                             daily_frequency_cap=self.daily_frequency_cap,
-                             weekly_frequency_cap=self.weekly_frequency_cap,
-                             monthly_frequency_cap=self.monthly_frequency_cap,
-                             lifetime_frequency_cap=self.lifetime_frequency_cap,
-                             keywords=self.keywords,
-                             site_keys=[str(key) for key in self.site_keys],
-                             mktplace_price_floor=self.mktplace_price_floor,
-                             device_targeting=self.device_targeting,
-                             target_iphone=self.target_iphone,
-                             target_ipad=self.target_ipad,
-                             target_ipod=self.target_ipod,
-                             ios_version_max=self.ios_version_max,
-                             ios_version_min=self.ios_version_min,
-                             target_android=self.target_android,
-                             android_version_max=self.android_version_max,
-                             android_version_min=self.android_version_min,
-                             target_other=self.target_other,
-                             cities=self.cities,
-                             geo_predicates=self.geo_predicates,
-                             allocation_percentage=self.allocation_percentage,
-                             optimizable=self.optimizable,
-                             default_cpm=self.default_cpm,
-                             network_type=self.network_type,
-                             # Added as part of orders feature
-                             adgroup_type=self.adgroup_type,
-                             start_datetime=start_datetime,
-                             end_datetime=end_datetime,
-                             full_budget=self.full_budget,
-                             daily_budget=self.budget,
-                             budget_type=self.budget_type,
-                             included_apps=self.included_apps_global_ids,
-                             excluded_apps=self.excluded_apps_global_ids,
-                             )
+        if hasattr(self, 'full_budget'):
+            full_budget = self.full_budget
+        else:
+            full_budget = 0
+
+        if hasattr(self, 'daily_budget'):
+            daily_budget = self.daily_budget
+        else:
+            daily_budget = 0
+
+        if hasattr(self, 'budget_type'):
+            budget_type = self.budget_type
+        else:
+            budget_type = None
+            
+        return SimpleAdGroup(
+            key=str(self.key()),
+            campaign=self.campaign,
+            account=self.account,
+            name=self.name,
+            bid=self.bid,
+            bid_strategy=self.bid_strategy,
+            active=self.active,
+            deleted=self.deleted,
+            minute_frequency_cap=self.minute_frequency_cap,
+            hourly_frequency_cap=self.hourly_frequency_cap,
+            daily_frequency_cap=self.daily_frequency_cap,
+            weekly_frequency_cap=self.weekly_frequency_cap,
+            monthly_frequency_cap=self.monthly_frequency_cap,
+            lifetime_frequency_cap=self.lifetime_frequency_cap,
+            keywords=self.keywords,
+            site_keys=[str(key) for key in self.site_keys],
+            mktplace_price_floor=self.mktplace_price_floor,
+            device_targeting=self.device_targeting,
+            target_iphone=self.target_iphone,
+            target_ipad=self.target_ipad,
+            target_ipod=self.target_ipod,
+            ios_version_max=self.ios_version_max,
+            ios_version_min=self.ios_version_min,
+            target_android=self.target_android,
+            android_version_max=self.android_version_max,
+            android_version_min=self.android_version_min,
+            target_other=self.target_other,
+            cities=self.cities,
+            geo_predicates=self.geo_predicates,
+            allocation_percentage=self.allocation_percentage,
+            optimizable=self.optimizable,
+            default_cpm=self.default_cpm,
+            network_type=self.network_type,
+            
+            # Added as part of orders feature
+            adgroup_type=self.adgroup_type,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+            full_budget=full_budget,
+            daily_budget=daily_budget,
+            budget_type=budget_type,
+            included_apps=self.included_apps_global_ids,
+            excluded_apps=self.excluded_apps_global_ids,
+        )
 
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such

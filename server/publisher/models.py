@@ -97,8 +97,7 @@ class App(db.Model):
                          experimental_fraction = self.experimental_fraction,
                          network_config = self.network_config,
                          primary_category = self.primary_category,
-                         secondary_category = self.secondary_category,
-                         force_marketplace = self.force_marketplace)
+                         secondary_category = self.secondary_category)
 
     @property
     def global_id(self):

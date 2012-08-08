@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from google.appengine.api import images
 from google.appengine.ext import blobstore
@@ -429,7 +430,7 @@ class AdGroup(db.Model):
             budget_type = self.budget_type
         else:
             budget_type = None
-            
+        
         return SimpleAdGroup(
             key=str(self.key()),
             campaign=self.campaign,

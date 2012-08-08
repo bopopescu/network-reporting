@@ -54,7 +54,13 @@
   {% chart_placeholder start_date end_date %}
 
   <div id="ad-sources">
-    <div class="right">
+    <div class="btn-well right">
+
+      <a class="btn" href="{% url publisher_integration_help adunit_key=adunit.key %}">
+        {% button_icon "wrench" %}
+        Code Integration
+      </a>
+      
       <a class="btn" id="advertisers-testAdServer" href="#">
         {% button_icon "tasks" %}
         Test Ad
@@ -165,6 +171,8 @@
     </div>
 
   </div>
+
+
 
 {% endblock content %}
 

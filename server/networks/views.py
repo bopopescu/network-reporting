@@ -205,25 +205,22 @@ class NetworksHandler(RequestHandler):
             self.account.display_networks_message = False
             AccountQueryManager.put(self.account)
 
-        return render_to_response(self.request,
-              'networks/index.html',
-              {
-                  'start_date': self.days[0],
-                  'end_date': self.days[-1],
-                  'date_range': self.date_range,
-                  'days': self.days,
-                  'display_message': display_message,
-                  'graph': True if networks else False,
-                  'networks': networks,
-                  'networks_to_setup': networks_to_setup,
-                  'additional_networks': additional_networks,
-                  'apps': apps,
-                  'reporting': reporting,
-              })
+        return {
+            'display_message': display_message,
+            'graph': True if networks else False,
+            'networks': networks,
+            'networks_to_setup': networks_to_setup,
+            'additional_networks': additional_networks,
+            'apps': apps,
+            'reporting': reporting,
+        }
+
 
 @login_required
 def networks(request, *args, **kwargs):
-    return NetworksHandler()(request, *args, **kwargs)
+    handler = NetworksHandler(template='networks/index.html')
+    return handler(request, *args, **kwargs)
+
 
 class EditNetworkHandler(RequestHandler):
     def get(self, network='', campaign_key=''):
@@ -1009,6 +1006,7 @@ class EditNetworkHandler(RequestHandler):
 def edit_network(request, *args, **kwargs):
     return EditNetworkHandler()(request, *args, **kwargs)
 
+
 class NetworkDetailsHandler(RequestHandler):
     def get(self, campaign_key):
         """
@@ -1088,25 +1086,22 @@ class NetworkDetailsHandler(RequestHandler):
         network_data['apps'] = sorted(network_data['apps'], key=lambda
                 app_and_bid: app_and_bid[0].identifier)
 
-
         apps = sorted(apps, key=lambda app: app.identifier)
 
-        return render_to_response(self.request,
-              'networks/details.html',
-              {
-                  'start_date' : self.days[0],
-                  'end_date' : self.days[-1],
-                  'date_range' : self.date_range,
-                  'graph' : True,
-                  'reporting' : network_data['reporting'],
-                  'network': network_data,
-                  'apps': apps,
-                  'LoginStates': LoginStates,
-              })
+        return {
+            'graph': True,
+            'reporting': network_data['reporting'],
+            'network': network_data,
+            'apps': apps,
+            'LoginStates': LoginStates,
+        }
+
 
 @login_required
 def network_details(request, *args, **kwargs):
-    return NetworkDetailsHandler()(request, *args, **kwargs)
+    handler = NetworkDetailsHandler(template='networks/details.html')
+    return handler(request, *args, **kwargs)
+
 
 class PauseNetworkHandler(RequestHandler):
     def post(self):

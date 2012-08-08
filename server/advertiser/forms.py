@@ -150,7 +150,11 @@ class LineItemForm(forms.ModelForm):
                                          required=False,
                                          widget=forms.RadioSelect)
 
-    cities   = forms.Field(required=False, widget=forms.SelectMultiple)
+    cities = forms.Field(required=False, widget=forms.SelectMultiple)
+
+    keywords = forms.CharField(
+        label='Keywords:', required=False, widget=forms.Textarea(
+            attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
 
     def __init__(self, *args, **kwargs):
         # initial

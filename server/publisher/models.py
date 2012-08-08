@@ -82,6 +82,8 @@ class App(db.Model):
 
     use_proxy_bids = db.BooleanProperty(default=True)
 
+    force_marketplace = db.BooleanProperty(default=True)
+
     def simplify(self):
         return SimpleApp(key = str(self.key()),
                          account = self.account,
@@ -281,8 +283,8 @@ class Site(db.Model):
         if type(other) == Site:
             return self.key() == other.key()
         return False
-        
-    
+
+
     def simplify(self):
         return SimpleAdUnit(key = str(self.key()),
                             name = self.name,

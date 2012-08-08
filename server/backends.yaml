@@ -27,7 +27,7 @@ backends:
 
 - name: frontend-staging
   class: B2
-  instances: 20
+  instances: 10
   options: public
 
 - name: gae-context-fetch
@@ -37,7 +37,7 @@ backends:
 
 - name: frontend-boom
   class: B2
-  instances: 20
+  instances: 10
   options: public
 
 - name: frontend-slam

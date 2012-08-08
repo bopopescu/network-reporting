@@ -150,6 +150,7 @@ Order = Campaign
 
 
 class AdGroup(db.Model):
+
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     # net_creative is not set for new network campaigns due to circular
     # reference redundancy, use the creatives collection instead
@@ -412,18 +413,23 @@ class AdGroup(db.Model):
             return kinds[self.adgroup_type]
         return ''
 
-    def simplify(self):
-        if hasattr(self, 'start_date') and not hasattr(self, 'start_datetime'):
-            strt = self.start_date
-            start_datetime = datetime.datetime(strt.year, strt.month, strt.day)
-        else:
-            start_datetime = self.start_datetime
-        if hasattr(self, 'end_date') and not hasattr(self, 'end_datetime'):
-            end = self.end_date
-            end_datetime = datetime.datetime(end.year, end.month, end.day)
-        else:
-            end_datetime = self.end_datetime
+    def simplify(self):        
 
+        if hasattr(self, 'full_budget'):
+            full_budget = self.full_budget
+        else:
+            full_budget = 0
+
+        if hasattr(self, 'daily_budget'):
+            daily_budget = self.daily_budget
+        else:
+            daily_budget = 0
+
+        if hasattr(self, 'budget_type'):
+            budget_type = self.budget_type
+        else:
+            budget_type = None
+            
         return SimpleAdGroup(
             key=str(self.key()),
             campaign=self.campaign,
@@ -458,13 +464,14 @@ class AdGroup(db.Model):
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,
             network_type=self.network_type,
+            
             # Added as part of orders feature
             adgroup_type=self.adgroup_type,
-            start_datetime=start_datetime,
-            end_datetime=end_datetime,
-            full_budget=self.full_budget,
-            daily_budget=self.budget,
-            budget_type=self.budget_type,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+            full_budget=full_budget,
+            daily_budget=daily_budget,
+            budget_type=budget_type,
             included_apps=self.included_apps_global_ids,
             excluded_apps=self.excluded_apps_global_ids,
         )

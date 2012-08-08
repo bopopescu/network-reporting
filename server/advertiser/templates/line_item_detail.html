@@ -47,14 +47,14 @@
     </div>
   {% endif %}
 
-  <div class="right" style="clear: both; margin-bottom: 10px;">
+  <div class="btn-well right" style="clear: both; margin-bottom: 10px;">
     
-    <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 10px;">
+    <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 5px;">
       {% button_icon "pencil" %}
       Edit Line Item
     </a>
 
-    <div class="left dropdown" id="copy-line-item" style="margin-right: 10px;">
+    <div class="left dropdown" id="copy-line-item" style="margin-right: 5px;">
       <a id="copy-button" class="btn dropdown-toggle" data-toggle="dropdown" href="#copy-line-item">
         <i class="icon-share"></i>
         Copy Line Item

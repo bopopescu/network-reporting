@@ -597,15 +597,21 @@
                                 // hack for making adgroups in-active
                                 for (k in extraItems) {
                                     var value = extraItems[k];
-                                    if(k.indexOf('active') != -1 || k.indexOf('target') != -1) {
+                                    if(k.indexOf('active') != -1 || k.indexOf('target_') != -1) {
                                         arr.push({'name': k,
                                                   'value': ''});
                                     }
                                 }
 
                                 // hack for removing geo predicates
-                                if('geo_predicates' in extraItems) {
+                                if('geo_predicates' in extraItems && !('geo_predicates' in currentItems)) {
                                     arr.push({'name': 'geo_predicates',
+                                              'value': ''});
+                                }
+
+                                // hack for removing cities
+                                if('cities' in extraItems && !('cities' in currentItems)) {
+                                    arr.push({'name': 'cities',
                                               'value': ''});
                                 }
 
@@ -1255,32 +1261,22 @@
 
             $('#delete-network')
                 .click(function () {
-                    var key = $(this).attr('id');
-                    var div = $('.' + key);
-                    div.dialog({
-                        buttons: {
-                            "Delete": function() {
                                 $.post('/networks/delete',
                                     {campaign_key: campaign_data.id},
                                     function() {
                                       window.location = '/networks';
                                 });
-                                },
-                            "Cancel": function() { $(this).dialog('close');} }
-                    });
-                });
-
-            $('#network-editActive').change(function () {
-                var hidden_li = $('#network-editActive-menu').find('li:hidden');
-                var shown_li = $('#network-editActive-menu').find('li:not(:hidden)');
-                hidden_li.show();
-                shown_li.hide();
-
-                $.post('/networks/pause', { campaign_key: campaign_data.id,
-                                             active: $(this).val() } );
             });
 
-            $('#network-editActive-menu').find('li').first().hide();
+            $('#network-editActive').change(function () {
+                $('#active-spinner').show();
+                $.post('/networks/pause',
+                       { campaign_key: campaign_data.id,
+                         active: $(this).val() } ,
+                       function(data) {
+                           $('#active-spinner').hide();
+                       });
+            });
 
             }
     };

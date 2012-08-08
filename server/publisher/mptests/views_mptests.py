@@ -608,8 +608,8 @@ class CreateAppViewTestCase(BaseViewTestCase):
             lambda campaign: campaign.campaign_type == 'order',
             campaigns_dict.values())
         expected_backfill_promo_campaign = generate_campaign(
-            self.account, name="MoPub Demo Campaign",
-            description="Demo campaign for checking that MoPub works for your" +
+            self.account, name="MoPub Demo Order",
+            description="Demo Order for checking that MoPub works for your" +
             " application")
         model_eq(backfill_promo_campaign, expected_backfill_promo_campaign,
             check_primary_key=False, exclude=['created'])
@@ -632,10 +632,10 @@ class CreateAppViewTestCase(BaseViewTestCase):
             lambda adgroup: adgroup.adgroup_type == 'backfill_promo',
             adgroups_dict.values())
         expected_backfill_promo_adgroup = generate_adgroup(
-            self.account, backfill_promo_campaign, name="MoPub Demo Campaign",
+            self.account, backfill_promo_campaign, name="MoPub Demo Line Item",
             adgroup_type='backfill_promo', site_keys=[adunit.key()], bid=1.0)
         model_eq(backfill_promo_adgroup, expected_backfill_promo_adgroup,
-            check_primary_key=False, exclude=['created', 't'])
+            check_primary_key=False, exclude=['created', 't', 'start_datetime'])
 
         # CREATIVES
         creatives_dict = AdvertiserQueryManager.get_creatives_dict_for_account(

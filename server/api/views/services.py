@@ -375,17 +375,18 @@ class CampaignServiceHandler(RequestHandler):
             # adgroups
             campaign_dict['adgroups'] = []
             for adgroup in campaign.adgroups:
-                # adgroup dict
-                adgroup_dict = adgroup.toJSON()
+                if not adgroup.deleted and not adgroup.archived:
+                    # adgroup dict
+                    adgroup_dict = adgroup.toJSON()
 
-                # stats
-                adgroup_dict.update(stats_fetcher.get_adgroup_stats(
-                    adgroup, self.start_date, self.end_date, False))
+                    # stats
+                    adgroup_dict.update(stats_fetcher.get_adgroup_stats(
+                        adgroup, self.start_date, self.end_date, False))
 
-                # progress
-                adgroup_dict.update(get_progress_dict(adgroup.key()))
+                    # progress
+                    adgroup_dict.update(get_progress_dict(adgroup.key()))
 
-                campaign_dict['adgroups'].append(adgroup_dict)
+                    campaign_dict['adgroups'].append(adgroup_dict)
 
             campaigns_dicts.append(campaign_dict)
 

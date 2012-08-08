@@ -64,9 +64,9 @@
         {% button_icon "plus" %}
         Add a new order
       </a>
-      
+
     </div>
-      
+
     {% order_table orders %}
 
     <br />
@@ -149,7 +149,7 @@
         {% endfor %}
       </select>
 
-        
+
       <a class="btn"
          style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
          href='{% url advertiser_order_and_line_item_form_new %}'>
@@ -157,12 +157,12 @@
         Add a new order
       </a>
       </div>
-      
+
       <div class="right" style='margin-left: 5px;'>
         {% filter_buttons %}
       </div>
     </div>
-    
+
     {% line_item_table line_items %}
 
     <br />
@@ -172,7 +172,7 @@
         Archived Line Items
       </a>
     </div>
-    
+
     <div class="right">
       <div class="dropdown" id="line-item-export">
         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#line-item-export">
@@ -207,7 +207,7 @@
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}
-  
+
   <script type="text/javascript">
     $(function() {
         OrdersController.initializeIndex({

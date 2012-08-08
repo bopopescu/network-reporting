@@ -732,18 +732,19 @@ class EditNetworkHandler(RequestHandler):
             Tiago Bandeira (7/17/2012)
         """
         COERCE_FIELDS = {'device_targeting': lambda data: '1' if data else '0',
-                         'keywords': lambda data: '\n'.join(data)}
+                         'keywords': lambda data: '\n'.join(data),
+                         'geo_predicates': lambda data: [loc.replace('country_name=', '') for loc in data]}
 
         for field in form_class.base_fields.iterkeys():
+            if prefix:
+                key = prefix + '-' + field
+            else:
+                key = field
+
+            if key in query_dict:
+                continue
+
             if hasattr(instance, field):
-                if prefix:
-                    key = prefix + '-' + field
-                else:
-                    key = field
-
-                if key in query_dict:
-                    continue
-
                 value = getattr(instance, field)
                 if field in COERCE_FIELDS:
                     value = COERCE_FIELDS[field](value)
@@ -753,7 +754,18 @@ class EditNetworkHandler(RequestHandler):
                     #query_dict.setlist(key, value)
                 else:
                     query_dict[key] = value
-
+            elif key == 'region_targeting':
+                # hack to get derived property region targeting working
+                if ('geo_predicates' in query_dict and len(query_dict['geo_predicates']) == 1) or \
+                        ('geo_predicates' not in query_dict and len(instance.geo_predicates) == 1 \
+                        and len(instance.cities)):
+                    query_dict[key] = 'city'
+                else:
+                    query_dict[key] = 'all'
+            elif (field == 'custom_method' and instance.network_type == 'custom_native') or \
+                    (field == 'custom_html' and instance.network_type == 'custom'):
+                creative = instance.creatives.filter('deleted =', False).get()
+                query_dict[key] = creative.html_data
 
     def create(self, network):
         """Create a network campaign.

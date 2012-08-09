@@ -49,9 +49,12 @@ def submit_report_request(report):
     submission_url = (
         'http://%s:%d/run_report?%s' %
         (settings.REPORT_SERVER_HOST, settings.REPORT_SERVER_PORT, urllib.urlencode(params)))
-    response = urllib.urlopen(submission_url).read()
 
-    logging.info('Reponse from report server:' + response)
+    try:
+        response = urllib.urlopen(submission_url).read()
+        logging.info('Reponse from report server:' + response)
+    except Exception, e:
+        logging.warn("Couldn't contact report service: " + str(e))
 
 
 def get_report_data_url(report_id):

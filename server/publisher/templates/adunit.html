@@ -56,15 +56,25 @@
   <div id="ad-sources">
     <div class="btn-well right">
 
-      <a class="btn" href="{% url publisher_integration_help adunit_key=adunit.key %}">
-        {% button_icon "wrench" %}
-        Code Integration
-      </a>
+      {% if user.is_admin %}
+
+        <a class="btn" href="/fetch_api/adunit/{{adunit.key}}/fetch_context">
+          {% button_icon "filter" %}
+          Fetch Context (Admin)
+        </a>
+        
+      {% endif %}
       
       <a class="btn" id="advertisers-testAdServer" href="#">
         {% button_icon "tasks" %}
         Test Ad
       </a>
+      
+      <a class="btn" href="{% url publisher_integration_help adunit_key=adunit.key %}">
+        {% button_icon "wrench" %}
+        Code Integration
+      </a>
+      
       <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
         {% button_icon "pencil" %}
         Edit ad unit settings

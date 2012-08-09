@@ -23,6 +23,7 @@ from common.ragendja.template import render_to_response, JSONResponse
 from common.utils import helpers, tablib, stats_helpers
 from common.utils.request_handler import RequestHandler
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import utc
 
 from account.query_managers import AccountQueryManager
 from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
@@ -63,7 +64,7 @@ class OrderIndexHandler(RequestHandler):
         # Sort by multiple keys - case sensitive
         # from operator import itemgetter
         # mylist = sorted(mylist, key=itemgetter('priority', 'name'))
-        
+
         gtee_high_line_items = []
         gtee_line_items = []
         gtee_low_line_items = []
@@ -156,7 +157,7 @@ class OrderDetailHandler(RequestHandler):
                                                         archived=True)
         line_items.extend(archived_line_items)
         logging.warn(line_items)
-        
+
         if line_items:
             self.start_date = None
             self.end_date = None
@@ -205,9 +206,9 @@ class LineItemDetailHandler(RequestHandler):
 
         line_item = AdGroupQueryManager.get(line_item_key)
 
-        self.start_date = line_item.start_datetime.date()
+        self.start_date = line_item.start_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date()
         if line_item.end_datetime:
-            self.end_date = line_item.end_datetime.date()
+            self.end_date = line_item.end_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date()
         else:
             self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
 

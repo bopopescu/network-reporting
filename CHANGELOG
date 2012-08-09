@@ -1,10 +1,20 @@
+# Deployed Thursday, August 09, 2012 at 05:53PM PST
+### Deployed by John Pena
+### Tagged deploy-174
+### Bugs Fixed: []
+### Included Commits: 
+ * 096cce5 added try/except to report service request
+ * 6499836 Initial set of changes to get report data from report server
+ * dff4360 updated backends
+ * 3c9b551 Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, August 08, 2012 at 11:45PM PST
 ### Deployed by John Pena
 ### Tagged deploy-173
 ### Bugs Fixed: []
-### Included Commits: 
- * 347e8cb Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 347e8cb Deployed without finding any bug fixes.
+
 # Deployed Wednesday, August 08, 2012 at 11:29PM PST
 ### Deployed by John Pena
 ### Tagged deploy-172

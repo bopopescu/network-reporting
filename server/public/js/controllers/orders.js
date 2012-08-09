@@ -181,7 +181,7 @@
             + "support@mopub.com";
 
         $("#copy-button").addClass('disabled');
-        
+
         // Hit the copy endpoint with our form data
         var copy_promise = $.ajax({
             url: '/advertise/line_item_copy/',
@@ -596,7 +596,7 @@
 
                 adunit.fetch();
             });
-            
+
             // Set up the handler for the copy button
             var copy_modal = $("#copy_modal").modal({
                 show: false,
@@ -985,17 +985,21 @@
                 $(this).val(val);
             });
 
-            $('input[name="end_datetime_0"], input[name="end_datetime_1"], select[name="budget_type"], select[name="budget_strategy"]').change(function(){
+            $('input[name="end_datetime_0"], input[name="end_datetime_1"], select[name="budget_type"], input[name="budget_strategy"]').change(function (){
                 if(!$('input[name="end_datetime_0"]').val() &&
-                   !$('input[name="end_datetime_1"]').val() &&
-                   $('select[name="budget_type"]').val() == 'full_campaign') {
-                    $('input#id_budget_strategy_1').prop('checked', 'checked');
-                    $('input#id_budget_strategy_0').removeProp('checked');
-                    $('input#id_budget_strategy_0').attr('disabled', 'disabled');
+                   !$('input[name="end_datetime_1"]').val()) {
+                    if($('select[name="budget_type"]').val() == 'full_campaign') {
+                        $('input[name="budget_strategy"][value="evenly"]').attr('disabled', 'disabled');
+                        return;
+                    }
+                    if($('input[name="budget_strategy"][value="evenly"]').prop('checked')) {
+                        $('select[name="budget_type"] option[value="full_campaign"]').attr('disabled', 'disabled');
+                        return;
+                    }
                 }
-                else {
-                    $('input#id_budget_strategy_0').removeAttr('disabled');
-                }
+
+                $('select[name="budget_type"] option[value="full_campaign"]').removeAttr('disabled');
+                $('input[name="budget_strategy"][value="evenly"]').removeAttr('disabled');
             }).change();
 
             $('#all-adunits').change(function() {

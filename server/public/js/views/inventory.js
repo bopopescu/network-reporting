@@ -766,7 +766,8 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var row = $('#' + current_model.get('key'), this.el);
+            var current_model_key = current_model.get('key');
+            var row = $('#' + current_model_key, this.el);
 
             var display_fields = [
                 'rev',
@@ -786,20 +787,20 @@ var mopub = window.mopub || {};
                 var percent_delivered = current_model.get('percent_delivered');
                 var $percent_delivered = $('.progress', row);
                 $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100 + '%');
-                $('#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%')
+                $('#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%');
                 $percent_delivered.show();
             }
 
             if(current_model.has('pace') && current_model.has('pace_type')) {
                 var $pace = $('.pace', row);
                 $pace.addClass(current_model.get('pace_type'));
-                $pace.text('Pace: ' + Math.round(current_model.get('pace')*100) + '%')
+                $pace.text('Pace: ' + Math.round(current_model.get('pace')*100) + '%');
                 $pace.show();
             }
 
             var popover_template = _.template($("#popover-template").html());
             var popover_content = popover_template(current_model.toJSON());
-            $(".moreinfo", row).popover({
+            $(current_model_key + "-popover").popover({
                 placement: 'left',
                 title: current_model.get('name'),
                 content: popover_content,

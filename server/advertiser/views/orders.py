@@ -35,6 +35,7 @@ from advertiser.query_managers import (CampaignQueryManager,
 from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
                                       AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
+from budget.query_managers import BudgetQueryManager
 import logging
 
 flatten = lambda l: [item for sublist in l for item in sublist]
@@ -1065,6 +1066,57 @@ class AdServerTestHandler(RequestHandler):
 def adserver_test(request, *args, **kwargs):
     return AdServerTestHandler()(request, *args, **kwargs)
 
+
+class AdminPushBudget(RequestHandler):
+    def get(self):
+
+        adgroup_key = self.request.GET.get('adgroup_key', None)
+        
+        if not adgroup_key:
+            logging.error("user " +
+                          str(self.request.account.key()) +
+                          "tried to access line item push budget for line item " +
+                          adgroup_key)
+            raise Http404
+
+        logging.warn('pushing budget for ' + adgroup_key)
+        
+        testing = bool(self.request.GET.get('testing', False))
+        staging = bool(int(self.request.GET.get('staging', 0)))
+        total_spent = float(self.request.GET.get('total_spent', 0.0))
+        
+
+
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        put_result = BudgetQueryManager.update_or_create_budget_for_adgroup(
+            adgroup,
+            total_spent = total_spent,
+            testing = testing,
+            staging = staging
+        )
+
+        if put_result:
+            if staging:
+                message = "Successfully updated budget on staging"
+            else:
+                message = "Successfully updated budget in production"
+        else:
+            message = "Unsuccessful in updating budget"
+
+        return JSONResponse({
+            'status': message
+        })
+                
+    
+@login_required
+def push_budget(request, *args, **kwargs):
+    if not request.user.is_staff:
+        raise Http404
+
+    return AdminPushBudget()(request, *args, **kwargs)
+    
+
+    
 ###########
 # Helpers #
 ###########

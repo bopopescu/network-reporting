@@ -39,9 +39,10 @@ DATABASE_PORT = ''             # Set to empty string for default. Not used with 
 # Host and port for reporting server
 REPORT_SERVER_HOST = 'reporting.mopub.com'
 REPORT_SERVER_PORT = 80
+REPORT_SERVER_SECRET_API_KEY = 'rs7tvxW9ZKJ7WVJH3OwTe7CUG2ZNzoUmn9wv4y6Kpda2ns6iWqR5TrMDeFScImH'
 
 # Whether to actually use report server as canonical source
-WRITE_REPORT_SERVER_RESULTS = True
+WRITE_REPORT_SERVER_RESULTS = False
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

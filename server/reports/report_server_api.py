@@ -57,14 +57,18 @@ def submit_report_request(report):
         logging.warn("Couldn't contact report service: " + str(e))
 
 
-def get_report_data_url(report_id):
+def get_report_data_url(report_data_callback_url):
     """Given a report ID, call back to the report server to get the signed S3 data URL."""
-    report_url = (
-        'http://%s:%d/report_results/%s?mode=link' %
-        (settings.REPORT_SERVER_HOST, settings.REPORT_SERVER_PORT, report_id))
-    response = urllib.urlopen(report_url).read()
-    logging.info('Reponse from report server:' + response)
+    try:
+        response = urllib.urlopen(
+            'http://%s:%s%s' % (settings.REPORT_SERVER_HOST, settings.REPORT_SERVER_PORT,
+            report_data_callback_url)).read()
+    except Exception, e:
+        logging.warn("Couldn't contact report service to get data url: " + str(e))
+        raise
+    else:
+        logging.info('Reponse from report server:' + response)
 
-    response_json = json.loads(response)
+        response_json = json.loads(response)
 
-    return response_json['url']
+        return response_json['url']

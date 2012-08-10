@@ -41,7 +41,7 @@ REPORT_SERVER_HOST = 'reporting.mopub.com'
 REPORT_SERVER_PORT = 80
 
 # Whether to actually use report server as canonical source
-WRITE_REPORT_SERVER_RESULTS = False
+WRITE_REPORT_SERVER_RESULTS = True
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

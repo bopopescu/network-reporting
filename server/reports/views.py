@@ -223,7 +223,8 @@ class ReportExporter(RequestHandler):
         report = Report.get(report_key)
 
         if report.report_data_link:
-            return HttpResponseRedirect(report_server_api.get_report_data_url(report_key))
+            return HttpResponseRedirect(
+                report_server_api.get_report_data_url(report.report_data_link))
         else:
             return sswriter.write_report('csv', report_key, self.account.key())
 

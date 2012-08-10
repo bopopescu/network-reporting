@@ -800,11 +800,24 @@ var mopub = window.mopub || {};
 
             var popover_template = _.template($("#popover-template").html());
             var popover_content = popover_template(current_model.toJSON());
-            $(current_model_key + "-popover").popover({
+            $("#" + current_model_key + "-popover").popover({
                 placement: 'left',
                 title: current_model.get('name'),
+                trigger: 'manual',
                 content: popover_content,
-                delay: { hide: 500 }
+                delay: { hide: 10 }
+            }).click(function (event) {
+                $("#" + current_model_key + "-popover")
+                    .popover('toggle')
+                    .toggleClass('active');
+                event.stopPropagation();
+                
+            });
+
+            $('html').click(function () {
+                $("#" + current_model_key + "-popover")
+                    .popover('hide')
+                    .removeClass('active');
             });
 
             $(".loading-img", row).hide();

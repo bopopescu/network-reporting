@@ -223,8 +223,8 @@ class ReportExporter(RequestHandler):
         report = Report.get(report_key)
 
         if report.report_data_link:
-            # The report was processed by the new system; redirect the user to a signed S3 link
-            # that will give them their data.
+            # The report was processed by the new system; use the report_data_link to dynamically generate
+            # a signed S3 link that points at the report output data
             return HttpResponseRedirect(
                 report_server_api.get_report_data_url(report.report_data_link))
         else:

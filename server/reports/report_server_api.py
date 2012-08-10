@@ -38,6 +38,9 @@ def submit_report_request(report):
     group_by_list = [g for g in [report_schedule.d1, report_schedule.d2, report_schedule.d3] if g]
 
     account_key = report.account.key()
+
+    # Get the numeric ID for the account; can't use id() function alone because older keys might have a
+    # numbered account encoded as a string.
     account_id = account_key.id_or_name()
 
     if not account_id:

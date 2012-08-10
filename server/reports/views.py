@@ -223,9 +223,12 @@ class ReportExporter(RequestHandler):
         report = Report.get(report_key)
 
         if report.report_data_link:
+            # The report was processed by the new system; redirect the user to a signed S3 link
+            # that will give them their data.
             return HttpResponseRedirect(
                 report_server_api.get_report_data_url(report.report_data_link))
         else:
+            # The report was processed by the old system
             return sswriter.write_report('csv', report_key, self.account.key())
 
 def exporter(request, *args, **kwargs):

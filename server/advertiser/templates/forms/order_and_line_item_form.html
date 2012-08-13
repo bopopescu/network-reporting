@@ -4,7 +4,7 @@
 {% load forms %}
 
 {% block pageTitleTag %}
-{% if order %}New Line Item{% else %}New Order{% endif %}
+{% if order %}{% if line_item %}Edit Line Item{% else %}New Line Item{% endif %}{% else %}New Order{% endif %}
 {% endblock %}
 
 {% block pageTitle %}

@@ -1,11 +1,9 @@
 import logging
+from urllib2 import urlopen
 
 from django.utils import simplejson
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from google.appengine.api import urlfetch
-from google.appengine.api.urlfetch import DownloadError
-from urllib2 import urlopen
 
 from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
@@ -16,6 +14,7 @@ from publisher.query_managers import PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import tablib
+
 
 class MarketplaceIndexHandler(RequestHandler):
     """
@@ -34,7 +33,7 @@ class MarketplaceIndexHandler(RequestHandler):
         alphabetically_sorted_apps = sorted(apps_dict.values(), lambda x, y:
                                             cmp(x.name, y.name))
         app_keys_json = simplejson.dumps(apps_dict.keys())
-        
+
         adunit_keys = []
         for app_key, app in apps_dict.iteritems():
             if app.adunits is not None:
@@ -176,7 +175,8 @@ class MarketplaceOnOffHandler(RequestHandler):
     def post(self):
         try:
             activate = self.request.POST.get('activate', 'true')
-            mpx = CampaignQueryManager.get_marketplace(self.account)
+            mpx = CampaignQueryManager.get_marketplace(self.account,
+                                                       from_db=True)
             if activate == 'true':
                 mpx.active = True
             elif activate == 'false':
@@ -243,7 +243,7 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
         url = "http://mpx.mopub.com/stats/creatives"
         query = "?" + "&".join([key + '=' + value for key, value in
             self.request.GET.items()])
-        url += query            
+        url += query
         response = urlopen(url).read()
 
         return HttpResponse(response)
@@ -256,14 +256,14 @@ def marketplace_creative_proxy(request, *args, **kwargs):
 
 class MarketplaceExportHandler(RequestHandler):
     def get(self):
-        
+
         marketplace_campaign = CampaignQueryManager.get_marketplace(
             self.account, from_db=True)
-        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)        
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
         export_type = self.request.GET.get('type', 'html')
         stats = StatsModelQueryManager(self.account)
         export_data = []
-        
+
         for app in apps_dict.values():
             app_stats = stats.get_stats_sum(publisher=app,
                                             advertiser=marketplace_campaign,
@@ -278,7 +278,7 @@ class MarketplaceExportHandler(RequestHandler):
                 "N/A",
             )
             export_data.append(app_row)
-            
+
             for adunit in app.adunits:
                 marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(str(adunit.key()),
                                                                                   str(self.account.key()),
@@ -297,8 +297,8 @@ class MarketplaceExportHandler(RequestHandler):
                     'Activated' if marketplace_adgroup and marketplace_adgroup.active else 'Not activated',
                 )
                 export_data.append(adunit_row)
-                
-            
+
+
         # Put together the header list
         headers = (
             'Name',
@@ -312,21 +312,21 @@ class MarketplaceExportHandler(RequestHandler):
 
         # Create the data to export from all of the rows
         data_to_export = tablib.Dataset(headers=headers)
-        data_to_export.extend(export_data)        
+        data_to_export.extend(export_data)
 
         response = HttpResponse(getattr(data_to_export, export_type),
                                 mimetype="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
                    ("MoPub marketplace", export_type)
-        
+
         return response
-        
+
 
 @login_required
 def marketplace_export(request, *args, **kwargs):
     return MarketplaceExportHandler()(request, *args, **kwargs)
 
-    
+
 # REFACTOR: Do we still need this?
 class MPXInfoHandler(RequestHandler):
     def get(self):

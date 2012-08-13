@@ -25,8 +25,7 @@ from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
-from publisher.query_managers import PublisherQueryManager, AppQueryManager
-from reporting.models import StatsModel
+from publisher.query_managers import PublisherQueryManager
 
 
 class DashboardViewTestCase(BaseViewTestCase):

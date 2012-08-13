@@ -237,6 +237,12 @@ class LineItemForm(forms.ModelForm):
         else:
             return budget
 
+    def clean_adgroup_type(self):
+        adgroup_type = self.cleaned_data.get('adgroup_type', None)
+        if not adgroup_type:
+            raise forms.ValidationError("This field is required.")
+        return adgroup_type
+
     def clean_name(self):
         name = self.cleaned_data.get('name', '')
         name = name.strip()
@@ -282,6 +288,7 @@ class LineItemForm(forms.ModelForm):
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords')
+            keywords = "\n".join([keyword.strip() for keyword in keywords.split("\n") if keyword.strip()])
         return keywords
 
     def _clean_start_and_end_datetime(self, data):
@@ -349,11 +356,11 @@ class LineItemForm(forms.ModelForm):
 
         self._clean_start_and_end_datetime(cleaned_data)
 
-        if cleaned_data['adgroup_type'] == 'gtee':
+        if cleaned_data.get('adgroup_type', '') == 'gtee':
             self._clean_gtee_adgroup_type(cleaned_data)
             self._clean_gtee_budget(cleaned_data)
 
-        elif cleaned_data['adgroup_type'] == 'promo':
+        elif cleaned_data.get('adgroup_type', '') == 'promo':
             self._clean_promo_adgroup_type(cleaned_data)
             self._clean_promo_budget(cleaned_data)
 

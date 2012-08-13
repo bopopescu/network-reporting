@@ -37,7 +37,12 @@
 
   {% if apps_without_global_id %}
     <div class="alert-message block-message error">
-      <p>Error: You must have a complete iTunes URL or Android package name for the app(s) that you are using for user targeting.  Access the apps below and add the iTunes URL or Android package name.</p>
+      <p>
+      Error: You must have a complete iTunes URL or Android package
+      name for the app(s) that you are using for user targeting.
+      Access the apps below and add the iTunes URL or Android package
+      name.
+      </p>
       <ul class="simple">
         {% for app in apps_without_global_id %}
           <li><a href="{% url publisher_app_show app.key %}">{{ app.name }}</a></li>
@@ -48,6 +53,14 @@
   {% endif %}
 
   <div class="btn-well right" style="clear: both; margin-bottom: 10px;">
+
+    {% if user.is_staff %}
+      {# see end of content for this modal #}
+      <a class="left btn" id="#open-admin-budget" data-toggle="modal" href="#budget-admin-modal" style='margin-right: 5px;'>
+        {% button_icon "briefcase" %}
+        Update Budget (Admin)
+      </a>
+    {% endif %}
     
     <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 5px;">
       {% button_icon "pencil" %}
@@ -237,6 +250,39 @@
   </div>
 
 </div>
+
+{% if user.is_staff %}
+<div class="modal hidden" id="budget-admin-modal">
+
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">×</a>
+    <h3> Admin Budget Controls </h3>
+  </div>
+
+  <div class="modal-body" style='overflow: visible;'>
+
+    <div class="alert-message block-message info">
+      Manually force an update of the budget for this line item.  If
+      'use staging' is checked, the budget will be pushed to the
+      staging adserver instead.
+    </div>
+    
+    Use staging?
+    <input id="use_staging" type="checkbox"></input>
+  </div>
+
+  <div class="modal-footer">
+    <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
+    <a href="#" class="btn" data-dismiss="modal">
+      Close
+    </a>
+    <a id="update-budget" href="#" class="btn btn-primary">
+      Update Budget
+    </a>
+  </div>
+
+</div>
+{% endif %}
 
 {% endblock content %}
 

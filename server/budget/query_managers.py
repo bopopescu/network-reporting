@@ -1,3 +1,4 @@
+import logging
 import urllib
 import urllib2
 
@@ -13,7 +14,10 @@ from budget.helpers import (build_budget_update_string,
                             get_slice_from_datetime,
                             parse_budget_update_string)
 
-from adserver_constants import BUDGET_UPDATE_URL, ADSERVER_ADMIN_HOSTNAME
+from adserver_constants import (BUDGET_UPDATE_URL,
+                                ADSERVER_ADMIN_HOSTNAME,
+                                ADSERVER_STAGING_HOSTNAME,
+                                ADSERVER_TESTING_HOSTNAME)
 from advertiser.query_managers import AdGroupQueryManager
 
 ZERO_BUDGET = 0.0
@@ -44,7 +48,9 @@ class BudgetQueryManager(QueryManager):
         db.put(adgroups)
 
     @classmethod
-    def update_or_create_budget_for_adgroup(cls, ag, total_spent=0.0, testing=False, fetcher=None, migrate_total=False):
+    def update_or_create_budget_for_adgroup(cls, ag, total_spent=0.0,
+                                            testing=False, staging=False,
+                                            fetcher=None, migrate_total=False):
         # Update budget
         if ag.start_datetime is None:
             ag.start_datetime = datetime.utcnow()
@@ -79,17 +85,28 @@ class BudgetQueryManager(QueryManager):
 
         if testing and fetcher:
             fetcher.fetch(update_uri)
+            return True
         else:
             pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
             try:
-                full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
+                if staging:
+                    adserver_url = ADSERVER_STAGING_HOSTNAME
+                elif testing:
+                    adserver_url = ADSERVER_TESTING_HOSTNAME
+                else:
+                    adserver_url = ADSERVER_ADMIN_HOSTNAME
+                full_url = 'http://' + adserver_url + update_uri
+                logging.info('Updating budget at ' + full_url)
                 urllib2.urlopen(full_url)
-            except:
+                return True
+            except Exception, e:
                 # This isn't implemented yet
                 #TODO(tornado): need to implement this and things
-                pass
+                logging.warn("Couldn't update budget: " + str(e))
+                return False
+                
 
     @classmethod
     def migrate_adgroup(cls, adgroup):

@@ -224,6 +224,31 @@
         return copy_promise;
     }
 
+    function initializeBudgetControls(line_item_key) {
+
+        $("#update-budget").click(function () {
+
+            var use_staging = $("#use_staging").is(":checked");
+            var budget_promise = $.ajax({
+                url: '/advertise/push_budget/',
+                data: {
+                    adgroup_key: line_item_key,
+                    staging: use_staging ? 1 : 0
+                }
+                
+            });
+
+            budget_promise.success(function (response) {
+                Toast.info(response.status);
+                $("#budget-admin-modal").modal('hide');                
+            });
+
+            budget_promise.error(function (response) {
+                Toast.error("Couldn't access the push endpoint");
+            });
+        });
+    }
+    
     /*
      * Sets up the click handler for the status control button. This
      * is the button group that pauses, resumes, and archives
@@ -508,7 +533,8 @@
 
             initializeDateButtons();
             initializeStatusControls(true);
-
+            initializeBudgetControls(bootstrapping_data.line_item_key);
+            
             /*
              * Load the stats for the line item
              */

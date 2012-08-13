@@ -146,4 +146,5 @@ urlpatterns = patterns(
     #################
     
     url(r'^adserver_test/$', 'adserver_test', name='advertiser_adserver_test'),
+    url(r'^push_budget/$', 'push_budget', name='advertiser_push_budget'),
 )

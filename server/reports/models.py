@@ -240,6 +240,9 @@ class Report(db.Model):
     #the actual report
     data = DictProperty()
 
+    # Link to the data produced by the new report system
+    report_data_link = db.TextProperty()
+
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
     status = db.StringProperty(default='Pending')

@@ -266,7 +266,7 @@ class ReportDoneHandler(RequestHandler):
         logging.info('Got callback from reporting system: ' +
             str([report_id, results_url, status, reason]))
 
-        report_query_manager = ReportQueryManager(self.account)
+        report_query_manager = ReportQueryManager()
         report = report_query_manager.get_report_data_by_key(report_id)
 
         if status == 'done':
@@ -302,4 +302,4 @@ class ReportDoneHandler(RequestHandler):
 
 
 def report_done(request, *args, **kwargs):
-    return ReportDoneHandler()(request, *args, **kwargs)
+    return ReportDoneHandler(login=False)(request, *args, **kwargs)

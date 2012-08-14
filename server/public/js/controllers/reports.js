@@ -1,4 +1,5 @@
 (function() {
+    
     var submit_button;
     
     var ReportIndexController = {
@@ -287,20 +288,23 @@
             d3_sel.trigger("liszt:updated");
     }
     
-    var DIMENSIONS = [['','------------'],
-                      ['app', 'App'],
-                      ['adunit', 'Ad Unit'],
-                      ['priority', 'Priority'],
-                      ['campaign', 'Campaign'],
-                      ['creative', 'Creative'],
-                      ['month', 'Month'],
-                      ['week', 'Week'],
-                      ['day', 'Day'],
-                      ['hour', 'Hour'],
-                      ['country', 'Country'],
-                      ['marketing', 'Device'],
-                      ['os', 'OS'],
-                      ['os_ver', 'OS Version']];
+    var DIMENSIONS = [
+        ['','------------'],
+        ['app', 'App'],
+        ['adunit', 'Ad Unit'],
+        ['priority', 'Priority'],
+        ['campaign', 'Order'],
+        ['adgroup', 'Line Item'],
+        ['creative', 'Creative'],
+        ['month', 'Month'],
+        ['week', 'Week'],
+        ['day', 'Day'],
+        ['hour', 'Hour'],
+        ['country', 'Country'],
+        ['marketing', 'Device'],
+        ['os', 'OS'],
+        ['os_ver', 'OS Version']
+    ];
     
     /* Reset dimension selector back to initial options */
     function reset_dimensions(selector) {

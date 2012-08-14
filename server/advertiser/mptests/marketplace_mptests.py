@@ -1,11 +1,9 @@
-import datetime
 import os
-import simplejson as json
 import sys
-
 sys.path.append(os.environ['PWD'])
-
 import common.utils.test.setup
+
+import simplejson as json
 
 from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
@@ -18,13 +16,11 @@ from account.models import (DEFAULT_CATEGORIES, LOW_CATEGORIES,
 from account.query_managers import (NetworkConfigQueryManager,
                                     AccountQueryManager)
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
-from common.utils.date_magic import gen_days
 from common.utils.test.fixtures import (generate_app, generate_adunit,
                                         generate_network_config)
 from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
                                           model_eq, EDITED_1)
 from common.utils.test.views import BaseViewTestCase
-from common.utils.timezones import Pacific_tzinfo
 
 
 class MarketplaceIndexViewTestCase(BaseViewTestCase):
@@ -37,10 +33,6 @@ class MarketplaceIndexViewTestCase(BaseViewTestCase):
 
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
-
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
-        self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
             self.adunit.key(), self.account.key())
@@ -57,69 +49,17 @@ class MarketplaceIndexViewTestCase(BaseViewTestCase):
         get_response = self.client.get(url)
         eq_(get_response.status_code, 200)
 
-        model_eq(get_response.context['marketplace'], self.marketplace_campaign)
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
+        model_eq(get_response.context['marketplace'], marketplace_campaign)
+
         list_eq(get_response.context['apps'], [self.app])
         list_eq(get_response.context['app_keys'],
                 json.dumps([str(self.app.key())]))
         list_eq(get_response.context['adunit_keys'], [self.adunit.key()])
         eq_(get_response.context['pub_key'], self.account.key())
 
-        end_date = datetime.datetime.now(Pacific_tzinfo()).date()
-        start_date = end_date - datetime.timedelta(days=13)
-
-        # Build an expected mpx_stats dict that has default values for
-        # comparison.
-        mpx_stats = {
-            'rev': 0.0,
-            'daily': [],
-            'imp': 0,
-            'clk': 0,
-            'cpm': 0,
-        }
-        for date in gen_days(start_date, end_date):
-            mpx_stats['daily'].append({
-                'rev': 0,
-                'date': unicode(date),
-                'imp': 0,
-                'clk': 0,
-                'cpm': 0,
-            })
-        dict_eq(json.loads(get_response.context['mpx_stats']), mpx_stats)
-
-        list_eq(get_response.context['stats_breakdown_includes'],
-                ['revenue', 'impressions', 'ecpm'])
-        dict_eq(get_response.context['totals'], mpx_stats)
-
-        today_stats = mpx_stats["daily"][-1]
-        yesterday_stats = mpx_stats["daily"][-2]
-
-        dict_eq(get_response.context['today_stats'], today_stats)
-        dict_eq(get_response.context['yesterday_stats'], yesterday_stats)
-
-        # We also load stats for today/yesterday/total. Check them here.
-        stats = {
-            'rev': {
-                'today': 0,
-                'yesterday': 0,
-                'total': 0,
-            },
-            'imp': {
-                'today': 0,
-                'yesterday': 0,
-                'total': 0,
-            },
-            'cpm': {
-                'today': 0,
-                'yesterday': 0,
-                'total': 0,
-            },
-        }
-
-        dict_eq(get_response.context['stats'], stats)
         list_eq(get_response.context['blocklist'], [])
-        eq_(get_response.context['start_date'], start_date)
-        eq_(get_response.context['end_date'], end_date)
-        eq_(get_response.context['date_range'], 14)
         ok_(not get_response.context['blind'])
 
         expected_network_config = generate_network_config(self.account,
@@ -140,10 +80,6 @@ class BlocklistViewTestCase(BaseViewTestCase):
 
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
-
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
-        self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
             self.adunit.key(), self.account.key())
@@ -245,10 +181,6 @@ class ContentFilterViewTestCase(BaseViewTestCase):
 
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
-
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
-        self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
             self.adunit.key(), self.account.key())
@@ -377,10 +309,6 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
 
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
-        self.marketplace_campaign.put()
-
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
             self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
@@ -433,10 +361,6 @@ class MarketplaceBlindnessViewTestCase(BaseViewTestCase):
 
         self.app = generate_app(self.account, put=True)
         self.adunit = generate_adunit(self.account, self.app, put=True)
-
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
-        self.marketplace_campaign.put()
 
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
             self.adunit.key(), self.account.key())

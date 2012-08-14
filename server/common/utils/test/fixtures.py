@@ -22,7 +22,7 @@ def _generate_model_instance(model, put, defaults, **kwargs):
     return model_instance
 
 
-def generate_account(username, password):
+def generate_account(username="test@mopub.com", password="test"):
     # Create a user and profile based on passed-in credentials.
     manager = RegistrationManager()
     user = manager.create_active_user(send_email=False, username=username,
@@ -151,7 +151,8 @@ def generate_adgroup(account, campaign, put=False, **kwargs):
 def generate_creative(account, adgroup, put=False, **kwargs):
     defaults = {
         'account': account,
-        'adgroup': adgroup,
+        'ad_group': adgroup,
+        'ad_type': 'html',
     }
     return _generate_model_instance(Creative, put, defaults, **kwargs)
 

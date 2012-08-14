@@ -608,7 +608,7 @@ class DisplayCreativeHandler(RequestHandler):
             if creative.ad_type == "html":
                 html_data = creative.html_data or ''
                 return HttpResponse("<html><body style='margin:0px;'>" + \
-                                    html_data + "</body></html")
+                                    html_data + "</body></html>")
         else:
             raise Http404
 
@@ -1075,7 +1075,7 @@ class AdminPushBudget(RequestHandler):
     def get(self):
 
         adgroup_key = self.request.GET.get('adgroup_key', None)
-        
+
         if not adgroup_key:
             logging.error("user " +
                           str(self.request.account.key()) +
@@ -1084,11 +1084,11 @@ class AdminPushBudget(RequestHandler):
             raise Http404
 
         logging.warn('pushing budget for ' + adgroup_key)
-        
+
         testing = bool(self.request.GET.get('testing', False))
         staging = bool(int(self.request.GET.get('staging', 0)))
         total_spent = float(self.request.GET.get('total_spent', 0.0))
-        
+
 
 
         adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -1110,17 +1110,17 @@ class AdminPushBudget(RequestHandler):
         return JSONResponse({
             'status': message
         })
-                
-    
+
+
 @login_required
 def push_budget(request, *args, **kwargs):
     if not request.user.is_staff:
         raise Http404
 
     return AdminPushBudget()(request, *args, **kwargs)
-    
 
-    
+
+
 ###########
 # Helpers #
 ###########

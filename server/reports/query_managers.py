@@ -222,7 +222,7 @@ class ReportQueryManager(CachedQueryManager):
         report.put()
 
         # Send report request to both old and new systems
-        report_server_api.submit_report_request(new_report)
+        #report_server_api.submit_report_request(new_report)
         fire_report_sqs(new_report)
 
         return new_report
@@ -246,7 +246,7 @@ class ReportQueryManager(CachedQueryManager):
         scheduled_report.put()
 
         # Send report request to both old and new systems
-        report_server_api.submit_report_request(report)
+        #report_server_api.submit_report_request(report)
         fire_report_sqs(report)
 
     def clone_report(self, report, sched=False):

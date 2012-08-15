@@ -1456,23 +1456,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(edit_response.status_code in [200, 302])
 
-    @confirm_db()
-    def mptest_graceful_fail_without_ajax(self):
-        """
-        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
-
-        Author: John Pena
-        """
-
-        self.html_creative_post_body.pop('ajax')
-
-        new_response = self.client.post(self.new_url, self.html_creative_post_body)
-        eq_(new_response.status_code, 404)
-
-        edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
-        eq_(edit_response.status_code, 404)
-
-    @confirm_db(creative={'added': 1, 'edited':1})
+    @confirm_db(creative={'added': 1, 'edited': 1})
     def mptest_ensure_proper_redirect(self):
         new_response = self.client.post(self.new_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')

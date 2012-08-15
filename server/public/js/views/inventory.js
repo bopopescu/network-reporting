@@ -97,7 +97,7 @@ var mopub = window.mopub || {};
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail({
             graph: graph,
             xFormatter: function(x, y) {
-                return '' + moment.unix(x).format("dddd MMMM Do") +
+                return '' + moment.unix(x).format("dddd, MMMM Do") +
                     "<br />" +
                     ModelHelpers.format_stat(kind, y) + ' ' +
                     ATTRIBUTE_LABELS[kind];

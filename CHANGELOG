@@ -1,11 +1,18 @@
+# Deployed Wednesday, August 15, 2012 at 02:22AM PST
+### Deployed by John Pena
+### Tagged deploy-177
+### Bugs Fixed: []
+### Included Commits: 
+ * 30f7df7 Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, August 15, 2012 at 01:50AM PST
 ### Deployed by John Pena
 ### Tagged deploy-176
 ### Bugs Fixed: []
-### Included Commits: 
- * 82dadd0 removed calls to new reports backend
- * 6c42567 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 82dadd0 removed calls to new reports backend
+* 6c42567 Deployed without finding any bug fixes.
+
 # Deployed Monday, August 13, 2012 at 06:50PM PST
 ### Deployed by John Pena
 ### Tagged deploy-175

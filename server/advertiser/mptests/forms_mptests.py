@@ -403,7 +403,7 @@ def _parse_datetime(date):
 class LineItemCleanMethodsTestCase(unittest.TestCase):
     def setUp(self):
         self.data = copy.deepcopy(PROMOTIONAL_LINE_ITEM_DATA[0])
-        self.now = datetime.datetime.now()
+        self.now = datetime.datetime.now(Pacific_tzinfo()).replace(tzinfo=None)
         self.yesterday = self.now - datetime.timedelta(days=1)
         self.tomorrow = self.now + datetime.timedelta(days=1)
 

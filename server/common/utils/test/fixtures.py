@@ -1,7 +1,8 @@
 from account.models import MarketPlaceConfig, NetworkConfig
 from account.query_managers import AccountQueryManager
 from advertiser.models import (Campaign, AdGroup, Creative, MarketplaceCreative,
-                               HtmlCreative, NetworkStates)
+                               HtmlCreative, NetworkStates, ImageCreative,
+                               TextAndTileCreative)
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
@@ -152,9 +153,35 @@ def generate_creative(account, adgroup, put=False, **kwargs):
     defaults = {
         'account': account,
         'ad_group': adgroup,
-        'ad_type': 'html',
     }
     return _generate_model_instance(Creative, put, defaults, **kwargs)
+
+
+def generate_text_and_tile_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+        'ad_type': 'text_icon',
+    }
+    return _generate_model_instance(TextAndTileCreative, put, defaults, **kwargs)
+
+
+def generate_html_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+        'ad_type': 'html',
+    }
+    return _generate_model_instance(HtmlCreative, put, defaults, **kwargs)
+
+
+def generate_image_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+        'ad_type': 'image'
+    }
+    return _generate_model_instance(ImageCreative, put, defaults, **kwargs)
 
 
 def generate_marketplace_creative(account, adgroup, put=False, **kwargs):
@@ -163,11 +190,3 @@ def generate_marketplace_creative(account, adgroup, put=False, **kwargs):
         'ad_group': adgroup,
     }
     return _generate_model_instance(MarketplaceCreative, put, defaults, **kwargs)
-
-
-def generate_html_creative(account, adgroup, put=False, **kwargs):
-    defaults = {
-        'account': account,
-        'ad_group': adgroup,
-    }
-    return _generate_model_instance(HtmlCreative, put, defaults, **kwargs)

@@ -232,6 +232,15 @@ class AppDetailHandler(RequestHandler):
         marketplace_campaign = CampaignQueryManager.get_marketplace(app._account, from_db=True)
 
         network_campaigns = CampaignQueryManager.get_network_campaigns(app.account, is_new=True)
+        for campaign in network_campaigns:
+            if campaign.active:
+                active = False
+                for adunit in app.adunits:
+                    adgroup = AdGroupQueryManager.get_network_adgroup(campaign, adunit.key(), app.account, get_from_db=True)
+                    if adgroup.active:
+                        active = True
+                        break
+                campaign.active = active
         network_campaigns = sorted(network_campaigns, key=lambda campaign: campaign.name.lower())
 
         return {

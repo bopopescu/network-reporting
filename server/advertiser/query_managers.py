@@ -446,7 +446,8 @@ class AdGroupQueryManager(QueryManager):
         adgroup_query = adgroup_query.filter('deleted =', False)
         adgroup_query = adgroup_query.filter('adgroup_type IN', ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
         adgroup_query = adgroup_query.filter('site_keys =', adunit.key())
-        return list(adgroup_query.run())
+        adgroups = filter(lambda adgroup: not adgroup.campaign.archived, adgroup_query.run())
+        return adgroups
 
     @classmethod
     def get_sorted_line_items_for_app_and_date_range(cls, app, start_date, end_date):

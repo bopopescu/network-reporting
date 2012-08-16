@@ -1178,6 +1178,16 @@ def enable_networks(adunit, account):
                 setattr(adgroup, 'target_' + device, getattr(
                     preexisting_adgroup, 'target_' + device, False))
             adgroup.target_other = preexisting_adgroup.target_other
+
+            adgroup.ios_version_min = preexisting_adgroup.ios_version_min
+            adgroup.ios_version_max = preexisting_adgroup.ios_version_max
+
+            adgroup.android_version_min = preexisting_adgroup.android_version_min
+            adgroup.android_version_max = preexisting_adgroup.android_version_max
+
+            adgroup.geo_predicates = preexisting_adgroup.geo_predicates
+            adgroup.cities = preexisting_adgroup.cities
+            adgroup.keywords = preexisting_adgroup.keywords
         creatives.append(adgroup.default_creative())
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)

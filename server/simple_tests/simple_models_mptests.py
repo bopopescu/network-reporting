@@ -251,6 +251,8 @@ class TestBudgetEndToEnd(unittest.TestCase):
     def mptest_basic_wrapping(self):
         simple = self.auc.simplify()
         basic = simple.to_basic_dict()
+        print simple
+        print from_basic_type(basic)
         assert from_basic_type(basic) == simple
 
     def mptest_adding_random_params(self):
@@ -278,9 +280,17 @@ class TestBudgetEndToEnd(unittest.TestCase):
                                          campaigns = [simple_campaign],
                                          adgroups = [simple_adgroup],
                                          creatives = [simple_creative1, simple_creative2])
-        
+
         basic_obj = simple_auc.to_basic_dict()
         new_simple_auc = from_basic_type(basic_obj)
 
         eq_(simple_auc, new_simple_auc)
 
+    def mptest_geo_predicates(self):
+        """
+        Test that we don't let 'country=' get passed to ad_server
+        because things break.
+        """
+        self.ag.geo_predicates = ['country=']
+        simple_adgroup = self.ag.simplify()
+        eq_(simple_adgroup.geo_predicates, ['country=*'])

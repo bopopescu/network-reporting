@@ -342,6 +342,11 @@ class LineItemForm(forms.ModelForm):
             data['adgroup_type'] = 'backfill_promo'
 
     def _clean_promo_budget(self, data):
+        """
+        Promo campaigns are currently unbudgeted, so we remove all
+        budgeting information if they've somehow been set (we shouldn't
+        be exposing budgeting controls in the UI).
+        """
         data['daily_budget'] = None
         data['full_budget'] = None
         data['budget_type'] = None

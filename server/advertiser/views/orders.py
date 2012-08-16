@@ -157,7 +157,7 @@ class OrderDetailHandler(RequestHandler):
                                                         order=order,
                                                         archived=True)
         line_items.extend(archived_line_items)
-        logging.warn(line_items)
+
 
         if line_items:
             self.start_date = None
@@ -410,6 +410,8 @@ class OrderAndLineItemFormHandler(RequestHandler):
         if len(self.request.POST.keys()) == 0:
             raise Http404
 
+        # Fetch the objects we're going to edit from their keys.
+        # If both keys are None, we're making new objects.
         if line_item_key:
             line_item = AdGroupQueryManager.get(line_item_key)
             order = line_item.campaign
@@ -420,6 +422,8 @@ class OrderAndLineItemFormHandler(RequestHandler):
             order = None
             line_item = None
 
+        # Sanity checks. Make sure the order and line item are valid
+        # and owned by the requester.
         if order:
             if (not order.is_order) or order.account.key() != self.account.key():
                 raise Http404
@@ -430,13 +434,19 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
         order_form = OrderForm(self.request.POST, instance=order, prefix='order')
 
-        # TODO: do this in the form? maybe pass the account in?
+        # We grab the adunits available for targeting here, but we could probably
+        # pass in the account and do it in the form.
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-        line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys, apps_choices=get_apps_choices(self.account))
+        line_item_form = LineItemForm(self.request.POST,
+                                      instance=line_item,
+                                      site_keys=site_keys,
+                                      apps_choices=get_apps_choices(self.account))
 
+        # Shouldn't this be order_form.is_valid() if order else True ? why the 'not'?
         order_form_is_valid = order_form.is_valid() if not order else True
         line_item_form_is_valid = line_item_form.is_valid()
+        
         if order_form_is_valid and line_item_form_is_valid:
             if not order:
                 order = order_form.save()
@@ -450,7 +460,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             line_item.campaign = order
             line_item.save()
             AdGroupQueryManager.put(line_item)
-
+            
             # Onboarding: user is done after they set up their first campaign
             if self.account.status == "step4":
                 self.account.status = ""
@@ -462,6 +472,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
                                     kwargs={'line_item_key': line_item.key()}),
             })
 
+            
         errors = {}
         if not line_item_form_is_valid:
             logging.warn('line')

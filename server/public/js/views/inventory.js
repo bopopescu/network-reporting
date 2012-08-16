@@ -811,7 +811,7 @@ var mopub = window.mopub || {};
                     .popover('toggle')
                     .toggleClass('active');
                 event.stopPropagation();
-                
+                event.preventDefault();
             });
 
             $('html').click(function () {

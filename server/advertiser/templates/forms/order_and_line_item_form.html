@@ -72,17 +72,17 @@
               {% if line_item_form.instance %}
                 {% if line_item_form.instance.gtee %}Guaranteed{% else %}Promotional{% endif %}
                 <input name="adgroup_type" type="hidden" value="{% if line_item_form.instance.gtee %}gtee{% else %}promo{% endif %}" />
-                    {% else %}
-                      {{ line_item_form.adgroup_type }}
-                    {% endif %}
-                    <a href="#" id="adgroup_type-helpLink">What's this?</a>
-                    <div class="hidden" id="adgroup_type-helpContent">
-                      <h3>Line Item Type</h3>
-                      <h4>Guaranteed</h4>
-                      <p>A <strong>Guaranteed</strong> line item is typically a direct sold line item with a set CPM for a certain number of impressions and a start and end date.</p>
-                      <h4>Promotional</h4>
-                      <p>A <strong>Promotional</strong> line item is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" line item.</p>
-                    </div>
+              {% else %}
+                {{ line_item_form.adgroup_type }}
+              {% endif %}
+              <a href="#" id="adgroup_type-helpLink">What's this?</a>
+              <div class="hidden" id="adgroup_type-helpContent">
+                <h3>Line Item Type</h3>
+                <h4>Guaranteed</h4>
+                <p>A <strong>Guaranteed</strong> line item is typically a direct sold line item with a set CPM for a certain number of impressions and a start and end date.</p>
+                <h4>Promotional</h4>
+                <p>A <strong>Promotional</strong> line item is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" line item.</p>
+              </div>
             </div>
             </li>
 
@@ -137,7 +137,7 @@
                 {{ line_item_form.bid_strategy.label_tag }}
                 <div>
                     {{ line_item_form.bid_strategy }} @ {{ line_item_form.bid }} USD
-                    <a class="adgroup_type_dependant promo whatsthis" id="bid-helpLink" href="#">What's this?</a>
+                    <a class="adgroup_type_dependent promo whatsthis" id="bid-helpLink" href="#">What's this?</a>
                     <div id="bid-helpContent" class="hidden">
                         <h3>Promotional CPM</h3>
                         <p>MoPub uses CPM to prioritize which promotional line item will be displayed.  Increase the CPM of a line item to run it before other line items within the same priority.</p>
@@ -145,7 +145,7 @@
                 </div>
             </li>
 
-            <li class="adgroup_type_dependant gtee">
+            <li class="adgroup_type_dependent gtee">
                 {{ line_item_form.budget.label_tag }}
                 <div>
                     {{ line_item_form.budget }}
@@ -153,7 +153,7 @@
                 </div>
             </li>
 
-            <li class="adgroup_type_dependant gtee">
+            <li class="adgroup_type_dependent gtee">
                 {{ line_item_form.budget_strategy.label_tag }}
                 <div>
                     <span class="radios">

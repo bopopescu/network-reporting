@@ -235,12 +235,12 @@
                     adgroup_key: line_item_key,
                     staging: use_staging ? 1 : 0
                 }
-                
+
             });
 
             budget_promise.success(function (response) {
                 Toast.info(response.status);
-                $("#budget-admin-modal").modal('hide');                
+                $("#budget-admin-modal").modal('hide');
             });
 
             budget_promise.error(function (response) {
@@ -248,7 +248,7 @@
             });
         });
     }
-    
+
     /*
      * Sets up the click handler for the status control button. This
      * is the button group that pauses, resumes, and archives
@@ -534,7 +534,7 @@
             initializeDateButtons();
             initializeStatusControls(true);
             initializeBudgetControls(bootstrapping_data.line_item_key);
-            
+
             /*
              * Load the stats for the line item
              */
@@ -896,9 +896,9 @@
             });
 
             // toggle fields based on adgroup_type
-            $('[name="adgroup_type"]').change(function() {
+            $('[name="adgroup_type"]').change(function () {
                 var adgroup_type = $(this).val();
-                $('.adgroup_type_dependent').each(function() {
+                $('.adgroup_type_dependent').each(function () {
                     $(this).toggle($(this).hasClass(adgroup_type));
                 });
             }).change(); // update on document ready

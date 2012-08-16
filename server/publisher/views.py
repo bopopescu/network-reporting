@@ -1174,9 +1174,11 @@ def enable_networks(adunit, account):
             preexisting_adgroup = adgroups[0]
             # Copy over targeting for the NetworkDetails page
             adgroup.device_targeting = preexisting_adgroup.device_targeting
-            for device, pretty_name in adgroup.DEVICE_CHOICES:
-                setattr(adgroup, 'target_' + device, getattr(
-                    preexisting_adgroup, 'target_' + device, False))
+
+            adgroup.target_iphone = preexisting_adgroup.target_iphone
+            adgroup.target_ipod = preexisting_adgroup.target_ipod
+            adgroup.target_ipad = preexisting_adgroup.target_ipad
+            adgroup.target_android = preexisting_adgroup.target_android
             adgroup.target_other = preexisting_adgroup.target_other
 
             adgroup.ios_version_min = preexisting_adgroup.ios_version_min
@@ -1188,6 +1190,7 @@ def enable_networks(adunit, account):
             adgroup.geo_predicates = preexisting_adgroup.geo_predicates
             adgroup.cities = preexisting_adgroup.cities
             adgroup.keywords = preexisting_adgroup.keywords
+
         creatives.append(adgroup.default_creative())
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)

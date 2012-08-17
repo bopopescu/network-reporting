@@ -1,51 +1,51 @@
 backends:
 - name: stats-updater
-  # options: dynamic
-  options: public
   class: B4
   instances: 2
+  # options: dynamic
+  options: public
 
 - name: admin-prep
-  options: public
   class: B8
   instances: 1
+  options: public
 
 - name: frontend-0
+  class: B2
   instances: 20
   options: public
-  class: B2
 
 - name: frontend-1
+  class: B2
   instances: 20
   options: public
-  class: B2
 
 - name: frontend-2
+  class: B2
   instances: 20
   options: public
-  class: B2
 
 - name: frontend-staging
-  instances: 20
-  options: public
   class: B2
+  instances: 10
+  options: public
 
 - name: gae-context-fetch
-  options: public
   class: B2
   instances: 2
+  options: public
 
 - name: frontend-boom
-  instances: 2
-  options: public
   class: B2
+  instances: 10
+  options: public
 
 - name: frontend-slam
+  class: B2
   instances: 2
   options: public
-  class: B2
 
 - name: frontend-beta
+  class: B2
   instances: 2
   options: public
-  class: B2

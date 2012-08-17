@@ -140,12 +140,12 @@ def secure_url_from_url(url):
 
 def get_all(Model, limit=300, testing=False):
     cnt = 0
-    models = Model.all().fetch(limit)
+    models = list(Model.all().fetch(limit=limit, batch_size=300))
     new_models = models
     while new_models:
         cnt += 1
         print cnt, len(models)
-        new_models = Model.all().filter('__key__ >',models[-1]).fetch(limit)
+        new_models = list(Model.all().filter('__key__ >', models[-1]).run(limit=limit, batch_size=300))
         models += new_models
         # in testing mode return right away
         if testing: return models

@@ -1,4 +1,3 @@
-import logging
 import sys
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
@@ -435,7 +434,7 @@ class AdGroup(db.Model):
                              android_version_min = self.android_version_min,
                              target_other = self.target_other,
                              cities = self.cities,
-                             geo_predicates = self.geo_predicates,
+                             geo_predicates = self._cleaned_geo_predicates(),
                              allocation_percentage = self.allocation_percentage,
                              optimizable = self.optimizable,
                              default_cpm = self.default_cpm,
@@ -443,6 +442,20 @@ class AdGroup(db.Model):
                              included_apps = self.included_apps_global_ids,
                              excluded_apps = self.excluded_apps_global_ids,
                              )
+
+    def _cleaned_geo_predicates(self):
+        """
+        This is a HACK to fix a frontend bug that sometimes sometimes
+        geo_predicates to ['country='] instead of ['country=*']
+        Jira: https://mopubinc.atlassian.net/browse/UI-90
+
+        This is going to be removed entirely very soon, so i'm
+        just going to implement this fix now.
+
+        """
+        if self.geo_predicates == ['country=']:
+            return ['country=*']
+        return self.geo_predicates
 
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
@@ -467,6 +480,8 @@ class AdGroup(db.Model):
 
         if c:
             c.ad_group = self
+
+        c.account = self._account
         return c
 
     def __repr__(self):
@@ -976,7 +991,7 @@ class EjamCreative(Creative):
     #ServerSide = EjamServerSide
     @property
     def multi_format(self):
-        return ('320x50', 'full',)
+        return ('320x50', 'full', '300x250', '728x90', '320x480')
 
 
 class InMobiCreative(Creative):

@@ -75,7 +75,7 @@ SHORT_ACCT_DIR = 'account_data'
 
 NUM_INSTANCES = 1
 MASTER_INSTANCE_TYPE = 'm1.large'
-SLAVE_INSTANCE_TYPE = 'm1.large'
+SLAVE_INSTANCE_TYPE = 'm1.xlarge'
 KEEP_ALIVE = True
 
 MAX_RETRIES = 3
@@ -510,6 +510,7 @@ class ReportMessageHandler(MessageHandler):
         else:
             timeout = 1
         if self.queue.count() > 0:
+            logging.warning("Messages!")
             msgs = self.queue.get_messages(MAX_MSGS, visibility_timeout = timeout)
             if len(msgs) == 0:
                 # Actually no messages, return False
@@ -825,7 +826,7 @@ class ReportMessageHandler(MessageHandler):
                 rep.completed_at = datetime.now()
                 rep.status = 'Completed'
                 rep.put()
-            except:
+            except Exception, e:
                 raise ReportPutError(message = message, jobflowid = jobflowid)
             return True
 
@@ -839,7 +840,8 @@ class ReportMessageHandler(MessageHandler):
                         raise ReportNotifyError(message = message, jobflowid = jobflowid)
                 else:
                     rep.notify_complete()
-            except:
+            except Exception, e:
+                logging.warning(e)
                 raise ReportNotifyError(message = message, jobflowid = jobflowid)
 
             return True
@@ -915,8 +917,19 @@ class ReportMessageHandler(MessageHandler):
                 output = output,
                 )
         steps_to_add = [gen_report_step]
-        jobid = get_waiting_jobflow(self.emr_conn, self.existing_jobflows)
-        instances = 10
+        success = False
+        count = 0
+        while success == False:
+            try:
+                jobid = get_waiting_jobflow(self.emr_conn, self.existing_jobflows)
+                success = True
+            except Exception, e:
+                logging.warning(e)
+                logging.warning("Trying to get waiting jobflows failed")
+                time.sleep(2 ** count)
+                count += 1
+                success = False
+        instances = 21
         try:
             if jobid:
                 self.emr_conn.add_jobflow_steps(jobid, steps_to_add)

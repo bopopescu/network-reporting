@@ -1,5 +1,3 @@
-import logging
-
 from common.utils.query_managers import CachedQueryManager, QueryManager
 
 from common.utils.decorators import wraps_first_arg

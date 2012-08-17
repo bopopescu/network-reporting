@@ -62,8 +62,8 @@ class TestScrapers(unittest.TestCase):
 
     def iad_mptest(self):
         nc = NetworkConfidential()
-        nc.username = 'chesscom'
-        nc.password = 'Faisal1Chess'
+        nc.username = '2_acrossair@acrossair.com'
+        nc.password = 'imano@314'
         nc.ad_network_name = 'iad'
         scraper = IAdScraper(nc)
         scraper.get_site_stats(date.today() - timedelta(days = 1))

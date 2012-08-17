@@ -41,6 +41,13 @@ ALL_NETWORKS = 'default'
 TO_ERR = 'TIMEOUT_ERROR'
 BAD_KEY_ERR = 'BAD_KEY_ERROR'
 
+def is_int(x):
+    try:
+        int(x)
+        return True
+    except Exception:
+        return False
+
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
     Deleted from memcache whenever its components are updated."""
@@ -84,11 +91,20 @@ class AdUnitContextQueryManager(CachedQueryManager):
             trace_logging.warning("memcache miss: fetching adunit_context from db")
             try:
                 adunit_context = cls.get_context(adunit_key)
-                memcache.set(adunit_context_key,
-                             adunit_context,
-                             time=CACHE_TIME)
+                try:
+                    memcache.set(adunit_context_key,
+                                 adunit_context,
+                                 time=CACHE_TIME)
+                except ValueError:
+                    # If it's too big at the very least save it's created_at time
+                    logging.warning("%s is too big" % adunit_key)
+                    memcache.set(adunit_context_key,
+                                 int(adunit_context.created_at),
+                                 time=CACHE_TIME)
+
                 new_timestamp = datetime.datetime.now()
                 memcache.set("ts:%s" % adunit_context_key, new_timestamp)
+
             except db.Timeout, e: # Datastore timeouts usually
                 logging.warning("Datastore timeout for wrapping context for: %s" % adunit_key)
                 return TO_ERR
@@ -105,8 +121,19 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
         # We got new information for the hypercache, give it a new timestamp
 
+        if is_int(adunit_context):
+            context_created_at = int(adunit_context)
+            try:
+                adunit_context = cls.get_context(adunit_key)
+            except db.Timeout, e:
+                return TO_ERR
+            except db.BadKeyError, e:
+                return BAD_KEY_ERR
+            except db.KindError, e:
+                return BAD_KEY_ERR
+            adunit_context.created_at = context_created_at
 
-        if adunit_context:
+        elif adunit_context:
             context_created_at = getattr(adunit_context, 'created_at', None)
             if context_created_at is None:
                 now = int(time.mktime(datetime.datetime.utcnow().timetuple()))
@@ -384,7 +411,6 @@ class AppQueryManager(CachedQueryManager):
         """
         for app in App.all().filter('account =', account):
             if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
-                logging.info(app.name)
                 ids = re.findall('/id[0-9]*\?', app.url)
                 if ids:
                     pub_id = ids[0][len('/id'):-1]

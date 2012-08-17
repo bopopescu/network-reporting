@@ -9,8 +9,7 @@ import simplejson as json
 from datetime import date
 from nose.plugins.skip import SkipTest
 from nose.tools import ok_, \
-       eq_, \
-       make_decorator
+       eq_
 
 from google.appengine.ext import db
 from django.core.urlresolvers import reverse
@@ -32,6 +31,10 @@ from common.constants import NETWORKS, \
         REPORTING_NETWORKS
 
 from networks.mptests.network_test_case import NetworkTestCase, \
+        requires_network_with_reporting, \
+        requires_network_with_pub_ids, \
+        requires_network_without_pub_ids, \
+        requires_non_custom_network_type, \
         DEFAULT_BID, \
         DEFAULT_HTML, \
         DEFAULT_PUB_ID
@@ -48,6 +51,7 @@ from publisher.query_managers import AdUnitQueryManager, \
         AppQueryManager
 
 from account.models import NetworkConfig
+from account.query_managers import NetworkConfigQueryManager
 from advertiser.models import Campaign, \
         AdGroup, \
         Creative, \
@@ -62,46 +66,6 @@ from networks.forms import NetworkCampaignForm, \
         NetworkAdGroupForm, \
         AdUnitAdGroupForm
 
-
-# -------------------- >> begin test decorators << --------------------
-# These methods allow for conditionally skipping tests based on network type.
-# For example, applying @requires_network_with_reporting to a test method will
-# cause the test to run only for network types that support revenue reporting.
-# For all other types, the test will show up as an 'S' in the nose output.
-
-def requires_network_with_reporting(test_method):
-    @make_decorator(test_method)
-    def wrapper(self, *args, **kwargs):
-        if self.network_type not in REPORTING_NETWORKS:
-            raise SkipTest('Skipping test... requires reporting network')
-        return test_method(self, *args, **kwargs)
-    return wrapper
-
-def requires_network_with_pub_ids(test_method):
-    @make_decorator(test_method)
-    def wrapper(self, *args, **kwargs):
-        if self.network_type not in NETWORKS_WITH_PUB_IDS:
-            raise SkipTest('Skipping test... requires network with pub IDs')
-        return test_method(self, *args, **kwargs)
-    return wrapper
-
-def requires_network_without_pub_ids(test_method):
-    @make_decorator(test_method)
-    def wrapper(self, *args, **kwargs):
-        if self.network_type in NETWORKS_WITH_PUB_IDS:
-            raise SkipTest('Skipping test... requires network without pub IDs')
-        return test_method(self, *args, **kwargs)
-    return wrapper
-
-def requires_non_custom_network_type(test_method):
-    @make_decorator(test_method)
-    def wrapper(self, *args, **kwargs):
-        if self.network_type in ['custom', 'custom_native']:
-            raise SkipTest('Skipping test... requires non-custom network type')
-        return test_method(self, *args, **kwargs)
-    return wrapper
-
-# -------------------- >> end test decorators << --------------------
 
 
 class CreateNetworkGetTestCase(NetworkTestCase):
@@ -146,23 +110,29 @@ class CreateNetworkGetTestCase(NetworkTestCase):
 
         Author: Tiago Bandeira
         """
+        # set up network configs
+        for app_idx, app in enumerate(self.existing_apps):
+            pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
+            setattr(app.network_config, '%s_pub_id' % self.network_type_to_test(), pub_id)
+            AppQueryManager.update_config_and_put(app, app.network_config)
+
+            for adunit_idx, adunit in enumerate(app.adunits):
+                adunit_pub_id = '%s_%s' % (pub_id, adunit_idx)
+                setattr(adunit.network_config, '%s_pub_id' % self.network_type_to_test(), adunit_pub_id)
+                AdUnitQueryManager.update_config_and_put(adunit, adunit.network_config)
+
+        # send the request
         response = self.client.get(self.url)
         context = response.context
 
-        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
-                self.account).values()
-        adgroups_by_adunit = {}
-        for adgroup in adgroups:
-            adgroups_by_adunit[adgroup.site_keys[0]] = adgroup
-
         network_data = {'name': self.network_type,
                         'pretty_name': NETWORKS[self.network_type],
-                        'show_login': False,
+                        'show_login': True,
                         'login_state': LoginStates.NOT_SETUP}
 
         dict_eq(network_data, context['network'])
 
-        eq_(str(self.account.key()), context['account_key'])
+        eq_(self.account.key(), context['account'].key())
 
         ok_(not context['custom_campaign'] or (context['custom_campaign'] and
             self.network_type in ('custom', 'custom_native')))
@@ -182,9 +152,7 @@ class CreateNetworkGetTestCase(NetworkTestCase):
 
             for adunit_idx, adunit in enumerate(app.adunits):
                 ok_(isinstance(adunit.adgroup_form, AdUnitAdGroupForm))
-                ok_(adunit.key() in adgroups_by_adunit)
-                model_eq(adunit.adgroup_form.instance,
-                        adgroups_by_adunit[adunit.key()])
+                ok_(adunit.adgroup_form)
 
                 eq_(adunit.pub_id, '%s_%s' % (pub_id, adunit_idx))
 

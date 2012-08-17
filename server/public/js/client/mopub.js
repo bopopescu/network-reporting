@@ -7,7 +7,10 @@ function redo_tags(div) {
     for (var i=0;i<at.length;i++) {
         var curr = at[i];
         if (curr.href != '#') {
-            curr.href = mopub_click_url + '&r=' + curr.href;
+            curr.href = mopub_click_url + '&r=' + encodeURIComponent(curr.href);
+        }
+        if (typeof window.mopub_click_prepend !== 'undefined' && window.mopub_click_prepend !== null) {
+            curr.href = window.mopub_click_prepend + curr.href;
         }
     }
 }

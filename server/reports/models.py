@@ -240,6 +240,9 @@ class Report(db.Model):
     #the actual report
     data = DictProperty()
 
+    # Link to the data produced by the new report system
+    report_data_link = db.TextProperty()
+
     # maybe useful for internal analytics//informing users
     completed_at = db.DateTimeProperty()
     status = db.StringProperty(default='Pending')
@@ -570,7 +573,7 @@ class Report(db.Model):
                     if key in dimkey or dim not in ONLINE_DIMS:
                         all_keys_in[i] = True
 
-            if not all(all_keys_in):
+            if dimkey_to_obj and not all(all_keys_in):
                 continue
             vals = eval(vals)
             req, att = self.get_stats_info(keys, dimkey_to_obj, testing)

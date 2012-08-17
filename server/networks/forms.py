@@ -1,4 +1,3 @@
-import logging
 from django import forms
 from advertiser.models import Campaign, AdGroup
 
@@ -30,7 +29,6 @@ class NetworkAdGroupForm(forms.ModelForm):
                                               label='Device Targeting:',
                                               required=False,
                                               widget=forms.RadioSelect)
-    active = forms.BooleanField(label='Active:', required=False)
     target_iphone = forms.BooleanField(initial=True, label='iPhone',
                                        required=False)
     target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
@@ -83,15 +81,17 @@ class NetworkAdGroupForm(forms.ModelForm):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
 
-            initial['active'] = instance.active
-
             kwargs.update(initial=initial)
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
     def clean_geo_predicates(self):
+        cleaned_geo_predicates = self.cleaned_data.get('geo_predicates', [])
+        if isinstance(cleaned_geo_predicates, basestring):
+            cleaned_geo_predicates = [cleaned_geo_predicates]
+
         geo_predicates = []
-        for geo_predicate in self.cleaned_data.get('geo_predicates', []) or []:
+        for geo_predicate in cleaned_geo_predicates:
             geo_predicate = tuple(geo_predicate.split(','))
             #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
             geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
@@ -99,10 +99,17 @@ class NetworkAdGroupForm(forms.ModelForm):
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
-        logging.warning("keywords: %s" % keywords)
+
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
+
+            if isinstance(keywords, basestring):
+                keywords = keywords.replace(',', '\n').split('\n')
+                keywords = [word.strip() for word in keywords]
+        else:
+            keywords = []
+
         return keywords
 
     def clean(self):
@@ -127,7 +134,6 @@ class NetworkAdGroupForm(forms.ModelForm):
                   'android_version_max',
                   'target_other',
                   'geo_predicates',
-                  'region_targeting',
                   'cities',
                   'keywords')
 
@@ -158,6 +164,9 @@ class AdUnitAdGroupForm(forms.ModelForm):
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
 
     def __init__(self, *args, **kwargs):
+        # network type is required for __init__
+        self.network_type = kwargs.pop('network_type')
+
         initial = kwargs.get('initial', {})
         adgroup = kwargs.get('instance', None)
 
@@ -184,6 +193,20 @@ class AdUnitAdGroupForm(forms.ModelForm):
             not isinstance(allocation_percentage, float)):
             allocation_percentage = 100
         return allocation_percentage
+
+    def clean_custom_html(self):
+        custom_html = self.cleaned_data.get('custom_html', None)
+        if self.network_type == 'custom' and self.cleaned_data.get('active', False) and \
+                not custom_html:
+            raise forms.ValidationError("This field is required if this adunit is turned on.")
+        return custom_html
+
+    def clean_custom_method(self):
+        custom_method = self.cleaned_data.get('custom_method', None)
+        if self.network_type == 'custom_native' and self.cleaned_data.get('active', False) and \
+                not custom_method:
+            raise forms.ValidationError("This field is required if this adunit is turned on.")
+        return custom_method
 
     class Meta:
         model = AdGroup

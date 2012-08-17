@@ -123,8 +123,8 @@ class RequestHandler(object):
                     "account": self.account
                 })
                 response = render_to_response(self.request,
-                                          self.template,
-                                          response)
+                                              self.template,
+                                              response)
                 if use_handshake:
                     self._add_handshake(response)
                 return response
@@ -192,10 +192,6 @@ class RequestHandler(object):
                     self.account = AccountQueryManager.get(account_key)
         if not self.account:
             self.account = AccountQueryManager.get_current_account(self.request, cache=True)
-
-
-class AjaxRequestHandler(RequestHandler):
-    pass
 
 
 def get_start_and_end_dates(request):

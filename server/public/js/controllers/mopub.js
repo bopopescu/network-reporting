@@ -29,7 +29,7 @@ if (window.console === undefined) {
     var Chart = window.Chart || {};
     var Stats = window.Stats || {};
 
-    $(document).ready(function() {
+    $(function() {
         
 
         // export tables as xls/csv
@@ -1083,7 +1083,7 @@ if (window.console === undefined) {
 })(this.jQuery);
 
 
-(function($){
+(function(){
 
     var config = window.ToastjsConfig = {
         defaultTimeOut: 3000,
@@ -1114,6 +1114,7 @@ if (window.console === undefined) {
         $("body").append(config.container);
     });
 
+
     function getNotificationElement() {
         return $("<div>").css(config.notificationStyles).hover(function() {
             $(this).css(config.notificationStylesHover);
@@ -1126,37 +1127,38 @@ if (window.console === undefined) {
 
     Toast.notify = function(message, title, iconUrl, timeOut) {
         var notificationElement = getNotificationElement();
-
+        
         timeOut = timeOut || config.defaultTimeOut;
 
-        if (iconUrl) {
-            var iconElement = $("<img/>", {
+        if (typeof iconUrl !== 'undefined') {
+            var iconconfig = {
                 src: iconUrl,
                 css: {
                     width: 36,
                     height: 36,
                     display: "inline-block",
                     verticalAlign: "middle",
-                    float: "left"
+                    "float": "left"
                 }
-            });
+            };
+            var iconElement = $("<img/>", iconconfig);
             notificationElement.append(iconElement);
         }
-
+        
         var textElement = $("<div/>").css({
             display: 'inline-block',
             verticalAlign: 'middle',
             padding: '0 12px'
         });
 
-        if (title) {
+        if (typeof title !== 'undefined') {
             var titleElement = $("<div/>");
             titleElement.append(document.createTextNode(title));
             titleElement.css("font-weight", "bold");
             textElement.append(titleElement);
         }
 
-        if (message) {
+        if (typeof message !== 'undefined') {
             var messageElement = $("<div/>");
             messageElement.css("width", "230px");
             messageElement.css("float", "left");
@@ -1167,6 +1169,7 @@ if (window.console === undefined) {
         notificationElement.delay(timeOut).fadeOut(function(){
             notificationElement.remove();
         });
+
         notificationElement.bind("click", function() {
             notificationElement.hide();
         });
@@ -1174,7 +1177,7 @@ if (window.console === undefined) {
         notificationElement.append(textElement);
         config.container.prepend(notificationElement);
     };
-
+    
     Toast.info = function(message, title) {
         Toast.notify(message, title, "");
     };
@@ -1191,4 +1194,10 @@ if (window.console === undefined) {
         Toast.notify(message, title, "/images/36x36-success.png");
     };
 
-}(this.jQuery));
+}).call(this);
+
+// Raven setup
+(function () {
+    Raven.config('http://f36551acc7cb477eaf11fd7e150f4d57@ec2-50-17-17-246.compute-1.amazonaws.com/3');
+    window.onerror = Raven.process;
+}).call(this);

@@ -13,4 +13,5 @@ urlpatterns = patterns('reports.views',
         url(r'^daily_sched_runner/$', 'sched_runner', name='sched_runner'),
         url(r'^export/(?P<report_key>[-\w\.]+)/$', 'exporter', name='report_export'),
         url(r'^update_report_state/$', 'update_report_state', name='report_state_change'),
+        url(r'^report_done/$', 'report_done', name='report_done')
         )

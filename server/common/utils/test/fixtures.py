@@ -48,6 +48,7 @@ def generate_account(username, password):
 
     # This account also needs a default marketplace campaign.
     marketplace_campaign = CampaignQueryManager.get_marketplace(account)
+    marketplace_campaign.active = False
     marketplace_campaign.put()
 
     account.put()

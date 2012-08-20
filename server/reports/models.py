@@ -254,16 +254,21 @@ class Report(db.Model):
 
 
     def notify_complete(self):
-        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                 subject = 'Your report has completed',
-                                 bcc = 'report-monitoring@mopub.com')
-        mesg_dict = dict(report_key = str(self.schedule.key()),
-                         dim1 = self.d1,
-                         dim2 = self.d2,
-                         dim3 = self.d3,
-                         start = self.start.strftime('%m/%d/%y'),
-                         end = self.end.strftime('%m/%d/%y'))
+        mesg = mail.EmailMessage(
+            sender = 'olp@mopub.com',
+            subject = 'Your report has completed',
+            bcc = 'report-monitoring@mopub.com'
+        )
+        mesg_dict = dict(
+            report_key = str(self.schedule.key()),
+            dim1 = rename_for_oli(self.d1),
+            dim2 = rename_for_oli(self.d2),
+            dim3 = rename_for_oli(self.d3),
+            start = self.start.strftime('%m/%d/%y'),
+            end = self.end.strftime('%m/%d/%y')
+        )
         mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
+        
         if self.email and self.recipients:
             mesg.to = self.recipients
         else:
@@ -276,22 +281,27 @@ class Report(db.Model):
             
 
     def notify_failure(self, reason=OTHER):
-        mesg_dict = dict(dim1 = self.d1,
-                         dim2 = self.d2,
-                         dim3 = self.d3,
-                         start = self.start.strftime('%m/%d/%y'),
-                         end = self.end.strftime('%m/%d/%y'))
+        mesg_dict = dict(
+            dim1 = rename_for_oli(self.d1),
+            dim2 = rename_for_oli(self.d2),
+            dim3 = rename_for_oli(self.d3),
+            start = self.start.strftime('%m/%d/%y'),
+            end = self.end.strftime('%m/%d/%y')
+        )
+        
         if reason == NODAT:
-            mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                     subject = 'No data for your report',
-                                     bcc = 'report-monitoring@mopub.com',
-                                     )
+            mesg = mail.EmailMessage(
+                sender = 'olp@mopub.com',
+                subject = 'No data for your report',
+                bcc = 'report-monitoring@mopub.com',
+            )
             mesg.body = REPORT_NO_DATA % mesg_dict
         else:
-            mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                     subject = 'Your report has failed',
-                                     bcc = 'report-monitoring@mopub.com',
-                                     )
+            mesg = mail.EmailMessage(
+                sender = 'olp@mopub.com',
+                subject = 'Your report has failed',
+                bcc = 'report-monitoring@mopub.com',
+            )
             mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
 
         if self.email and self.recipients:
@@ -345,7 +355,8 @@ class Report(db.Model):
         return self.schedule.days
 
     def __str__(self):
-        return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
+        return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % \
+               (self.d1, self.d2, self.d3, self.start, self.end)
 
     @property
     def html_data(self):
@@ -849,3 +860,21 @@ class Report(db.Model):
             return (key, key)
         else:
             logging.warning("Not handling KW's yet")
+
+            
+def rename_for_oli(report_dimension):
+    """
+    Hack: The old reports system uses 'campaign' and 'adgroup' as
+    dimensions, instead of 'order' and 'line item'. We should go
+    through every place where instances of 'campaign' and 'adgroup'
+    are used and change them in those places. For now, we just
+    use this filter method wherever the string could be 'campaign'
+    or 'adgroup' and change it before it goes out in an email or
+    a template.
+    """
+    return str(report_dimension).replace('campaign', 'order')\
+                                .replace('adgroup', 'line item')\
+                                .replace('Campaign', 'Order')\
+                                .replace('Adgroup', 'Line Item')\
+                                .replace('AdGroup', 'Line Item')
+    

@@ -19,14 +19,21 @@ from common.utils.test.fixtures import (generate_app, generate_adunit,
                                         generate_marketplace_creative,
                                         generate_html_creative,
                                         generate_network_campaign)
-from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
-                                          model_key_eq, time_almost_eq,
-                                          model_eq, ADDED_1, EDITED_1)
+from common.utils.test.test_utils import (confirm_all_models, confirm_db,
+                                          dict_eq, list_eq, model_key_eq,
+                                          time_almost_eq, model_eq, ADDED_1,
+                                          EDITED_1)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
-from publisher.query_managers import PublisherQueryManager, AppQueryManager
+from publisher.query_managers import (PublisherQueryManager,
+                                      AppQueryManager,
+                                      AdUnitQueryManager)
 from reporting.models import StatsModel
+
+from account.models import NetworkConfig
+from publisher.models import App, AdUnit
+from advertiser.models import Campaign, AdGroup, Creative
 
 
 class DashboardViewTestCase(BaseViewTestCase):
@@ -593,6 +600,129 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
 ################################################################################
 ################################################################################
 ################################################################################
+
+class NewCreateAppViewTestCase(BaseViewTestCase):
+    """
+    NewCreateAppViewTestCase will replcae CreateAppViewTestCase because it uses
+    the confirm_all_models helper which makes tests cleaner and tests for more things.
+    It's not replcaed yet because I'm being lazy and don't want to look into
+    everything that CreateAppViewTestCase tests for
+
+        Author: Tiago Bandeira (8/16/2012)
+    """
+    def setUp(self):
+        super(NewCreateAppViewTestCase, self).setUp()
+
+        self.post_data = {
+            u'adunit-name': [u'Banner Ad'],
+            u'adunit-description': [u''],
+            u'adunit-custom_height': [u''],
+            u'app_type': [u'iphone'],
+            u'name': [u'Book App'],
+            u'package': [u''],
+            u'url': [u'', u''],
+            u'img_file': [u''],
+            u'secondary_category': [u''],
+            u'adunit-custom_width': [u''],
+            u'adunit-format': [u'320x50'],
+            u'adunit-app_key': [u''],
+            u'adunit-device_format': [u'phone'],
+            u'img_url': [u''],
+            u'primary_category': [u'books'],
+            u'adunit-refresh_interval': [u'0'],
+        }
+
+        self.url = reverse('publisher_create_app')
+
+    def mptest_create_app_and_adunit(self):
+        """Create an app and adunit
+
+        Author: Tiago Bandeira (8/16/2012)
+        """
+        c = Campaign.all().get()
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={self.account.key(): {'status': 'step4'}},
+                           added={App: 1,
+                                  AdUnit: 1,
+                                  NetworkConfig: 2,
+                                  Campaign: 1,
+                                  AdGroup: 2,
+                                  Creative: 2},
+                           response_code=302)
+
+    def mptest_create_network_adgroup(self):
+        """Create an app and adunit. Make sure adgroup is created for the network campaign for the new adunit.
+
+        Author: Tiago Bandeira (8/16/2012)
+        """
+        self.network_campaign = generate_network_campaign(
+                self.account, 'admob', put=True)
+
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={self.account.key(): {'status': 'step4'}},
+                           added={App: 1,
+                                  AdUnit: 1,
+                                  NetworkConfig: 2,
+                                  Campaign: 1,
+                                  AdGroup: 3,
+                                  Creative: 3},
+                           response_code=302)
+
+    def mptest_create_network_adgroup_and_copy_settings(self):
+        """Create an app and adunit. Make sure adgroup is created for the network campaign for the new adunit.
+
+        Author: Tiago Bandeira (8/16/2012)
+        """
+        app = generate_app(self.account)
+        AppQueryManager.put(app)
+        adunit = generate_adunit(self.account, app)
+        AdUnitQueryManager.put(adunit)
+
+        self.network_campaign = generate_network_campaign(
+                self.account, 'admob', put=True)
+
+        adgroup = self.network_campaign.adgroups[0]
+
+        # modify global adgroup settings
+        adgroup.device_targeting = True
+
+        adgroup.target_iphone = True
+        adgroup.target_ipod = True
+        adgroup.target_ipad = False
+        adgroup.target_android = True
+        adgroup.target_other = False
+
+        adgroup.ios_version_min = '2.1+'
+        adgroup.ios_version_max = '3.2+'
+
+        adgroup.android_version_min = '1.6'
+        adgroup.android_version_max = '2.2'
+
+        adgroup.geo_predicates = [u'country_name=BR']
+        adgroup.cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        adgroup.keywords = ['abc', 'de', 'fg']
+
+        AdGroupQueryManager.put(adgroup)
+
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={self.account.key(): {'status': 'step4'}},
+                           added={App: 1,
+                                  AdUnit: 1,
+                                  NetworkConfig: 2,
+                                  AdGroup: 2,
+                                  Creative: 2},
+                           response_code=302)
+
+        # verify settings have been copied over
+        new_adgroup = [ag for ag in self.network_campaign.adgroups if ag.key() != adgroup.key()][0]
+        model_eq(adgroup, new_adgroup, exclude=['site_keys', 't', 'active', 'created'], check_primary_key=False)
+
 
 class CreateAppViewTestCase(BaseViewTestCase):
     """

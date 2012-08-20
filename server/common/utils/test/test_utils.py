@@ -336,7 +336,8 @@ def get_arg_name(key):
                               'AdNetworkAppMapper':
                                 'adnetwork_app_mapper',
                               'NetworkConfig':
-                                'network_config'}
+                                'network_config',
+                              'Site': 'adunit'}
 
     if isinstance(key, db.Key):
         class_name = db.get(key).__class__.__name__

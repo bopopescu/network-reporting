@@ -1,0 +1,65 @@
+<section id="network-settingsForm" class="hidden">
+  <form accept-charset="ascii" id="network-login-form" autocomplete="off">
+    {% if not network.show_login %}
+      <fieldset class="alt login-fields" style="padding-top:20px">
+        <legend>
+          <h2>
+            Revenue Reporting
+            {% if network.name == "admob" or network.name == "inmobi" %}
+              <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
+            {% endif %}
+                </h2>
+            </legend>
+
+            <div style="clear: both;padding-top:10px">
+              <div class="login-credentials-message">
+                {% if reporting %}
+                  Revenue reporting for {{ network.pretty_name }} is turned on.
+                {% else %}
+                  MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
+                {% endif %}    
+              </div>
+              
+              {% if network.name != "mobfox" %}
+                <ul class="form_fields">
+                  <li>
+                    {{ login_form.username_str.label_tag }}
+                    {{ login_form.username_str }}
+                    <span id="username"></span>
+                  </li>
+                  
+                  <li>
+                    {{ login_form.password_str.label_tag }}
+                    {{ login_form.password_str }}
+                    <span id="password"></span>
+                  </li>
+                  
+                  {% if network.name == "admob" %}
+                    <li>
+                      {{ login_form.client_key.label_tag }}
+                      {{ login_form.client_key }}
+                      <span id="client_key"></span>
+                    </li>
+                  {% endif %}
+                </ul>
+              {% endif %}
+              
+              <div class="form-submit login-credentials-submit">
+                <a class="submit button">
+                  {% if network.name == "mobfox" %} 
+                    Turn on Reporting
+                  {% else %}
+                    Check and Save Credentials
+                  {% endif %}
+                </a>
+                <a class="cancel button">No Thanks</a>
+              </div>
+              <div class="form-submit login-credentials-settings hidden">
+                <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
+              </div>
+            </div>
+      </fieldset>
+    {% endif %}
+  </form>
+</section>
+{% endif %}

@@ -602,6 +602,14 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
 ################################################################################
 
 class NewCreateAppViewTestCase(BaseViewTestCase):
+    """
+    NewCreateAppViewTestCase will replcae CreateAppViewTestCase because it uses
+    the confirm_all_models helper which makes tests cleaner and tests for more things.
+    It's not replcaed yet because I'm being lazy and don't want to look into
+    everything that CreateAppViewTestCase tests for
+
+        Author: Tiago Bandeira (8/16/2012)
+    """
     def setUp(self):
         super(NewCreateAppViewTestCase, self).setUp()
 

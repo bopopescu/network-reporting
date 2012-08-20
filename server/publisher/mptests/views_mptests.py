@@ -631,10 +631,7 @@ class NewCreateAppViewTestCase(BaseViewTestCase):
 
         Author: Tiago Bandeira (8/16/2012)
         """
-        import logging
         c = Campaign.all().get()
-        logging.info(c)
-        logging.info(c.campaign_type)
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},

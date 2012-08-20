@@ -210,6 +210,14 @@ class MpxReportHandler(webapp.RequestHandler):
         
         return (total, a)
         
+    def mpx_cleared(self, start, end):
+        # total cleared impressions
+        mpx = json.loads(urlfetch.fetch(MPX_URL % (start.strftime("%m-%d-%Y"), end.strftime("%m-%d-%Y")), deadline=30).content)
+        total = sum([x["imp"] for x in mpx.values()])
+        
+        return total
+
+        
     def cost_total(self, end):
         BANDWIDTH = ["AWS Data Transfer"]
         CPU = ["Amazon Elastic Compute Cloud", "Amazon Simple Notification Service", "Amazon Simple Queue Service", "Amazon SimpleDB", "Amazon Elastic MapReduce"]
@@ -240,6 +248,31 @@ class MpxReportHandler(webapp.RequestHandler):
         else:
             logging.warn("Could not retrieve billing stats from AWS")
             return (0, 0, 0, 0)        
+            
+    def snippets(self, start):
+        # room IDs can be obtained from HipChat
+        API_KEY = "3ec795e1dd7781d59fb5b8731adef1"
+        ROOMS = [("Client", 51581), 
+                 ("AdServer", 57170),
+                 ("Data", 81833), 
+                 ("FrontEnd", 47652), 
+                 ("MPX", 80467), 
+                 ("MoPub", 21565)] 
+        date = start.strftime("%Y-%m-%d")
+        
+        # build snippets
+        snippets = []
+        
+        # go through each room and pull statuses
+        for room in ROOMS:
+            url = "http://api.hipchat.com/v1/rooms/history?room_id=%d&date=%s&timezone=PST&format=json&auth_token=%s" % (room[1], date, API_KEY)
+            logs = json.loads(urlfetch.fetch(url, deadline=30).content)
+            for m in logs["messages"]:
+                if "#standup" in m["message"] or "#snippet" in m["message"]:
+                    snippets.append(("%s/%s" % (room[0], m["from"]["name"]), m["message"].replace("#standup", "").replace("#snippet", "").replace("@all", "").strip()))
+        
+        # return the snippet list
+        return snippets
         
     def get(self):
         now = datetime.datetime.now() + datetime.timedelta(hours=-8)
@@ -257,8 +290,16 @@ class MpxReportHandler(webapp.RequestHandler):
             self.mpx_total(week[0], week[1])[0] / 1000.0, 
             self.mpx_total(month[0], month[1])[0] / 1000.0)
             
+        # clear rate
+        mpx_cleared = (self.mpx_cleared(now, now) / 1000000.0, 
+            self.mpx_cleared(week[0], week[1]) / 1000000000.0, 
+            self.mpx_cleared(month[0], month[1]) / 1000000000.0)
+            
         # total cost 
         cost = self.cost_total(now)
+        
+        # snippets
+        snippets = self.snippets(now)
             
         # cpm
         cpm = (mpx_spend[0] / request_count[0] / 1000.0, mpx_spend[1] / request_count[1] / 1000.0, mpx_spend[2] / request_count[2] / 1000.0)
@@ -266,6 +307,7 @@ class MpxReportHandler(webapp.RequestHandler):
         # compute body
         body = "Total Spend: $%.2f (7d: $%.1fK 30d: $%.1fK)\n" % mpx_spend
         body += "Total Inventory: %.1fMM (7d: %.1fB 30d: %.1fB)\n" % request_count
+        body += "Clear Rate: %.1f%% (7d: %.1f%% 30d: %.1f%%)\n" % (100 * mpx_cleared[0] / request_count[0], 100 * mpx_cleared[1] / request_count[1], 100 * mpx_cleared[2] / request_count[2])
         body += "eCPM: $%.3f (7d: $%.3f 30d: $%.3f)\n" % cpm
         body += "COGS: $%.3f (bandwidth: $%.3f storage: $%.3f cpu: $%.3f)\n" % cost
         
@@ -273,6 +315,11 @@ class MpxReportHandler(webapp.RequestHandler):
         body += "\nTop Bidders\n===========\n"
         for x in a:
           body += "%s: $%.2f\n" % x
+          
+        # snippets 
+        body += "\nSnippets\n========\n"
+        for x in snippets:
+          body += "%s: %s\n" % x
 
         body += "\nData retrieved at %s UTC. COGS computed on a month-to-date basis. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
         

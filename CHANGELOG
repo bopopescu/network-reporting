@@ -1,10 +1,30 @@
+# Deployed Saturday, August 18, 2012 at 12:05AM PST
+### Deployed by John Pena
+### Tagged deploy-178
+### Bugs Fixed: []
+### Included Commits: 
+ * bd4fb8c Merge branch 'master' of github.com:mopub/mopub
+ * be35a65 -- add snippets
+ * 594ffb9 Merge branch 'master' of github.com:mopub/mopub
+ * 94f9764 Merge branch 'master' of github.com:mopub/mopub
+ * 1424d4a added alert message for OLI launch
+ * 1ac67b9 added test
+ * 5885c59 UI-90 hack to fix network geo predicate bug
+ * 0688a07 Merge
+ * 94f8b66 Made copying device targeting to new network adgroups explicit
+ * 274d8cc [ui-83 state:fixed]
+ * 6156cfa Deployed without finding any bug fixes.
+ * 163aa37 Merge branch 'master' of github.com:mopub/mopub
+ * d34aee2 Merge branch 'master' of github.com:mopub/mopub
+ * e6e4243 -- clear rate into email
+ 
 # Deployed Wednesday, August 15, 2012 at 02:22AM PST
 ### Deployed by John Pena
 ### Tagged deploy-177
 ### Bugs Fixed: []
-### Included Commits: 
- * 30f7df7 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 30f7df7 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, August 15, 2012 at 01:50AM PST
 ### Deployed by John Pena
 ### Tagged deploy-176

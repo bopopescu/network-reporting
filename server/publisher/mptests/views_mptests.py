@@ -281,11 +281,6 @@ class AppDetailViewTestCase(BaseViewTestCase):
         list_eq(get_response.context['backfill_promo'],
             [self.backfill_promo_campaign])
 
-        # Both of these are true because we have an active marketplace campaign
-        # targetting an active adunit.
-        eq_(get_response.context['marketplace_activated'], True)
-        eq_(get_response.context['active_mpx_adunit_exists'], True)
-
     @confirm_db()
     def mptest_get_authorization(self):
         """
@@ -438,9 +433,6 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         list_eq(get_response.context['network'], [network_adgroup])
         list_eq(get_response.context['backfill_promo'],
                 [self.backfill_promo_adgroup])
-
-        # This is true because we have an active marketplace campaign.
-        eq_(get_response.context['marketplace_activated'], True)
 
     @confirm_db()
     def mptest_get_authorization(self):
@@ -780,11 +772,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
         ok_(not get_response.context['adunit_form'].is_bound)
 
-    @confirm_db(app=ADDED_1, adunit=ADDED_1, campaign={'added': 1, 'edited': 1},
+    @confirm_db(app=ADDED_1, adunit=ADDED_1, campaign=ADDED_1,
                 adgroup={'added': 2}, creative={'added': 2},
                 account={'edited': 1}, network_config={'added': 2})
     def mptest_create_first_app_and_adunit(self):
-        """
+        """mptest_create_first_app_and_adunit
+
         Confirm the entire app creation workflow by submitting known good
         parameters, and confirming the app/adunit were created as expected.
         """
@@ -932,11 +925,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         model_eq(backfill_promo_creative, expected_backfill_promo_creative,
             check_primary_key=False, exclude=['t'])
 
-    @confirm_db(app={'added': 2}, adunit={'added': 2}, campaign=EDITED_1,
+    @confirm_db(app={'added': 2}, adunit={'added': 2},
                 adgroup={'added': 1}, creative={'added': 1},
                 account={'edited': 1}, network_config={'added': 2})
     def mptest_create_additional_app_and_adunit(self):
-        """
+        """mptest_create_additional_app_and_adunit
+
         Confirm the entire app creation workflow by submitting known good
         parameters, and confirming the app/adunit were created as expected.
         """

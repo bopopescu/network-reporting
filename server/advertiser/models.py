@@ -208,7 +208,8 @@ class AdGroup(db.Model):
 
     adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
                                               'network', 'promo',
-                                              'backfill_promo', 'marketplace'])
+                                              'backfill_promo', 'marketplace',
+                                              'backfill_marketplace'])
 
     ##################################
     # /end moved from campaign class #

@@ -895,7 +895,7 @@ class Creative(polymodel.PolyModel):
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
-    ad_type = db.StringProperty(choices=["text_icon", "image", "html",
+    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "html",
                                          "iAd", "adsense", "admob",
                                          "greystripe", "html_full", "clear",
                                          "custom_native", "admob_native",

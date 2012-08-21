@@ -54,6 +54,7 @@ class NetworkAdGroupForm(forms.ModelForm):
                                          widget=forms.RadioSelect)
     cities = forms.Field(required=False, widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
+                               label='Keywords:',
                                widget=forms.Textarea(attrs={'cols': 50,
                                                             'rows': 3}))
 

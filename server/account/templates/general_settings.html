@@ -1,10 +1,16 @@
 {% extends "account/base.html" %}
 {% load filters %}
-{% block pageTitle %}<h1>Account</h1>{% endblock pageTitle %}
+  
+{% block pageTitle %}
+  <h1>Account</h1>
+{% endblock pageTitle %}
+
 {% block content %}
 
 
-             <h2 style="margin:0 0 0 0;">Basic Account Settings <span style="font-weight:normal;">- <a href="{% url settings_change %}">Edit</a></span></h2>
+  <h2 style="margin:0 0 0 0;">
+  Basic Account Settings
+  <span style="font-weight:normal;">- <a href="{% url settings_change %}">Edit</a></span></h2>
 
               <fieldset id="appForm-details">
 

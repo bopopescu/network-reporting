@@ -1,57 +1,60 @@
 {% extends "registration/base.html" %}
 
+{% load filters %}
+
 {% block pageTitle %}<h1>Account - Login</h1>{% endblock %}
 
 {% block content %}
-<div class="content-main">
-  <script type="text/javascript">
-    $(document).ready(function(){
-        $(':input').keypress(function(e) {
-            if (e.which == 13) {
-                e.preventDefault();
-                $('#accountForm').submit();
-            }
-        });
-    });
-  </script>
-  <div id="login-left">
-    <form action="" method="POST" accept-charset="utf-8" id="accountForm">
-      {% csrf_token %}
-      <fieldset id="appForm-details">
-        <legend>Welcome Back!</legend>
-        <p>
-          Enter your email and password to log back in to MoPub
-        </p>
-        <dl class="formFields">
+  <div class="content-main">
+    <div id="login-left">
+      <form action="" method="POST" accept-charset="utf-8" id="accountForm">
+        {% csrf_token %}
+        <fieldset id="appForm-details">
+          <h2>Welcome Back!</h2>
+          <p> Enter your email and password to log back in to MoPub</p>
+          <dl class="formFields">
             <dt>Email: </dt>
             <dd>
-                <input type="text" name="username" class="{% if form.username.errors or form.errors %}error{% endif %}" value="{{form.data.username}}"/>
-                {% if form.username.errors %}<span class="error">(Required)</span>{% endif %}
+              <input type="text" name="username" class="input-text {% if form.username.errors or form.errors %}error{% endif %}" value="{{form.data.username}}"/>
+              {% if form.username.errors %}<span class="error">(Required)</span>{% endif %}
             </dd>
             <dt>Password: </dt>
             <dd>
-                <input type="password" name="password" class="{% if form.password.errors or form.errors %}error{% endif %}" value="{{form.data.password}}"/>
-                {% if form.password.errors %}<span class="error">(Required)</span>{% endif %}
+              <input type="password" name="password" class="input-text {% if form.password.errors or form.errors %}error{% endif %}" value="{{form.data.password}}"/>
+              {% if form.password.errors %}<span class="error">(Required)</span>{% endif %}
             </dd>
             {% for error in form.non_field_errors %}
-            <dt>
-            </dt>
-            <dd>
-              <span class="error">{{ error|safe }}</span>
-            </dd>
+              <dt>
+              </dt>
+              <dd>
+                <span class="error">{{ error|safe }}</span>
+              </dd>
             {% endfor %}
-
+            
             <dt>&nbsp;</dt>
             <dd>
-              <a href="#" class="button" id="accountForm-submit">Log in</a> or <a id="register-account" href="{% url registration_register %}">register for a MoPub account</a>
+              <a href="#" class="btn" id="accountForm-submit">
+                Log in
+              </a>
+              or <a id="register-account" href='{% url registration_register %}'>register for a MoPub account</a>
             </dd>
             <dt>&nbsp;</dt>
             <dd>
-              <a href="{% url auth_password_reset %}">Forgot your password?</a>
+              <a href='{% url auth_password_reset %}'>Forgot your password?</a>
             </dd>
-        </dl>
-      </fieldset>
-    </form>
+          </dl>
+        </fieldset>
+      </form>
+    </div>
   </div>
-</div>
+
 {% endblock content %}
+
+{% block extraScripts %}
+  {% include_script "controllers/account" %}
+    <script type="text/javascript">
+      $(function () {
+          LoginController.initialize();
+      });
+    </script>
+{% endblock extraScripts %}

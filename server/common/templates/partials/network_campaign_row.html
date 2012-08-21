@@ -1,0 +1,54 @@
+{% load elements %}
+{% load filters %}
+
+<tr class="sub lineitem-row {{ network_campaign.status }}" id="{{ network_campaign.key }}">
+  <td class="controls">
+    <img id="status-{{ network_campaign.key }}" src="{{ network_campaign.status_icon_url }}" height="9" width="9" style="margin-top: 4px;" />
+  </td>
+  <td class="name">
+    <a href="{% url network_details network_campaign.key %}">
+      {{ network_campaign.name }}
+    </a>
+    <br />
+    <span class="muted">
+      {{ network_campaign.status|capitalize }}
+    </span>
+    <img id="{{ network_campaign.key }}-img" class="loading-img" src="/images/spin-small.gif" />
+  </td>
+  <td class="type stat">
+    {{ network_campaign.campaign_type|capitalize }}
+  </td>
+  <td class="goal stat">
+  </td>
+  <td class="rate stat">
+  </td>
+  <td class="start_date stat">
+  </td>
+  <td class="end_date stat">
+  </td>
+  <td class="imp stat">
+    --
+  </td>
+  <td class="clk stat">
+    --
+  </td>
+  <td class="ctr stat">
+    --
+  </td>
+  <td class="stat">
+    <div class="conv">
+      --
+    </div>
+    <div class="muted conv_rate">
+      --
+    </div>
+  </td>
+  <td class="delivery">
+  </td>
+  <td class="popdown">
+    {% comment %}
+      TODO: implement popover for network campaigns
+      <i class="moreinfo icon-search" id="popover-{{ network_campaign.key }}"></i>
+    {% endcomment %}
+  </td>
+</tr>

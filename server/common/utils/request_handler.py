@@ -1,7 +1,6 @@
-import logging
-
 import datetime
 import random
+import logging
 
 from account.query_managers import AccountQueryManager
 
@@ -17,6 +16,7 @@ from common.utils import date_magic
 from django.conf import settings
 from django.http import Http404
 from common.ragendja.template import render_to_response
+from common.utils.browsers import is_ie
 
 from stats.log_service import LogService
 
@@ -67,13 +67,24 @@ class RequestHandler(object):
             #       self.start_date and self.end_date, inclusive.
             # * self.days - a list of datetime.date objects for each day
             #       in between self.start_date and self.end_date, inclusive.
+            # self.current - True if the date range includes today, False otherwise
             self.start_date, self.end_date = get_start_and_end_dates(self.request)
             try:
                 self.date_range = int(self.params.get('r'))
             except:
                 self.date_range = 14
             self.days = date_magic.gen_days(self.start_date, self.end_date)
+            
+            today = datetime.datetime.now(Pacific_tzinfo()).date()
+            self.current = today == self.days[-1]
 
+            
+            # little hack to figure out if it's yesterday so we can
+            # show the button pressed down in the date controls
+            yesterday = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(1)        
+            self.yesterday = (self.days[-1] == yesterday and len(self.days) == 1)
+
+            
             # Set self.account
             if self.login:
                 if 'account' in self.params:
@@ -83,6 +94,14 @@ class RequestHandler(object):
                 else:
                     self._set_account()
 
+            # Determine if this request was made from an IE browser so
+            # we can display a warning in the template
+            try:
+                self.is_ie = is_ie(request.META['HTTP_USER_AGENT'])
+            except Exception, error:
+                logging.warn(error)
+                self.is_ie = False
+                    
             # If a key is passed in the url, and if the request handler
             # has been initialized with id='key_name', we can fetch the
             # object from the db now.  We'll use it later on to make sure
@@ -118,17 +137,21 @@ class RequestHandler(object):
                     "start_date": self.start_date,
                     "end_date": self.end_date,
                     "date_range": self.date_range,
-                    "days":self.days,
+                    "days": self.days,
+                    "yesterday": self.yesterday,
                     "offline": self.offline,
-                    "account": self.account
+                    "account": self.account,
+                    "current": self.current,
+                    "True": True,
+                    "False": False,
                 })
+                logging.warn(response)
                 response = render_to_response(self.request,
                                               self.template,
                                               response)
                 if use_handshake:
                     self._add_handshake(response)
                 return response
-
 
             elif request.method == "POST":
                 if self.login and self.request.user.is_authenticated():

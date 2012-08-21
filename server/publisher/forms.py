@@ -7,6 +7,7 @@ from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
 from publisher.models import Site, App
 
+import logging
 from common.utils import helpers
 
 
@@ -146,7 +147,7 @@ class AdUnitForm(mpforms.MPModelForm):
     format = mpfields.MPTextField(required=True,
                                   widget = mpwidgets.MPFormatWidget)
     device_format = mpfields.MPChoiceField(required=True,
-                                           widget=mpwidgets.MPRadioWidget,
+                                           widget=mpwidgets.MPRadioWidget(attrs={'class': 'btn'}),
                                            choices=DEVICE_FORMAT_CHOICES)
 
     def clean_refresh_interval(self):

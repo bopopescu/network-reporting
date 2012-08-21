@@ -1,34 +1,19 @@
-
 import logging
-
-from urllib import urlencode
 from datetime import datetime, date
-import urllib
 
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.utils import simplejson
-from django.template import loader
-from google.appengine.api import mail, files
-from google.appengine.ext import db
-from google.appengine.ext.webapp import template, blobstore_handlers
-from google.appengine.ext.webapp.util import run_wsgi_app
 
-from common.ragendja.template import render_to_response, \
-        render_to_string, \
-        JSONResponse
+from google.appengine.ext import db
+from common.ragendja.template import JSONResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
-from mail.mails import REPORT_FINISHED_SIMPLE
-from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
 from reports.forms import ReportForm
-from reports.models import ScheduledReport, \
-        Report
+from reports.models import ScheduledReport, Report
 from reports.query_managers import ReportQueryManager
-from reports.forms import ReportForm
 
 import report_server_api
 
@@ -50,35 +35,37 @@ class ReportIndexHandler(RequestHandler):
 
         scheduled = sorted(scheduled, key=sort_reports_key, reverse=True)
 
-        new_report_form = ReportForm(initial={'recipients':
-                                        self.request.user.email},
+        new_report_form = ReportForm(initial={'recipients': self.request.user.email},
                                      prefix='new')
 
         display_splash = date.today() < date(2012, 8, 1)
-        return render_to_response(self.request, 'reports/reports_index.html',
-                                 {'scheduled': scheduled,
-                                  'new_report_form': new_report_form,
-                                  'display_splash': display_splash})
+        return  {
+            'scheduled': scheduled,
+            'new_report_form': new_report_form,
+            'display_splash': display_splash
+        }
 
 @login_required
 def reports_index(request, *args, **kwargs):
-    return ReportIndexHandler()(request, *args, **kwargs)
+    template = 'reports/reports_index.html'
+    return ReportIndexHandler(template=template)(request, *args, **kwargs)    
 
 
 class ReportStatusHandler(RequestHandler):
+    
     def get(self, report_key):
+        
         report = ScheduledReport.get(report_key)
-
         if report.account.key() != self.account.key():
             raise Http404
 
         return JSONResponse({'status': report.status})
 
-
 @login_required
 def report_status(request, *args, **kwargs):
     return ReportStatusHandler()(request, use_cache=False,*args, **kwargs)
 
+    
 class EditReportHandler(RequestHandler):
     def post(self, report_key=None):
         """
@@ -115,7 +102,8 @@ class EditReportHandler(RequestHandler):
 
             return JSONResponse({
                 'success': True,
-                'redirect': reverse('reports_index')})
+                'redirect': reverse('reports_index')
+            })
         else:
             errors = {}
             for key, value in report_form.errors.items():
@@ -223,7 +211,8 @@ class ReportExporter(RequestHandler):
         report = Report.get(report_key)
 
         if report.report_data_link:
-            # The report was processed by the new system; use the report_data_link to dynamically generate
+            # The report was processed by the new system; use the
+            # report_data_link to dynamically generate
             # a signed S3 link that points at the report output data
             return HttpResponseRedirect(
                 report_server_api.get_report_data_url(report.report_data_link))
@@ -234,6 +223,7 @@ class ReportExporter(RequestHandler):
 def exporter(request, *args, **kwargs):
     return ReportExporter()(request, *args, **kwargs)
 
+    
 class ReportStateUpdater(RequestHandler):
     def post(self, action='delete'):
         keys = self.request.POST.getlist('reportChangeStateForm-key') or []
@@ -257,10 +247,12 @@ def update_report(report, action):
 
 
 class ReportDoneHandler(RequestHandler):
-    """Handle callback from report server.
+    """
+    Handle callback from report server.
 
-       During the testing phase, we should comment out the 'put' statement and notifications
-       so that it doesn't interfere with the existing system.
+    During the testing phase, we should comment out the 'put'
+    statement and notifications so that it doesn't interfere with the
+    existing system.
     """
     def post(self, report_id='', results_url='', status='', reason=''):
         logging.info('Got callback from reporting system: ' +
@@ -279,10 +271,12 @@ class ReportDoneHandler(RequestHandler):
             logging.info('Successfully got report')
 
             if settings.WRITE_REPORT_SERVER_RESULTS:
-                # Only send email if we're using report server as canonical source
+                # Only send email if we're using report server as
+                # canonical source
                 report.notify_complete()
         elif status == 'error':
-            # Reporting system had a problem; translate reason to appropriate status here
+            # Reporting system had a problem; translate reason to
+            # appropriate status here
             if reason == 'no_data':
                 report_status = 'No Data'
             else:
@@ -291,11 +285,13 @@ class ReportDoneHandler(RequestHandler):
             report.status = report_status
 
             if settings.WRITE_REPORT_SERVER_RESULTS:
-                # Only send email if we're using report server as canonical source
+                # Only send email if we're using report server as
+                # canonical source
                 report.notify_failure(report_status)
 
         if settings.WRITE_REPORT_SERVER_RESULTS:
-            # Only persist results if we're using report server as canonical source
+            # Only persist results if we're using report server as
+            # canonical source
             report.put()
 
         return JSONResponse({'status': 'ok'})

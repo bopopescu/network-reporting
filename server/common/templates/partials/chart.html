@@ -1,0 +1,95 @@
+<div id="stats-breakdown-container" class="stats-breakdown">
+  <table>
+    <tbody>
+      <% if (rev !== null) { %>
+      <tr <% if (active === 'rev') { %>class="active"<% } %> id="stats-breakdown-rev">
+        <td class="stats-breakdown-value">
+          <span class="inner"><%= rev %></span>
+        </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Revenue</span>
+          </th>
+      </tr>
+      <% } %>
+      
+      <% if (req !== null) { %>
+      <tr <% if (active === 'req') { %>class="active"<% } %> id="stats-breakdown-req">
+        <td class="stats-breakdown-value">
+          <span class="inner"><%= req %></span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Requests</span>
+          </th>
+      </tr>
+      <% } %>
+      
+      <% if (imp !== null) { %>
+      <tr <% if (active === 'imp') { %>class="active"<% } %> id="stats-breakdown-imp">
+        <td class="stats-breakdown-value">
+            <span class="inner"><%= imp %></span>
+        </td>
+        <th class="stats-breakdown-name">
+          <span class="inner">Impressions</span>
+        </th>
+      </tr>
+      <% } %>
+      
+      <% if (clk !== null) { %>
+        <tr <% if (active === 'clk') { %>class="active"<% } %> id="stats-breakdown-clk">
+          <td class="stats-breakdown-value">
+            <span class="inner">
+              <%= clk %>
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Clicks</span>
+          </th>
+        </tr>
+        <% } %>
+
+        <% if (ctr !== null) { %>
+        <tr <% if (active === 'ctr') { %>class="active"<% } %> id="stats-breakdown-ctr">
+          <td class="stats-breakdown-value">
+            <span class="inner">
+              <%= ctr %>
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">CTR</span>
+          </th>
+        </tr>
+        <% } %>        
+
+        <% if (conv !== null) { %>
+        <tr <% if (active === 'conv') { %>class="active"<% } %> id="stats-breakdown-conv">
+          <td class="stats-breakdown-value">
+            <span class="inner">
+              <%= conv %>
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Conversions</span>
+          </th>
+        </tr>
+        <% } %>
+
+        
+        <% if (cpm !== null) { %>
+        <tr <% if (active === 'cpm') { %>class="active"<% } %> id="stats-breakdown-cpm">
+          <td class="stats-breakdown-value">
+            <span class="inner">
+              <%= cpm %>
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">eCPM</span>
+          </th>
+        </tr>
+        <% } %>
+    </tbody>
+  </table>
+</div>
+
+<div class="chart stats-chart" id="stats-chart"></div>
+<div id="chart-legend"></div>
+

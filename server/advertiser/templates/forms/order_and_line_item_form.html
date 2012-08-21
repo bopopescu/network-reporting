@@ -1,0 +1,367 @@
+{% extends 'advertiser/base.html' %}
+
+{% load filters %}
+{% load forms %}
+
+{% block pageTitleTag %}
+{% if order %}{% if line_item %}Edit Line Item{% else %}New Line Item{% endif %}{% else %}New Order{% endif %}
+{% endblock %}
+
+{% block pageTitle %}
+<h1>{% if order %}{% if line_item %}Edit Line Item{% else %}New Line Item{% endif %}{% else %}New Order{% endif %}</h1>
+{% endblock pageTitle %}
+
+{% block titleBarRight %}
+{% endblock titleBarRight %}
+
+{% block content %}
+
+  {% if apps_without_global_id %}
+    <div class="alert-message block-message error">
+      <p>Error: You must have a complete iTunes URL or Android package name for the app(s) that you are using for user targeting.  Access the apps below and add the iTunes URL or Android package name.</p>
+      <ul class="simple">
+        {% for app in apps_without_global_id %}
+          <li><a href="{% url publisher_app_show app.key %}">{{ app.name }}</a></li>
+        {% endfor %}
+      </ul>
+      <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+    </div>
+  {% endif %}
+
+<form id="order_and_line_item_form" method="post">
+    {% if order %}
+        <fieldset id="order_fieldset">
+            <legend><h2>Order Details</h2></legend>
+
+            <ul class="form_fields">
+                <li>
+                    <label>Name:</label>
+                    <div>
+                        {{ order.name }}
+                    </div>
+                </li>
+                <li>
+                    <label>Advertiser:</label>
+                    <div>
+                        {{ order.advertiser }}
+                    </div>
+                </li>
+                <li>
+                    <label>Description:</label>
+                    <div>
+                        {{ order.description }}
+                    </div>
+                </li>
+            </ul>
+        </fieldset>
+    {% else %}
+        {% include 'forms/order_form.html' %}
+    {% endif %}
+    <div>&nbsp;</div>
+    <fieldset id="line_item_fieldset">
+        <legend>
+            <h2>Line Item Details</h2>
+            <p>Each Order has one or more Line Items.  A Line Item is a set of creatives and targeting parameters that runs with a specific budget.</p>
+        </legend>
+
+        <ul class="form_fields">
+          <li>
+            {{ line_item_form.adgroup_type.label_tag }}
+            <div>
+              {% comment %}TODO: do this in a tag or something{% endcomment %}
+              {% if line_item_form.instance %}
+                {% if line_item_form.instance.gtee %}Guaranteed{% else %}Promotional{% endif %}
+                <input name="adgroup_type" type="hidden" value="{% if line_item_form.instance.gtee %}gtee{% else %}promo{% endif %}" />
+              {% else %}
+                {{ line_item_form.adgroup_type }}
+              {% endif %}
+              <a href="#" id="adgroup_type-helpLink">What's this?</a>
+              <div class="hidden" id="adgroup_type-helpContent">
+                <h3>Line Item Type</h3>
+                <h4>Guaranteed</h4>
+                <p>A <strong>Guaranteed</strong> line item is typically a direct sold line item with a set CPM for a certain number of impressions and a start and end date.</p>
+                <h4>Promotional</h4>
+                <p>A <strong>Promotional</strong> line item is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" line item.</p>
+              </div>
+            </div>
+            </li>
+
+            <li class="adgroup_type_dependent gtee">
+              {{ line_item_form.gtee_priority.label_tag }}
+              <div>
+                    {{ line_item_form.gtee_priority }}
+                    <a href="#" id="gtee_priority-helpLink">What's this?</a>
+                    <div id="gtee_priority-helpContent" class="hidden">
+                        <h3>Priority</h3>
+                        <p>
+                          Line items are set to run before other line items at lower priorities. Line Items within the same priority level are run in order of CPM.
+                        </p>
+                    </div>
+                </div>
+            </li>
+
+            <li class="adgroup_type_dependent promo">
+                {{ line_item_form.promo_priority.label_tag }}
+                <div>
+                    {{ line_item_form.promo_priority }}
+                    <a href="#" id="promo_priority-helpLink">What's this?</a>
+                    <div id="promo_priority-helpContent" class="hidden">
+                        <h3>Priority</h3>
+                        <p>You may pick whether line items are prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
+                    </div>
+                </div>
+            </li>
+
+            <li>
+                {{ line_item_form.name.label_tag }}
+                <div>
+                    {{ line_item_form.name }}
+                </div>
+            </li>
+
+            <li>
+                {{ line_item_form.start_datetime.label_tag }}
+                <div>
+                    {{ line_item_form.start_datetime }} PST
+                </div>
+            </li>
+
+            <li>
+                {{ line_item_form.end_datetime.label_tag }}
+                <div>
+                    {{ line_item_form.end_datetime}} PST
+                </div>
+            </li>
+
+            <li>
+                {{ line_item_form.bid_strategy.label_tag }}
+                <div>
+                    {{ line_item_form.bid_strategy }} @ {{ line_item_form.bid }} USD
+                    <a class="adgroup_type_dependent promo whatsthis" id="bid-helpLink" href="#">What's this?</a>
+                    <div id="bid-helpContent" class="hidden">
+                        <h3>Promotional CPM</h3>
+                        <p>MoPub uses CPM to prioritize which promotional line item will be displayed.  Increase the CPM of a line item to run it before other line items within the same priority.</p>
+                    </div>
+                </div>
+            </li>
+
+            <li class="adgroup_type_dependent gtee">
+                {{ line_item_form.budget.label_tag }}
+                <div>
+                    {{ line_item_form.budget }}
+                    {{ line_item_form.budget_type }}
+                </div>
+            </li>
+
+            <li class="adgroup_type_dependent gtee">
+                {{ line_item_form.budget_strategy.label_tag }}
+                <div>
+                    <span class="radios">
+                        {% comment %}
+                        The latest version of Django makes it easy to modify the
+                        RadioSelect widget.  Since it is not simple here, this
+                        wrapper is used to style it.
+                        {% endcomment %}
+                        {{ line_item_form.budget_strategy }}
+                    </span>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    <fieldset>
+        <legend>
+            <h2>Targeting</h2>
+            <p>Choose which ad units this line item will target.</p>
+        </legend>
+
+        <span id="apps_label">
+            Ad Units:<br />
+            <label>( <input id="all-adunits" type="checkbox" /> All )</label>
+        </span>
+
+        <ul id="apps">
+            {% for app in apps %}
+            <li>
+                <img src="{{ app.icon_url }}" />
+                <div>
+                    <label>
+                        {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                    </label>
+                    <ul class="adunits">
+                        {% for adunit in app.all_adunits %}
+                          {% if not adunit.deleted %}
+                            <li>
+                              <label>
+                                <input {% if adunit.key in line_item_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
+                                {{ adunit.name }}
+                              </label>
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </fieldset>
+
+    <fieldset class="hidden" id="advanced">
+        <legend>
+            <h2>Advanced Details</h2>
+        </legend>
+
+        <ul class="form_fields">
+            <li>
+                {{ line_item_form.allocation_percentage.label_tag }}
+                <div>
+                    {{ line_item_form.allocation_percentage }} % of all requests
+                </div>
+            </li>
+            <li>
+                {{ line_item_form.daily_frequency_cap.label_tag }}
+                <div>
+                    {{ line_item_form.daily_frequency_cap }} daily impressions per user<br />
+                    {{ line_item_form.hourly_frequency_cap }} hourly impressions per user
+                </div>
+            </li>
+            <li>
+                {{ line_item_form.device_targeting.label_tag }}
+                <div>
+                    {% comment %}
+                    This field should be rendered using a Django widget, but
+                    there is no good option in 1.2 for a Boolean RadioSelect.
+                    {% endcomment %}
+                    <span class="radios">
+                        <ul>
+                            <li><label for="id_device_targeting_0"><input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not line_item_form.device_targeting|display_value %}checked="checked"{% endif %}> All</label></li>
+                            <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if line_item_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
+                        </ul>
+                    </span>
+                    <ul id="device_targeting">
+                        <li>
+                            <ul class="device_type">
+                                <li><label>{{ line_item_form.target_iphone }} {{ line_item_form.target_iphone.label }}</label></li>
+                                <li><label>{{ line_item_form.target_ipod }} {{ line_item_form.target_ipod.label }}</label></li>
+                                <li><label>{{ line_item_form.target_ipad }} {{ line_item_form.target_ipad.label }}</label></li>
+                            </ul>
+                            {{ line_item_form.ios_version_min.label_tag }}
+                            {{ line_item_form.ios_version_min }}
+                            {{ line_item_form.ios_version_max.label_tag }}
+                            {{ line_item_form.ios_version_max }}
+                        </li>
+                        <li>
+                            <label class="device_type">{{ line_item_form.target_android }} {{ line_item_form.target_android.label }}</label>
+                            {{ line_item_form.android_version_min.label_tag }}
+                            {{ line_item_form.android_version_min }}
+                            {{ line_item_form.android_version_max.label_tag }}
+                            {{ line_item_form.android_version_max }}
+                        </li>
+                        <li>
+                            <label class="device_type">{{ line_item_form.target_other }} {{ line_item_form.target_other.label }}</label>
+                            <span class="muted">(All versions)</span>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li>
+                <label>User Targeting:</label>
+                <div>
+                    <div>
+                        Target users that
+                        <select id="user_targeting_type">
+                            <option value="excluded_apps">don't have</option>
+                            <option value="included_apps">have</option>
+                        </select>
+                        these apps
+                    </div>
+                    <div>
+                        {{ line_item_form.included_apps }}
+                        {{ line_item_form.excluded_apps }}
+                        <a href="#" id="campaignForm-apps-helpLink">What's this?</a>
+                        <div id="campaignForm-apps-helpContent" class="hidden">
+                            <h3>User targeting</h3>
+                            <p>User targeting enables you to specify certain groups of users for each ad campaign that will or will not be shown an ad. This feature is especially useful for cross-promotional install campaigns where you may want to exclude users that already have certain apps installed.</p>
+                            <p>
+                                For example, if you would like to drive installs for the "Tic-tac-toe" application with a cross-promotional campaign for users that do not currently have "Tic-tac-toe" installed, you would do the following:
+                                <ol>
+                                    <li>Select "Target users that don't have these apps"</li>
+                                    <li>Enter "Tic-tac-toe" in the field directly below</li>
+                                    <li>Select Continue to save your inputs</li>
+                                </ol>
+                            </p>
+                            <p>
+                                Note: User targeting only works when the following conditions are met:
+                                <ul>
+                                    <li>You have the app(s) with users you want to include/exclude on your MoPub dashboard</li>
+                                    <li>You have enabled conversion tracking on the app</li>
+                                    <li>You have input a complete iTunes URL or Android package name for the app</li>
+                                </ul>
+                            </p>
+                            <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <label>Country Targeting:</label>
+                <div>
+                    <div id="geo_pred_ta" name="geo_predicates"></div>
+                </div>
+            </li>
+            <li class="countryNumDependent 0 1" style="display: none;">
+                {{ line_item_form.region_targeting.label_tag }}
+                <div>
+                    <span class="radios">{{ line_item_form.region_targeting }}</span>
+                </div>
+            </li>
+            <li class="locationDependent city" style="display: none;">
+                <label>City Targeting:</label>
+                <div>
+                    <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
+                    <div class="countryNumDependent 1" style="display: none;"><div id="city_ta"></div></div>
+                </div>
+            </li>
+            <li>
+                {{ line_item_form.keywords.label_tag }}
+                <div>
+                    {{ line_item_form.keywords }}
+                    <a href="#" id="keywords-helpLink">What's this?</a>
+                    <div id="keywords-helpContent" class="hidden">
+                        <h3>Keywords</h3>
+                        <p>
+                            Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
+                            <br/><br/>
+                            e.g. In order to target 24-year-old males or any 25-year-old you can use special keywords
+                            <br/><br/>
+                            m_age:24 AND m_gender:M
+                            <br/>
+                            m_age:25
+                            <br/><br/>
+                            Note: Keywords should only be used if your app is sending keywords with the ad request.
+                        </p>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    <a class="btn left" id="toggle_advanced" href="#">Show Advanced Targeting</a>
+
+    <a class="btn right" id="submit" href="#">Continue</a>
+</form>
+{% endblock %}
+
+{% block extraScripts %}
+{% include_script "models/inventory" %}
+{% include_script "views/inventory" %}
+{% include_script "controllers/orders" %}
+<script type="text/javascript">
+    $(function() {
+        OrdersController.initializeOrderAndLineItemForm({
+            priors: {{ line_item_form.geo_predicates|field_value|to_json|safe }},
+            city_priors: {{ line_item_form.cities|field_value|to_json|safe }}
+        });
+    });
+</script>
+{% endblock extraScripts %}

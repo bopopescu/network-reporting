@@ -13,7 +13,7 @@ from django.forms.widgets import Textarea
 
 class MPBoundField(BoundField):
     """"A Field plus data by MoPub."""
-    TEMPLATE = "bound_field.html"
+    TEMPLATE = "common/bound_field.html"
 
     def __unicode__(self):
         """Renders this field as an HTML widget with label and errors."""
@@ -186,11 +186,11 @@ class MPModelForm(forms.ModelForm):
 
                     if errors_on_separate_row and bf_errors:
                         output.append(error_row % force_unicode(bf_errors))
-
                     if bf.label:
                         label = conditional_escape(force_unicode(bf.label))
                         # Only add the suffix if the label does not end in
                         # punctuation.
+                        logging.warn(label)
                         if self.label_suffix:
                             if label[-1] not in ':?.!':
                                 label += self.label_suffix

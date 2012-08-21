@@ -1,68 +1,29 @@
-import sys
-from google.appengine.ext import db
-from google.appengine.ext import blobstore
-from google.appengine.ext.db import polymodel
-from google.appengine.api import images
-from account.models import Account
-
-from common.constants import MIN_IOS_VERSION, \
-        MAX_IOS_VERSION, \
-        MIN_ANDROID_VERSION, \
-        MAX_ANDROID_VERSION, \
-        NETWORKS
 import datetime
+import logging
 
-#from ad_server.renderers.creative_renderer import BaseCreativeRenderer
-#from ad_server.renderers.admob import AdMobRenderer
-#from ad_server.renderers.admob_native import AdMobNativeRenderer
-#from ad_server.renderers.text_and_tile import TextAndTileRenderer
-#from ad_server.renderers.adsense import AdSenseRenderer
-#from ad_server.renderers.image import ImageRenderer
-#from ad_server.renderers.millennial_native import MillennialNativeRenderer
-#from ad_server.renderers.millennial import MillennialRenderer
-#from ad_server.renderers.custom_native import CustomNativeRenderer
-#from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
-#from ad_server.renderers.html_data_renderer import HtmlDataRenderer
-#from ad_server.renderers.brightroll import BrightRollRenderer
-#from ad_server.renderers.inmobi import InmobiRenderer
-#from ad_server.renderers.greystripe import GreyStripeRenderer
-#from ad_server.renderers.appnexus import AppNexusRenderer
-#from ad_server.renderers.chartboost import ChartBoostRenderer
-#from ad_server.renderers.ejam import EjamRenderer
-#from ad_server.renderers.jumptap import JumptapRenderer
-#from ad_server.renderers.iad import iAdRenderer
-#from ad_server.renderers.mobfox import MobFoxRenderer
+from google.appengine.api import images
+from google.appengine.ext import blobstore
+from google.appengine.ext import db
+from google.appengine.ext.db import polymodel
 
-
-#from ad_server.networks.appnexus import AppNexusServerSide
-#from ad_server.networks.jumptap import JumptapServerSide
-#from ad_server.networks.brightroll import BrightRollServerSide
-#from ad_server.networks.chartboost import ChartBoostServerSide
-#from ad_server.networks.ejam import EjamServerSide
-#from ad_server.networks.greystripe import GreyStripeServerSide
-#from ad_server.networks.inmobi import InMobiServerSide
-#from ad_server.networks.jumptap import JumptapServerSide
-#from ad_server.networks.millennial import MillennialServerSide
-#from ad_server.networks.mobfox import MobFoxServerSide
-#from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
-#                                                  DummyServerSideFailure
-#                                                 )
-
+from account.models import Account
+from common.constants import (MIN_IOS_VERSION,
+                              MAX_IOS_VERSION,
+                              MIN_ANDROID_VERSION,
+                              MAX_ANDROID_VERSION,
+                              ISO_COUNTRY_LOOKUP_TABLE,
+                              NETWORKS)
 from common.utils.helpers import to_uni
-
-from budget.models import Budget
+from common.templatetags.filters import withsep
 from simple_models import (SimpleAdGroup,
                            SimpleCampaign,
                            SimpleCreative,
                            SimpleHtmlCreative,
                            SimpleImageCreative,
                            SimpleTextAndTileCreative,
-                           SimpleTextCreative,
                            SimpleNullCreative,
                            SimpleDummyFailureCreative,
-                           SimpleDummySuccessCreative,
-                           )
-# from budget import budget_service
+                           SimpleDummySuccessCreative)
 
 
 class NetworkStates:
@@ -76,42 +37,36 @@ class NetworkStates:
 
 
 class Campaign(db.Model):
-    """ A campaign.    Campaigns have budgetary and time based restrictions. """
-    name = db.StringProperty(required=True)
-    description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo',
-                                               'network', 'backfill_promo', 'marketplace',
-                                               'backfill_marketplace'])
+    """
+    Campaigns are essentially containers for adgroups.
+    They have a name, advertiser, and description, some basic state,
+    and an account. All other information should be added to AdGroup.
+    """
+    name = db.StringProperty(verbose_name='Name:',
+                             default='Order Name',
+                             required=True)
+    advertiser = db.StringProperty(verbose_name='Advertiser:',
+                                   default='None',
+                                   required=True)
+    description = db.StringProperty(verbose_name='Description:',
+                                    multiline=True)
 
-    # budget per day
-    budget = db.FloatProperty()
-    full_budget = db.FloatProperty()
-
-    # Determines whether we redistribute if we underdeliver during a day
-    budget_type = db.StringProperty(choices=['daily', 'full_campaign'], default="daily")
-
-    # Determines whether we smooth during a day
-    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'], default="allatonce")
-
-    # DEPRECATED
-    # start and end dates
-    start_date = db.DateProperty()
-    end_date = db.DateProperty()
-
-    # New start and end date properties
-    start_datetime = db.DateTimeProperty()
-    end_datetime = db.DateTimeProperty()
-
+    # current state
     active = db.BooleanProperty(default=True)
+    archived = db.BooleanProperty(default=False)
     deleted = db.BooleanProperty(default=False)
 
-    # who owns this
+    # who owns this?
     account = db.ReferenceProperty(Account)
-    t = db.DateTimeProperty(auto_now_add=True)
 
-    budget_obj = db.ReferenceProperty(Budget, collection_name='campaign')
+    # date of creation
+    created = db.DateTimeProperty(auto_now_add=True)
 
-    blind = db.BooleanProperty(default=False)
+    # is this a campaign for direct sold (an order), marketplace, or networks?
+    campaign_type = db.StringProperty(choices=['order',
+                                               'marketplace',
+                                               'network',
+                                               'backfill_marketplace'])
 
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank
@@ -123,46 +78,35 @@ class Campaign(db.Model):
     #       millennial = millennial_native
     #       iad = iAd
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
-    network_state = db.IntegerProperty(default=NetworkStates. \
-            STANDARD_CAMPAIGN)
+    network_state = db.IntegerProperty(default=NetworkStates.STANDARD_CAMPAIGN)
     # needed so old stats can be mapped to the new campaign on migration
     # since we can't keep the same campaign key for optimization purposes
     old_campaign = db.SelfReferenceProperty()
     transition_date = db.DateProperty()
 
     @property
-    def has_daily_budget(self):
-        return self.budget and self.budget_type == 'daily'
+    def is_order(self):
+        return self.campaign_type == 'order'
 
     @property
-    def has_full_budget(self):
-        return self.full_budget and self.budget_type == 'full_campaign'
+    def is_marketplace(self):
+        return self.campaign_type == 'marketplace'
+
+    @property
+    def is_network(self):
+        return self.campaign_type == 'network'
 
     def simplify(self):
-        if self.start_date and not self.start_datetime:
-            strt = self.start_date
-            start_datetime = datetime.datetime(strt.year, strt.month, strt.day)
-        else:
-            start_datetime = self.start_datetime
-        if self.end_date and not self.end_datetime:
-            end = self.end_date
-            end_datetime = datetime.datetime(end.year, end.month, end.day)
-        else:
-            end_datetime = self.end_datetime
         return SimpleCampaign(key=str(self.key()),
                               name=self.name,
-                              campaign_type=self.campaign_type,
+                              advertiser=self.advertiser,
                               active=self.active,
-                              start_datetime=start_datetime,
-                              end_datetime=end_datetime,
-                              account=self.account,
-                              full_budget=self.full_budget,
-                              daily_budget=self.budget,
-                              budget_type=self.budget_type,
-                              )
+                              account=self.account)
 
     def __repr__(self):
-        return "Camp(start:(%s,%s) end:(%s,%s) active:%s daily:%s total:%s spread:%s type:%s)" % (self.start_date, self.start_datetime, self.end_date, self.end_datetime, self.active, self.budget, self.full_budget, self.budget_strategy, self.budget_type)
+        return "Campaign: %s, owned by %s, for %s" % (self.name,
+                                                      self.account,
+                                                      self.advertiser)
 
     @property
     def owner_key(self):
@@ -171,13 +115,6 @@ class Campaign(db.Model):
     @property
     def owner_name(self):
         return None
-
-    @property
-    def finite(self):
-        if (self.start_date and self.end_date):
-            return True
-        else:
-            return False
 
     def get_owner(self):
         return None
@@ -188,48 +125,40 @@ class Campaign(db.Model):
     def owner(self):
         return property(self.get_owner, self.set_owner)
 
-    def delivery(self):
-        if self.stats:
-            return self.stats.revenue / self.budget
-        else:
-            return 1
+    # TODO: Rename because this returns a dictionary, not JSON.
+    def toJSON(self):
+        return {
+            'name': self.name,
+            'advertiser': self.advertiser,
+            'description': self.description,
+            'active': self.active,
+            'deleted': self.deleted,
+            'key': str(self.key())
+        }
 
-    def gtee(self):
-        return self.campaign_type in ['gtee', 'gtee_high', 'gtee_low']
+    @property
+    def status_icon_url(self):
+        if self.deleted:
+            return "/images/deleted.gif"
+        if self.active:
+            return "/images/active.gif"
+        if self.archived:
+            return "/images/archived.gif"
 
-    def promo(self):
-        return self.campaign_type in ['promo', 'backfill_promo']
+        return "/images/paused.gif"
 
-    def network(self):
-        return self.campaign_type in ['network']
 
-    def marketplace(self):
-        return self.campaign_type in ['marketplace', 'backfill_marketplace']
-
-    def is_active_for_date(self, date):
-        """ Start and end dates are inclusive """
-        if (self.start_date <= date if self.start_date else True) and (date <= self.end_date if self.end_date else True):
-            return True
-        else:
-            return False
-
-    def has_started(self):
-        return self.start_datetime < datetime.datetime.now()
-
-    def is_finished(self):
-        return self.end_datetime < datetime.datetime.now()
+Order = Campaign
 
 
 class AdGroup(db.Model):
+
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     # net_creative is not set for new network campaigns due to circular
     # reference redundancy, use the creatives collection instead
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
-    name = db.StringProperty()
-
-    # start and end dates
-    start_date = db.DateProperty()
-    end_date = db.DateProperty()
+    name = db.StringProperty(verbose_name='Name',
+                             default='Line Item Name')
 
     created = db.DateTimeProperty(auto_now_add=True)
 
@@ -259,6 +188,33 @@ class AdGroup(db.Model):
     bid = db.FloatProperty(default=0.05, required=False)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
+    #############################
+    # moved from campaign class #
+    #############################
+
+    # budget per day
+    daily_budget = db.FloatProperty()
+    full_budget = db.FloatProperty()
+    # Determines whether we redistribute if we underdeliver during a day
+    budget_type = db.StringProperty(choices=['daily', 'full_campaign'],
+                                    default="daily")
+    # Determines whether we smooth during a day
+    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'],
+                                        default="allatonce")
+
+    # New start and end date properties
+    start_datetime = db.DateTimeProperty()
+    end_datetime = db.DateTimeProperty()
+
+    adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
+                                              'network', 'promo',
+                                              'backfill_promo', 'marketplace',
+                                              'backfill_marketplace'])
+
+    ##################################
+    # /end moved from campaign class #
+    ##################################
+
     # state of this ad group
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
@@ -266,7 +222,8 @@ class AdGroup(db.Model):
 
     # percent of users to be targetted
     percent_users = db.FloatProperty(default=100.0)
-    allocation_percentage = db.FloatProperty(default=100.0)
+    allocation_percentage = db.FloatProperty(verbose_name='Allocation',
+                                             default=100.0)
     allocation_type = db.StringProperty(choices=["users", "requests"])
 
     # frequency caps
@@ -291,7 +248,7 @@ class AdGroup(db.Model):
     t = db.DateTimeProperty(auto_now_add=True)
 
     # marketplace price floor
-    mktplace_price_floor = db.FloatProperty(default=0.05, required=False)
+    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
 
     DEVICE_CHOICES = (
         ('any', 'Any'),
@@ -319,17 +276,22 @@ class AdGroup(db.Model):
     # Device Targeting
     device_targeting = db.BooleanProperty(default=False)
 
-    target_iphone = db.BooleanProperty(default=True)
-    target_ipod = db.BooleanProperty(default=True)
-    target_ipad = db.BooleanProperty(default=True)
-    ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
-    ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
+    target_iphone = db.BooleanProperty(verbose_name='iPhone', default=True)
+    target_ipod = db.BooleanProperty(verbose_name='iPod', default=True)
+    target_ipad = db.BooleanProperty(verbose_name='iPad', default=True)
+    ios_version_min = db.StringProperty(verbose_name='Min:',
+                                        default=MIN_IOS_VERSION)
+    ios_version_max = db.StringProperty(verbose_name='Max:',
+                                        default=MAX_IOS_VERSION)
 
-    target_android = db.BooleanProperty(default=True)
-    android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
-    android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
+    target_android = db.BooleanProperty(verbose_name='Android', default=True)
+    android_version_min = db.StringProperty(verbose_name='Min:',
+                                            default=MIN_ANDROID_VERSION)
+    android_version_max = db.StringProperty(verbose_name='Max:',
+                                            default=MAX_ANDROID_VERSION)
 
-    target_other = db.BooleanProperty(default=True)  # MobileWeb on blackberry etc.
+    # MobileWeb on blackberry etc.
+    target_other = db.BooleanProperty(verbose_name='Other:', default=True)
 
     optimizable = db.BooleanProperty(default=False)
     default_cpm = db.FloatProperty()
@@ -390,6 +352,14 @@ class AdGroup(db.Model):
         return global_ids
 
     @property
+    def has_daily_budget(self):
+        return self.daily_budget and self.budget_type == 'daily'
+
+    @property
+    def has_full_budget(self):
+        return self.full_budget and self.budget_type == 'full_campaign'
+
+    @property
     def calculated_cpm(self):
         """
         Calculate the ecpm for a cpc campaign.
@@ -399,49 +369,114 @@ class AdGroup(db.Model):
                     float(self.stats.impression_count))
         return self.bid
 
+    @property
+    def line_item_priority(self):
+        ranks = {
+            'gtee_high': 1,
+            'gtee': 2,
+            'gtee_low': 3,
+            'promo': 4,
+            'backfill_promo': 5
+        }
+        return ranks[self.adgroup_type]
+
+    @property
+    def status(self):
+        if self.deleted:
+            return "deleted"
+        elif self.archived:
+            return "archived"
+        elif self.active and self.campaign.active:
+            now = datetime.datetime.now()
+            if (self.start_datetime <= now if self.start_datetime else True) and \
+               (now <= self.end_datetime if self.end_datetime else True):
+                return "running"
+            elif self.end_datetime <= now:
+                return "completed"
+            else:
+                return "scheduled"
+        else:
+            return "paused"
+        return "running"
+
+    @property
+    def adgroup_type_display(self):
+        kinds = {
+            'gtee_high': "Guaranteed (High)",
+            'gtee': "Guaranteed",
+            'gtee_low': "Guaranteed (Low)",
+            'promo': "Promotional",
+            "backfill_promo": "Backfill Promotional",
+            "network": "Network",
+            "marketplace": "Marketplace"
+        }
+
+        if self.adgroup_type:
+            return kinds[self.adgroup_type]
+        return ''
+
     def simplify(self):
-        return SimpleAdGroup(key = str(self.key()),
-                             campaign = self.campaign,
-                             account = self.account,
-                             name = self.name,
-                             adgroup_type = self.campaign.campaign_type,
-                             bid = self.bid,
-                             bid_strategy = self.bid_strategy,
-                             full_budget=self.campaign.full_budget,
-                             daily_budget=self.campaign.budget,
-                             budget_type=self.campaign.budget_type,
-                             start_datetime=self.campaign.start_datetime,
-                             end_datetime=self.campaign.end_datetime,
-                             active = self.active,
-                             deleted = self.deleted,
-                             minute_frequency_cap= self.minute_frequency_cap,
-                             hourly_frequency_cap= self.hourly_frequency_cap,
-                             daily_frequency_cap= self.daily_frequency_cap,
-                             weekly_frequency_cap= self.weekly_frequency_cap,
-                             monthly_frequency_cap= self.monthly_frequency_cap,
-                             lifetime_frequency_cap= self.lifetime_frequency_cap,
-                             keywords = self.keywords,
-                             site_keys = [str(key) for key in self.site_keys],
-                             mktplace_price_floor = self.mktplace_price_floor,
-                             device_targeting = self.device_targeting,
-                             target_iphone = self.target_iphone,
-                             target_ipad = self.target_ipad,
-                             target_ipod = self.target_ipod,
-                             ios_version_max = self.ios_version_max,
-                             ios_version_min = self.ios_version_min,
-                             target_android = self.target_android,
-                             android_version_max = self.android_version_max,
-                             android_version_min = self.android_version_min,
-                             target_other = self.target_other,
-                             cities = self.cities,
-                             geo_predicates = self._cleaned_geo_predicates(),
-                             allocation_percentage = self.allocation_percentage,
-                             optimizable = self.optimizable,
-                             default_cpm = self.default_cpm,
-                             network_type = self.network_type,
-                             included_apps = self.included_apps_global_ids,
-                             excluded_apps = self.excluded_apps_global_ids,
-                             )
+
+        if hasattr(self, 'full_budget'):
+            full_budget = self.full_budget
+        else:
+            full_budget = 0
+
+        if hasattr(self, 'daily_budget'):
+            daily_budget = self.daily_budget
+        else:
+            daily_budget = 0
+
+        if hasattr(self, 'budget_type'):
+            budget_type = self.budget_type
+        else:
+            budget_type = None
+
+        return SimpleAdGroup(
+            key=str(self.key()),
+            campaign=self.campaign,
+            account=self.account,
+            name=self.name,
+            bid=self.bid,
+            bid_strategy=self.bid_strategy,
+            active=self.active,
+            deleted=self.deleted,
+            minute_frequency_cap=self.minute_frequency_cap,
+            hourly_frequency_cap=self.hourly_frequency_cap,
+            daily_frequency_cap=self.daily_frequency_cap,
+            weekly_frequency_cap=self.weekly_frequency_cap,
+            monthly_frequency_cap=self.monthly_frequency_cap,
+            lifetime_frequency_cap=self.lifetime_frequency_cap,
+            keywords=self.keywords,
+            site_keys=[str(key) for key in self.site_keys],
+            mktplace_price_floor=self.mktplace_price_floor,
+            device_targeting=self.device_targeting,
+            target_iphone=self.target_iphone,
+            target_ipad=self.target_ipad,
+            target_ipod=self.target_ipod,
+            ios_version_max=self.ios_version_max,
+            ios_version_min=self.ios_version_min,
+            target_android=self.target_android,
+            android_version_max=self.android_version_max,
+            android_version_min=self.android_version_min,
+            target_other=self.target_other,
+            cities=self.cities,
+            geo_predicates=self.geo_predicates,
+            allocation_percentage=self.allocation_percentage,
+            optimizable=self.optimizable,
+            default_cpm=self.default_cpm,
+            network_type=self.network_type,
+
+            # Added as part of orders feature
+            adgroup_type=self.adgroup_type,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+            full_budget=full_budget,
+            daily_budget=daily_budget,
+            budget_type=budget_type,
+            included_apps=self.included_apps_global_ids,
+            excluded_apps=self.excluded_apps_global_ids,
+        )
 
     def _cleaned_geo_predicates(self):
         """
@@ -460,23 +495,108 @@ class AdGroup(db.Model):
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
         c = None
-        if self.network_type == 'adsense': c = AdSenseCreative(key_name=key_name, name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
-        elif self.network_type == 'iAd': c = iAdCreative(key_name=key_name, name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
-        elif self.network_type == 'admob': c = AdMobCreative(key_name=key_name, name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
-        elif self.network_type == 'brightroll': c = BrightRollCreative(key_name=key_name, name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
-        elif self.network_type == 'chartboost': c = ChartBoostCreative(key_name=key_name, name="chartboost dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'ejam': c = EjamCreative(key_name=key_name, name="ejam dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'jumptap': c = JumptapCreative(key_name=key_name, name="jumptap dummy",ad_type="html", format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'millennial': c = MillennialCreative(key_name=key_name, name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-        elif self.network_type == 'inmobi': c = InMobiCreative(key_name=key_name, name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-        elif self.network_type == 'greystripe' : c = GreyStripeCreative(key_name=key_name, name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
-        elif self.network_type == 'appnexus': c = AppNexusCreative(key_name=key_name, name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
-        elif self.network_type == 'mobfox' : c = MobFoxCreative(key_name=key_name, name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'custom': c = CustomCreative(key_name=key_name, name='custom', ad_type='html', format='', format_predicates=['format=*'], html_data=custom_html)
-        elif self.network_type == 'custom_native': c = CustomNativeCreative(key_name=key_name, name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
-        elif self.network_type == 'admob_native': c = AdMobNativeCreative(key_name=key_name, name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'millennial_native': c = MillennialNativeCreative(key_name=key_name, name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(key_name=key_name, name='marketplace dummy', ad_type='html')
+        if self.network_type == 'adsense':
+            c = AdSenseCreative(key_name=key_name,
+                                name="adsense dummy",
+                                ad_type="adsense",
+                                format="320x50",
+                                format_predicates=["format=*"])
+        elif self.network_type == 'iAd':
+            c = iAdCreative(key_name=key_name,
+                            name="iAd dummy",
+                            ad_type="iAd",
+                            format="320x50",
+                            format_predicates=["format=320x50"])
+        elif self.network_type == 'admob':
+            c = AdMobCreative(key_name=key_name,
+                              name="admob dummy",
+                              ad_type="admob",
+                              format="320x50",
+                              format_predicates=["format=320x50"])
+        elif self.network_type == 'brightroll':
+            c = BrightRollCreative(key_name=key_name,
+                                   name="brightroll dummy",
+                                   ad_type="html_full",
+                                   format="full",
+                                   format_predicates=["format=*"])
+        elif self.network_type == 'chartboost':
+            c = ChartBoostCreative(key_name=key_name,
+                                   name="chartboost dummy",
+                                   ad_type="html",
+                                   format="320x50",
+                                   format_predicates=["format=320x50"])
+        elif self.network_type == 'ejam':
+            c = EjamCreative(key_name=key_name,
+                             name="ejam dummy",
+                             ad_type="html",
+                             format="320x50",
+                             format_predicates=["format=320x50"])
+        elif self.network_type == 'jumptap':
+            c = JumptapCreative(key_name=key_name,
+                                name="jumptap dummy",
+                                ad_type="html",
+                                format="320x50",
+                                format_predicates=["format=320x50"])
+        elif self.network_type == 'millennial':
+            c = MillennialCreative(key_name=key_name,
+                                   name="millennial dummy",
+                                   ad_type="html",
+                                   format="320x50",
+                                   format_predicates=["format=320x50"])  # TODO: make sure formats are right
+        elif self.network_type == 'inmobi':
+            c = InMobiCreative(key_name=key_name,
+                               name="inmobi dummy",
+                               ad_type="html",
+                               format="320x50",
+                               format_predicates=["format=320x50"])  # TODO: make sure formats are right
+        elif self.network_type == 'greystripe':
+            c = GreyStripeCreative(key_name=key_name,
+                                   name="greystripe dummy",
+                                   ad_type="greystripe",
+                                   format="320x50",
+                                   format_predicates=["format=*"])  # TODO: only formats 320x320, 320x48, 300x250
+        elif self.network_type == 'appnexus':
+            c = AppNexusCreative(key_name=key_name,
+                                 name="appnexus dummy",
+                                 ad_type="html",
+                                 format="320x50",
+                                 format_predicates=["format=300x250"])
+        elif self.network_type == 'mobfox':
+            c = MobFoxCreative(key_name=key_name,
+                               name="mobfox dummy",
+                               ad_type="html",
+                               format="320x50",
+                               format_predicates=["format=320x50"])
+        elif self.network_type == 'custom':
+            c = CustomCreative(key_name=key_name,
+                               name='custom',
+                               ad_type='html',
+                               format='',
+                               format_predicates=['format=*'],
+                               html_data=custom_html)
+        elif self.network_type == 'custom_native':
+            c = CustomNativeCreative(key_name=key_name,
+                                     name='custom native dummy',
+                                     ad_type='custom_native',
+                                     format='320x50',
+                                     format_predicates=['format=*'],
+                                     html_data=custom_html)
+        elif self.network_type == 'admob_native':
+            c = AdMobNativeCreative(key_name=key_name,
+                                    name="admob native dummy",
+                                    ad_type="admob_native",
+                                    format="320x50",
+                                    format_predicates=["format=320x50"])
+        elif self.network_type == 'millennial_native':
+            c = MillennialNativeCreative(key_name=key_name,
+                                         name="millennial native dummy",
+                                         ad_type="millennial_native",
+                                         format="320x50",
+                                         format_predicates=["format=320x50"])
+        elif self.adgroup_type in ['marketplace', 'backfill_marketplace']:
+            c = MarketplaceCreative(key_name=key_name,
+                                    name='marketplace dummy',
+                                    ad_type='html')
 
         if c:
             c.ad_group = self
@@ -538,20 +658,49 @@ class AdGroup(db.Model):
 
     @property
     def budget_goal(self):
-        campaign = self.campaign
         try:
             if self.bid_strategy == 'cpm':
-                if campaign.budget_type == 'daily':
-                    return int((campaign.budget / self.bid) * 1000)
+                if self.budget_type == 'daily':
+                    return int((self.daily_budget / self.bid) * 1000)
                 else:
-                    return int((campaign.full_budget / self.bid) * 1000)
+                    return int((self.full_budget / self.bid) * 1000)
             else:
-                if campaign.budget_type == 'daily':
-                    return int(campaign.budget)
+                if self.budget_type == 'daily':
+                    return int(self.daily_budget)
                 else:
-                    return int(campaign.full_budget)
-        except:
+                    return int(self.full_budget)
+        except TypeError:
+            # We'll get a NoneType exception if no budget is set
             return None
+
+    @property
+    def budget_goal_display(self):
+        goal = self.budget_goal
+
+        if goal:
+            goal = withsep(goal) # add commas
+            if self.bid_strategy == 'cpm':
+                if self.budget_type == 'daily':
+                    return str(goal) + ' Impressions Daily'
+                else:
+                    return str(goal) + ' Impressions Total'
+            else:
+                if self.budget_type == 'daily':
+                    return str(goal) + ' USD Daily'
+                else:
+                    return str(goal) + ' USD Total'
+        else:
+            if self.bid_strategy == 'cpm':
+                return "Unlimited Impressions"
+            else:
+                return "Unlimited Clicks"
+
+    @property
+    def rate_display(self):
+        rate_display = "$%.2f" % self.bid
+        if self.bid_strategy in ['cpm', 'cpc']:
+            rate_display += " %s" % self.bid_strategy.upper()
+        return rate_display
 
     @property
     def individual_cost(self):
@@ -574,45 +723,170 @@ class AdGroup(db.Model):
         return False
 
     @property
-    def status(self):
-        """ Returns a string: Paused, Running, Eligible, Scheduled """
-        campaign = self.campaign
-        now = datetime.datetime.now()
-        if campaign.start_datetime and now < campaign.start_datetime:
-            return "Scheduled"
-        if campaign.end_datetime and now > campaign.end_datetime:
-            return "Completed"
-        if not self.active:
-            return "Paused"
-
-        # At this point, all campaigns are within active date range and not paused
-        if campaign.budget and hasattr(self, 'percent_delivered'):
-            if self.percent_delivered and self.percent_delivered < 100.0:
-                return "Running"
-            elif self.percent_delivered and self.percent_delivered >= 100.0:
-                return "Completed"
-            else:
-                # Eligible campaigns have 0% delivery.
-                # In production, they should only last a couple seconds
-                # before becoming running campaigns
-                return "Eligible"
-        else:
-            return "Running"
-
-    @property
     def created_date(self):
         return self.created.date()
 
     @property
-    def campaign_type(self):
-        return self.campaign.campaign_type
+    def frequency_cap_display(self):
+
+        display = []
+
+        if self.minute_frequency_cap:
+            display.append(str(self.minute_frequency_cap) + "/minute")
+        if self.hourly_frequency_cap:
+            display.append(str(self.hourly_frequency_cap) + "/hour")
+        if self.daily_frequency_cap:
+            display.append(str(self.daily_frequency_cap) + "/day")
+        if self.weekly_frequency_cap:
+            display.append(str(self.weekly_frequency_cap) + "/week")
+        if self.monthly_frequency_cap:
+            display.append(str(self.monthly_frequency_cap) + "/month")
+        if self.lifetime_frequency_cap:
+            display.append(str(self.lifetime_frequency_cap) + " total")
+
+        if not display:
+            return "No frequency caps"
+        else:
+            return ", ".join(display)
+
+    @property
+    def country_targeting_display(self):
+
+        display = []
+        for country in self.geo_predicates:
+            country_id = country.strip("country_name=")
+            if country_id.find("*") == -1:
+                try:
+                    country_name = ISO_COUNTRY_LOOKUP_TABLE[country_id]
+                    display.append(country_name)
+                except KeyError:
+                    pass
+
+        if not display:
+            return "All countries"
+        else:
+            return ", ".join(sorted(display))
+
+    @property
+    def device_targeting_display(self):
+
+        if self.device_targeting and not self.uses_default_device_targeting:
+
+            display = []
+
+            # iOS Targeting
+            ios_display = []
+            if self.target_iphone:
+                ios_display.append("iPhone")
+            if self.target_ipad:
+                ios_display.append("iPad")
+            if self.target_ipod:
+                ios_display.append("iPod")
+
+            if ios_display:
+                ios_display_all = ", ".join(ios_display) + \
+                                  " (iOS version " + self.ios_version_min + \
+                                  " to " + self.ios_version_max + ")"
+                display.append(ios_display_all)
+
+            # Android Targeting
+            if self.target_android:
+                android_display_all = "Android Devices (version " + \
+                                      self.android_version_min + " to " + \
+                                      self.android_version_max + ")"
+                display.append(android_display_all)
+
+            if self.target_other:
+                display.append("Other Devices")
+
+            if display:
+                return display
+
+        return ["All devices"]
+
+    # TODO: Rename because this returns a dictionary, not JSON.
+    def toJSON(self):
+        d = {
+            'key': str(self.key()),
+            'campaign_key': str(self.campaign.key()),
+            'name': self.name,
+            'created': self.created,
+            'network_type': self.network_type,
+            'bid': self.bid,
+            'bid_strategy': self.bid_strategy,
+            'budget_type': self.budget_type,
+            'budget_strategy': self.budget_strategy,
+            'adgroup_type': self.adgroup_type,
+            'start_datetime': self.start_datetime,
+            'end_datetime': self.end_datetime,
+            'device_targeting': self.device_targeting_display,
+            'country_targeting': self.country_targeting_display,
+            'frequency_caps': self.frequency_cap_display,
+            'allocation': self.allocation_percentage,
+        }
+        return d
+
+    #############################
+    # moved from campaign class #
+    #############################
+
+    @property
+    def finite(self):
+        if (self.start_datetime and self.end_datetime):
+            return True
+        else:
+            return False
+
+    def delivery(self):
+        if self.stats:
+            return self.stats.revenue / self.budget
+        else:
+            return 1
+
+    def gtee(self):
+        return self.adgroup_type in ['gtee', 'gtee_high', 'gtee_low']
+
+    def promo(self):
+        return self.adgroup_type in ['promo', 'backfill_promo']
+
+    def network(self):
+        return self.adgroup_type in ['network']
+
+    def marketplace(self):
+        return self.adgroup_type in ['marketplace']
+
+    def is_active_for_date(self, date):
+        """ Start and end dates are inclusive """
+        if (self.start_date <= date if self.start_date else True) and \
+           (date <= self.end_date if self.end_date else True):
+            return True
+        else:
+            return False
+
+    ##################################
+    # /end moved from campaign class #
+    ##################################
+
+    @property
+    def status_icon_url(self):
+        if self.deleted:
+            return "/images/deleted.gif"
+        if self.active and self.campaign.active:
+            return "/images/active.gif"
+        if self.archived or self.campaign.archived:
+            return "/images/archived.gif"
+
+        return "/images/paused.gif"
+
+LineItem = AdGroup
 
 
 class Creative(polymodel.PolyModel):
-    name = db.StringProperty(default='Creative')
+    name = db.StringProperty(verbose_name='Creative Name',
+                             default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
-    landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
+    landscape = db.BooleanProperty(default=False)  # TODO: make this more flexible later
 
     ad_group = db.ReferenceProperty(AdGroup, collection_name="creatives")
 
@@ -621,21 +895,22 @@ class Creative(polymodel.PolyModel):
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
-    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "iAd", "adsense",
-                                         "admob", "greystripe", "html", "html_full",
-                                         "clear", "custom_native","admob_native",
+    ad_type = db.StringProperty(choices=["text_icon", "image", "html",
+                                         "iAd", "adsense", "admob",
+                                         "greystripe", "html_full", "clear",
+                                         "custom_native", "admob_native",
                                          "millennial_native"],
                                 default="image")
 
     # tracking pixel
-    tracking_url = db.StringProperty()
+    tracking_url = db.StringProperty(verbose_name='Impression Tracking URL')
 
     # destination URLs
-    url = db.StringProperty()
+    url = db.StringProperty(verbose_name='Click URL')
     display_url = db.StringProperty()
 
     # conversion goals
-    conv_appid = db.StringProperty()
+    conv_appid = db.StringProperty(verbose_name='Conversion Tracking ID')
 
     # format predicates - the set of formats that this creative can match
     # e.g. format=320x50
@@ -645,7 +920,7 @@ class Creative(polymodel.PolyModel):
     # format_predicates: one creative per size
     format = db.StringProperty(default="320x50")
 
-    launchpage = db.StringProperty()
+    launchpage = db.StringProperty(verbose_name='Intercept URL')
 
     # time of creation
     account = db.ReferenceProperty(Account)
@@ -687,11 +962,11 @@ class Creative(polymodel.PolyModel):
     def _get_adgroup(self):
             return self.ad_group
 
-    def _set_adgroup(self,value):
+    def _set_adgroup(self, value):
             self.ad_group = value
 
     #whoever did this you rule
-    adgroup = property(_get_adgroup,_set_adgroup)
+    adgroup = property(_get_adgroup, _set_adgroup)
 
     def get_owner(self):
         return self.ad_group
@@ -702,7 +977,7 @@ class Creative(polymodel.PolyModel):
     def _get_width(self):
         if self.custom_width:
             return self.custom_width
-        if hasattr(self,'_width'):
+        if hasattr(self, '_width'):
             return self._width
         width = 0
         if self.format:
@@ -710,14 +985,15 @@ class Creative(polymodel.PolyModel):
             if len(parts) == 2:
                 width = parts[0]
         return width
-    def _set_width(self,value):
+
+    def _set_width(self, value):
         self._width = value
-    width = property(_get_width,_set_width)
+    width = property(_get_width, _set_width)
 
     def _get_height(self):
         if self.custom_height:
             return self.custom_height
-        if hasattr(self,'_height'):
+        if hasattr(self, '_height'):
             return self._height
 
         height = 0
@@ -730,11 +1006,10 @@ class Creative(polymodel.PolyModel):
     def _set_height(self, value):
         self._height = value
 
-    height = property(_get_height,_set_height)
-
+    height = property(_get_height, _set_height)
 
     def owner(self):
-        return property(get_owner, set_owner)
+        return property(self.get_owner, self.set_owner)
 
     @property
     def owner_key(self):
@@ -747,86 +1022,68 @@ class Creative(polymodel.PolyModel):
     def __repr__(self):
         return "Creative{ad_type=%s, key_name=%s}" % (self.ad_type, self.key().id_or_name())
 
-
     def build_simplify_dict(self):
-        return dict(key = str(self.key()),
-                    name = self.name,
-                    custom_width = self.custom_width,
-                    custom_height = self.custom_height,
-                    landscape = self.landscape,
-                    ad_group = self.ad_group,
-                    active = self.active,
-                    ad_type = self.ad_type,
-                    tracking_url = self.tracking_url,
-                    url = self.url,
-                    display_url = self.display_url,
-                    conv_appid = self.conv_appid,
-                    format = self.format,
-                    launchpage = self.launchpage,
-                    account = self.account,
-                    multi_format = self.multi_format,
-                    network_name = self.network_name)
+        return dict(key=str(self.key()),
+                    name=self.name,
+                    custom_width=self.custom_width,
+                    custom_height=self.custom_height,
+                    landscape=self.landscape,
+                    ad_group=self.ad_group,
+                    active=self.active,
+                    ad_type=self.ad_type,
+                    tracking_url=self.tracking_url,
+                    url=self.url,
+                    display_url=self.display_url,
+                    conv_appid=self.conv_appid,
+                    format=self.format,
+                    launchpage=self.launchpage,
+                    account=self.account,
+                    multi_format=self.multi_format,
+                    network_name=self.network_name)
 
     def simplify(self):
         simplify_dict = self.build_simplify_dict()
         return self.SIMPLE(**simplify_dict)
 
-
-
-class TextCreative(Creative):
-    SIMPLE = SimpleTextCreative
-    # text ad properties
-    headline = db.StringProperty()
-    line1 = db.StringProperty()
-    line2 = db.StringProperty()
-
-    #@property
-    #def Renderer(self):
-    #    return None
-
-    def __repr__(self):
-        return "'%s'" % (self.headline,)
-
-    def build_simplify_dict(self):
-        spec_dict = dict(headline = self.headline,
-                         line1 = self.line1,
-                         line2 = self.line2)
-        spec_dict.update(super(TextCreative, self).build_simplify_dict())
-        return spec_dict
+    # TODO: rename
+    def toJSON(self):
+        return {
+            'key': str(self.key()),
+            'name': self.name
+        }
 
 
 class TextAndTileCreative(Creative):
     SIMPLE = SimpleTextAndTileCreative
 
-    line1 = db.StringProperty()
-    line2 = db.StringProperty()
+    line1 = db.StringProperty(verbose_name='Line 1')
+    line2 = db.StringProperty(verbose_name='Line 2')
     # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
     image_serve_url = db.StringProperty()
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
-    color = db.StringProperty(default="000000")
-    font_color = db.StringProperty(default="FFFFFF")
-    gradient = db.BooleanProperty(default=True)
+    color = db.StringProperty(verbose_name='Background Color',
+                              default="000000")
+    font_color = db.StringProperty(verbose_name='Font Color',
+                                   default="FFFFFF")
+    gradient = db.BooleanProperty(verbose_name='Gradient',
+                                  default=True)
 
     def build_simplify_dict(self):
         try:
             img_url = images.get_serving_url(self.image_blob)
         except:
             img_url = "http://curezone.com/upload/Members/new03/white.jpg"
-        spec_dict = dict(line1 = self.line1,
-                         line2 = self.line2,
-                         image_url = img_url,
-                         action_icon = self.action_icon,
-                         color = self.color,
-                         font_color = self.font_color,
-                         gradient = self.gradient)
+        spec_dict = dict(line1=self.line1,
+                         line2=self.line2,
+                         image_url=img_url,
+                         action_icon=self.action_icon,
+                         color=self.color,
+                         font_color=self.font_color,
+                         gradient=self.gradient)
 
         spec_dict.update(super(TextAndTileCreative, self).build_simplify_dict())
         return spec_dict
-
-    #@property
-    #def Renderer(self):
-    #    return TextAndTileRenderer
 
 
 class HtmlCreative(Creative):
@@ -836,11 +1093,12 @@ class HtmlCreative(Creative):
 
     SIMPLE = SimpleHtmlCreative
     html_data = db.TextProperty()
-    ormma_html = db.BooleanProperty(default=False)
+    ormma_html = db.BooleanProperty(verbose_name='MRAID Ad',
+                                    default=False)
 
     def build_simplify_dict(self):
-        spec_dict = dict(html_data = self.html_data,
-                         ormma_html = self.ormma_html)
+        spec_dict = dict(html_data=self.html_data,
+                         ormma_html=self.ormma_html)
 
         spec_dict.update(super(HtmlCreative, self).build_simplify_dict())
         return spec_dict
@@ -871,9 +1129,9 @@ class ImageCreative(Creative):
         return [fp] if fp else None
 
     def build_simplify_dict(self):
-        spec_dict = dict(image_url = self.image_serve_url,
-                         image_width = self.image_width,
-                         image_height = self.image_height,
+        spec_dict = dict(image_url=self.image_serve_url,
+                         image_width=self.image_width,
+                         image_height=self.image_height,
                          )
 
         spec_dict.update(super(ImageCreative, self).build_simplify_dict())
@@ -890,7 +1148,7 @@ class MarketplaceCreative(HtmlCreative):
 
     @property
     def multi_format(self):
-        return ('728x90', '320x50','300x250', '160x600', 'full', 'full_tablet')
+        return ('728x90', '320x50', '300x250', '160x600', 'full', 'full_tablet')
 
 
 class CustomCreative(HtmlCreative):
@@ -905,7 +1163,7 @@ class CustomNativeCreative(HtmlCreative):
 
     @property
     def multi_format(self):
-        return ('728x90', '320x50','300x250', 'full')
+        return ('728x90', '320x50', '300x250', 'full')
 
 
 class iAdCreative(Creative):
@@ -942,7 +1200,7 @@ class AdMobNativeCreative(AdMobCreative):
 
     @property
     def multi_format(self):
-        return ('728x90', '320x50', '300x250', 'full' ,)
+        return ('728x90', '320x50', '300x250', 'full')
 
 
 class MillennialCreative(Creative):
@@ -967,7 +1225,7 @@ class MillennialNativeCreative(MillennialCreative):
 
     @property
     def multi_format(self):
-        return ('728x90', '320x50', '300x250', 'full' , 'full_tablet')
+        return ('728x90', '320x50', '300x250', 'full', 'full_tablet')
 
 
 class ChartBoostCreative(Creative):

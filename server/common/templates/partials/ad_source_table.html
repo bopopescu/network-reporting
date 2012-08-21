@@ -1,0 +1,87 @@
+{% load filters %}
+{% load elements %}
+
+<table class="inventory_table" id="order_table">
+  <thead>
+    <tr>
+      {% if include_status %}
+        <th style="width: 24px;"></th>
+      {% endif %}
+      <th class="name">Order Name</th>
+      <th class="stat" style="width: 150px;">Advertiser</th>
+      <th class="stat">Line Items</th>
+      <th class="stat">Revenue</th>
+      <th class="stat">Impressions</th>
+      <th class="stat">Clicks</th>
+      <th class="stat">CTR</th>
+    </tr>
+  </thead>
+
+  {% for order in orders %}
+    <tr class='order-row {% cycle 'primary' 'alt' %} {% if order.archived %} archived hidden{% endif %}' id="order-{{ order.key }}">
+
+      {# Status (active/paused/archived) #}
+      <td class="controls">
+        <input class="status_change_control" id="{{order.key}}" type="checkbox" />
+        {% status_icon adgroup %}
+      </td>
+      
+      <td class="name">
+        {% if singular %} Totals {% else %}
+          <a href="{% url advertiser_order_detail order_key=order.key %}">
+            {{ order.name }}
+          </a>
+        {% endif %}
+        <img id="{{ order.key }}-img" class="loading-img" src="/images/spin-small.gif" />        
+      </td>
+      
+      {# these stats will be loaded over ajax #}
+      <td class="advertiser stat">
+        {{ order.advertiser }}
+      </td>
+      <td class="items stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+        --
+      </td>
+      <td class="revenue stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+        --
+      </td>
+      <td class="impressions stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+        --
+      </td>
+      <td class="clicks stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+        --
+      </td>
+      <td class="ctr stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+        --
+      </td>
+    </tr>
+  {% endfor %}
+</table>
+    
+    {% comment %}
+    {% for adgroup in order.adgroups %}
+
+      {% if not adgroup.deleted %}
+
+        <tr class="sub lineitem-row{% if adgroup.archived %} archived hidden{% endif %}"
+            id="lineitem-{{ adgroup.key }}">
+        
+          {% if include_status %}
+
+          {% endif %}
+          <td class="name" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>
+            <a href="{% url advertiser_line_item_detail order_key=order.key line_item_key=adgroup.key %}">
+              {{ adgroup.name }}
+              <img id="{{ adgroup.key }}-img" class="hidden loading-img" src="/images/icons-custom/spinner-12.gif" />
+            </a>
+          </td>
+          <td class="advertiser stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}></td>
+          <td class="lineitems stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}></td>
+          <td class="revenue stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+          <td class="impressions stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+          <td class="clicks stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+          <td class="ctr stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+    {% endcomment %}

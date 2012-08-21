@@ -1,18 +1,19 @@
 import logging
+from urllib2 import urlopen
 
 from django.utils import simplejson
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from google.appengine.api import urlfetch
 
 from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
-from advertiser.query_managers import CampaignQueryManager
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from common.ragendja.template import render_to_response, JSONResponse
 from common.utils.request_handler import RequestHandler
 from publisher.query_managers import PublisherQueryManager
-from common.utils.stats_helpers import (MarketplaceStatsFetcher,
-                                        MPStatsAPIException)
+from reporting.query_managers import StatsModelQueryManager
+
+from common.utils import tablib
 
 
 class MarketplaceIndexHandler(RequestHandler):
@@ -25,12 +26,12 @@ class MarketplaceIndexHandler(RequestHandler):
         # Marketplace settings are kept as a single campaign.  Only
         # one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(
-                self.account, from_db=True)
+            self.account, from_db=True)
 
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(
-                self.account)
+            self.account)
         alphabetically_sorted_apps = sorted(apps_dict.values(), lambda x, y:
-                cmp(x.name, y.name))
+                                            cmp(x.name, y.name))
         app_keys_json = simplejson.dumps(apps_dict.keys())
 
         adunit_keys = []
@@ -38,97 +39,35 @@ class MarketplaceIndexHandler(RequestHandler):
             if app.adunits is not None:
                 adunit_keys += [adunit.key() for adunit in app.adunits]
 
-        # Set up a MarketplaceStatsFetcher with this account
-        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-
-        try:
-            mpx_stats = stats_fetcher.get_account_stats(self.days[0],
-                    self.days[-1], daily=True)
-        except MPStatsAPIException, error:
-            logging.warning("MPStatsAPIException: %s" % error)
-            mpx_stats = {}
-
         # Set up the blocklist
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = [str(domain) for domain in network_config.blocklist
-                    if not str(domain) in ("", "#")]
-
-        # Get today and yesterday's stats for the graph
-        today_stats = []
-        yesterday_stats = []
-        stats = {}
-        try:
-            today_stats = mpx_stats["daily"][-1]
-            yesterday_stats = mpx_stats["daily"][-2]
-
-            # REFACTOR: load this data via ajax and use CollectionGraphView?
-            def cpm(rev, imp):
-                if imp:
-                    return rev / imp * 1000
-                else:
-                    return 0
-
-            mpx_stats['cpm'] = cpm(mpx_stats['rev'], mpx_stats['imp'])
-
-            for stats in mpx_stats['daily']:
-                stats['cpm'] = cpm(stats['rev'], stats['imp'])
-
-            stats = {
-                'rev': {
-                    'today': today_stats['rev'],
-                    'yesterday': yesterday_stats['rev'],
-                    'total': mpx_stats['rev']
-                },
-                'imp': {
-                    'today': today_stats['imp'],
-                    'yesterday': yesterday_stats['imp'],
-                    'total': mpx_stats['imp'],
-                },
-                'cpm': {
-                    'today': cpm(today_stats['rev'], today_stats['imp']),
-                    'yesterday': cpm(yesterday_stats['rev'],
-                        yesterday_stats['imp']),
-                    'total': cpm(mpx_stats['rev'], mpx_stats['imp']),
-                },
-            }
-
-        except Exception, e:
-            logging.warn(e)
+            blocklist = [str(domain) for domain in network_config.blocklist \
+                         if not str(domain) in ("", "#")]
 
         try:
             blind = self.account.network_config.blind
         except AttributeError:
             blind = False
 
-        return render_to_response(self.request,
-                                  "advertiser/marketplace_index.html",
-                                  {
-                                      'marketplace': marketplace_campaign,
-                                      'apps': alphabetically_sorted_apps,
-                                      'app_keys': app_keys_json,
-                                      'adunit_keys': adunit_keys,
-                                      'pub_key': self.account.key(),
-                                      'mpx_stats': simplejson.dumps(mpx_stats),
-                                      'stats_breakdown_includes': ['revenue',
-                                              'impressions', 'ecpm'],
-                                      'totals': mpx_stats,
-                                      'today_stats': today_stats,
-                                      'yesterday_stats': yesterday_stats,
-                                      'stats': stats,
-                                      'blocklist': blocklist,
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'blind': blind,
-                                      'network_config': network_config
-                                  })
+        return {
+            'marketplace': marketplace_campaign,
+            'apps': alphabetically_sorted_apps,
+            'app_keys': app_keys_json,
+            'adunit_keys': adunit_keys,
+            'pub_key': self.account.key(),
+            'blocklist': blocklist,
+            'blind': blind,
+            'network_config': network_config
+        }
 
 
 @login_required
 def marketplace_index(request, *args, **kwargs):
-    return MarketplaceIndexHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/marketplace_index.html"
+    return MarketplaceIndexHandler(template=t)(request, use_cache=False,
+                                               *args, **kwargs)
 
 
 class BlocklistHandler(RequestHandler):
@@ -236,7 +175,8 @@ class MarketplaceOnOffHandler(RequestHandler):
     def post(self):
         try:
             activate = self.request.POST.get('activate', 'true')
-            mpx = CampaignQueryManager.get_marketplace(self.account)
+            mpx = CampaignQueryManager.get_marketplace(self.account,
+                                                       from_db=True)
             if activate == 'true':
                 mpx.active = True
             elif activate == 'false':
@@ -245,6 +185,8 @@ class MarketplaceOnOffHandler(RequestHandler):
             CampaignQueryManager.put(mpx)
             return JSONResponse({'success': 'success'})
         except Exception, e:
+            raise
+            logging.error(e)
             return JSONResponse({'error': e})
 
 
@@ -302,7 +244,7 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
         query = "?" + "&".join([key + '=' + value for key, value in
             self.request.GET.items()])
         url += query
-        response = urlfetch.fetch(url, method=urlfetch.GET, deadline=30).content
+        response = urlopen(url).read()
 
         return HttpResponse(response)
 
@@ -310,6 +252,79 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
 @login_required
 def marketplace_creative_proxy(request, *args, **kwargs):
     return MarketplaceCreativeProxyHandler()(request, *args, **kwargs)
+
+
+class MarketplaceExportHandler(RequestHandler):
+    def get(self):
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+        export_type = self.request.GET.get('type', 'html')
+        stats = StatsModelQueryManager(self.account)
+        export_data = []
+
+        for app in apps_dict.values():
+            app_stats = stats.get_stats_sum(publisher=app,
+                                            advertiser=marketplace_campaign,
+                                            num_days=self.date_range)
+            app_row = (
+                app.name,
+                str(app.key()),
+                app_stats.rev,
+                app_stats.imp,
+                app_stats.cpm,
+                "N/A",
+                "N/A",
+            )
+            export_data.append(app_row)
+
+            for adunit in app.adunits:
+                marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(str(adunit.key()),
+                                                                                  str(self.account.key()),
+                                                                                  get_from_db=True)
+                logging.warn(marketplace_adgroup)
+                adunit_stats = stats.get_stats_sum(publisher=adunit,
+                                                   advertiser=marketplace_campaign,
+                                                   num_days=self.date_range)
+                adunit_row = (
+                    adunit.name,
+                    str(adunit.key()),
+                    adunit_stats.rev,
+                    adunit_stats.imp,
+                    adunit_stats.cpm,
+                    marketplace_adgroup.mktplace_price_floor if marketplace_adgroup else 'Not activated',
+                    'Activated' if marketplace_adgroup and marketplace_adgroup.active else 'Not activated',
+                )
+                export_data.append(adunit_row)
+
+
+        # Put together the header list
+        headers = (
+            'Name',
+            'Pub ID',
+            'Revenue',
+            'Impressions',
+            'eCPM',
+            'Minimum Acceptable CPM',
+            'RTB Enabled'
+        )
+
+        # Create the data to export from all of the rows
+        data_to_export = tablib.Dataset(headers=headers)
+        data_to_export.extend(export_data)
+
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   ("MoPub marketplace", export_type)
+
+        return response
+
+
+@login_required
+def marketplace_export(request, *args, **kwargs):
+    return MarketplaceExportHandler()(request, *args, **kwargs)
 
 
 # REFACTOR: Do we still need this?

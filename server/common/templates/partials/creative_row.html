@@ -1,0 +1,28 @@
+{% load elements %}
+{% load filters %}
+
+<tr class="sub" id="{{ creative.key }}">
+  <td class="controls">
+    <input class="status_change_control" id="{{ creative.key }}" type="checkbox" />
+    {% status_icon creative %}
+  </td>
+  <td class="name">
+    {{ creative.name }}
+
+    <button class="btn btn-mini preview" data-toggle="modal" href="#preview-{{ creative.key }}">
+      <i class="icon-picture"></i>
+      Preview
+    </button>
+    {% creative_preview creative %}
+
+    <button class="btn btn-mini edit" data-toggle="modal" href="#edit-{{ creative.key }}">
+      <i class="icon-pencil"></i>
+      Edit
+    </button>
+    {% edit_creative_modal creative %}
+  </td>
+  <td class="imp stat">--</td>
+  <td class="clk stat">--</td>
+  <td class="ctr stat">--</td>
+  <td class="{% if line_item.gtee %}rev{% else %}conv{% endif %} stat">--</td>
+</tr>

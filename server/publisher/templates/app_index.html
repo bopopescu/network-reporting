@@ -1,17 +1,21 @@
 {% extends 'publisher/base.html' %}
-{% load filters %}
+
 {% load elements %}
+{% load filters %}
 
 {% block pageTitle %}
   <h1>Dashboard</h1>
 {% endblock pageTitle %}
 
-
-{% block titleBarRight %}
-  <a href="{% url dashboard %}"> MoPub Explorer (Beta) </a>
-{% endblock titleBarRight %}
-  
 {% block content %}
+
+  {% comment %}
+  <div class="alert-message block-message">
+    We just released a beta version of <a href="{% url dashboard %}">
+    MoPub Explorer</a>, a new tool that you can use for in-depth
+    analysis of everything that happens on the platform.
+  </div>
+  {% endcomment %}
 
   {% ifequal account.status "step4" %}
     <div class="alert-message block-message">
@@ -19,8 +23,8 @@
       the page
       <br/><br/>
       <ul>
-        <li><strong>Campaigns</strong> Traffic your direct sold
-        advertisements and house campaigns</li>
+        <li><strong>Orders</strong> Traffic your direct sold
+        advertisements and house orders</li>
         <li><strong>Marketplace</strong> Tap into MoPub’s Real-Time
         Bidding platform to access more demand sources and get paid
         directly from MoPub</li>
@@ -31,88 +35,84 @@
     </div>
   {% endifequal %}
 
-  <div class="alert-message block-message">
-    MoPub will be in maintenance mode on Monday, August 20 from 9PM to
-    Midnight PST. Your account will be inaccessible during this
-    time. Ad serving will not be affected. If you
-    have any questions or concerns, please contact us at
-    <a href="mailto:support@mopub.com">support@mopub.com</a>.
-  </div>
 
-  {% if stats %}
-    {# Show stats if they have a reasonably small number of apps #}
-  <section class="offset nomargin" id="dashboard-stats">
-
-    <h3 class="stats-chart-title">
-      Realtime Stats for {{start_date|format_date_compact}} to
-      {{end_date|format_date_compact}}
-    </h3>
-
-    <div class="stats">
-
-      {% stats_breakdown stats %}
-
-      <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-
-    </div>
-    <div class="clear"></div>
-  </section>
-
-  <div class="clear"></div>
-  {% endif %}
+  {% chart_placeholder start_date end_date %}
 
   <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
-      <a class="button" id="dashboard-apps-addAppButton" href='{% url publisher_create_app %}'>Add an app</a>
+    <div class="right">
+      <select data-placeholder="Quick jump to an app"
+              class="chzn-select"
+              style=" width:300px;"
+              id="app-quick-navigate">
+        <option value=""></option>
+        {% for app in apps %}
+          {% if not app.deleted %}
+            <option value="{% url publisher_app_show app_key=app.key %}">
+              {{app.name}} ({{ app.type }})
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <a class="btn" href='{% url publisher_create_app %}' style="margin-top: -3px">
+        {% button_icon "plus" %}
+        Add an app
+      </a>
     </div>
+
     <h2>Apps and sites</h2>
 
     {% inventory_table apps %}
 
-
     <br />
-    <form id='dashboardExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url dashboard_export %}'>
-      <input name='file_type' id='appExportType' type='text' value='' />
-      <input name='start' value={{start_date|date:"mdy"}} />
-      <input name='end' value={{end_date|date:"mdy"}} />
-    </form>
-    <div class="buttonBank buttonBank-right">
-      <select name='exportSelect' id='publisher-dashboard-exportSelect' class='selectmenu'>
-        <option value='exp'>Export</option>
-        <option value='xls'>XLS</option>
-        <option value='csv'>CSV</option>
-      </select>
+
+    <div class="right">
+      <div class="dropdown" id="inventory-export">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#inventory-export">
+          <i class="icon-download-alt"></i> Export
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="{% url publisher_inventory_exporter %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          {% comment %}
+          <li> <a href="{% url publisher_inventory_exporter %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+          {% endcomment %}
+          <li> <a href="{% url publisher_inventory_exporter %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url publisher_inventory_exporter %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
+        </ul>
+      </div>
     </div>
+
 
   </section>
 
 {% endblock content %}
 
 {% block extraScripts %}
-  <script type="text/html" id="app-template">
-    {% include "partials/app.html" %}
-  </script>
-  <script type="text/html" id="adunit-template">
-    {% include "partials/adunit.html" %}
-  </script>
-  {% include_script 'models/inventory' %}
-  {% include_script 'views/inventory' %}
-  <script>
-    var mopub = mopub || {};
+
+  {% include_template "app" %}
+  {% include_template "adunit" %}
+  {% include_template "chart" %}
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/publisher" %}
+  <script type="text/javascript">
     $(function() {
-        var graphStartDate = Date.UTC({{ start_date.year }},
-              {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}
-              {{ start_date.day }});
-        var accountStats = {{ account_stats|safe }};
-
-        var app_keys = {{ app_keys|safe }};
-
         DashboardController.initializeIndex({
-            start_date: graphStartDate,
-            account_stats: accountStats,
-            app_keys: app_keys
+            start_date: {{ start_date|js_date}},
+            end_date: {{ end_date|js_date}},
+            app_keys: {{ app_keys|safe }},
         });
     });
 </script>
-{% include_script 'controllers/publisher' %}
 {% endblock %}

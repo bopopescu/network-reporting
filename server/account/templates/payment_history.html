@@ -5,159 +5,243 @@
 {% endblock pageTitle %}
 {% block content %}
 
-<div class="content-main">
-{% if user.is_admin %}<a class="right button" href="#" id="add-scheduled-payment-button">Add period balance</a>{% endif %}
-<h2>Marketplace Balance</h2>
-<div>This is your unpaid balance from the MoPub Marketplace.  Payment will be sent 60 days after the end of the monthly payment period or according to your contract terms.  Payment is only sent for balances over $100.</div>
-<fieldset>
-  <dl class="formFields flat">
-    {% for payment in scheduled_payments %}
-    <dt>Period {{payment.period_start|format_date_compact}}-{{payment.period_end|format_date_compact}}:</dt>
-    <dd>{{payment.amount|currency}} {% if user.is_admin %}<a href="{% url payment_history %}?resolved={{payment.key}}">Resolved</a>{% endif %}</dd>
-    {% endfor %}
-    <dt>Period {{start_date|format_date_compact}}-{{end_date|format_date_compact}}:</dt>
-    <dd>{{unscheduled_balance|currency}} *</dd>
-    <dt style="font-weight:bold">Total Balance:</dt>
-    <dd style="font-weight:bold">{{balance|currency}}</dd>
-  </dl>
-</fieldset>
-<p><span class="muted">* Your payment from Marketplace may be less than the estimate shown here. <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-" target="_blank">Learn why</a></span></p>
-<section>
-  {% if user.is_admin %}<a class="right button" href="#" id="add-payment-button">Add payment</a>{% endif %}
-  <h2>Payment History</h2>
-  <div>This is a list of payments that MoPub has deposited in your bank or PayPal account.</div>
-  <fieldset>
-    <dl class="formFields flat">
-      <dt>Total Payments:</dt>
-      <dd>{{total_paid|currency}}</dt>
-    </dl>
-  </fieldset>
-  <table class="dataTable campaignData-main">
-    <thead>
-      <th class="dataTable-date-short">Period Start</th>
-      <th class="dataTable-date-short">Period End</th>
-      <th class="dataTable-date-short">Amount</th>
-      <th class="dataTable-date-short">Payment Date</th>
-      <th>Status</th>
-      {% if user.is_admin %}<th></th>{% endif %}
-    </thead>
-    <tbody>
-      {% for record in payment_records %}
-      <tr class="{% cycle 'campaignData' 'campaignData-alt' %}">
-        <td>{{record.period_start|date:"m/d/Y"}}</td>
-        <td>{{record.period_end|date:"m/d/Y"}}</td>
-        <td>{{record.amount|currency}}</td>
-        <td>{{record.date_executed|date:"m/d/Y"}}</td>
-        <td>{{record.status|default_if_none:""}}</td>
-        {% if user.is_admin %}
-        <td>
-          <form action="{% url payment_delete payment_record_key=record.key %}" method="GET" id="pr_{{record.key}}">
-            <input class='button' type="submit" name="delete" value="Delete" onclick="return delete_confirm();"/>
-          </form>
-        </td>
-        {% endif %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% if not payment_records %}
-  <div class="alert-message block-message">No payments have been made for this account.</div>
-  {% endif %}
-</section>
+  <div class="content-main">
+    {% if user.is_admin %}
+      <a class="right btn" href="#" id="add-scheduled-payment-button">
+        <i class="icon-plus-sign"></i>
+        Add period balance
+      </a>
+    {% endif %}
+    
+    <h2>Marketplace Balance</h2>
+    <div>
+      This is your unpaid balance from the MoPub Marketplace.  Payment
+      will be sent 60 days after the end of the monthly payment period
+      or according to your contract terms.  Payment is only sent for
+      balances over $100.
+    </div>
+    
+    <fieldset>
+      <dl class="formFields flat">
 
-<section>
-{% if user.is_admin %}
-  <script type="text/javascript">
-      function delete_confirm()
-      {
-       return confirm("Are you sure you want to delete this payment record?");
-      }
-  </script>
-  </script>
-  <script type="text/javascript">
-  (function($){
-    $(document).ready(function() {
-      $('.payment-datepicker').datepicker();
-      $('#add-scheduled-payment-button').click(function(e) {
-        e.preventDefault();
-        $('#add-scheduled-payment-modal').dialog({
-          width: 750,
-          buttons: [
-            {
-              text: 'Cancel',
-              click: function() {
-                $(this).dialog('close');
-              }
-            },
-            {
-              text: 'Save',
-              click: function() {
-                $('#scheduledpaymentForm').submit();;
-              }
-            }
-          ]
-        });
-      });
-      $('#add-payment-button').click(function(e) {
-        e.preventDefault();
-        $('#add-payment-modal').dialog({
-          width: 750,
-          buttons: [
-            {
-              text: 'Cancel',
-              click: function() {
-                $(this).dialog('close');
-              }
-            },
-            {
-              text: 'Save',
-              click: function() {
-                $('#paymentForm').submit();;
-              }
-            }
-          ]
-        });
-      });
-    });
-  })(this.jQuery);
-  </script>
-  <div id="add-scheduled-payment-modal" class="hidden">
-    <form id="scheduledpaymentForm" method="POST">
-      <input type="hidden" name="form_type" value="scheduled_payment">
-    <h3>Add Period Balance <span class="muted">(Admin only)</span></h3>
+        {% for payment in scheduled_payments %}
+          <dt>Period {{payment.period_start|format_date_compact}}-{{payment.period_end|format_date_compact}}:</dt>
+          <dd>
+          {{payment.amount|currency}}
+          {% if user.is_admin %}
+            <a href="{% url payment_history %}?resolved={{payment.key}}">Resolved</a>
+          {% endif %}
+          </dd>
+        {% endfor %}
+        
+        <dt>Period {{start_date|format_date_compact}}-{{end_date|format_date_compact}}:</dt>
+        <dd>{{unscheduled_balance|currency}} *</dd>
+        <dt style="font-weight:bold">Total Balance:</dt>
+        <dd style="font-weight:bold">{{balance|currency}}</dd>
+      </dl>
+    </fieldset>
+    
+    <p>
+      <span class="muted">
+        * Your payment from Marketplace may be less than the estimate shown here.
+        <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-" target="_blank">Learn why</a>
+      </span>
+    </p>
+    
+    <section>
+
+      {% if user.is_admin %}
+        <a class="right btn" href="#" id="add-payment-button">
+          <i class="icon-gift"></i>
+          Add payment
+        </a>
+      {% endif %}
+      
+      <h2>Payment History</h2>      
+      <div>
+        This is a list of payments that MoPub has deposited in your
+        bank or PayPal account.
+      </div>
+      
       <fieldset>
-        <dl class="formFields">
-          <dt>Start Date:</dt>
-          <dd><input type="text" name="period_start" class="input-text input-text-number number payment-datepicker" placeholder="MM/DD/YYYY"/></dd>
-          <dt>End Date:</dt>
-          <dd><input type="text" id="payment-period_end" name="period_end" class="input-text input-text-number number payment-datepicker" placeholder="MM/DD/YYYY"/></dd>
-          <dt>Amount:</dt>
-          <dd><input type="text" name="amount" class="input-text input-text-number number" placeholder="$0.00"/></dd>
+        <dl class="formFields flat">
+          <dt>Total Payments:</dt>
+          <dd>{{total_paid|currency}}</dt>
         </dl>
       </fieldset>
-    </form>
-  </div>
-  <div id="add-payment-modal" class="hidden">
-    <form id="paymentForm" method="POST">
-      <input type="hidden" name="form_type" value="payment">
-    <h3>Add Payment <span class="muted">(Admin only)</span></h3>
-      <fieldset>
-        <dl class="formFields">
-          <dt>Start Date:</dt>
-          <dd><input type="text" name="period_start" class="input-text input-text-number number payment-datepicker" placeholder="MM/DD/YYYY"/></dd>
-          <dt>End Date:</dt>
-          <dd><input type="text" name="period_end" class="input-text input-text-number number payment-datepicker" placeholder="MM/DD/YYYY"/></dd>
-          <dt>Amount:</dt>
-          <dd><input type="text" name="amount" class="input-text input-text-number number" placeholder="$0.00"/></dd>
-          <dt>Payment Date:</dt>
-          <dd><input type="text" name="date_executed" class="input-text input-text-number number payment-datepicker" placeholder="MM/DD/YYYY"/></dd>
-          <dt>Status:</dt>
-          <dd><input type="text" name="status" class="input-text input-text-number number" placeholder="Payment sent via Paypal"/></dd>
-        </dl>
-      </fieldset>
-    </form>
-  </div>
-{% endif %}
-</section>
+      <table class="dataTable campaignData-main">
+        <thead>
+          <th class="dataTable-date-short">Period Start</th>
+          <th class="dataTable-date-short">Period End</th>
+          <th class="dataTable-date-short">Amount</th>
+          <th class="dataTable-date-short">Payment Date</th>
+          <th>Status</th>
+          {% if user.is_admin %}<th></th>{% endif %}
+        </thead>
+        <tbody>
+          {% for record in payment_records %}
+            <tr class="{% cycle 'campaignData' 'campaignData-alt' %}">
+              <td>{{record.period_start|date:"m/d/Y"}}</td>
+              <td>{{record.period_end|date:"m/d/Y"}}</td>
+              <td>{{record.amount|currency}}</td>
+              <td>{{record.date_executed|date:"m/d/Y"}}</td>
+              <td>{{record.status|default_if_none:""}}</td>
+              {% if user.is_admin %}
+                <td>
+                  <form action="{% url payment_delete payment_record_key=record.key %}" method="GET" id="pr_{{record.key}}">
+                    <input class='button' type="submit" name="delete" value="Delete" onclick="return delete_confirm();"/>
+                  </form>
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if not payment_records %}
+        <div class="alert-message block-message">No payments have been made for this account.</div>
+      {% endif %}
+    </section>
+    
+    <section>
+      {% if user.is_admin %}
+        <script type="text/javascript">
+          function delete_confirm()
+          {
+              return confirm("Are you sure you want to delete this payment record?");
+          }
+        </script>
+      
+        <script type="text/javascript">
+          (function($){
+              $(document).ready(function() {
+                  $('.payment-datepicker').datepicker();
+                  $('#add-scheduled-payment-button').click(function(e) {
+                      e.preventDefault();
+                    $('#add-scheduled-payment-modal').dialog({
+                        width: 750,
+                        buttons: [
+                            {
+                                text: 'Cancel',
+                                click: function() {
+                                    $(this).dialog('close');
+                                }
+                            },
+                            {
+                                text: 'Save',
+                                click: function() {
+                                    $('#scheduledpaymentForm').submit();;
+                                }
+                            }
+                        ]
+                    });
+                });
+                $('#add-payment-button').click(function(e) {
+                    e.preventDefault();
+                    $('#add-payment-modal').dialog({
+                        width: 750,
+                        buttons: [
+                            {
+                                text: 'Cancel',
+                                click: function() {
+                                    $(this).dialog('close');
+                                }
+                            },
+                            {
+                                text: 'Save',
+                                click: function() {
+                                    $('#paymentForm').submit();;
+                                }
+            }
+                        ]
+                    });
+                });
+            });
+        })(this.jQuery);
+      </script>
+      
+      <div id="add-scheduled-payment-modal" class="hidden">
+        <form id="scheduledpaymentForm" method="POST">
+          <input type="hidden" name="form_type" value="scheduled_payment">
+            <h3>Add Period Balance <span class="muted">(Admin only)</span></h3>
+            <fieldset>
+              <dl class="formFields">
+                <dt>Start Date:</dt>
+                <dd>
+                  <input type="text"
+                         name="period_start"
+                         class="input-text input-text-number number payment-datepicker"
+                         placeholder="MM/DD/YYYY"/>
+                </dd>
+                <dt>End Date:</dt>
+                <dd>
+                  <input type="text"
+                         id="payment-period_end"
+                         name="period_end"
+                         class="input-text input-text-number number payment-datepicker"
+                         placeholder="MM/DD/YYYY"/>
+                </dd>
+                <dt>Amount:</dt>
+                <dd>
+                  <input type="text"
+                         name="amount"
+                         class="input-text input-text-number number"
+                         placeholder="$0.00"/>
+                </dd>
+              </dl>
+            </fieldset>
+          </form>
+        </div>
+        <div id="add-payment-modal" class="hidden">
+          <form id="paymentForm" method="POST">
+            <input type="hidden" name="form_type" value="payment">
+              <h3>Add Payment <span class="muted">(Admin only)</span></h3>
+              <fieldset>
+                <dl class="formFields">
+                  
+                  <dt>Start Date:</dt>
+                  <dd>
+                    <input type="text"
+                           name="period_start"
+                           class="input-text input-text-number number payment-datepicker"
+                           placeholder="MM/DD/YYYY"/>
+                  </dd>
+                  
+                  <dt>End Date:</dt>
+                  <dd>
+                    <input type="text"
+                           name="period_end"
+                           class="input-text input-text-number number payment-datepicker"
+                           placeholder="MM/DD/YYYY"/>
+                  </dd>
+                  
+                  <dt>Amount:</dt>
+                  <dd>
+                    <input type="text"
+                           name="amount" class="
+                                                input-text input-text-number number"
+                           placeholder="$0.00"/>
+                  </dd>
+                  
+                  <dt>Payment Date:</dt>
+                  <dd>
+                    <input type="text"
+                           name="date_executed"
+                           class="input-text input-text-number number payment-datepicker"
+                           placeholder="MM/DD/YYYY"/>
+                  </dd>
+                  
+                  <dt>Status:</dt>
+                  <dd>
+                    <input type="text"
+                           name="status"
+                           class="input-text input-text-number number"
+                           placeholder="Payment sent via Paypal"/>
+                  </dd>
+                </dl>
+              </fieldset>
+            </form>
+        </div>
+      {% endif %}
+    </section>
 </div>
 {% endblock content %}

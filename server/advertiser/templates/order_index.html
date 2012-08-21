@@ -1,0 +1,228 @@
+{% extends "advertiser/base.html" %}
+{% load filters %}
+{% load elements %}
+
+{% block content %}
+
+
+  <div class="alert-message block-message info">
+    Your account has been upgraded to a new layout based on Orders &
+    Line Items - each of your existing Guaranteed and Promotional
+    campaigns are structured as an Order containing a Line Item.
+    <br /><br />
+    Learn more about the new features <a href="http://help.mopub.com/customer/portal/articles/692791-creating-orders-line-items">here</a>.
+  </div>
+  
+  <ul class="tabs">
+    <li class="active">
+      <a href="#orders"> Orders </a>
+    </li>
+    <li>
+      <a href="#line_items"> Line Items </a>
+    </li>
+  </ul>
+
+
+  {% comment %}
+    Order Tab
+  {% endcomment %}
+  <div class="active tab-section" id="orders">
+
+    {# Order activity controls #}
+    <div class="left">
+      <div class="btn-group">
+        <button class="btn status_change"
+                data-toggle="pause"
+                data-target="#order_table">
+          {% button_icon "pause" %}
+          Pause
+        </button>
+        <button class="btn status_change"
+                data-toggle="play"
+                data-target="#order_table">
+          {% button_icon "play" %}
+          Resume
+        </button>
+        <button class="btn status_change"
+                data-toggle="archive"
+                data-target="#order_table">
+          {% button_icon "inbox" %}
+          Archive
+        </button>
+      </div>
+    </div>
+    <div class="right">
+
+      <select data-placeholder="Quick jump to an order"
+              class="chosen-select"
+              style=" width:250px;"
+              id="order-quick-navigate">
+        <option value=""></option>
+        {% for order in orders %}
+          {% if not order.deleted and not order.archived %}
+            <option value="{% url advertiser_order_detail order_key=order.key %}">
+              {{order.name}} ({{ order.advertiser }})
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+
+      <a class="btn"
+         style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
+         href='{% url advertiser_order_and_line_item_form_new %}'>
+        {% button_icon "plus" %}
+        Add a new order
+      </a>
+
+    </div>
+
+    {% order_table orders %}
+
+    <br />
+
+    <div class="left">
+      <a href="{% url advertiser_order_archive %}">
+        Archived Orders
+      </a>
+    </div>
+
+    <div class="right">
+      <div class="dropdown" id="order-export">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#order-export">
+          <i class="icon-download-alt"></i> Export
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          {% comment %}
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+                  {% endcomment %}
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_orders %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+
+  {% comment %}
+    Line Items Tab
+  {% endcomment %}
+  <div class="tab-section" id="line_items">
+
+    {# Line item activity controls #}
+    <div class="left btn-group">
+      <button class="btn status_change"
+              data-target="#line_item_table"
+              data-toggle="pause">
+        {% button_icon "pause" %}
+        Pause
+      </button>
+      <button class="btn status_change"
+              data-target="#line_item_table"
+              data-toggle="play">
+        {% button_icon "play" %}
+        Resume
+      </button>
+      <button class="btn status_change"
+              data-target="#line_item_table"
+              data-toggle="archive">
+        {% button_icon "stop" %}
+        Archive
+      </button>
+    </div>
+
+    <div class="right">
+      <div class="left">
+      <select data-placeholder="Quick jump to a line item"
+              style=" width:200px; top: -9px;"
+              id="line-item-quick-navigate">
+        <option value=""></option>
+        {% for line_item in line_items %}
+          {% if not line_item.deleted and not line_item.archived %}
+            <option value="{% url advertiser_line_item_detail line_item_key=line_item.key %}">
+              {{line_item.name}} ({{ line_item.campaign.name }})
+            </option>
+          {% endif %}
+        {% endfor %}
+      </select>
+
+
+      <a class="btn"
+         style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
+         href='{% url advertiser_order_and_line_item_form_new %}'>
+        {% button_icon "plus" %}
+        Add a new order
+      </a>
+      </div>
+
+      <div class="right" style='margin-left: 5px;'>
+        {% filter_buttons %}
+      </div>
+    </div>
+
+    {% line_item_table line_items %}
+
+    <br />
+
+    <div class="left">
+      <a href="{% url advertiser_order_archive %}#line_items-tab">
+        Archived Line Items
+      </a>
+    </div>
+
+    <div class="right">
+      <div class="dropdown" id="line-item-export">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#line-item-export">
+          <i class="icon-download-alt"></i> Export
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url advertiser_export_multiple_line_items %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+{% endblock content %}
+
+{% block extraScripts %}
+
+  {% include_template "popover" %}
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+
+  <script type="text/javascript">
+    $(function() {
+        OrdersController.initializeIndex({
+            order_keys: [ {% for order in orders %}"{{order.key}}", {% endfor %} ],
+            line_item_keys: [ {% for line_item in line_items %} "{{ line_item.key }}", {% endfor %}]
+        });
+    });
+  </script>
+{% endblock extraScripts %}

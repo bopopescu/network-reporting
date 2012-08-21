@@ -20,7 +20,7 @@
       <span class="ui-icon ui-icon-arrow-1-e"></span>
       <span class="stepProgress-step stepProgress-active">Step 2: Integrate</span>
       <span class="ui-icon ui-icon-arrow-1-e"></span>
-      <span class="stepProgress-step">Step 3: Add campaigns</span>
+      <span class="stepProgress-step">Step 3: Create ad sources</span>
     </div>
   {% endifequal %}
 {% endblock titleBarRight %}
@@ -30,8 +30,8 @@
     {% ifequal status 'welcome' %}
       <div class="alert-message block-message">
         Your first app is now set up.  The next step is to add the SDK to your
-        code and test that ads are serving correctly.  A sample ad campaign
-        <strong>MoPub Demo Campaign</strong> has been created and you should be
+        code and test that ads are serving correctly.  A sample order and line item
+        (<strong>MoPub Demo Order/MoPub Demo Line Item)</strong> have been created and you should be
         able to see the test ad after you add the MoPub code snippet and run the
         emulator.
       </div>
@@ -162,11 +162,15 @@ mpv.loadAd();</pre>
               </li>
             </ol>
             <div class="form-submit">
-              <span class="buttonWrap">
               {% ifequal status 'welcome' %}
-                <a href="{% url app_index %}" class="button">Continue to Step 3</a>
+                <a href="{% url app_index %}" class="btn">Continue to Step 3</a>
               {% else %}
-                <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>
-              {% endifequal %}</span>
+                <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="btn">
+                  Continue
+                  <i class="icon-chevron-right"></i>
+                </a>
+              {% endifequal %}
             </div>
-          </section>{% endblock content %}
+            </section>
+
+{% endblock content %}

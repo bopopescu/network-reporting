@@ -2,42 +2,47 @@
 
 {# saved is hidden and only set by js on submit #}
 {{ report_form.saved }}
+  
 <dl class='formFields'>
-    <dt>{{ report_form.name.label_tag }}</dt>
-    <dd>{{ report_form.name }}</dd>
-    <dt>{{ report_form.d1.label_tag }}</dt>
-    <dd>
+  <dt>{{ report_form.name.label_tag }}</dt>
+  <dd>{{ report_form.name }}</dd>
+  
+  <dt>{{ report_form.d1.label_tag }}</dt>
+  <dd>
     {{ report_form.d1 }}
     <span id='{{ prefix }}-d2-show' {% if report.form.instance.d1 == None %}class='hidden'{% endif %}>
-        {{ report_form.d2.label_tag }}
-        {{ report_form.d2 }}
-        <span id='{{ prefix }}-d3-show' {% if report.form.instance.d2 == None %}class='hidden'{% endif %}>
-            {{ report_form.d3.label_tag }}
-            {{ report_form.d3 }}
-        </span>
+      {{ report_form.d2.label_tag }}
+      {{ report_form.d2 }}
+      <span id='{{ prefix }}-d3-show' {% if report.form.instance.d2 == None %}class='hidden'{% endif %}>
+        {{ report_form.d3.label_tag }}
+        {{ report_form.d3 }}
+      </span>
     </span>
-    </dd>
-    <dt>{{ report_form.interval.label_tag }}</dt>
-    <dd>
+  </dd>
+  
+  <dt>{{ report_form.interval.label_tag }}</dt>
+  <dd>
     {{ report_form.interval }}
     {{ report_form.start }} - {{ report_form.end }}
-    </dd>
-    <dt>{{ report_form.recipients.label_tag }}</dt>
-    <dd>{{ report_form.recipients }}</dd>
-    <dt>{{ report_form.sched_interval.label_tag }}</dt>
-    <dd>
-        {{ report_form.sched_interval }}
-        <span id='{{ prefix }}-schedule-help-daily'>
-            (Run every day, 12:00 AM GMT.)
-        </span>
-        <span id='{{ prefix }}-schedule-help-weekly'>
-            (Run every Monday, 12:00 AM GMT.)
-        </span>
-        <span id='{{ prefix }}-schedule-help-monthly'>
-            (Run on the first of every month, 12:00 AM GMT.)
-        </span>
-        <span id='{{ prefix }}-schedule-help-quarterly'>
-            (Run at the start of every quarter, 12:00 AM GMT.)
-        </span>
-    </dd>
+  </dd>
+  
+  <dt>{{ report_form.recipients.label_tag }}</dt>
+  <dd>{{ report_form.recipients }}</dd>
+    
+  <dt>{{ report_form.sched_interval.label_tag }}</dt>
+  <dd>
+    {{ report_form.sched_interval }}
+    <span id='{{ prefix }}-schedule-help-daily'>
+      (Run every day, 12:00 AM GMT.)
+    </span>
+    <span id='{{ prefix }}-schedule-help-weekly'>
+      (Run every Monday, 12:00 AM GMT.)
+    </span>
+    <span id='{{ prefix }}-schedule-help-monthly'>
+      (Run on the first of every month, 12:00 AM GMT.)
+    </span>
+    <span id='{{ prefix }}-schedule-help-quarterly'>
+      (Run at the start of every quarter, 12:00 AM GMT.)
+    </span>
+  </dd>
 </dl>

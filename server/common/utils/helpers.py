@@ -8,6 +8,7 @@ from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import db
 
+
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
@@ -186,9 +187,39 @@ def get_udid_appid(request):
     # Otherwise, there's no need to do special processing. Simply return the request parameters
     return udid, mobile_appid
 
-def dict_eq_(dict1, dict2):
-    dict1_keys = dict1.keys()
-    eq_(dict1_keys, dict2.keys())
-    for key in dict1_keys:
-        assert_almost_equals(dict1[key], dict2[key])
+def clone_entity(e, skip_auto_now=False, skip_auto_now_add=False, **extra_args):
+    """Clones an entity, adding or overriding constructor attributes.
 
+    The cloned entity will have exactly the same property values as the original
+    entity, except where overridden. By default it will have no parent entity or
+    key name, unless supplied.
+    
+    Args:
+    e: The entity to clone
+    
+    skip_auto_now: If True then all DateTimeProperty propertes will be skipped
+    which have the 'auto_now' flag set to True
+    
+    skip_auto_now_add: If True then all DateTimeProperty propertes will be
+    skipped which have the 'auto_now_add' flag set to True
+    
+    extra_args: Keyword arguments to override from the cloned entity and pass
+    to the constructor.
+    
+    Returns:
+    A cloned, possibly modified, copy of entity e.
+    """
+
+    klass = e.__class__
+    props = {}
+    for k, v in klass.properties().iteritems():
+        if not (type(v) == db.DateTimeProperty and \
+                ((skip_auto_now and getattr(v, 'auto_now')) or \
+                 (skip_auto_now_add and getattr(v, 'auto_now_add')))):
+            if type(v) == db.ReferenceProperty:
+                value = getattr(klass, k).get_value_for_datastore(e)
+            else:
+                value = v.__get__(e, klass)
+            props[k] = value
+    props.update(extra_args)
+    return klass(**props)

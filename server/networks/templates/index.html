@@ -8,14 +8,6 @@
 </h1>
 {% endblock pageTitle %}
 
-{% block titleBarRight %}
-{% if reporting %}
-<span class="titlebar-right">
-    <a class="button" id="network-settingsButton" href="#">Daily report settings</a>
-</span>
-{% endif %}
-{% endblock titleBarRight %}
-
 {% block preContent %}
 {% if display_message %}
 <div class="alert-message block-message warning">
@@ -38,9 +30,11 @@
                 </dl>
             </div>
             <div class="form-submit" style="clear:both;">
-                <span class="hidden" id="networkSettingsForm-loading"><img src="/images/loading2.gif"/></span>
-                <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-cancel">Cancel</a></span>
-                <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-submit">Save</a></span>
+                <span class="hidden" id="networkSettingsForm-loading">
+                    <img src="/images/loading2.gif"/>
+                </span>
+                <a href="#" class="btn" id="networkSettingsForm-cancel">Cancel</a>          
+                <a href="#" class="btn" id="networkSettingsForm-submit">Save</a>
             </div>
         </fieldset>
     </form>
@@ -57,19 +51,30 @@ Make a table for ad networks that are active
 {% endcomment %}
 <section>
 
-<div style="float: left;">
+<div class="left">
     <h2>Network Breakdown</h2>
 </div>
-<div style="float: right;">
-    <select id='network-editSelect' class='selectmenu'>
-        <option value="">Add a Network</option>
-        {% for network in additional_networks %}
-        <option value="{% url edit_network network=network.name %}">{{network.pretty_name}}</option>
+
+<div class="right">
+    {% if reporting %}
+    <a class="btn" id="network-settingsButton" href="#">Daily report settings</a>
+    {% endif %}
+
+    <select id="network-editSelect"
+            data-placeholder="Add a Network"
+            class="chzn-select"
+            style='width:200px;'>
+      <option value=""></option>
+      {% for network in additional_networks %}
+        <option id="network-editSelect-{{ network.name }}"
+                value="{% url edit_network network=network.name %}">
+          {{network.pretty_name}}
+        </option>
         {% endfor %}
     </select>
 </div>
 
-<div style="clear:both;">
+<div style="clear:both; margin-bottom: 30px">
     <div class="appData-columnHeaders">
         <table class="dataTable" width=100%>
             <thead>
@@ -117,7 +122,7 @@ Make a table for ad networks that are active
                             </a>
                         </div>
                         <div style="clear: both;">
-                            <a class="show-apps button button-small" id="{{network.key}}" style="width:75px;">Show Apps</a>
+                            <a class="show-apps btn" id="{{network.key}}" style="width:75px;">Show Apps</a>
                         </div>
                     </td>
                     {% if network.reporting %}
@@ -238,90 +243,38 @@ Make a table for ad networks that are active
     {% endfor %}
 </div>
 
-<h2 style="margin: 15px 0 0 0">Daily Counts</h2>
-<div class="appData-details noneg">
-    <table class="dataTable">
-        <thead>
-            <tr>
-                <th class="dataTable-name big">&nbsp;</th>
-                {% if reporting %}
-                <th class="dataTable-data numeric special">Revenue</th>
-                <th class="dataTable-data numeric special">CPM</th>
-                {% endif %}
-                <th class="dataTable-data numeric special">Impressions</th>
-                <th class="dataTable-data numeric special">Clicks</th>
-                <th class="dataTable-data numeric special">CTR</th>
-            </tr>
-        </thead>
-        <tbody id="dailyCounts-totals">
-            <tr>
-                <th class="dataTable-name big">Totals</th>
-                {% if reporting %}
-                <td class="dataTable-data numeric rev" style="color:orange;">
-                    -
-                </td>
-                <td class="dataTable-data numeric cpm" style="color:orange;">
-                    -
-                </td>
-                {% endif %}
-                <td class="dataTable-data numeric imp">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric clk">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric ctr">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-            </tr>
-        </tbody>
-        <tbody id="dailyCounts-individual" class="hidden">
-            {% for day in days reversed %}
-            <tr class="dailyCounts-stats">
-                <th class="dataTable-name">{{ day }}</th>
-                {% if reporting %}
-                <td class="dataTable-data numeric rev" style="color:orange;">
-                    -
-                </td>
-                <td class="dataTable-data numeric cpm" style="color:orange;">
-                    -
-                </td>
-                {% endif %}
-                <td class="dataTable-data numeric imp">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric clk">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric ctr">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <a class="dailyCount-toggleButton button" href="#">Show details</a>
+<div class="right">
+    <div class="dropdown" id="app-export" style="display: inline;">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
+            <i class="icon-download-alt"></i>
+            Export
+            <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+            <a href="{% url network_exporter %}?type=xls" data-toggle="running"> Excel XLS </a>
+            </li>
+            <li>
+            <a href="{% url network_exporter %}?type=xlsx" data-toggle="running"> Excel XLSX </a>
+            </li>
+            <li>
+            <a href="{% url network_exporter %}?type=ods" data-toggle="running"> OpenOffice Spreadsheet </a>
+            </li>
+            <li>
+            <a href="{% url network_exporter %}?type=csv" data-toggle="running"> CSV </a>
+            </li>
+            <li>
+            <a href="{% url network_exporter %}?type=tsv" data-toggle="running"> TSV </a>
+            </li>
+            <li>
+            <a href="{% url network_exporter %}?type=yaml" data-toggle="running"> YAML </a>
+            </li>
+            <li>
+            <a href="{% url network_exporter %}?type=json" data-toggle="running"> JSON </a>
+            </li>
+        </ul>
+    </div>
 </div>
-
 </section>
 
 {% else %}
@@ -340,7 +293,7 @@ Make a table for the main ad networks that are not setup
                     <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
                 </td>
                 <td>
-                    <a class="show-status button button-small" href="{% url edit_network network=network.name %}">Set up {{network.pretty_name}}</a>
+                    <a class="show-status btn btn-small" href="{% url edit_network network=network.name %}">Set up {{network.pretty_name}}</a>
                 </td>
             </tr>
         </tbody>
@@ -368,13 +321,13 @@ Make a table for the main ad networks that are not setup
         var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
 
         NetworksController.initialize({
-            campaigns_data: [{% for network in networks %}{'id': '{{ network.key }}',
-                                                           'network': '{{ network.name }}',
-                                                           'reporting': {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
+            campaigns_data: [{% for network in networks %}{
+                id: '{{ network.key }}',
+                network: '{{ network.name }}',
+                reporting: {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
             apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
             date_range: {{ date_range }},
-            graph_start_date: graph_start_date,});
-
+            graph_start_date: graph_start_date, });
     });
 </script>
 {% endblock extraScripts %}

@@ -1,6 +1,12 @@
 {% extends 'advertiser/base.html' %}
 
-{% load fields %}
+{% block navLinks %}
+<li><a href="{% url app_index %}">Dashboard</a></li>
+<li><a href="{% url advertiser_order_index %}">Orders</a></li>
+<li><a href="{% url marketplace_index %}">Marketplace</a></li>
+<li class="active"><a href="{% url networks %}">Networks</a></li>
+{% endblock navLinks %}
+
 {% load filters %}
 
 {% block dateButtons %}
@@ -15,7 +21,7 @@
 {% block titleBarRight %}
 {% if login_form %}
 <span id="title-bar-button" class="titlebar-right{% if network.show_login %} hidden{% endif %}">
-    <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
+    <a class="btn" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
 </span>
 {% endif %}
 {% endblock titleBarRight %}
@@ -27,7 +33,7 @@
         {% if not network.show_login %}
         <fieldset class="alt login-fields" style="padding-top:20px">
             <legend>
-                <h2>
+                <h2 style="padding-top:20px">
                     Revenue Reporting
                     {% if network.name == "admob" or network.name == "inmobi" %}
                     <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
@@ -45,38 +51,46 @@
                 </div>
 
                 {% if network.name != "mobfox" %}
-                <ul class="form_fields">
-                    <li>
-                    {{ login_form.username_str.label_tag }}
-                    {{ login_form.username_str }}
-                    <span id="username"></span>
-                    </li>
+                    <div>
+                        <dl class="formFields" style="padding-top: 20px">
+                            <dt>
+                            {{ login_form.username_str.label_tag }}
+                            </dt>
+                            <dd>
+                            {{ login_form.username_str }}
+                            <span id="username"></span>
+                            </dd>
 
-                    <li>
-                    {{ login_form.password_str.label_tag }}
-                    {{ login_form.password_str }}
-                    <span id="password"></span>
-                    </li>
+                            <dt>
+                            {{ login_form.password_str.label_tag }}
+                            </dt>
+                            <dd>
+                            {{ login_form.password_str }}
+                            <span id="password"></span>
+                            </dd>
 
-                    {% if network.name == "admob" %}
-                    <li>
-                    {{ login_form.client_key.label_tag }}
-                    {{ login_form.client_key }}
-                    <span id="client_key"></span>
-                    </li>
-                    {% endif %}
-                </ul>
+                            {% if network.name == "admob" %}
+                            <dt>
+                            {{ login_form.client_key.label_tag }}
+                            </dt>
+                            <dd>
+                            {{ login_form.client_key }}
+                            <span id="client_key"></span>
+                            </dd>
+                            {% endif %}
+                        </dl>
+                    </div>
                 {% endif %}
 
-                <div class="form-submit login-credentials-submit">
-                    <a class="submit button">
+                <div class="form-submit login-credentials-submit" style="clear: both">
+                    <a class="submit btn">
                         {% if network.name == "mobfox" %} 
                         Turn on Reporting
                         {% else %}
                         Check and Save Credentials
                         {% endif %}
                     </a>
-                    <a class="cancel button">No Thanks</a>
+                    <a class="cancel btn">No Thanks</a>
                 </div>
                 <div class="form-submit login-credentials-settings hidden">
                     <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
@@ -94,37 +108,40 @@
             <img src="/images/{{network.name}}-transparent.png"/>
         </div>
         <div>
-            <ul class="form_fields">
+            <dl class="formFields">
                 {% if custom_campaign %}
-                <li>
+                <dt>
                 {{ campaign_form.name.label_tag }}
-                <div>
+                </dt>
+                <dd>
                     {{ campaign_form.name }}
-                </div>
-                </li>
+                </dd>
                 {% endif %}
 
                 {% if network.name == "admob" or network.name == "millennial" %}
-                <li>
+                <dt>
                     <label>Special Instructions:</label>
-                    <div>
-                        Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
-                    </div>
-                </li>
+                </dt>
+                <dd>
+                    Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
+                </dd>
                 {% endif %}
 
                 {% if network.name == "jumptap" %}
-                <li>
-                <label for="id_{{ network.name }}_pub_id">{{ network.pretty_name }} Publisher Alias:</label>
-                <div>
+                <dt>
+                    <label for="id_{{ network.name }}_pub_id">{{ network.pretty_name }} Publisher Alias:</label>
+                </dt>
+                <dd>
                     <input type="text" name="{% if campaign_key %}{{ account.network_config.key }}-{% endif %}{{ network.name }}_pub_id" id="id_{{ network.name }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
-                </div>
-                </li>
+                </dd>
                 {% endif %}
-            </ul>
+            </dl>
 
             <div style="margin-top:15px">
-                <a class="button" id="advanced">Show Advanced Targeting</a>
+                <a class="btn" id="advanced">
+                    <i class="icon-eye-open"></i>
+                    Show Advanced Targeting
+                </a>
             </div>
         </div>
     </fieldset>
@@ -134,75 +151,89 @@
             <h2>Advanced Targeting</h2>
         </legend>
 
-        <ul class="form_fields">
-            <li>
+        <dl class="formFields">
+            <dt>
             {{ campaign_form.description.label_tag }}
-            <div>
-                {{ campaign_form.description }}
-            </div>
-            </li>
+            </dt>
+            <dd>
+            {{ campaign_form.description }}
+            </dd>
 
-            <li>
+            <dt>
             {{ adgroup_form.device_targeting.label_tag }}
-            <div>
-                {% comment %}
-                This field should be rendered using a Django widget, but
-                there is no good option in 1.2 for a Boolean RadioSelect.
-                {% endcomment %}
-                <span class="radios">
-                    <ul>
-                        <li><label for="id_device_targeting_0"><input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> All</label></li>
-                        <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
+            </dt>
+            <dd>
+                <div class="device-targeting" style="display: inline-block;">
+                    {% comment %}
+                    This field should be rendered using a Django widget, but
+                    there is no good option in 1.2 for a Boolean RadioSelect.
+                    {% endcomment %}
+                    <span class="radios">
+                        {{ adgroup_form.device_targeting }}
+                    </span>
+                    <ul id="device_targeting" class="{% if not adgroup_form.device_targeting|display_value %}hidden{% endif %}">
+                        <li class="inline">
+                            <ul class="devices inline">
+                                <li class="inline">
+                                    <label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label>
+                                </li>
+                                <li class="inline">
+                                    <label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label>
+                                </li>
+                                <li class="inline">
+                                    <label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label>
+                                </li>
+                            </ul>
+                            <div class="inline">
+                                {{ adgroup_form.ios_version_min.label_tag }}
+                                {{ adgroup_form.ios_version_min }}
+                                {{ adgroup_form.ios_version_max.label_tag }}
+                                {{ adgroup_form.ios_version_max }}
+                            </div>
+                        </li>
+                        <li>
+                            <div class="devices inline">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</div>
+                            {{ adgroup_form.android_version_min.label_tag }}
+                            {{ adgroup_form.android_version_min }}
+                            {{ adgroup_form.android_version_max.label_tag }}
+                            {{ adgroup_form.android_version_max }}
+                        </li>
+                        <li>
+                            <div class="devices inline">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</div>
+                            <span class="muted">(All versions)</span>
+                        </li>
                     </ul>
-                </span>
-                <ul id="device_targeting" class="{% if not adgroup_form.device_targeting|display_value %}hidden{% endif %}">
-                    <li>
-                    <ul class="device_type">
-                        <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>
-                        <li><label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label></li>
-                        <li><label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label></li>
-                    </ul>
-                    {{ adgroup_form.ios_version_min.label_tag }}
-                    {{ adgroup_form.ios_version_min }}
-                    {{ adgroup_form.ios_version_max.label_tag }}
-                    {{ adgroup_form.ios_version_max }}
-                    </li>
-                    <li>
-                    <label class="device_type">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</label>
-                    {{ adgroup_form.android_version_min.label_tag }}
-                    {{ adgroup_form.android_version_min }}
-                    {{ adgroup_form.android_version_max.label_tag }}
-                    {{ adgroup_form.android_version_max }}
-                    </li>
-                    <li>
-                    <label class="device_type">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</label>
-                    <span class="muted">(All versions)</span>
-                    </li>
-                </ul>
-            </div>
-            </li>
-            <li>
-            <label>Country Targeting:</label>
-            <div>
+                </div>
+            </dd>
+            <dt>
+                <label>Country Targeting:</label>
+            </dt>
+            <dd>
                 <div id="geo_pred_ta" name="geo_predicates"></div>
+            </dd>
+            <div class="countryNumDependent 0 1" style="display: none;">
+                <dt>
+                    {{ adgroup_form.region_targeting.label_tag }}
+                </dt>
+                <dd>
+                    <span class="radios">
+                        {{ adgroup_form.region_targeting }}
+                    </span>
+                </dd>
             </div>
-            </li>
-            <li class="countryNumDependent 0 1" style="display: none;">
-            {{ adgroup_form.region_targeting.label_tag }}
-            <div>
-                <span class="radios">{{ adgroup_form.region_targeting }}</span>
+            <div class="locationDependent city" style="display: none;"> 
+                <dt>
+                    <label>City Targeting:</label>
+                </dt>
+                <dd>
+                    <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
+                    <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
+                </dd>
             </div>
-            </li>
-            <li class="locationDependent city" style="display: none;">
-            <label>City Targeting:</label>
-            <div>
-                <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
-                <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
-            </div>
-            </li>
-            <li>
+            <dt>
             {{ adgroup_form.keywords.label_tag }}
-            <div>
+            </dt>
+            <dd>
                 {{ adgroup_form.keywords }}
                 <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
                 <div id="campaignForm-keyword-helpContent" class="hidden">
@@ -219,15 +250,14 @@
                     Note: Keywords should only be used if your app is sending keywords with the ad request.
                     </p>
                 </div>
-            </div>
-            </li>
-        </ul>
+            </dd>
+        </dl>
     </fieldset>
 
     {% if login_form and network.show_login %}
     <fieldset class="alt login-fields" style="padding-top:20px">
         <legend>
-                <h2>
+                <h2 style="padding-top: 20px">
                     Revenue Reporting
                     {% if network.name == "admob" or network.name == "inmobi" %}
                     <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
@@ -245,38 +275,46 @@
             </div>
 
             {% if network.name != "mobfox" %}
-                <ul class="form_fields">
-                    <li>
-                    {{ login_form.username_str.label_tag }}
-                    {{ login_form.username_str }}
-                    <span id="username"></span>
-                    </li>
+                <div>
+                    <dl class="formFields" style="padding-top: 20px">
+                        <dt>
+                        {{ login_form.username_str.label_tag }}
+                        </dt>
+                        <dd>
+                        {{ login_form.username_str }}
+                        <span id="username"></span>
+                        </dd>
 
-                    <li>
-                    {{ login_form.password_str.label_tag }}
-                    {{ login_form.password_str }}
-                    <span id="password"></span>
-                    </li>
+                        <dt>
+                        {{ login_form.password_str.label_tag }}
+                        </dt>
+                        <dd>
+                        {{ login_form.password_str }}
+                        <span id="password"></span>
+                        </dd>
 
-                    {% if network.name == "admob" %}
-                    <li>
-                    {{ login_form.client_key.label_tag }}
-                    {{ login_form.client_key }}
-                    <span id="client_key"></span>
-                    </li>
-                    {% endif %}
-                </ul>
+                        {% if network.name == "admob" %}
+                        <dt>
+                        {{ login_form.client_key.label_tag }}
+                        </dt>
+                        <dd>
+                        {{ login_form.client_key }}
+                        <span id="client_key"></span>
+                        </dd>
+                        {% endif %}
+                    </dl>
+                </div>
             {% endif %}
 
-            <div class="form-submit login-credentials-submit">
-                <a class="submit button">
+            <div class="form-submit login-credentials-submit" style="clear:both;">
+                <a class="submit btn">
                     {% if network.name == "mobfox" %} 
                     Turn on Reporting
                     {% else %}
                     Check and Save Credentials
                     {% endif %}
                 </a>
-                <a class="cancel button">No Thanks</a>
+                <a class="cancel btn">No Thanks</a>
             </div>
             <div class="form-submit login-credentials-settings hidden">
                 <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
@@ -285,12 +323,11 @@
     </fieldset>
     {% endif %}
 
-    <h2>App Targeting</h2>
+    <h2 style="padding-top: 20px">App Targeting</h2>
     <div>
         <table class="inventory_table">
             <thead>
                 <tr>
-                    <td class="icon"></td>
                     <td class="name"></td>
                     <td class="name">
                         Enabled
@@ -352,8 +389,6 @@
             </thead>
             <tbody class="global-settings">
                 <tr id="global-row" class="main sub global-row">
-                    <td class="icon">
-                    </td>
                     <td class="title">
                         Global Settings
                     </td>
@@ -408,13 +443,6 @@
             {% for app in apps %}
             <tbody class="{% cycle 'alt' '' %} app-tbody">
                 <tr id="{{ app.key }}-row" class="main app-targeting app-row">
-                    <td class="icon">
-                        <div>
-                        <a href="/inventory/app/{{app.key_}}">
-                            <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
-                        </a>
-                        </div>
-                    </td>
                     <td class="name">
                         {{ app.name }} <span class="muted">({{ app.type }})</span>
                     </td>
@@ -478,7 +506,6 @@
                 </tr>
                 {% for adunit in app.adunits %}
                 <tr id="{{ adunit.key }}-row" class="sub adunit-row" style="height:33px">
-                    <td class="icon"></td>
                     <td class="name">
                         {{ adunit.name }}
                     </td>
@@ -555,8 +582,8 @@
         <div id="loading" class="hidden">
             <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
         </div>
-        <a class="button" id="submit" href="#">Save</a>
-        <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
+        <a class="btn" id="submit" href="#">Save</a>
+        <a class="btn" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
 
 
@@ -570,19 +597,18 @@
             </div>
             <div class="modal-body">
                 <fieldset class="dialog global-options">
-                    <ul class="form_fields">
-                        <li>
-                        <label for="id_global-allocation_percentage">Allocation:</label>
-                        <div>
+                    <dl class="formFields">
+                        <dt>
+                            <label for="id_global-allocation_percentage">Allocation:</label>
+                        </dt>
+                        <dd>
                             <input id="id_global-allocation_percentage" type="text" class="float">
                             % of all requests
-                        </div>
-                        </li>
-                        <li>
-                        <label for="id_global-daily_frequency_cap">
-                            Frequency Caps:
-                        </label>
-                        <div>
+                        </dd>
+                        <dt>
+                            <label for="id_global-daily_frequency_cap">Frequency Caps:</label>
+                        </dt>
+                        <dd>
                             <div>
                                 <input id="id_global-daily_frequency_cap" type="text" class="float">
                                 daily impressions per user
@@ -591,14 +617,13 @@
                                 <input id="id_global-hourly_frequency_cap" type="text" class="float">
                                 hourly impressions per user
                             </div>
-                        </div>
-                        </li>
-                    </ul>
+                        </dd>
+                    </dl>
                 </fieldset>
             </div>
             <div class="modal-footer">
-                <a class="button save" href="#">Ok</a>
-                <a class="button close" href="#">Cancel</a>
+                <a class="btn save" href="#">Ok</a>
+                <a class="btn cancel" href="#">Cancel</a>
             </div>
         </div>
         {% for app in apps %}
@@ -609,19 +634,18 @@
                 </div>
                 <div class="modal-body">
                     <fieldset class="dialog app-options">
-                        <ul class="form_fields">
-                            <li>
-                            <label for="id_{{ app.key }}-allocation_percentage">Allocation:</label>
-                            <div>
+                        <dl class="formFields">
+                            <dt>
+                                <label for="id_{{ app.key }}-allocation_percentage">Allocation:</label>
+                            </dt>
+                            <dd>
                                 <input id="id_{{ app.key }}-allocation_percentage" type="text" class="float">
                                 % of all requests
-                            </div>
-                            </li>
-                            <li>
-                            <label for="id_{{ app.key }}-daily_frequency_cap">
-                                Frequency Caps:
-                            </label>
-                            <div>
+                            </dd>
+                            <dt>
+                                <label for="id_{{ app.key }}-daily_frequency_cap">Frequency Caps:</label>
+                            </dt>
+                            <dd>
                                 <div>
                                     <input id="id_{{ app.key }}-daily_frequency_cap" type="text" class="float">
                                     daily impressions per user
@@ -630,14 +654,13 @@
                                     <input id="id_{{ app.key }}-hourly_frequency_cap" type="text" class="float">
                                     hourly impressions per user
                                 </div>
-                            </div>
-                            </li>
-                        </ul>
+                            </dd>
+                        </dl>
                     </fieldset>
                 </div>
                 <div class="modal-footer">
-                    <a class="button save" href="#">Ok</a>
-                    <a class="button close" href="#">Cancel</a>
+                    <a class="btn save" href="#">Ok</a>
+                    <a class="btn cancel" href="#">Cancel</a>
                 </div>
             </div>
             {% for adunit in app.adunits %}
@@ -647,30 +670,30 @@
                 </div>
                 <div class="modal-body">
                     <fieldset class="dialog adunit-options">
-                        <ul class="form_fields">
-                            <li>
-                            {{ adunit.adgroup_form.allocation_percentage.label_tag }}
-                            <div>
+                        <dl class="formFields">
+                            <dt>
+                                {{ adunit.adgroup_form.allocation_percentage.label_tag }}
+                            </dt>
+                            <dd>
                                 {{ adunit.adgroup_form.allocation_percentage }} % of all requests
-                            </div>
-                            </li>
-                            <li>
-                            {{ adunit.adgroup_form.daily_frequency_cap.label_tag }}
-                            <div>
+                            </dd>
+                            <dt>
+                                {{ adunit.adgroup_form.daily_frequency_cap.label_tag }}
+                            </dt>
+                            <dd>
                                 <div>
                                 {{ adunit.adgroup_form.daily_frequency_cap }} daily impressions per user
                                 </div>
                                 <div>
                                 {{ adunit.adgroup_form.hourly_frequency_cap }} hourly impressions per user
                                 </div>
-                            </div>
-                            </li>
-                        </ul>
+                            </dd>
+                        </dl>
                     </fieldset>
                 </div>
                 <div class="modal-footer">
-                    <a class="button save" href="#">Ok</a>
-                    <a class="button close" href="#">Cancel</a>
+                    <a class="btn save" href="#">Ok</a>
+                    <a class="btn cancel" href="#">Cancel</a>
                 </div>
             </div>
             {% endfor %}
@@ -683,6 +706,8 @@
 {% block extraScripts %}
 {% include_style "bootstrap" %}
 {% include_script "libs/bootstrap.min.js" %}
+{% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
 {% include_script "controllers/networks" %}
 {% include_script "utilities/webkit_pushstack_fix" %}
 <script type="text/javascript">
@@ -710,4 +735,3 @@
     });
 </script>
 {% endblock extraScripts %}
-

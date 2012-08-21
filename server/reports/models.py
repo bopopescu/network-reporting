@@ -1,22 +1,14 @@
-#generic python imports
 import logging
 import time
 import traceback
-import sys
-
 from datetime import datetime, timedelta
 
 from django.template import loader
-#appengine imports
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
-from google.appengine.api import users, mail
-from google.appengine.ext.webapp import template
+from google.appengine.api import mail
 
-#mopub imports
-from account.models import Account
 from advertiser.models import Creative
-from common.constants import ISO_COUNTRIES, REP_KEY, CLONE_REP_KEY
 from common.properties.dict_property import DictProperty
 from common.utils import date_magic
 from common.utils.helpers import cust_sum
@@ -24,8 +16,7 @@ from common.wurfl.query_managers import WurflQueryManager
 from publisher.models import AdUnit
 from mail.mails import (REPORT_FINISHED_SIMPLE,
                         REPORT_FAILED_SIMPLE,
-                        REPORT_NO_DATA,
-                        )
+                        REPORT_NO_DATA)
 
 APP = 'app'
 AU = 'adunit'
@@ -165,7 +156,9 @@ class ScheduledReport(db.Model):
     @property
     def details(self):
         if self._details:
-            return self._details
+            return self._details\
+                       .replace("Campaign", "Order")\
+                       .replace("Adgroup", "Line Item")
         else:
             return self.most_recent.details(self.interval)
 
@@ -217,6 +210,7 @@ class ScheduledReport(db.Model):
 
         super(ScheduledReport, self).__init__(*args, **kwargs)
 
+        
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
@@ -249,20 +243,32 @@ class Report(db.Model):
 
     @property
     def message(self):
-        return REPORT_MSG % (self.d1, self.d2, self.d3, self.start.strftime('%y%m%d'), self.end.strftime('%y%m%d'), self.key(), self.account.key(), time.mktime(self.created_at.utctimetuple()))
+        return REPORT_MSG % (self.d1,
+                             self.d2,
+                             self.d3,
+                             self.start.strftime('%y%m%d'),
+                             self.end.strftime('%y%m%d'),
+                             self.key(),
+                             self.account.key(),
+                             time.mktime(self.created_at.utctimetuple()))
 
 
     def notify_complete(self):
-        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                 subject = 'Your report has completed',
-                                 bcc = 'report-monitoring@mopub.com')
-        mesg_dict = dict(report_key = str(self.schedule.key()),
-                         dim1 = self.d1,
-                         dim2 = self.d2,
-                         dim3 = self.d3,
-                         start = self.start.strftime('%m/%d/%y'),
-                         end = self.end.strftime('%m/%d/%y'))
+        mesg = mail.EmailMessage(
+            sender = 'olp@mopub.com',
+            subject = 'Your report has completed',
+            bcc = 'report-monitoring@mopub.com'
+        )
+        mesg_dict = dict(
+            report_key = str(self.schedule.key()),
+            dim1 = rename_for_oli(self.d1),
+            dim2 = rename_for_oli(self.d2),
+            dim3 = rename_for_oli(self.d3),
+            start = self.start.strftime('%m/%d/%y'),
+            end = self.end.strftime('%m/%d/%y')
+        )
         mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
+        
         if self.email and self.recipients:
             mesg.to = self.recipients
         else:
@@ -271,25 +277,31 @@ class Report(db.Model):
         try:
             mesg.send()
         except mail.InvalidEmailError, e:
-            pass
+            logging.warn(str(e))
+            
 
     def notify_failure(self, reason=OTHER):
-        mesg_dict = dict(dim1 = self.d1,
-                         dim2 = self.d2,
-                         dim3 = self.d3,
-                         start = self.start.strftime('%m/%d/%y'),
-                         end = self.end.strftime('%m/%d/%y'))
+        mesg_dict = dict(
+            dim1 = rename_for_oli(self.d1),
+            dim2 = rename_for_oli(self.d2),
+            dim3 = rename_for_oli(self.d3),
+            start = self.start.strftime('%m/%d/%y'),
+            end = self.end.strftime('%m/%d/%y')
+        )
+        
         if reason == NODAT:
-            mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                     subject = 'No data for your report',
-                                     bcc = 'report-monitoring@mopub.com',
-                                     )
+            mesg = mail.EmailMessage(
+                sender = 'olp@mopub.com',
+                subject = 'No data for your report',
+                bcc = 'report-monitoring@mopub.com',
+            )
             mesg.body = REPORT_NO_DATA % mesg_dict
         else:
-            mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                     subject = 'Your report has failed',
-                                     bcc = 'report-monitoring@mopub.com',
-                                     )
+            mesg = mail.EmailMessage(
+                sender = 'olp@mopub.com',
+                subject = 'Your report has failed',
+                bcc = 'report-monitoring@mopub.com',
+            )
             mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
 
         if self.email and self.recipients:
@@ -300,7 +312,7 @@ class Report(db.Model):
         try:
             mesg.send()
         except mail.InvalidEmailError, e:
-            pass
+            logging.warn(str(e))
 
     @property
     def d1(self):
@@ -343,21 +355,12 @@ class Report(db.Model):
         return self.schedule.days
 
     def __str__(self):
-        return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % (self.d1, self.d2, self.d3, self.start, self.end)
+        return "Report(d1=%s, d2=%s, d3=%s, start=%s, end=%s)" % \
+               (self.d1, self.d2, self.d3, self.start, self.end)
 
     @property
     def html_data(self):
         return loader.render_to_string('reports/report.html', dict(all_stats=self.data))
-        #if self.report_blob:
-        #    logging.warning("parsing report blob")
-        #    magic = self.parse_report_blob(self.report_blob.open())
-        #    logging.warning('\n%s\n' % magic)
-        #    return loader.render_to_string('reports/report.html', dict(all_stats=magic))
-        #BACKWARDS COMPATIBILITY!
-        #elif self.data:
-        #   pass
-        #else:
-        #    return None
     @property
     def export_data(self):
         """ Turns the dictionary into a list of lists """
@@ -386,9 +389,17 @@ class Report(db.Model):
                 if isinstance(value['stats'], dict):
                     impressions = float(value['stats']['impression_count'])
                     ctr = 'n/a' if impressions == 0 else value['stats']['click_count'] / impressions
-                    data += [value['stats']['request_count'], value['stats']['impression_count'], value['stats']['click_count'], value['stats']['conversion_count'], value['stats']['revenue'], ctr]
+                    data += [value['stats']['request_count'],
+                             value['stats']['impression_count'],
+                             value['stats']['click_count'],
+                             value['stats']['conversion_count'],
+                             value['stats']['revenue'],
+                             ctr]
                 else:
-                    data += [value['stats'].request_count, value['stats'].impression_count, value['stats'].click_count, value['stats'].conversion_count]
+                    data += [value['stats'].request_count,
+                             value['stats'].impression_count,
+                             value['stats'].click_count,
+                             value['stats'].conversion_count]
 
                 data_list.append(data)
 
@@ -532,6 +543,7 @@ class Report(db.Model):
     all the resolution is done here.  In the future it might makes sense to take this and put it
     into a second mapreduce job that's run when the report finalizes.
     """
+    
     def parse_report_blob(self, blobreader, dimkey_to_obj, testing=False):
         """ turns a reports report_blob blobstore object into a dictionary
 
@@ -767,16 +779,17 @@ class Report(db.Model):
         return None, None
 
     def get_key_name(self, idx, key, dimkey_to_obj, offline=False):
-        """ Turns arbitrary keys and things into human-readable names to
-            be output to the report
+        """
+        Turns arbitrary keys and things into human-readable names to
+        be output to the report
 
-            Args:
-               idx: level of this argument (should always be 0, 1, or 2)
-               key: key string for this dim
+        Args:
+          idx: level of this argument (should always be 0, 1, or 2)
+          key: key string for this dim
 
-            Returns:
-                (key, name) so we can use 'key' for keying into DataTables
-                and name to display
+        Returns:
+          (key, name) so we can use 'key' for keying into DataTables
+          and name to display
         """
         if idx == 0:
             dim = self.d1
@@ -847,3 +860,21 @@ class Report(db.Model):
             return (key, key)
         else:
             logging.warning("Not handling KW's yet")
+
+            
+def rename_for_oli(report_dimension):
+    """
+    Hack: The old reports system uses 'campaign' and 'adgroup' as
+    dimensions, instead of 'order' and 'line item'. We should go
+    through every place where instances of 'campaign' and 'adgroup'
+    are used and change them in those places. For now, we just
+    use this filter method wherever the string could be 'campaign'
+    or 'adgroup' and change it before it goes out in an email or
+    a template.
+    """
+    return str(report_dimension).replace('campaign', 'order')\
+                                .replace('adgroup', 'line item')\
+                                .replace('Campaign', 'Order')\
+                                .replace('Adgroup', 'Line Item')\
+                                .replace('AdGroup', 'Line Item')
+    

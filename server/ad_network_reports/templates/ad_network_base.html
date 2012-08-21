@@ -1,8 +1,8 @@
-﻿{% extends "base.html" %}
+﻿{% extends 'common/base.html' %}
 {% load filters %}
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
-  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url advertiser_order_index %}">Orders</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
@@ -151,7 +151,7 @@
 {% endblock extraScripts %}
 
 {% block dateButtons %}
-  {% include "partials/datecontrols.html" %}
+  {% include "common/partials/datecontrols.html" %}
 {% endblock dateButtons %}
 
 

@@ -5,4 +5,4 @@ def not_found_error(request, *args, **kwargs):
 	if request.META['HTTP_HOST'] == "ads.mopub.com":
 	    return HttpResponseNotFound('404: Not Found')
 	else:
-	    return HttpResponseNotFound(render_to_string(request, '404.html'))
+	    return HttpResponseNotFound(render_to_string(request, 'common/404.html'))

@@ -20,39 +20,14 @@ var mopub = mopub || {};
     };
 
     /*
-     * Fetches and renders all apps from a list of app_keys.
-     * Useful for bootstrapping table loads.
-     */
-    function fetchAllApps (app_keys) {
-        _.each(app_keys, function(app_key) {
-            var app = new App({ id: app_key, stats_endpoint: 'mpx' });
-            app.bind('change', function(current_app) {
-                var appView = new AppView({
-                    model: current_app,
-                    el: 'marketplace-apps'
-                });
-                appView.render();
-            });
-
-            app.fetch({
-                success: function(){
-                    $('table').trigger('update');
-                },
-                error: function () {
-                    app.fetch({
-                        error: toast_error
-                    });
-                }
-            });
-        });
-    }
-
-    /*
      * Fetches all app stats using a list of app keys and renders
      * them into table rows that have already been created in the
-     * page. Useful for decreasing page load time along with `fetchAdunitStats`.
+     * page. Useful for decreasing page load time along with `fetchAdunitsFromAppKey`.
      */
-    function fetchAppStats (app_keys) {
+    function fetchAppsFromKeys (app_keys) {
+        var apps = new AppCollection();
+        var fetched_apps = 0;
+
         _.each(app_keys, function(app_key) {
             var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
@@ -62,14 +37,25 @@ var mopub = mopub || {};
                 });
                 appView.renderInline();
             });
+
             app.fetch({
                 error: function () {
                     app.fetch({
                         error: toast_error
                     });
+                },
+                success: function() {
+                    fetched_apps++;
+                    if (fetched_apps == app_keys.length) {
+                        apps.trigger('loaded');
+                    }
                 }
             });
+
+            apps.add(app);
         });
+
+        return apps;
     }
 
     /*
@@ -77,7 +63,7 @@ var mopub = mopub || {};
      * existing table rows.  This method is useful for decreasing page
      * load time. Uses a parent app's key to bootstrap the fetch.
      */
-    function fetchAdunitStats (app_key, marketplace_active) {
+    function fetchAdunitsFromAppKey (app_key, marketplace_active) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
         adunits.stats_endpoint = 'mpx';
@@ -200,7 +186,7 @@ var mopub = mopub || {};
      * only when no errors are returned from the server. Fix this.
      */
     function turnOn () {
-        var on = $.post('/campaigns/marketplace/activation/', {
+        var on = $.post('/advertise/marketplace/activation/', {
             activate: 'true'
         });
 
@@ -221,12 +207,26 @@ var mopub = mopub || {};
      * only when no errors are returned from the server. Fix this.
      */
     function turnOff () {
-        var off = $.post('/campaigns/marketplace/activation/', {
+        var off = $.post('/advertise/marketplace/activation/', {
             activate: 'false'
         });
         $(".targeting-box").attr('disabled', true);
         $("#blindness").attr('disabled', true);
         return true;
+    }
+
+    /*
+     * Converts a date to a string in the form MM-DD-YYYY
+     * e.g. dateToMDYString(new Date()) (assuming today is July 25 2012)
+     * will produce "07-25-2012".
+     */      
+    function dateToMDYString(date) {
+        var d = date.getDate();
+        var m = date.getMonth()+1;
+        var y = date.getFullYear();
+        return '' + (m <= 9 ? '0' + m : m) + // MM
+        '-' + (d <= 9 ? '0' + d : d) + // DD        
+        '-' + y; // YYYY
     }
 
     /*
@@ -243,8 +243,12 @@ var mopub = mopub || {};
             origin = window.location.origin;
         }
 
+        // MM-DD-YYYY
+        var start_date_str = dateToMDYString(start_date);
+        var end_date_str = dateToMDYString(end_date);
+        
         var creative_data_url = origin
-            + "/campaigns/marketplace/creatives/";
+            + "/advertise/marketplace/creatives/";
         var table = $("#report-table").dataTable({
             bProcessing: true,
             // Use jQueryUI to style the table
@@ -277,8 +281,8 @@ var mopub = mopub || {};
                     url: sUrl,
                     data: {
                         pub_id: pub_id,
-                        start: start_date,
-                        end: end_date,
+                        start: start_date_str,
+                        end: end_date_str,
                         format:'jsonp'
                     },
                     // When the data returns from the endpoint, we have to format it the way
@@ -315,9 +319,12 @@ var mopub = mopub || {};
             // 'next'/'prev', or changes the number of displayed rows)
             fnRowCallback: function(nRow, aData, iDisplayIndex) {
 
-                $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" +
-                                         aData[0] +
-                                         "'></iframe>");
+                $("td:eq(0)", nRow).html("<iframe "
+                                         + "width='320px' "
+                                         + "height='50px' "
+                                         + "onerror='this.location = \"/images/preview_unavailable.png\";' "
+                                         + "src='" + aData[0] + "'>"
+                                         + "</iframe>");
 
                 var domain = aData[1];
                 if (_.contains(blocklist, domain)) {
@@ -328,7 +335,7 @@ var mopub = mopub || {};
                     // var anchor = $("<a href='#'> Block </a>").click(function (event) {
                     //     var $this = $(this);
                     //     event.preventDefault();
-                    //     var blocklist_xhr = $.post("/campaigns/marketplace/settings/blocklist/", {
+                    //     var blocklist_xhr = $.post("/advertise/marketplace/settings/blocklist/", {
                     //         action: 'add',
                     //         blocklist: domain
                     //     });
@@ -358,6 +365,7 @@ var mopub = mopub || {};
     function addToBlocklist (domain) {
         var anchor = $("<a href='#'>Remove</a>").click(blocklistRemoveClickHandler);
         var list_item = $("<li></li>").html(domain + " ");
+        list_item.attr("id", "blocked_domain")
         list_item.append(anchor);
         $("#blocked_domains").append(list_item);
     }
@@ -368,7 +376,7 @@ var mopub = mopub || {};
         var anchor = $(this);
         var domain = anchor.attr('id');
         $("img", anchor.parent()).removeClass('hidden');
-        var blocklist_xhr = $.post("/campaigns/marketplace/settings/blocklist/", {
+        var blocklist_xhr = $.post("/advertise/marketplace/settings/blocklist/", {
             action: 'remove',
             blocklist: domain
         });
@@ -376,6 +384,9 @@ var mopub = mopub || {};
         blocklist_xhr.done(function (response) {
             $("img#" + domain).addClass('hidden');
             anchor.parent().fadeOut();
+            if ($("#blocked_domains #blocked_domain:visible").size() === 0) {
+                $("#none_currently_blocked").fadeIn();
+            }
         });
 
         blocklist_xhr.error(function (response) {
@@ -389,9 +400,19 @@ var mopub = mopub || {};
 
             // Fill in the stats data for each of the apps and
             // each of their adunits
-            fetchAppStats(bootstrapping_data.app_keys);
+            var apps = fetchAppsFromKeys(bootstrapping_data.app_keys);
             _.each(bootstrapping_data.app_keys, function(app_key) {
-                fetchAdunitStats(app_key, bootstrapping_data.marketplace_active);
+                fetchAdunitsFromAppKey(app_key, bootstrapping_data.marketplace_active);
+            });
+
+            // When the apps are finished loading, we render the chart.
+            apps.bind('loaded', function() {
+                var chart_view = new CollectionChartView({
+                    collection: apps,
+                    start_date: bootstrapping_data.start_date,
+                    display_values: ['rev', 'imp', 'cpm' ] //TODO include cpm
+                });
+                chart_view.render();
             });
 
             var table = makeCreativePerformanceTable(bootstrapping_data.pub_key,
@@ -419,7 +440,7 @@ var mopub = mopub || {};
                 var loading_img = $("#blindness-spinner").show();
                 var saving = $("#blindness-save-status .saving").show();
 
-                var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/",{
+                var blindness_xhr = $.post("/advertise/marketplace/settings/blindness/",{
                     activate: $(this).is(":checked")
                 });
 
@@ -483,7 +504,7 @@ var mopub = mopub || {};
                 var domain = $(this).attr('id');
                 $.ajax({
                     type: 'post',
-                    url: '/campaigns/marketplace/settings/blocklist/',
+                    url: '/advertise/marketplace/settings/blocklist/',
                     data: {
                         blocklist: domain,
                         action: "add"
@@ -537,7 +558,7 @@ var mopub = mopub || {};
             $('#blocklist-submit').click(function(e) {
                 e.preventDefault();
                 var blocklist = $("textarea[name='blocklist']").val();
-                var blocklist_xhr = $.post('/campaigns/marketplace/settings/blocklist/', {
+                var blocklist_xhr = $.post('/advertise/marketplace/settings/blocklist/', {
                     action: 'add',
                     blocklist: blocklist
                 });
@@ -548,6 +569,7 @@ var mopub = mopub || {};
                         addToBlocklist(domain);
                     });
                     $("textarea[name='blocklist']").val('');
+                    $("#none_currently_blocked").fadeOut();
                 });
 
                 blocklist_xhr.error(function (response) {
@@ -569,7 +591,7 @@ var mopub = mopub || {};
                 var filter_level = self.attr('value');
                 var loading_img = $("#filter-spinner").show();
                 var saving = $("#filter-save-status .saving").show();
-                var result = $.post("/campaigns/marketplace/settings/content_filter/", {
+                var result = $.post("/advertise/marketplace/settings/content_filter/", {
                     filter_level: filter_level
                 });
 
@@ -586,119 +608,6 @@ var mopub = mopub || {};
                     }
                 });
             });
-
-
-
-
-            /*
-             * F THIS.
-             * REFACTOR.
-             *
-             * Everything here and below needs to not exist in this file, because
-             * it already exists in two other files. Obvo refactor.
-             */
-            function getCurrentChartSeriesType() {
-                var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-                if (activeBreakdownsElem.attr('id') == 'stats-breakdown-cpm') return 'line';
-                else return 'area';
-            }
-
-            $('.stats-breakdown tr').click(function(e) {
-                $('#dashboard-stats-chart').fadeOut(100, function() {
-                    mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-                    $(this).show();
-                });
-            });
-
-            var dailyStats = mopub.accountStats["daily"];
-            mopub.dashboardStatsChartData = {
-                pointStart: mopub.graphStartDate,
-                pointInterval: 86400000,
-                rev: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "rev")}],
-                imp: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}],
-                cpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "cpm")}]
-            };
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-
-            // set up dateOptions
-            $('#dashboard-dateOptions input').click(function() {
-                var option = $(this).val();
-                var hash = document.location.hash;
-                if(option == 'custom') {
-                    $('#dashboard-dateOptions-custom-modal').dialog({
-                        width: 570,
-                        buttons: [
-                            {
-                                text: 'Set dates',
-                                css: { fontWeight: '600' },
-                                click: function() {
-                                    var from_date=$('#dashboard-dateOptions-custom-from').xdatepicker("getDate");
-                                    var to_date=$('#dashboard-dateOptions-custom-to').xdatepicker("getDate");
-                                    var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
-
-                                    var from_day=from_date.getDate();
-                                    var from_month=from_date.getMonth()+1;
-                                    var from_year=from_date.getFullYear();
-
-                                    $(this).dialog("close");
-                                    var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
-                                    document.location.href = location +
-                                        '?r=' + num_days +
-                                        '&s=' + from_year + "-" + from_month + "-" + from_day +
-                                        hash;
-                                }
-                            },
-                            {
-                                text: 'Cancel',
-                                click: function() {
-                                    $(this).dialog("close");
-                                }
-                            }
-                        ]
-                        });
-                } else {
-                    // Tell server about selected option to get new data
-                    var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
-                    document.location.href = location+'?r=' + option + hash;
-                }
-            });
-
-            // set up stats breakdown dateOptions
-            $('#stats-breakdown-dateOptions input').click(function() {
-                $('.stats-breakdown-value').hide();
-                $('.stats-breakdown-value.'+$(this).val()).show();
-            });
-
-            // set up custom dateOptions modal dialog
-            $('#dashboard-dateOptions-custom-from').xdatepicker({
-                defaultDate: '-15d',
-                maxDate: '0d',
-                onSelect: function(selectedDate) {
-                    var other = $('#dashboard-dateOptions-custom-to');
-                    var instance = $(this).data("datepicker");
-                    var date = $.xdatepicker
-                        .parseDate(instance.settings.dateFormat ||
-                                   $.xdatepicker._defaults.dateFormat,
-                                   selectedDate,
-                                   instance.settings);
-                    other.xdatepicker('option', 'minDate', date);
-                }
-            });
-            $('#dashboard-dateOptions-custom-to').xdatepicker({
-                defaultDate: '-1d',
-                maxDate: '0d',
-                onSelect: function(selectedDate) {
-                    var other = $('#dashboard-dateOptions-custom-from');
-                    var instance = $(this).data("datepicker");
-                    var date = $.xdatepicker
-                        .parseDate(instance.settings.dateFormat ||
-                                   $.xdatepicker._defaults.dateFormat,
-                                   selectedDate,
-                                   instance.settings);
-                    other.xdatepicker('option', 'maxDate', date);
-                }
-            });
-
         }
     };
 

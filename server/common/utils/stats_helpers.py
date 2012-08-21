@@ -7,22 +7,22 @@ from api.networks_helpers import get_all_stats as get_network_stats
 
 from account.query_managers import AccountQueryManager
 from advertiser.models import NetworkStates
-from advertiser.query_managers import AdGroupQueryManager, \
-        CampaignQueryManager
+from advertiser.query_managers import (CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
+
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager
 from common.constants import REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager,\
-     AdUnitQueryManager, \
-     AdUnitContextQueryManager
-from common_templates.templatetags.filters import currency, percentage, percentage_rounded
+     AdUnitQueryManager
+
 from common.constants import MPX_DSP_IDS
 import logging
 
 from reporting.query_managers import StatsModelQueryManager
-from reporting.models import StatsModel, GEO_COUNTS
 
 try:
     import json
@@ -49,36 +49,44 @@ class AbstractStatsFetcher(object):
 
     def format_stats(self, stats):
         stat_totals = {
-            'rev': sum([stat.revenue for stat in stats]),
-            'imp': sum([stat.impression_count for stat in stats]),
-            'clk': sum([stat.click_count for stat in stats]),
-            'req': sum([stat.request_count for stat in stats]),
-            'conv': sum([stat.conversion_count for stat in stats]),
-            'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+            'sum': {
+                'rev': sum([stat.revenue for stat in stats]),
+                'imp': sum([stat.impression_count for stat in stats]),
+                'clk': sum([stat.click_count for stat in stats]),
+                'req': sum([stat.request_count for stat in stats]),
+                'conv': sum([stat.conversion_count for stat in stats]),
+                'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+            }
         }
 
         return stat_totals
 
     def format_daily_stats(self, all_stats):
-        stats_dict = {'sum': {'rev': sum([stats.revenue for stats in
-                                  all_stats]),
-                              'imp': sum([stats.impression_count for
-                                  stats in all_stats]),
-                              'clk': sum([stats.click_count for stats in
-                                  all_stats]),
-                              'req': sum([stats.request_count for stats
-                                  in all_stats]), },
-                      'daily_stats': [{'rev': stats.revenue,
-                                       'imp': stats.impression_count,
-                                       'clk': stats.click_count,
-                                       'req': stats.request_count,} for
-                                       stats in all_stats], }
+
+        stats_dict = {
+            'sum': {
+                'rev': sum([stats.revenue for stats in all_stats]),
+                'imp': sum([stats.impression_count for stats in all_stats]),
+                'clk': sum([stats.click_count for stats in all_stats]),
+                'req': sum([stats.request_count for stats in all_stats]),
+                'conv': sum([stat.conversion_count for stat in all_stats]),
+                'conv_rate': sum([stat.conv_rate for stat in all_stats])/len(all_stats),
+            },
+            'daily_stats': [{'rev': stats.revenue,
+                             'imp': stats.impression_count,
+                             'clk': stats.click_count,
+                             'req': stats.request_count,
+                             'conv': stats.conversion_count,
+                             'date': stats.date.strftime("%Y-%m-%d")} \
+                            for stats in all_stats],
+        }
         return stats_dict
 
 
 class SummedStatsFetcher(AbstractStatsFetcher):
+
     def _get_publisher_stats(self, start, end, publisher=None,
-                             advertiser=None, daily=False,
+                             advertiser=None, daily=True,
                              *args, **kwargs):
         # mongo
         days = date_magic.gen_days(start, end)
@@ -93,15 +101,16 @@ class SummedStatsFetcher(AbstractStatsFetcher):
             return self.format_stats(stats)
 
     def _get_campaign_stats(self, start, end, campaign, publisher=None,
-            daily=False, *args, **kwargs):
+                            daily=True, *args, **kwargs):
         # mongo
         query_manager = StatsModelQueryManager(AccountQueryManager.get(
             self.account_key))
         # If its a new network campaign that has been migrated and the
         # transition date is after the start date
-        if campaign.campaign_type == 'network' and campaign.network_state == \
-                NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
-                campaign.old_campaign and start <= campaign.transition_date:
+        if campaign.is_network and \
+           campaign.network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
+           campaign.old_campaign and start <= campaign.transition_date:
+
             new_stats = None
             if end >= campaign.transition_date:
                 # get new campaign stats
@@ -128,30 +137,33 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         if daily:
             return self.format_daily_stats(all_stats)
         else:
+
             return self.format_stats(all_stats)
 
-    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        # mongo
-        campaign = CampaignQueryManager.get(campaign_key)
-        campaign_stats = self._get_campaign_stats(start, end, campaign,
-                daily=True)
+
+    def _get_advertiser_stats(self, advertiser, start, end,
+                              publisher=None, daily=True,
+                              *args, **kwargs):
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(advertiser.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=advertiser,
+                                                 days=days)
+        if daily:
+            return self.format_daily_stats(stats)
+        else:
+            return self.format_stats(stats)
+
+
+    def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
+
+        if isinstance(campaign, str):
+            campaign = CampaignQueryManager.get(campaign)
+
+        campaign_stats = self._get_campaign_stats(start, end,
+                                                  campaign,
+                                                  daily=True)
         return campaign_stats
-
-    def get_campaign_specific_adunit_stats(self, adunit_key, campaign, start,
-            end, *args, **kwargs):
-        # mongo
-        adunit = AdUnitQueryManager.get(adunit_key);
-        adunit_stats = self._get_campaign_stats(start, end, campaign,
-                publisher=adunit)
-        return adunit_stats
-
-    def get_campaign_specific_app_stats(self, app_key, campaign,
-                                        start, end, *args, **kwargs):
-        # mongo
-        app = AppQueryManager.get(app_key)
-        app_stats = self._get_campaign_stats(start, end, campaign,
-                publisher=app)
-        return app_stats
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         # mongo
@@ -159,35 +171,177 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         app_stats = self._get_publisher_stats(start, end, publisher=app)
         return app_stats
 
-    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+    def get_adunit_stats(self, adunit_key, start, end, daily=True):
         # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
         adunit_stats = self._get_publisher_stats(start, end, publisher=adunit)
         return adunit_stats
 
-    def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
+    def get_adgroup_stats(self, adgroup, start, end, daily=True):
+        if isinstance(adgroup, str):
+            adgroup = AdGroupQueryManager.get(adgroup)
+        adgroup_stats = self._get_advertiser_stats(adgroup, start, end)
+        return adgroup_stats
+
+    def get_network_app_stats(self, app_key, campaign,
                                         start, end, *args, **kwargs):
+        """ This method needs to be merged """
+        # mongo
+        app = AppQueryManager.get(app_key)
+        app_stats = self._get_campaign_stats(start, end, campaign,
+                publisher=app)
+        return app_stats
+
+    def get_network_adunit_stats(self, adunit_key, campaign, start,
+            end, *args, **kwargs):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        adunit_stats = self._get_campaign_stats(start, end, campaign,
+                publisher=adunit)
+        return adunit_stats
+
+    def get_campaign_specific_app_stats(self, app_key, campaign_key,
+                                        start, end, daily=True):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        app_stats = self._get_publisher_stats(start, end, publisher=app,
+                                              advertiser=campaign, daily=daily)
+        return app_stats
+
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign_key,
+                                           start, end, daily=True):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
+                                                 advertiser=campaign,
+                                                 daily=daily)
+        return adunit_stats
+
+    def get_adgroup_specific_app_stats(self, app_key, adgroup_key, start, end,
+                                       daily=True):
         # mongo
         app = AppQueryManager.get(app_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         app_stats = self._get_publisher_stats(start, end, publisher=app,
-                                              advertiser=adgroup)
+                                              advertiser=adgroup, daily=daily)
         return app_stats
 
-
-    def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
-                                           start, end, *args, **kwargs):
+    def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key, start,
+                                          end, daily=True):
         # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
-                                                 advertiser=adgroup)
+                                                 advertiser=adgroup,
+                                                 daily=daily)
         return adunit_stats
 
 
-
 class DirectSoldStatsFetcher(AbstractStatsFetcher):
-    pass
+
+    def _get_publisher_stats(self, start, end,
+                             publisher=None,
+                             advertiser=None,
+                             daily=True,
+                             *args, **kwargs):
+        # mongo
+        days = date_magic.gen_days(start, end)
+        account = AccountQueryManager.get(self.account_key)
+        query_manager = StatsModelQueryManager(account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=advertiser,
+                                                 days=days)
+        if daily:
+            return self.format_daily_stats(stats)
+        else:
+            return self.format_stats(stats)
+
+    def _get_advertiser_stats(self, start, end,
+                              advertiser=None,
+                              publisher=None,
+                              daily=True,
+                              *args, **kwargs):
+
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(advertiser.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=advertiser,
+                                                 days=days)
+
+        if daily:
+            return self.format_daily_stats(stats)
+        else:
+            return self.format_stats(stats)
+
+    def get_campaign_stats(self, campaign, start, end, daily=True):
+
+        if isinstance(campaign, str):
+            campaign = CampaignQueryManager.get(campaign)
+
+        campaign_stats = self._get_advertiser_stats(start, end,
+                                                    advertiser=campaign,
+                                                    daily=daily)
+        return campaign_stats
+
+    def get_adgroup_stats(self, adgroup, start, end, daily=True):
+
+        if isinstance(adgroup, str):
+            adgroup = AdGroupQueryManager.get(adgroup)
+
+        adgroup_stats = self._get_advertiser_stats(start, end,
+                                                   advertiser=adgroup,
+                                                   daily=daily)
+        return adgroup_stats
+
+    def get_creative_stats(self, creative, start, end, daily=True):
+
+        if isinstance(creative, str):
+            creative = CreativeQueryManager.get(creative)
+
+        creative_stats = self._get_advertiser_stats(start, end,
+                                                    advertiser=creative,
+                                                    daily=daily)
+        return creative_stats
+
+    def get_campaign_specific_app_stats(self, app_key, campaign_key,
+                                        start, end, daily=True):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        app_stats = self._get_publisher_stats(start, end, publisher=app,
+                                              advertiser=campaign, daily=daily)
+        return app_stats
+
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign_key,
+                                           start, end, daily=True):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
+                                                 advertiser=campaign,
+                                                 daily=daily)
+        return adunit_stats
+
+    def get_adgroup_specific_app_stats(self, app_key, adgroup_key, start, end,
+                                       daily=True):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        app_stats = self._get_publisher_stats(start, end, publisher=app,
+                                              advertiser=adgroup, daily=daily)
+        return app_stats
+
+    def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key, start,
+                                          end, daily=True):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
+                                                 advertiser=adgroup,
+                                                 daily=daily)
+        return adunit_stats
 
 
 class MarketplaceStatsFetcher(object):
@@ -229,13 +383,13 @@ class MarketplaceStatsFetcher(object):
 
         stats_dict = {}
         for id, stats in response_dict.iteritems():
-            counts = {"rev": currency(stats['pub_rev']),
+            counts = {"rev": float(stats['pub_rev']),
                       "imp": int(stats['imp']),
                       "clk": stats['clk'], }
             stats_dict[id] = counts
         return stats_dict
 
-    def _get_pub_inventory(self, pub, start, end, daily=False):
+    def _get_pub_inventory(self, pub, start, end, daily=True):
         """
         This is an alternative to _get_inventory. Here, pub is used in the broad
         sense to represent a pub/app/adunit. When stats for only a single
@@ -277,7 +431,7 @@ class MarketplaceStatsFetcher(object):
              end)
         response_dict = _fetch_and_decode(url)
         stats_sum = response_dict['sum']
-        counts = _transform_stats(stats_sum)
+        counts = {'sum': _transform_stats(stats_sum)}
 
         if daily:
             # append daily breakdown of stats
@@ -287,12 +441,12 @@ class MarketplaceStatsFetcher(object):
                 daily_stats_transformed = _transform_stats(daily_stats)
                 daily_stats_transformed['date'] = daily_stats['date']
                 daily_stats_list_transformed.append(daily_stats_transformed)
-            counts['daily'] = daily_stats_list_transformed
+            counts['daily_stats'] = daily_stats_list_transformed
 
         stats_dict = {pub: counts}
         return stats_dict
 
-    def get_app_stats(self, app_key, start, end, daily=False):
+    def get_app_stats(self, app_key, start, end, daily=True):
         stats = self._get_pub_inventory(app_key,
                                         start=start.strftime("%m-%d-%Y"),
                                         end=end.strftime("%m-%d-%Y"),
@@ -300,14 +454,14 @@ class MarketplaceStatsFetcher(object):
         return stats.get(app_key, {})
 
 
-    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+    def get_adunit_stats(self, adunit_key, start, end, daily=True):
         stats = self._get_pub_inventory(adunit_key,
                                         start=start.strftime("%m-%d-%Y"),
                                         end=end.strftime("%m-%d-%Y"),
                                         daily=daily)
         return stats.get(adunit_key, {})
 
-    def get_account_stats(self, start, end, daily=False):
+    def get_account_stats(self, start, end, daily=True):
         stats = self._get_pub_inventory(self.pub_id,
                                         start=start.strftime("%m-%d-%Y"),
                                         end=end.strftime("%m-%d-%Y"),
@@ -399,8 +553,10 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
                 start, end).values()[0]
         return stats
 
-    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        campaign = CampaignQueryManager.get(campaign_key)
+    def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
+        if isinstance(campaign, str):
+            campaign = CampaignQueryManager.get(campaign)
+
         days = date_magic.gen_days(start, end)
         if campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
@@ -410,11 +566,17 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
             return None
         return stats
 
-    def get_campaign_specific_app_stats(self, app_key, campaign, start, end,
+    def get_campaign_specific_app_stats(self, app_key, campaign_key, start, end,
             *args, **kwargs):
+        campaign = CampaignQueryManager.get(campaign_key)
+
         app_stats = self._get_publisher_stats(start, end, campaign._account,
                 app_key=app_key, network=campaign.network_type)['sum']
         return app_stats
+
+    def get_adgroup_stats(self, *args, **kwargs):
+        return {}
+
 
 # TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):
@@ -471,9 +633,11 @@ class AdNetworkStatsFetcher(object):
 # Helper/Utility functions
 
 def _transform_stats(stats_dict):
-    return {"rev": stats_dict['rev'],
-            "imp": int(stats_dict['imp']),
-            "clk": stats_dict.get('clk', 0),} # no clk currently from /stats/pub
+    return {
+        "rev": stats_dict['rev'],
+        "imp": int(stats_dict['imp']),
+        "clk": stats_dict.get('clk', 0),
+    } # no clk currently from /stats/pub
 
 
 def _fetch_and_decode(url):

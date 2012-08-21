@@ -1,5 +1,5 @@
 /* ===================================================
- * bootstrap-transition.js v2.0.3
+ * bootstrap-transition.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#transitions
  * ===================================================
  * Copyright 2012 Twitter, Inc.
@@ -59,7 +59,7 @@
   })
 
 }(window.jQuery);/* ==========================================================
- * bootstrap-alert.js v2.0.3
+ * bootstrap-alert.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#alerts
  * ==========================================================
  * Copyright 2012 Twitter, Inc.
@@ -147,10 +147,8 @@
     $('body').on('click.alert.data-api', dismiss, Alert.prototype.close)
   })
 
-}(window.jQuery);
-
-/* ============================================================
- * bootstrap-button.js v2.0.3
+}(window.jQuery);/* ============================================================
+ * bootstrap-button.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#buttons
  * ============================================================
  * Copyright 2012 Twitter, Inc.
@@ -169,84 +167,83 @@
  * ============================================================ */
 
 
-// !function ($) {
+!function ($) {
 
-//   "use strict"; // jshint ;_;
-
-
-//  /* BUTTON PUBLIC CLASS DEFINITION
-//   * ============================== */
-
-//   var Button = function (element, options) {
-//     this.$element = $(element)
-//     this.options = $.extend({}, $.fn.button.defaults, options)
-//   }
-
-//   Button.prototype.setState = function (state) {
-//     var d = 'disabled'
-//       , $el = this.$element
-//       , data = $el.data()
-//       , val = $el.is('input') ? 'val' : 'html'
-
-//     state = state + 'Text'
-//     data.resetText || $el.data('resetText', $el[val]())
-
-//     $el[val](data[state] || this.options[state])
-
-//     // push to event loop to allow forms to submit
-//     setTimeout(function () {
-//       state == 'loadingText' ?
-//         $el.addClass(d).attr(d, d) :
-//         $el.removeClass(d).removeAttr(d)
-//     }, 0)
-//   }
-
-//   Button.prototype.toggle = function () {
-//     var $parent = this.$element.parent('[data-toggle="buttons-radio"]')
-
-//     $parent && $parent
-//       .find('.active')
-//       .removeClass('active')
-
-//     this.$element.toggleClass('active')
-//   }
+  "use strict"; // jshint ;_;
 
 
-//  /* BUTTON PLUGIN DEFINITION
-//   * ======================== */
+ /* BUTTON PUBLIC CLASS DEFINITION
+  * ============================== */
 
-//   $.fn.button = function (option) {
-//     return this.each(function () {
-//       var $this = $(this)
-//         , data = $this.data('button')
-//         , options = typeof option == 'object' && option
-//       if (!data) $this.data('button', (data = new Button(this, options)))
-//       if (option == 'toggle') data.toggle()
-//       else if (option) data.setState(option)
-//     })
-//   }
+  var Button = function (element, options) {
+    this.$element = $(element)
+    this.options = $.extend({}, $.fn.button.defaults, options)
+  }
 
-//   $.fn.button.defaults = {
-//     loadingText: 'loading...'
-//   }
+  Button.prototype.setState = function (state) {
+    var d = 'disabled'
+      , $el = this.$element
+      , data = $el.data()
+      , val = $el.is('input') ? 'val' : 'html'
 
-//   $.fn.button.Constructor = Button
+    state = state + 'Text'
+    data.resetText || $el.data('resetText', $el[val]())
+
+    $el[val](data[state] || this.options[state])
+
+    // push to event loop to allow forms to submit
+    setTimeout(function () {
+      state == 'loadingText' ?
+        $el.addClass(d).attr(d, d) :
+        $el.removeClass(d).removeAttr(d)
+    }, 0)
+  }
+
+  Button.prototype.toggle = function () {
+    var $parent = this.$element.parent('[data-toggle="buttons-radio"]')
+
+    $parent && $parent
+      .find('.active')
+      .removeClass('active')
+
+    this.$element.toggleClass('active')
+  }
 
 
-//  /* BUTTON DATA-API
-//   * =============== */
+ /* BUTTON PLUGIN DEFINITION
+  * ======================== */
 
-//   $(function () {
-//     $('body').on('click.button.data-api', '[data-toggle^=button]', function ( e ) {
-//       var $btn = $(e.target)
-//       if (!$btn.hasClass('btn')) $btn = $btn.closest('.btn')
-//       $btn.button('toggle')
-//     })
-//   })
+  $.fn.button = function (option) {
+    return this.each(function () {
+      var $this = $(this)
+        , data = $this.data('button')
+        , options = typeof option == 'object' && option
+      if (!data) $this.data('button', (data = new Button(this, options)))
+      if (option == 'toggle') data.toggle()
+      else if (option) data.setState(option)
+    })
+  }
 
-// }(window.jQuery);
-/* ==========================================================
- * bootstrap-carousel.js v2.0.3
+  $.fn.button.defaults = {
+    loadingText: 'loading...'
+  }
+
+  $.fn.button.Constructor = Button
+
+
+ /* BUTTON DATA-API
+  * =============== */
+
+  $(function () {
+    $('body').on('click.button.data-api', '[data-toggle^=button]', function ( e ) {
+      var $btn = $(e.target)
+      if (!$btn.hasClass('btn')) $btn = $btn.closest('.btn')
+      $btn.button('toggle')
+    })
+  })
+
+}(window.jQuery);/* ==========================================================
+ * bootstrap-carousel.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#carousel
  * ==========================================================
  * Copyright 2012 Twitter, Inc.
@@ -414,7 +411,7 @@
   })
 
 }(window.jQuery);/* =============================================================
- * bootstrap-collapse.js v2.0.3
+ * bootstrap-collapse.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#collapse
  * =============================================================
  * Copyright 2012 Twitter, Inc.
@@ -510,7 +507,7 @@
   , transition: function (method, startEvent, completeEvent) {
       var that = this
         , complete = function () {
-            if (startEvent == 'show') that.reset()
+            if (startEvent.type == 'show') that.reset()
             that.transitioning = 0
             that.$element.trigger(completeEvent)
           }
@@ -570,7 +567,7 @@
   })
 
 }(window.jQuery);/* ============================================================
- * bootstrap-dropdown.js v2.0.3
+ * bootstrap-dropdown.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#dropdowns
  * ============================================================
  * Copyright 2012 Twitter, Inc.
@@ -669,7 +666,7 @@
   })
 
 }(window.jQuery);/* =========================================================
- * bootstrap-modal.js v2.0.3
+ * bootstrap-modal.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#modals
  * =========================================================
  * Copyright 2012 Twitter, Inc.
@@ -886,7 +883,7 @@
   })
 
 }(window.jQuery);/* ===========================================================
- * bootstrap-tooltip.js v2.0.3
+ * bootstrap-tooltip.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#tooltips
  * Inspired by the original jQuery.tipsy by Jason Frame
  * ===========================================================
@@ -971,9 +968,9 @@
   , leave: function (e) {
       var self = $(e.currentTarget)[this.type](this._options).data(this.type)
 
+      if (this.timeout) clearTimeout(this.timeout)
       if (!self.options.delay || !self.options.delay.hide) return self.hide()
 
-      clearTimeout(this.timeout)
       self.hoverState = 'out'
       this.timeout = setTimeout(function() {
         if (self.hoverState == 'out') self.hide()
@@ -1159,8 +1156,9 @@
   , delay: 0
   }
 
-}(window.jQuery);/* ===========================================================
- * bootstrap-popover.js v2.0.3
+}(window.jQuery);
+/* ===========================================================
+ * bootstrap-popover.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#popovers
  * ===========================================================
  * Copyright 2012 Twitter, Inc.
@@ -1257,7 +1255,7 @@
   })
 
 }(window.jQuery);/* =============================================================
- * bootstrap-scrollspy.js v2.0.3
+ * bootstrap-scrollspy.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#scrollspy
  * =============================================================
  * Copyright 2012 Twitter, Inc.
@@ -1293,7 +1291,7 @@
     this.selector = (this.options.target
       || ((href = $(element).attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) //strip for ie7
       || '') + ' .nav li > a'
-    this.$body = $('body').on('click.scroll.data-api', this.selector, process)
+    this.$body = $('body')
     this.refresh()
     this.process()
   }
@@ -1407,7 +1405,7 @@
   })
 
 }(window.jQuery);/* ========================================================
- * bootstrap-tab.js v2.0.3
+ * bootstrap-tab.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#tabs
  * ========================================================
  * Copyright 2012 Twitter, Inc.
@@ -1541,7 +1539,7 @@
   })
 
 }(window.jQuery);/* =============================================================
- * bootstrap-typeahead.js v2.0.3
+ * bootstrap-typeahead.js v2.0.4
  * http://twitter.github.com/bootstrap/javascript.html#typeahead
  * =============================================================
  * Copyright 2012 Twitter, Inc.
@@ -1598,7 +1596,7 @@
     }
 
   , show: function () {
-      var pos = $.extend({}, this.$element.position(), {
+      var pos = $.extend({}, this.$element.offset(), {
         height: this.$element[0].offsetHeight
       })
 

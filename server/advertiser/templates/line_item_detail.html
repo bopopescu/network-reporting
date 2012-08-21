@@ -1,0 +1,312 @@
+{% extends 'advertiser/base.html' %}
+
+{% load filters %}
+{% load elements %}
+
+{% block pageTitleTag %}
+ MoPub -- Line Item Detail
+{% endblock %}
+
+{% block pageTitle %}
+<h1>
+    <a href='{% url advertiser_order_index %}'>Orders</a> /
+    <a href='{% url advertiser_order_detail order_key=order.key %}'>{{ order.name }}</a> /
+    {{ line_item.name }}
+</h1>
+{% endblock pageTitle %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block content %}
+  {% if not targeted_apps %}
+    <div class="alert-message block-message">
+      This line item is not targeted at any <strong>Ad Units</strong>.
+      In order for this line item to deliver, you will need to target
+      at least one Ad Unit.
+    </div>
+  {% endif %}
+
+  {% if not line_item.creatives.count %}
+    <div class="alert-message block-message">
+      This line item needs to have at least
+      one <strong>Creative</strong> in order to serve.  Set up a
+      creative below.
+    </div>
+  {% endif %}
+
+  {% if apps_without_global_id %}
+    <div class="alert-message block-message error">
+      <p>
+      Error: You must have a complete iTunes URL or Android package
+      name for the app(s) that you are using for user targeting.
+      Access the apps below and add the iTunes URL or Android package
+      name.
+      </p>
+      <ul class="simple">
+        {% for app in apps_without_global_id %}
+          <li><a href="{% url publisher_app_show app.key %}">{{ app.name }}</a></li>
+        {% endfor %}
+      </ul>
+      <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+    </div>
+  {% endif %}
+
+  <div class="btn-well right" style="clear: both; margin-bottom: 10px;">
+
+    {% if user.is_staff %}
+      {# see end of content for this modal #}
+      <a class="left btn" id="#open-admin-budget" data-toggle="modal" href="#budget-admin-modal" style='margin-right: 5px;'>
+        {% button_icon "briefcase" %}
+        Update Budget (Admin)
+      </a>
+    {% endif %}
+    
+    <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 5px;">
+      {% button_icon "pencil" %}
+      Edit Line Item
+    </a>
+
+    <div class="left dropdown" id="copy-line-item" style="margin-right: 5px;">
+      <a id="copy-button" class="btn dropdown-toggle" data-toggle="dropdown" href="#copy-line-item">
+        <i class="icon-share"></i>
+        Copy Line Item
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="copy_option" href="#" data-toggle="copy_with">
+            Copy with creatives
+          </a>
+        </li>
+        <li>
+          <a class="copy_option" href="#" data-toggle="copy_without">
+            Copy without creatives
+          </a>
+        </li>
+        <li>
+          <a class="copy_option" href="#" data-toggle="copy_to_another">
+            Copy to another order
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="left dropdown" id="export-menu">
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#export-menu">
+        <i class="icon-download-alt"></i> Export
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xls"
+                data-toggle="running"> Excel XLS </a> </li>
+{% comment %}
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=xlsx"
+                data-toggle="running"> Excel XLSX </a> </li>{% endcomment %}
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=ods"
+                data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=csv"
+                data-toggle="running"> CSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=tsv"
+                    data-toggle="running"> TSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=yaml"
+                data-toggle="running"> YAML </a> </li>
+        <li> <a href="{% url advertiser_export_single_line_item line_item_key=line_item.key %}?type=json"
+                    data-toggle="running"> JSON </a> </li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div style="clear: both;"></div>
+
+{# The stats breakdown and graph #}
+
+  {% chart_placeholder start_date end_date %}
+
+<br />
+
+
+<section>
+
+  {% comment %}
+  {% line_item_table line_item %}
+  <br />
+  {% endcomment %}
+
+  {% line_item_status line_item %}
+
+</section>
+
+<section>
+
+  <button class="btn right {% if not line_item.creatives.count %}hidden{% endif %}"
+          id="new_creative_button">
+    {% button_icon "plus" %}
+    Add a creative
+  </button>
+
+  <h3>Creatives</h3>
+  <form action="{% url advertiser_creative_form_new line_item.key %}"
+    {% if line_item.creatives.count %}class="hidden"{% endif %}
+    enctype="multipart/form-data"
+    id="new_creative_form"
+    method="post">
+
+    {% creative_form %}
+
+    <button class="btn right submit">
+      {% button_icon "check" %}
+      Save
+    </button>
+    <button class="btn right cancel">
+      Cancel
+    </button>
+    <div class="clear"></div>
+  </form>
+
+  {% creative_table line_item.creatives %}
+  <br />
+
+  <div class="btn-group">
+    <button class="btn status_change" data-toggle="pause" data-target="#creative_table">
+      {% button_icon "pause" %}
+      Pause
+    </button>
+    <button class="btn status_change" data-toggle="play" data-target="#creative_table">
+      {% button_icon "play" %}
+      Resume
+    </button>
+    <button class="btn status_change" data-toggle="delete" data-target="#creative_table">
+      {% button_icon "trash" %}
+      Delete
+    </button>
+  </div>
+
+</section>
+
+{# Table that shows all of the adunits being targeted #}
+<section>
+  <h3 class="left"> Inventory targeted by {{ line_item.name }} </h3>
+
+  {% comment %}
+    <a class="btn right" href="#">
+      <i class="icon-random"></i>
+      Change targeting
+    </a>
+  {% endcomment %}
+    {% inventory_table targeted_apps %}
+</section>
+
+
+
+{% comment %}
+<div id="daily-counts">
+  <h2>Daily Counts</h2>
+  <img src="/images/loading2.gif" style='margin-left:450px' />
+</div>
+{% endcomment %}
+
+<div class="modal hidden" id="copy_modal" style='overflow: visible;'>
+
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">×</a>
+    <h3> Copy Line Item </h3>
+  </div>
+
+  <div class="modal-body" style='overflow: visible;'>
+    <ul style='list-style-type: none;'>
+      <li>
+        <input id="copy_with_creatives" type="radio" name="li_copy" value="with" checked="checked">
+          Copy this line item's creatives
+        </input>
+      </li>
+      <li>
+        <input id="copy_without_creatives" type="radio" name="li_copy" value="without">
+          Don't copy this line item's creatives
+        </input>
+      </li>
+    </ul>
+
+    <span style='margin-left: 40px;'>Copy to order:</span>
+    <select data-placeholder="Select an order"
+            style='float: right; width:200px;'
+            id="copy-to-order">
+      <option value=""></option>
+      {% for order in orders %}
+        {% if not order.deleted or order.archived %}
+          <option value="{{ order.key }}">
+            {{order.name}}
+          </option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="modal-footer">
+    <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
+    <a href="#" class="btn" data-dismiss="modal">Close</a>
+    <a id="copy-ok-button" href="#" class="btn btn-primary">Copy Line Item</a>
+  </div>
+
+</div>
+
+{% if user.is_staff %}
+<div class="modal hidden" id="budget-admin-modal">
+
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">×</a>
+    <h3> Admin Budget Controls </h3>
+  </div>
+
+  <div class="modal-body" style='overflow: visible;'>
+
+    <div class="alert-message block-message info">
+      Manually force an update of the budget for this line item.  If
+      'use staging' is checked, the budget will be pushed to the
+      staging adserver instead.
+    </div>
+    
+    Use staging?
+    <input id="use_staging" type="checkbox"></input>
+  </div>
+
+  <div class="modal-footer">
+    <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
+    <a href="#" class="btn" data-dismiss="modal">
+      Close
+    </a>
+    <a id="update-budget" href="#" class="btn btn-primary">
+      Update Budget
+    </a>
+  </div>
+
+</div>
+{% endif %}
+
+{% endblock content %}
+
+{% block extraScripts %}
+
+  {% include_template "chart" %}
+  {% include_template "popover" %}
+  {% include_template "daily-counts" %}
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+
+  <script type="text/javascript">
+    $(function () {
+        OrdersController.initializeLineItemDetail({
+            order_key: "{{ order.key }}",
+            line_item_key: "{{ line_item.key }}",
+            start_date:  {{ start_date|js_date }},
+            date_range: {{ date_range }},
+            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
+        });
+    });
+  </script>
+
+{% endblock extraScripts %}

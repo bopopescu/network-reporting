@@ -1,0 +1,28 @@
+{% load filters %}
+{% load elements %}
+
+<table class="inventory_table" id="line_item_table">
+  <thead>
+    <tr style="width: 230px;">
+      <th style="width: 10px;">{# (Checkbox) Status Icon #}</th>
+      <th class="name" style="width: 230px;">Line Item Name</th>
+      <th class="type" style="width: 90px;">Type</th>
+      <th class="goal" style="width: 90px;">Goal</th>
+      <th class="stat" style="width: 60px;">Rate</th>
+      <th class="stat" style="width: 60px;">Start Date</th>
+      <th class="stat" style="width: 60px;">End Date</th>
+      <th class="stat" style="width: 60px;">Impressions</th>
+      <th class="stat" style="width: 60px;">Clicks</th>
+      <th class="stat" style="width: 60px;">CTR</th>
+      <th class="stat" style="width: 60px;">Conversions</th>
+      <th class="delivery" style="width: 70px;">Progress</th>
+      <th class="stat popdown" style="width: 10px">{# More info #}</th>
+    </tr>
+  </thead>
+
+  {% for line_item in line_items %}
+    <tbody class="{% cycle 'alt' 'primary' %}">
+      {% line_item_row line_item show_controls show_order_names show_archived %}
+    </tbody>
+  {% endfor %}
+</table>

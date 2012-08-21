@@ -29,6 +29,7 @@ from common.constants import NETWORKS, \
 from common.utils.date_magic import gen_last_days
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, \
+        HttpResponse, \
         render_to_string, \
         TextResponse, \
         JSONResponse
@@ -59,9 +60,12 @@ from advertiser.query_managers import AdGroupQueryManager, \
         CreativeQueryManager
 from advertiser.models import NetworkStates
 from reporting.models import StatsModel
+from reporting.query_managers import StatsModelQueryManager
 
 # Form imports
 from publisher.query_managers import AdUnitQueryManager
+
+from common.utils import tablib
 
 DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 
@@ -104,10 +108,14 @@ class NetworksHandler(RequestHandler):
             # we calculate it here instead of over ajax
             #campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
             # Get adgroup by key name
-            campaign_adgroups = AdGroupQueryManager.get([AdGroupQueryManager.
-                get_network_adgroup(campaign, adunit.key(),
-                    self.account.key()).key() for app in apps for
-                    adunit in app.adunits])
+            campaign_adgroups = []
+            for app in apps:
+                for adunit in app.adunits:
+                    adgroup = AdGroupQueryManager.get(AdGroupQueryManager.get_network_adgroup(campaign, adunit.key(), self.account.key()).key())
+                    if adgroup:
+                        campaign_adgroups.append(adgroup)
+                    else:
+                        logging.error("AdGroup for Campaign %s and AdUnit %s does not exist." % (campaign.key(), adunit.key()))
             bid_range = get_bid_range(campaign_adgroups)
             network_data = {'name': network,
                             'pretty_name': campaign.name,
@@ -150,7 +158,6 @@ class NetworksHandler(RequestHandler):
             network_data['apps'] = zip(apps, app_bids)
             network_data['apps'] = sorted(network_data['apps'], key=lambda
                     app_and_bid: app_and_bid[0].identifier)
-
 
             # Add this network to the list that goes in the page
             networks.append(network_data)
@@ -198,25 +205,22 @@ class NetworksHandler(RequestHandler):
             self.account.display_networks_message = False
             AccountQueryManager.put(self.account)
 
-        return render_to_response(self.request,
-              'networks/index.html',
-              {
-                  'start_date': self.days[0],
-                  'end_date': self.days[-1],
-                  'date_range': self.date_range,
-                  'days': self.days,
-                  'display_message': display_message,
-                  'graph': True if networks else False,
-                  'networks': networks,
-                  'networks_to_setup': networks_to_setup,
-                  'additional_networks': additional_networks,
-                  'apps': apps,
-                  'reporting': reporting,
-              })
+        return {
+            'display_message': display_message,
+            'graph': True if networks else False,
+            'networks': networks,
+            'networks_to_setup': networks_to_setup,
+            'additional_networks': additional_networks,
+            'apps': apps,
+            'reporting': reporting,
+        }
+
 
 @login_required
 def networks(request, *args, **kwargs):
-    return NetworksHandler()(request, *args, **kwargs)
+    handler = NetworksHandler(template='networks/index.html')
+    return handler(request, *args, **kwargs)
+
 
 class EditNetworkHandler(RequestHandler):
     def get(self, network='', campaign_key=''):
@@ -644,7 +648,7 @@ class EditNetworkHandler(RequestHandler):
             pub_id_query_dict = '%s-%s' % (network_config.key(), pub_id_field)
 
             query_dict = self.request.POST
-            if (pub_id_query_dict not in query_dict and not hasattr(network_config, pub_id_field)) \
+            if (pub_id_query_dict not in query_dict and not getattr(network_config, pub_id_field, False)) \
                     or (pub_id_query_dict in query_dict and not query_dict[pub_id_query_dict]):
                 errors['%s-%s_pub_id' % (network_config.key(), network_type)] = "MoPub requires an" \
                         " ad network id for enabled adunits."
@@ -1002,6 +1006,7 @@ class EditNetworkHandler(RequestHandler):
 def edit_network(request, *args, **kwargs):
     return EditNetworkHandler()(request, *args, **kwargs)
 
+
 class NetworkDetailsHandler(RequestHandler):
     def get(self, campaign_key):
         """
@@ -1081,25 +1086,22 @@ class NetworkDetailsHandler(RequestHandler):
         network_data['apps'] = sorted(network_data['apps'], key=lambda
                 app_and_bid: app_and_bid[0].identifier)
 
-
         apps = sorted(apps, key=lambda app: app.identifier)
 
-        return render_to_response(self.request,
-              'networks/details.html',
-              {
-                  'start_date' : self.days[0],
-                  'end_date' : self.days[-1],
-                  'date_range' : self.date_range,
-                  'graph' : True,
-                  'reporting' : network_data['reporting'],
-                  'network': network_data,
-                  'apps': apps,
-                  'LoginStates': LoginStates,
-              })
+        return {
+            'graph': True,
+            'reporting': network_data['reporting'],
+            'network': network_data,
+            'apps': apps,
+            'LoginStates': LoginStates,
+        }
+
 
 @login_required
 def network_details(request, *args, **kwargs):
-    return NetworkDetailsHandler()(request, *args, **kwargs)
+    handler = NetworkDetailsHandler(template='networks/details.html')
+    return handler(request, *args, **kwargs)
+
 
 class PauseNetworkHandler(RequestHandler):
     def post(self):
@@ -1187,8 +1189,64 @@ class DeleteNetworkHandler(RequestHandler):
 def delete_network(request, *args, **kwargs):
     return DeleteNetworkHandler()(request, *args, **kwargs)
 
-## Helpers
-#
+
+#############
+# Exporting #
+#############
+
+class NetworkExporter(RequestHandler):
+
+    def get(self):
+        export_type = self.request.GET.get('type', 'html')
+        stats = StatsModelQueryManager(self.account)
+
+        stats_per_day = []
+        for campaign in CampaignQueryManager.get_network_campaigns(self.account, is_new=True):
+            stats_per_day.append(stats.get_stats_for_days(advertiser=campaign, num_days=self.date_range))
+
+        network_data = []
+        for day_stats in zip(*stats_per_day):
+            req = sum([stat.req for stat in day_stats])
+            imp = sum([stat.imp for stat in day_stats])
+            fill_rate = float(imp) / req if req else 0
+            clk = sum([stat.clk for stat in day_stats])
+            ctr = float(clk) / imp if imp else 0
+
+            row = (
+                day_stats[0].date,
+                req,
+                imp,
+                fill_rate,
+                clk,
+                ctr,
+            )
+            network_data.append(row)
+
+        # Put together the header list
+        headers = (
+            'Date', 'Requests', 'Impressions',
+            'Fill Rate', 'Clicks', 'CTR'
+        )
+
+        # Create the data to export from all of the rows
+        data_to_export = tablib.Dataset(headers=headers)
+        data_to_export.extend(network_data)
+
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=networks.%s' %\
+                   export_type
+
+        return response
+
+@login_required
+def network_exporter(request, *args, **kwargs):
+    return NetworkExporter()(request, *args, **kwargs)
+
+###########
+# Helpers #
+###########
+
 def get_bid_range(adgroups):
     adgroup_bids = [adgroup.bid for adgroup in adgroups if adgroup.active]
 

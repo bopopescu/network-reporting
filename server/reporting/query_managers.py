@@ -2,8 +2,6 @@ from django.conf import settings
 
 import datetime
 import logging
-import time
-import copy
 import traceback
 from urllib import urlopen
 try:
@@ -16,19 +14,11 @@ except ImportError:
 
 
 from google.appengine.ext import db
-from google.appengine.ext import blobstore
-from google.appengine.ext.db import InternalError, Timeout
-from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError
-
 import reporting.models as reporting_models
 
 from common.utils.query_managers import CachedQueryManager
-from common.utils import date_magic
-from common.utils.helpers import chunks
 from reporting.models import SiteStats, StatsModel, BlobLog
 from reporting import mongostats
-from advertiser.models import Creative
-from publisher.models import Site as AdUnit
 
 
 # maximum number of objects per batch put
@@ -113,6 +103,25 @@ class StatsModelQueryManager(CachedQueryManager):
             stats += self.get_stats_for_days(publishers=apps,account=account,days=days,use_mongo=False)
 
         return stats
+
+    def get_stats_sum(self,
+                      publisher=None,
+                      publishers=None,
+                      advertiser=None,
+                      days=None,
+                      num_days=None,
+                      account=None,
+                      country=None,
+                      offline=False):
+        daily_stats = self.get_stats_for_days(publisher=publisher,
+                                              publishers=publishers,
+                                              advertiser=advertiser,
+                                              days=days,
+                                              num_days=num_days,
+                                              account=account,
+                                              country=country,
+                                              offline=offline)
+        return reduce(lambda x, y: x+y, daily_stats, StatsModel())
 
     def get_stats_for_hours(self,
                             publisher=None,

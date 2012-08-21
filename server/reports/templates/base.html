@@ -1,9 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'common/base.html' %}
 {% load filters %}
 
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
-  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url advertiser_order_index %}">Orders</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li><a href="{% url networks %}">Networks</a></li>
 {% endblock navLinks %}
@@ -13,3 +13,6 @@
   {% include_script "utilities/reports-ajaxPoll" %}
   {% include_script "legacy/datatables-treesort" %}
 {% endblock extraScripts %}
+
+{% block titleBarRight %}
+{% endblock titleBarRight %}

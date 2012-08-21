@@ -1,5 +1,6 @@
 from datetime import datetime, time, date, timedelta
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import UTC
 
 DAYS_IN_MONTHS = (31,28,31,30,31,30,31,31,30,31,30,31)
 
@@ -239,3 +240,11 @@ def date_key(time, dim):
         return time.strftime('%y%m%d')
     elif dim == HOUR:
         return time.strftime('%y%m%d%H')
+
+
+def utc_to_pacific(datetime):
+    return datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+
+
+def pacific_to_utc(datetime):
+    return datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)

@@ -76,11 +76,11 @@ def render_to_response(request, template_name, data=None, mimetype=None):
 
     return response
 
-def JSONResponse(pyobj):
+def JSONResponse(pyobj, **kwargs):
     from common.ragendja.json import JSONResponse as real_class
     global JSONResponse
     JSONResponse = real_class
-    return JSONResponse(pyobj)
+    return JSONResponse(pyobj, **kwargs)
 
 def TextResponse(string=''):
     return HttpResponse(string,

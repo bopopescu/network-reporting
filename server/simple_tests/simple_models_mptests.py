@@ -98,8 +98,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
                        experimental_fraction=0.01,
                        network_config=self.net_cfg,
                        primary_category=u'sports',
-                       secondary_category=u'travel',
-                       force_marketplace=False)
+                       secondary_category=u'travel')
         self.app.put()
 
         self.au = AdUnit(name='MCDERPUNIT',

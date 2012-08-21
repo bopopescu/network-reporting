@@ -1,7 +1,3 @@
-"""
-asdfasdf
-"""
-
 from django.conf import settings
 from google.appengine.ext import blobstore
 from google.appengine.ext import db
@@ -86,8 +82,6 @@ class App(db.Model):
 
     use_proxy_bids = db.BooleanProperty(default=True)
 
-    force_marketplace = db.BooleanProperty(default=True)
-
     def simplify(self):
         return SimpleApp(key = str(self.key()),
                          account = self.account,
@@ -103,8 +97,7 @@ class App(db.Model):
                          experimental_fraction = self.experimental_fraction,
                          network_config = self.network_config,
                          primary_category = self.primary_category,
-                         secondary_category = self.secondary_category,
-                         force_marketplace = self.force_marketplace)
+                         secondary_category = self.secondary_category)
 
     @property
     def global_id(self):
@@ -200,6 +193,9 @@ class App(db.Model):
                 return pub_id
 
     def toJSON(self):
+        d = {
+
+        }
         d = to_dict(self, ignore = ['icon', 'account', 'network_config'])
         d.update(icon_url=self.icon_url)
         return d
@@ -276,6 +272,15 @@ class Site(db.Model):
     t = db.DateTimeProperty(auto_now_add=True)
 
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
+
+    def __hash__(self):
+        return hash(str(self.key()))
+
+    def __eq__(self, other):
+        if type(other) == Site:
+            return self.key() == other.key()
+        return False
+
 
     def simplify(self):
         return SimpleAdUnit(key = str(self.key()),
@@ -397,12 +402,14 @@ AdUnit = Site
 
 SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
 
+# TODO: Move this to common.utils.helper
 def to_dict(model, ignore = None):
     if ignore == None:
         ignore = []
 
     output = {}
-    output.update(id=str(model.key()))
+    if not 'id' in ignore:
+        output.update(id=str(model.key()))
     properties = model.properties().iteritems()
 
     for key, prop in properties:

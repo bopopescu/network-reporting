@@ -1,0 +1,1653 @@
+__doc__ = """
+Tests for the order and line item views.
+
+Author: Haydn Dufrene and John Pena
+"""
+
+import os
+import sys
+sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
+
+import uuid
+from datetime import datetime
+
+from google.appengine.ext import db
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
+from django.test.utils import setup_test_environment
+from nose.tools import eq_, ok_
+import simplejson as json
+
+from account.query_managers import AccountQueryManager
+from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
+                              HtmlCreativeForm)
+from advertiser.models import Creative
+from advertiser.query_managers import (
+    CampaignQueryManager, AdGroupQueryManager, CreativeQueryManager)
+from advertiser.views.orders import get_targeted_apps
+from common.utils.test.fixtures import (generate_app, generate_adunit,
+                                        generate_campaign, generate_adgroup,
+                                        generate_html_creative)
+from common.utils.test.test_utils import (confirm_db, decorate_all_test_methods,
+                                          dict_eq, model_eq, model_key_eq,
+                                          time_almost_eq, ADDED_1, EDITED_1)
+from common.utils.test.views import BaseViewTestCase
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+
+
+setup_test_environment()
+
+
+class OrderViewTestCase(BaseViewTestCase):
+    """
+    Base test class for all of our order views.
+    """
+    def setUp(self):
+        super(OrderViewTestCase, self).setUp()
+
+        # Set up some basic items. These can be used for
+        # initial objects and for resolving urls.
+        self.app = generate_app(self.account, True)
+        self.adunit = generate_adunit(self.account, self.app, True)
+        self.order = generate_campaign(self.account, True)
+        self.line_item = generate_adgroup(
+            self.account, self.order, True, adgroup_type='gtee',
+            start_datetime=datetime.now())
+        # HTML Creative
+        self.creative = generate_html_creative(self.account, self.line_item,
+                                               True, html_data="<b>Test</b>")
+
+        # A post body for an order form, used for testing
+        # form submits that need an order.
+        self.order_body = {
+            u'ajax': u'true',  # common form parameter
+            u'order-advertiser': u'Testingco',
+            u'order-description': u'',
+            u'order-name': u'Test Order'
+        }
+
+        # A post body for a line item form, used for testing
+        # form submits that need a line item
+        self.line_item_body = {
+            u'ajax': u'true',  # common form parameters
+            u'adgroup_type': u'gtee',
+            u'allocation_percentage': u'100.0',
+            u'android_version_max': u'999',
+            u'android_version_min': u'1.5',
+            u'bid': u'0.05',
+            u'bid_strategy': u'cpm',
+            u'budget': u'',
+            u'budget_strategy': u'allatonce',
+            u'budget_type': u'daily',
+            u'daily_frequency_cap': u'0',
+            u'device_targeting': u'0',
+            u'end_datetime_0': u'06/26/3030',
+            u'end_datetime_1': u'11:59 PM',
+            u'geo_predicates': [u'US'],
+            u'gtee_priority': u'normal',
+            u'hourly_frequency_cap': u'0',
+            u'ios_version_max': u'999',
+            u'ios_version_min': u'2.0',
+            u'name': u'Test Line Item',
+            u'promo_priority': u'normal',
+            u'region_targeting': u'all',
+            u'start_datetime_0': u'05/30/2020',
+            u'start_datetime_1': u'12:00 AM',
+            u'target_android': u'on',
+            u'target_ipad': u'on',
+            u'target_iphone': u'on',
+            u'target_ipod': u'on',
+            u'target_other': u'on'
+        }
+
+        # Combined form post body
+        self.post_body = dict(self.order_body, **self.line_item_body)
+
+        # Mock order used for testing forms
+        mock_order_form = OrderForm(self.post_body, instance=None, prefix='order')
+        self.mock_order = mock_order_form.save()
+        self.mock_order.account = self.account
+
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
+
+        # Mock line item used for testing forms
+        line_item_form = LineItemForm(self.post_body,
+                                      instance=None,
+                                      site_keys=site_keys)
+        line_item_form.is_valid()
+        self.mock_line_item = line_item_form.save()
+        self.mock_line_item.account = self.account
+        self.mock_line_item.campaign = self.mock_order
+
+
+class OrderIndexTestCase(OrderViewTestCase):
+    """
+    Tests the order index handler
+
+    Author: Haydn Dufrene
+    """
+    def setUp(self):
+        """
+        Sets up the index url
+        """
+        super(OrderIndexTestCase, self).setUp()
+        self.url = reverse('advertiser_order_index')
+
+    def mptest_http_response_code(self):
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
+
+    def mptest_gets_all_orders(self):
+        """
+        Checks to see that all orders of a given account are returned
+        """
+        expected_orders = CampaignQueryManager.get_order_campaigns(account=self.account)
+        expected_orders = expected_orders
+
+        response = self.client.get(self.url)
+        actual_orders = response.context['orders']
+
+        eq_(len(actual_orders), len(expected_orders))
+        for actual_order, expected_order in zip(actual_orders, expected_orders):
+            model_key_eq(actual_order, expected_order)
+
+    def mptest_gets_all_line_items(self):
+        """
+        Checks to see that all line_items of an account are returned
+        """
+        expected_line_items = AdGroupQueryManager.get_adgroups(account=self.account)
+
+        response = self.client.get(self.url)
+        actual_line_items = response.context['line_items']
+
+        eq_(len(actual_line_items), len(expected_line_items))
+        for actual_line_item, expected_line_items in zip(actual_line_items, expected_line_items):
+            model_key_eq(actual_line_item, expected_line_items)
+
+    def mptest_account_owns_all_items(self):
+        """
+        We query for items by account in the previous two tests
+        and therefore this test implicitly passes if they do.
+
+        Author: Haydn Dufrene
+        """
+        pass
+
+    def mptest_all_orders_returned_are_orders(self):
+        response = self.client.get(self.url)
+        orders = response.context['orders']
+        for order in orders:
+            ok_(order.is_order)
+
+    @confirm_db()
+    def mptest_all_line_items_are_for_orders(self):
+        response = self.client.get(self.url)
+        line_items = response.context['line_items']
+        for line_item in line_items:
+            ok_(line_item.campaign.is_order)
+
+exclude = ['mptest_all_line_items_are_for_orders']
+decorate_all = decorate_all_test_methods(confirm_db(), exclude=exclude)
+OrderIndexTestCase = decorate_all(OrderIndexTestCase)
+
+
+class OrderDetailHandlerTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(OrderDetailHandlerTestCase, self).setUp()
+        self.url = reverse('advertiser_order_detail',
+                           kwargs={
+                                'order_key': unicode(self.order.key())
+                           })
+
+    def mptest_http_response_code(self):
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
+
+    def mptest_fails_on_unowned_order(self):
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)
+
+    def mptest_returns_all_targeted_adunits_apps_and_keys(self):
+        # Formatted lists properly so they match the view
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        expected_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                               for line_item in self.order.adgroups]))
+
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            model_key_eq(actual_adunit, expected_adunit)
+
+    def mptest_returns_all_targeted_apps_and_keys(self):
+        # Formatted lists properly so they match the view
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        expected_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                               for line_item in self.order.adgroups]))
+        expected_apps = get_targeted_apps(expected_adunits)
+        expected_app_keys = expected_apps.keys()
+
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+        actual_apps = response.context['targeted_apps']
+        actual_app_keys = response.context['targeted_app_keys']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            model_key_eq(actual_adunit, expected_adunit)
+
+        eq_(len(actual_apps), len(expected_apps))
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            model_key_eq(actual_app, expected_app)
+
+        eq_(actual_app_keys, expected_app_keys)
+
+    def mptest_returns_proper_order_form(self):
+        expected_order_form = OrderForm(instance=self.order)
+
+        response = self.client.get(self.url)
+        actual_order_form = response.context['order_form']
+
+        model_key_eq(expected_order_form.instance,
+                     actual_order_form.instance)
+
+    def mptest_returns_proper_order(self):
+        expected_order = self.order
+
+        response = self.client.get(self.url)
+        actual_order = response.context['order']
+
+        model_key_eq(expected_order, actual_order)
+
+decorate_all = decorate_all_test_methods(confirm_db())
+OrderDetailHandlerTestCase = decorate_all(OrderDetailHandlerTestCase)
+
+
+class LineItemDetailHandler(OrderViewTestCase):
+    def setUp(self):
+        super(LineItemDetailHandler, self).setUp()
+        self.url = reverse('advertiser_line_item_detail',
+                           kwargs={'line_item_key': self.line_item.key()})
+
+    def mptest_http_response_code(self):
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        eq_(response.status_code, 200)
+
+    def mptest_fails_on_unowned_line_item(self):
+        self.login_secondary_account()
+        response = self.client.get(self.url)
+        eq_(response.status_code, 404)
+
+    def mptest_returns_all_targeted_adunits(self):
+        expected_adunits = AdUnitQueryManager.get(self.line_item.site_keys)
+
+        response = self.client.get(self.url)
+        actual_adunits = response.context['targeted_adunits']
+
+        eq_(len(actual_adunits), len(expected_adunits))
+        for actual_adunit, expected_adunit in zip(actual_adunits, expected_adunits):
+            model_key_eq(actual_adunit, expected_adunit)
+
+    def mptest_returns_all_targeted_apps_and_keys(self):
+        expected_adunits = AdUnitQueryManager.get(self.line_item.site_keys)
+        expected_apps = get_targeted_apps(expected_adunits)
+        expected_app_keys = expected_apps.keys()
+
+        response = self.client.get(self.url)
+        actual_apps = response.context['targeted_apps']
+        actual_app_keys = response.context['targeted_app_keys']
+
+        eq_(len(actual_apps), len(expected_apps))
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            model_key_eq(actual_app, expected_app)
+
+        eq_(actual_app_keys, expected_app_keys)
+
+    def mptest_returns_new_creative_form(self):
+        response = self.client.get(self.url)
+        creative_form = response.context['creative_form']
+        ok_(isinstance(creative_form, NewCreativeForm))
+        ok_(creative_form.instance is None)
+
+    def mptest_returns_proper_line_item(self):
+        expected_line_item = self.line_item
+
+        response = self.client.get(self.url)
+        actual_line_item = response.context['line_item']
+
+        model_key_eq(expected_line_item, actual_line_item)
+
+    def mptest_returns_order_which_owns_line_item(self):
+        expected_order = self.order
+
+        response = self.client.get(self.url)
+        actual_line_item = response.context['line_item']
+        actual_order = response.context['order']
+
+        model_key_eq(actual_line_item.campaign, actual_order)
+        model_key_eq(actual_order, expected_order)
+
+decorate_all = decorate_all_test_methods(confirm_db())
+LineItemDetailHandler = decorate_all(LineItemDetailHandler)
+
+
+class OrderAndLineItemCreateGetTestCase(OrderViewTestCase):
+    """
+    Tests for the order and line item create view's GET method.
+
+    Author: Haydn Dufrene
+    """
+    def setUp(self):
+        super(OrderAndLineItemCreateGetTestCase, self).setUp()
+        self.url = reverse('advertiser_order_and_line_item_form_new')
+
+    def mptest_http_response_code(self):
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.get(self.url)
+        ok_(response.status_code in [200, 302])
+
+    def mptest_get_correct_forms_with_no_keys(self):
+        """
+        A valid get should return valid form objects when no
+        order or line item key is passed to the url.
+
+        Author: Haydn Dufrene
+        """
+        order = None
+        line_item = None
+        order_form = OrderForm(instance=order, prefix='order')
+        line_item_form = LineItemForm(instance=line_item)
+
+        no_key_url = reverse('advertiser_order_and_line_item_form_new')
+        response = self.client.get(no_key_url)
+        ok_(response.context['order_form'].instance is None)
+        ok_(response.context['line_item_form'].instance is None)
+
+
+class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
+    """
+    Tests the post for creating a new order and line item
+    Author: Haydn Dufrene
+    """
+    def setUp(self):
+        """
+        Set up the URL, post_body and creates mock models
+        to compare to the models put in the DB by the view
+        """
+        super(OrderAndLineItemCreatePostTestCase, self).setUp()
+        self.url = reverse('advertiser_order_and_line_item_form_new')
+
+    @confirm_db(campaign=ADDED_1, adgroup=ADDED_1)
+    def mptest_http_response_code(self):
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+        """
+        response = self.client.post(self.url, self.post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(response.status_code in [200, 302])
+
+    @confirm_db()
+    def mptest_graceful_fail_without_data(self):
+        """
+        Posting to the form handler should fail if there's no post body.
+
+        Author: John Pena
+        """
+        response = self.client.post(self.url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+    @confirm_db()
+    def mptest_graceful_fail_without_ajax(self):
+        """
+        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
+
+        Author: John Pena
+        """
+        response = self.client.post(self.url)
+        eq_(response.status_code, 404)
+
+    @confirm_db(campaign=ADDED_1, adgroup=ADDED_1)
+    def mptest_puts_new_valid_order_and_line_item(self):
+        """
+        A valid POST with valid order and line item data should
+        create new order and line item objects. The line item
+        should have a valid budget and valid targeting.
+
+        Catches the redirect for create order and line item post.
+        Then we use the line item key to retrieve the line item and
+        order created. We check to see if the line_item was created
+        and edited within the last minute. We then compare the models
+        to the mocks created in the class setup.
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url, self.post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Get the line item key out of the redirect url and fetch the new
+        # line item with the key.
+        redirect_url = response_json['redirect']
+        line_item_key = get_line_item_key_from_redirect_url(redirect_url)
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        # Tests to see that this line_item was created and modified
+        # within the last minute
+
+        time_almost_eq(line_item.t, datetime.utcnow())
+        time_almost_eq(line_item.created, datetime.utcnow())
+
+        model_eq(line_item, self.mock_line_item, exclude=['campaign', 'created', 't'],
+                 check_primary_key=False)
+
+        order = line_item.campaign
+        time_almost_eq(order.created, datetime.utcnow())
+
+        model_eq(order, self.mock_order, exclude=['created', 't'],
+                 check_primary_key=False)
+
+    def mptest_order_owns_line_item(self):
+        """
+        Because we must retrieve the order by line item key in the
+        redirect, this test is implicitly covered in
+        mptest_puts_new_valid_order_and_line_item.
+
+        Author: Haydn Dufrene
+        """
+        pass
+
+    def mptest_account_owns_order_and_line_item(self):
+        """
+        The mock which the returned order and line items are
+        compared against contain self.account, this test is
+        implicitly covered in mptest_puts_new_valid_order_and_line_item
+
+        Author: Haydn Dufrene
+        """
+        pass
+
+decorate_all = decorate_all_test_methods(confirm_db())
+OrderAndLineItemCreateGetTestCase = decorate_all(OrderAndLineItemCreateGetTestCase)
+
+
+class NewOrEditLineItemGetTestCase(OrderViewTestCase):
+    """
+    Tests for the new/edit line item GET method.
+    """
+
+    def setUp(self):
+        """
+        Sets up the new and edit urls.
+        """
+        super(NewOrEditLineItemGetTestCase, self).setUp()
+        self.new_url = reverse('advertiser_line_item_form_new', kwargs={
+            'order_key': unicode(self.order.key())
+        })
+        self.edit_url = reverse('advertiser_line_item_form_edit', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+
+    def mptest_http_response_code(self):
+        """
+        A valid get should return a valid (200, 302) response (regardless
+        of params).
+
+        Author: John Pena
+        """
+        new_response = self.client.get(self.new_url)
+        edit_response = self.client.get(self.edit_url)
+        ok_(new_response.status_code in [200, 302])
+        ok_(edit_response.status_code in [200, 302])
+
+    def mptest_get_correct_forms_with_order(self):
+        """
+        The proper order form is returned with an empty line_item
+        form for creating new line_items with an order
+
+        Author: Haydn Dufrene
+        """
+        line_item = None
+        order_form = OrderForm(instance=self.order, prefix='order')
+
+        response = self.client.get(self.new_url)
+        model_key_eq(response.context['order_form'].instance,
+                     order_form.instance)
+        ok_(response.context['line_item_form'].instance is None)
+
+    def mptest_get_correct_forms_with_line_item(self):
+        """
+        The proper order and line_item forms are returned
+        when editing
+
+        Author: Haydn Dufrene
+        """
+        order_form = OrderForm(instance=self.order, prefix='order')
+        line_item_form = LineItemForm(instance=self.line_item)
+
+        response = self.client.get(self.edit_url)
+        model_key_eq(response.context['order_form'].instance,
+                     order_form.instance)
+        model_key_eq(response.context['line_item_form'].instance,
+                     line_item_form.instance)
+
+    def mptest_order_owns_line_item(self):
+        """
+        The order returned must own the line_item returned
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.get(self.edit_url)
+        eq_(response.context['order'],
+            response.context['line_item'].campaign)
+
+    def mptest_models_do_not_change(self):
+        """
+        GETs should never change the state of models
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.get(self.edit_url)
+        actual_order = response.context['order']
+        actual_line_item = response.context['line_item']
+        model_eq(self.order, actual_order)
+        model_eq(self.line_item, actual_line_item)
+
+    def mptest_fail_on_unowned_order(self):
+        """
+        Trying to access an unowned order returns a 404
+
+        Author: John Pena
+        """
+        self.login_secondary_account()
+
+        response = self.client.get(self.new_url)
+        eq_(response.status_code, 404)
+
+    def mptest_fail_on_editing_unowned_line_item(self):
+        """
+        Trying to access and access an unowned line_item returns a 404
+
+        Author: John Pena
+        """
+        self.login_secondary_account()
+
+        response = self.client.get(self.edit_url)
+        eq_(response.status_code, 404)
+
+    @confirm_db(app={'added': 2})
+    def mptest_gets_correct_apps(self):
+        """
+        All apps for the given account should be returned.
+        This test will fail if actual apps are not alphabetized in the view.
+
+        Author: Haydn Dufrene
+        """
+        app1 = generate_app(self.account, True)
+        app2 = generate_app(self.account, True)
+        response = self.client.get(self.edit_url)
+
+        expected_apps = AppQueryManager.get_apps(account=self.account,
+                                        alphabetize=True)
+        actual_apps = response.context['apps']
+
+        eq_(len(actual_apps), len(expected_apps))
+        for actual_app, expected_app in zip(actual_apps, expected_apps):
+            model_key_eq(actual_app, expected_app)
+
+exclude = ['mptest_gets_correct_apps']
+decorate_all = decorate_all_test_methods(confirm_db(), exclude=exclude)
+NewOrEditLineItemGetTestCase = decorate_all(NewOrEditLineItemGetTestCase)
+
+
+class NewOrEditLineItemPostTestCase(OrderViewTestCase):
+    """
+    Tests for the new/edit line item POST method.
+    Author: John Pena
+    """
+    def setUp(self):
+        """
+        Sets up the new and edit urls.
+        """
+        super(NewOrEditLineItemPostTestCase, self).setUp()
+        self.new_url = reverse('advertiser_line_item_form_new', kwargs={
+            'order_key': unicode(self.order.key())
+        })
+        self.edit_url = reverse('advertiser_line_item_form_edit', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+
+    @confirm_db()
+    def mptest_graceful_fail_without_data(self):
+        """
+        Posting to the form handler should fail if there's no post body.
+
+        Author: John Pena
+        """
+
+        response = self.client.post(self.new_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+        response = self.client.post(self.edit_url,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+    @confirm_db()
+    def mptest_graceful_fail_without_ajax(self):
+        """
+        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
+
+        Author: John Pena
+        """
+        response = self.client.post(self.new_url)
+        eq_(response.status_code, 404)
+
+        response = self.client.post(self.edit_url)
+        eq_(response.status_code, 404)
+
+    @confirm_db()
+    def mptest_graceful_fail_for_non_order(self):
+        """
+        Posting to the edit form handler with a non-order campaign (marketplace
+        or network) should fail gracefully.
+
+        Author: John Pena
+        """
+        non_order_mpx = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
+        url = reverse('advertiser_line_item_form_new',
+                      kwargs={
+                        'order_key': unicode(non_order_mpx.key())
+                      })
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+        non_order_network = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
+        url = reverse('advertiser_line_item_form_new',
+                      kwargs={
+                        'order_key': unicode(non_order_network.key())
+                      })
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+    @confirm_db()
+    def mptest_fail_when_line_item_not_owned(self):
+        """
+        A line item should not be editable by accounts that don't
+        own it.
+
+        Author: John Pena
+        """
+        self.login_secondary_account()
+
+        response = self.client.post(self.edit_url, self.post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        eq_(response.status_code, 404)
+
+    @confirm_db(adgroup=ADDED_1)
+    def mptest_puts_new_valid_line_item(self):
+        """
+        Posting valid line item data should result in a new line item being
+        created on the order that was referenced in the URL.
+
+        Author: John Pena
+        """
+        new_line_item_name = u'New really awesome lineitem' + unicode(uuid.uuid4())
+
+        post_body = self.post_body
+        post_body['name'] = new_line_item_name
+
+        # Get the response from the post
+        response = self.client.post(self.new_url, post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        # Assert that the form post was a success
+        ok_(response_json['success'])
+
+        # Assert that we got a redirect link
+        ok_(response_json['redirect'])
+
+        # Get the new line item
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        time_almost_eq(self.mock_line_item.t, line_item.t)
+
+        model_eq(self.mock_line_item, line_item, exclude=['name', 'campaign',
+                                                          'created', 't'],
+                                                 check_primary_key=False)
+
+    @confirm_db(adgroup=EDITED_1)
+    def mptest_puts_changed_valid_line_item(self):
+        """
+        Posting valid line item information should update the line item
+        in the database.
+
+        Author: John Pena
+        """
+        # update the name for the post body
+        new_name = 'new new name yeah'
+        post_body = self.post_body
+        post_body['name'] = new_name
+
+        self.client.post(self.edit_url, post_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        line_item = AdGroupQueryManager.get(self.line_item.key())
+
+        eq_(line_item.name, new_name)
+
+    @confirm_db()
+    def mptest_fails_gracefully_invalid_line_item(self):
+        """
+        Posting invalid line item information should not result
+        in the line item being changed in the database.
+
+        Author: John Pena
+        """
+        post_body = self.post_body
+        post_body['name'] = ''
+
+        response = self.client.post(self.edit_url, post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        ok_(not response_json['success'])
+
+    @confirm_db(account=EDITED_1, adgroup=ADDED_1)
+    def mptest_complete_onboarding_after_first_campaign(self):
+        """
+        Sets the accounts status to Step 4. If a campaign is
+        created while the account's 'status' == 'step4',
+        the onboarding is complete and status becomes ''.
+
+        Author: Haydn Dufrene
+        """
+        self.account.status = 'step4'
+        AccountQueryManager.put_accounts(self.account)
+
+        self.client.post(self.new_url, self.post_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        acct = AccountQueryManager.get(self.account.key())
+        eq_(acct.status, '')
+
+    # TODO
+    @confirm_db()
+    def mptest_datetime_alias_for_jquery_on_fail(self):
+        """
+        There is a block at the end of the post (L:351-359)
+        that is a hack for JQuery validation. Unsure what
+        it is doing and what to test for.
+
+        Author: Haydn Dufrene
+        """
+        pass
+
+
+#TODO: Change this if confirm_db actually checks the models, rather than count
+class AdSourceChangeTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(AdSourceChangeTestCase, self).setUp()
+        self.url = reverse('advertiser_ad_source_status_change')
+
+    def mptest_http_response_code(self):
+        """
+        A valid post should return a valid (200, 302) response (regardless
+        of params).
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url)
+        ok_(response.status_code in [200, 302])
+
+    def mptest_fails_on_missing_params(self):
+        """
+        The ad source status change handler should return success: false
+        if required parameters (ad_sources, status) are missing.
+
+        Author: John Pena
+        """
+        # test without params
+        response = self.client.post(self.url)
+        response_json = json.loads(response.content)
+        ok_(not response_json['success'])
+
+        # test without the ad_sources param
+        response = self.client.post(self.url, {
+            'status': 'boomslam'
+        })
+        response_json = json.loads(response.content)
+        ok_(not response_json['success'])
+
+        # test without the status param
+        response = self.client.post(self.url, {
+            'ad_sources[]': ['abcd']
+        })
+        response_json = json.loads(response.content)
+        ok_(not response_json['success'])
+
+    # TODO
+    def mptest_fail_on_unowned_objects(self):
+        """
+        Users should not be able to change the status of objects
+        they don't own. The view should return a 404.
+
+        Author: John Pena
+        """
+        pass
+
+    def mptest_creative_run(self):
+        """
+        The ad source status change handler should set a creative as running
+        when 'run' is passed as the status.
+
+        Author: Haydn Dufrene
+        """
+        self.creative.active = False
+        CreativeQueryManager.put(self.creative)
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.creative.key()),
+            'status': 'run'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        ok_(self.creative.active)
+
+    @confirm_db(creative=EDITED_1)
+    def mptest_creative_pause(self):
+        """
+        The ad source status change handler should set a creative as paused
+        when 'pause' is passed as the status.
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.creative.key()),
+            'status': 'pause'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        ok_(not self.creative.active)
+
+    @confirm_db(creative=EDITED_1)
+    def mptest_creative_delete(self):
+        """
+        The ad source status change handler should set a creative as deleted
+        when 'delete' is passed as the status.
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url, data={
+            "ad_sources[]": unicode(self.creative.key()),
+            "status": "delete"
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.creative = CreativeQueryManager.get(self.creative.key())
+        ok_(self.creative.deleted)
+        ok_(not self.creative.active)
+
+    def mptest_line_item_run(self):
+        """
+        The ad source status change handler should set a line item as running
+        when 'run' is passed as the status.
+
+        Author: John Pena
+        """
+        # Set the line item as paused
+        self.line_item.active = False
+        self.line_item.archived = False
+        self.line_item.deleted = False
+
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'run'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
+
+    @confirm_db(adgroup=EDITED_1)
+    def mptest_line_item_pause(self):
+        """
+        The ad source status change handler should set a line item as paused
+        when 'pause' is passed as the status.
+        Author: John Pena
+        """
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'pause'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
+
+    @confirm_db(adgroup=EDITED_1)
+    def mptest_line_item_archive(self):
+        """
+        Author: John Pena
+        The ad source status change handler should set a line item as archived
+        when 'archive' is passed as the status.
+        """
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'archive'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not actual_line_item.active)
+        ok_(actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
+
+    @confirm_db(adgroup=EDITED_1)
+    def mptest_line_item_delete(self):
+        """
+        The ad source status change handler should set a line item as deleted
+        when 'delete' is passed as the status.
+        Author: John Pena
+        """
+        AdGroupQueryManager.put(self.line_item)
+        response = self.client.post(self.url, {
+            'ad_sources[]': [unicode(self.line_item.key())],
+            'status': 'delete'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(actual_line_item.deleted)
+
+    @confirm_db(campaign=EDITED_1)
+    def mp_test_order_run(self):
+        """
+        The ad source status change handler should set an order as running
+        when 'run' is passed as the status. The order's line items should
+        not be affected.
+
+        Author: Haydn Dufrene
+        """
+        self.order.active = False
+        CampaignQueryManager.put(self.order)
+
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'run'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.order = CampaignQueryManager.get(self.order.key())
+        ok_(self.order.active)
+
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(self.line_item.active)
+
+    @confirm_db(campaign=EDITED_1)
+    def mptest_order_pause(self):
+        """
+        The ad source status change handler should set an order as paused
+        when 'pause' is passed as the status. The order's line items should
+        not be affected.
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'pause'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.order = CampaignQueryManager.get(self.order.key())
+        ok_(not self.order.active)
+
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(self.line_item.active)
+
+    @confirm_db(campaign=EDITED_1)
+    def mptest_order_archive(self):
+        """
+        The ad source status change handler should set an order as archived
+        when 'archive' is passed as the status. The order's line items should
+        not be affected.
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'archive'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.order = CampaignQueryManager.get(self.order.key())
+        ok_(self.order.archived)
+
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not self.line_item.archived)
+
+    @confirm_db(campaign=EDITED_1)
+    def mptest_order_delete(self):
+        """
+        The ad source status change handler should set an order as deleted
+        when 'delete' is passed as the status. The order's line items should
+        not be affected.
+
+        Author: Haydn Dufrene
+        """
+        response = self.client.post(self.url, data={
+            'ad_sources[]': unicode(self.order.key()),
+            'status': 'delete'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        self.order = CampaignQueryManager.get(self.order.key())
+        ok_(self.order.deleted)
+        ok_(not self.order.active)
+
+        self.line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not self.line_item.deleted)
+        ok_(self.line_item.active)
+
+    def mptest_mixed_run(self):
+        """
+        The ad source status change handler changes multiple objects
+        statuses to running when 'run' is passed as the status.
+
+        Author: John Pena
+        """
+        # Set the line item as paused and put it in the db
+        self.line_item.active = False
+        self.line_item.archived = False
+        self.line_item.deleted = False
+        AdGroupQueryManager.put(self.line_item)
+
+        # set the order as paused and put it in the db
+        self.order.active = False
+        self.order.archived = False
+        self.order.deleted = False
+        CampaignQueryManager.put(self.order)
+
+        # set the creative as paused and put it in the db
+        self.creative.active = False
+        self.creative.deleted = False
+        CreativeQueryManager.put(self.creative)
+
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'run'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        ok_(actual_creative.active)
+        ok_(not actual_creative.deleted)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        ok_(actual_order.active)
+        ok_(not actual_order.archived)
+        ok_(not actual_order.deleted)
+
+    def mptest_mixed_pause(self):
+        """
+        The ad source status change handler changes multiple objects
+        statuses to paused when 'pause' is passed as the status.
+        Author: John Pena
+        """
+
+        AdGroupQueryManager.put(self.line_item)
+        CampaignQueryManager.put(self.order)
+        CreativeQueryManager.put(self.creative)
+
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'pause'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        ok_(not actual_creative.active)
+        ok_(not actual_creative.deleted)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        ok_(not actual_order.active)
+        ok_(not actual_order.archived)
+        ok_(not actual_order.deleted)
+
+    def mptest_mixed_archive(self):
+        """
+        The ad source status change handler changes multiple objects
+        statuses to archived when 'archive' is passed as the status.
+        Author: John Pena
+        """
+        AdGroupQueryManager.put(self.line_item)
+        CampaignQueryManager.put(self.order)
+        CreativeQueryManager.put(self.creative)
+
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'archive'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not actual_line_item.active)
+        ok_(actual_line_item.archived)
+        ok_(not actual_line_item.deleted)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        ok_(not actual_creative.active)
+        ok_(not actual_creative.deleted)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        ok_(not actual_order.active)
+        ok_(actual_order.archived)
+        ok_(not actual_order.deleted)
+
+    def mptest_mixed_delete(self):
+        """
+        The ad source status change handler changes multiple objects
+        statuses to deleted when 'delete' is passed as the status.
+        Author: John Pena
+        """
+        AdGroupQueryManager.put(self.line_item)
+        CampaignQueryManager.put(self.order)
+        CreativeQueryManager.put(self.creative)
+
+        response = self.client.post(self.url, {
+            'ad_sources[]': [
+                unicode(self.line_item.key()),
+                unicode(self.order.key()),
+                unicode(self.creative.key()),
+            ],
+            'status': 'delete'
+        })
+
+        response_json = json.loads(response.content)
+        ok_(response_json['success'])
+
+        # Test the line item status
+        actual_line_item = AdGroupQueryManager.get(self.line_item.key())
+        ok_(not actual_line_item.active)
+        ok_(not actual_line_item.archived)
+        ok_(actual_line_item.deleted)
+
+        # Test the creative status
+        actual_creative = CreativeQueryManager.get(self.creative.key())
+        ok_(not actual_creative.active)
+        ok_(actual_creative.deleted)
+
+        # Test the order status
+        actual_order = CampaignQueryManager.get(self.order.key())
+        ok_(not actual_order.active)
+        ok_(not actual_order.archived)
+        ok_(actual_order.deleted)
+
+
+class DisplayCreativeHandlerTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(DisplayCreativeHandlerTestCase, self).setUp()
+        self.image_url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': unicode(self.creative.key())
+        })
+        self.html_url = reverse('advertiser_creative_html', kwargs={
+            'creative_key': unicode(self.creative.key())
+        })
+
+    def mptest_http_response_code(self):
+        """
+        When a valid GET is made to the creative display handler, a valid
+        response is returned.
+
+        Author: John Pena
+        """
+        image_response = self.client.get(self.image_url)
+        html_response = self.client.get(self.html_url)
+        eq_(image_response.status_code, 200)
+        eq_(html_response.status_code, 200)
+
+    def mptest_fails_with_non_creative_key(self):
+        """
+        When an invalid creative key is passed in the url, the creative
+        display handler raises a 404.
+        """
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': 'sentinal134'
+        })
+        response = self.client.get(url)
+        eq_(response.status_code, 404)
+
+    def mptest_fails_on_unowned_creative(self):
+        """
+        When the key for an unowned creative is passed in the url, the
+        creative display handler raises a 404.
+
+        Author: John Pena
+        """
+        self.login_secondary_account()
+        response = self.client.get(self.html_url)
+        eq_(response.status_code, 404)
+
+    def mptest_returns_empty_for_mraid(self):
+        """
+        When 'mraid.js' is passed as the creative key, an empty
+        response is returned.
+
+        Author: John Pena
+        """
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': 'mraid.js'
+        })
+        response = self.client.get(url)
+        eq_(response.content, '')
+
+    def mptest_returns_html_for_creative(self):
+        url = reverse('advertiser_creative_image', kwargs={
+            'creative_key': unicode(self.creative.key())
+        })
+        response = self.client.get(url)
+        eq_(response.content, "<html><body style='margin:0px;'><b>Test</b></body></html>")
+
+
+decorate_all = decorate_all_test_methods(confirm_db())
+DisplayCreativeHandlerTestCase = decorate_all(DisplayCreativeHandlerTestCase)
+
+
+class CreativeImageHandlerTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(CreativeImageHandlerTestCase, self).setUp()
+        self.url = ''
+
+    def mptest_http_response_code(self):
+        pass
+
+    def mptest_fails_on_unowned_creative(self):
+        pass
+
+    def mptest_fails_with_non_creative_key(self):
+        pass
+
+    def mptest_returns_proper_response(self):
+        pass
+
+    def mptest_raise_404_for_non_image_creatives(self):
+        pass
+
+decorate_all = decorate_all_test_methods(confirm_db())
+CreativeImageHandlerTestCase = decorate_all(CreativeImageHandlerTestCase)
+
+
+class NewOrEditCreativeViewTestCase(OrderViewTestCase):
+    def setUp(self):
+        super(NewOrEditCreativeViewTestCase, self).setUp()
+        self.new_url = reverse('advertiser_creative_form_new', kwargs={
+            'line_item_key': unicode(self.line_item.key())
+        })
+        self.edit_url = reverse('advertiser_creative_form_edit', kwargs={
+            'creative_key': unicode(self.creative.key())
+        })
+
+        self.default_creative_post_body = {
+            u'ajax': u'true',
+            u'action_icon': u'download_arrow4',
+            u'ad_type': u'html',
+            u'color': u'000000',
+            u'conv_appid': u'',
+            u'custom_height': u'',
+            u'custom_width': u'',
+            u'font_color': u'FFFFFF',
+            u'format': u'320x50',
+            u'gradient': u'on',
+            u'html_data': u'',
+            u'launchpage': u'',
+            u'line1': u'',
+            u'line2': u'',
+            u'name': u'Creative',
+            u'tracking_url': u'',
+            u'url': u'',
+        }
+
+        # We need this to get the absolute path to image files
+        # we'll use for testing uploads
+        pwd = os.path.dirname(os.path.abspath(__file__))
+
+        # Post bodies for the different types of creatives
+        self.html_creative_post_body = self.default_creative_post_body.copy()
+        self.image_creative_post_body = self.default_creative_post_body.copy()
+        self.text_tile_creative_post_body = self.default_creative_post_body.copy()
+
+        self.html_creative_post_body.update({
+            u'html_data': u'<div> An Ad </div>',
+            u'name': u'HTML Creative',
+        })
+
+        self.image_creative_post_body.update({
+            u'ad_type': u'image',
+            u'name': u'Image Creative',
+        })
+        self.test_banner_path = os.path.join(pwd, 'test_banner.gif')
+        test_banner = open(self.test_banner_path)
+        image_file = SimpleUploadedFile(test_banner.name, test_banner.read())
+        self.image_creative_post_files = dict(image_file=image_file)
+
+        self.text_tile_creative_post_body.update({
+            u'ad_type': u'text_icon',
+            u'name': u'Text Tile Creative',
+        })
+        test_tile_path = os.path.join(pwd, 'test_tile.png')
+        test_tile = open(test_tile_path, 'rb')
+        image_file = SimpleUploadedFile(test_tile.name, test_tile.read())
+        self.text_tile_creative_post_files = dict(image_file=image_file)
+
+        mock_creative_form = HtmlCreativeForm(self.html_creative_post_body,
+                                              instance=None)
+        self.mock_creative = mock_creative_form.save()
+        self.mock_creative.account = self.account
+        self.mock_creative.ad_group = self.line_item
+
+    @confirm_db(creative={'added': 1, 'edited': 1})
+    def mptest_http_response_code(self):
+        """
+        A valid post should return a valid (200, 302) response (regardless
+        of params).
+
+        Author: Haydn Dufrene
+        """
+        new_response = self.client.post(self.new_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(new_response.status_code in [200, 302])
+
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        ok_(edit_response.status_code in [200, 302])
+
+    @confirm_db(creative={'added': 1, 'edited': 1})
+    def mptest_ensure_proper_redirect(self):
+        new_response = self.client.post(self.new_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        edit_response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        new_response_json = json.loads(new_response.content)
+        edit_response_json = json.loads(edit_response.content)
+
+        ok_(new_response_json['success'])
+        ok_(edit_response_json['success'])
+
+        new_redirect_url = new_response_json['redirect']
+        edit_redirect_url = edit_response_json['redirect']
+
+        new_redirect_split = new_redirect_url.split('/')
+        edit_redirect_split = edit_redirect_url.split('/')
+
+        eq_(new_redirect_split[1], 'advertise')
+        eq_(edit_redirect_split[1], 'advertise')
+
+        eq_(new_redirect_split[2], 'line_items')
+        eq_(edit_redirect_split[2], 'line_items')
+
+        # These will fail loudly if a valid key is not returned
+        db.Key(new_redirect_split[3])
+        db.Key(edit_redirect_split[3])
+
+    @confirm_db(creative=ADDED_1)
+    def mptest_puts_valid_new_creative(self):
+        response = self.client.post(self.new_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+
+        # There is also a randomly generated creative attached
+        # to self.line_item in module setUp
+        eq_(creatives.count(), 2)
+
+        creative = creatives.filter('name =', self.html_creative_post_body['name']).fetch(1)[0]
+        model_eq(creative, self.mock_creative, check_primary_key=False)
+
+    @confirm_db(creative=EDITED_1)
+    def mptest_puts_valid_edited_creative(self):
+        response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response_json = json.loads(response.content)
+
+        line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+        line_item = AdGroupQueryManager.get(line_item_key)
+
+        creatives = line_item.creatives
+
+        # self.creative
+        eq_(creatives.count(), 1)
+
+        creative = creatives[0]
+
+        updated_creative_form = HtmlCreativeForm(self.html_creative_post_body,
+                                                 instance=self.creative)
+        updated_creative = updated_creative_form.save()
+
+        model_eq(creative, updated_creative, check_primary_key=False)
+
+    @confirm_db(creative={'added': 3})
+    def mptest_uses_correct_form_for_html(self):
+        self.image_creative_post_body.update(self.image_creative_post_files)
+
+        self.text_tile_creative_post_body.update(self.text_tile_creative_post_files)
+
+        ad_type_dict = {
+                        'html': self.html_creative_post_body,
+                        'image': self.image_creative_post_body,
+                        'text_icon': self.text_tile_creative_post_body
+                        }
+
+        for ad_type, post_body in ad_type_dict.iteritems():
+            response = self.client.post(self.new_url, post_body,
+                                        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            response_json = json.loads(response.content)
+
+            ok_(response_json['success'], response_json.get('errors', "'errors' not in response."))
+            line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
+            line_item = AdGroupQueryManager.get(line_item_key)
+
+            eq_(line_item.creatives.filter('name =', post_body['name']).count(), 1)
+            creatives = line_item.creatives.filter('name =', post_body['name']).fetch(1)
+            creative = creatives[0]
+            eq_(creative.ad_type, ad_type)
+
+    # TODO: Make a mopub exception to catch, so we dont have to hardcode
+    #       error messages into tests?
+    @confirm_db()
+    def mptest_fails_with_unsupported_ad_type(self):
+        self.html_creative_post_body.update({u'ad_type': u'fake_ad_type'})
+        try:
+            self.client.post(self.new_url,
+                             self.html_creative_post_body,
+                             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        except Exception, e:
+            eq_(e.message, 'Unsupported creative type fake_ad_type.')
+
+    @confirm_db(creative=ADDED_1)
+    def mptest_line_item_owns_creative(self):
+        """
+        Check that when a new creative is made, it's owned by the line
+        item we referenced in the post url.
+
+        Author: John Pena
+        """
+        # look at the past creatives for this line item. after we post,
+        # the length of this list should be +1
+        past_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
+        self.client.post(self.new_url, self.html_creative_post_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        current_creatives = CreativeQueryManager.get_creatives(adgroup=self.line_item)
+        eq_(len(current_creatives), (len(past_creatives) + 1))
+
+    @confirm_db(creative=ADDED_1)
+    def mptest_account_owns_creative(self):
+        """
+        Check that when a new creative is made, it's owned by the
+        account that's logged in.
+
+        Author: John Pena
+        """
+        # make a super unique name and update the post body with the name
+        new_name = 'my super awesome creative ' + unicode(uuid.uuid4())
+        new_creative_body = self.html_creative_post_body
+        new_creative_body['name'] = new_name
+
+        # post the new creative
+        self.client.post(self.new_url, new_creative_body,
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # find the new creative based on its super unique name.
+        # make sure there's only one.
+        new_creatives = Creative.all().filter("name = ", new_name).fetch(1000)
+        new_creative = new_creatives[0]
+
+        # make sure its owned by the current account
+        model_key_eq(new_creative.account, self.account)
+
+    @confirm_db()
+    def mptest_fails_gracefully_with_form_errors(self):
+        """
+        Check that when invalid form data is posted, a valid (status
+        200) JSON response is returned, which includes success=False and
+        a list of errors.
+
+        Author: John Pena
+        """
+        # make some invalid data
+        invalid_creative_body = self.image_creative_post_body
+        invalid_creative_body['image_file'] = None
+
+        # post the new creative and make sure the response is valid
+        response = self.client.post(self.new_url, invalid_creative_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 200)
+
+        # look at the response data and make sure its listed as having failed
+        # and includes errors
+        response_json = json.loads(response.content)
+        ok_(not response_json['success'])
+        dict_eq(response_json['errors'],
+                {u'image_file':
+                 u'You must upload an image file for a creative of this type.'})
+
+    @confirm_db()
+    def mptest_fails_when_creative_is_unowned(self):
+        self.login_secondary_account()
+        response = self.client.post(self.edit_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+    @confirm_db()
+    def mptest_fails_when_line_item_is_unowned(self):
+        self.login_secondary_account()
+        response = self.client.post(self.new_url, self.html_creative_post_body,
+                                    HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        eq_(response.status_code, 404)
+
+
+def get_line_item_key_from_redirect_url(redirect_url):
+    """
+    Helper method for getting a line item key from the redirect
+    url that's passed back in many post views.
+    """
+    return redirect_url.replace('/advertise/line_items/', '').rstrip('/')

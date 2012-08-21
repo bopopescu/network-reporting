@@ -3,9 +3,8 @@ Views that handle pages for Apps and AdUnits.
 """
 
 import logging
-import datetime
-
 import urllib
+import datetime
 # hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
 
@@ -13,19 +12,19 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
-from common.ragendja.template import render_to_response, \
-     render_to_string, \
-     HttpResponse, \
-     JSONResponse
+from common.ragendja.template import (
+    render_to_response,
+    render_to_string,
+    HttpResponse,
+    JSONResponse
+)
 
 ## Models
-from advertiser.models import Campaign, \
-        AdGroup, \
-        HtmlCreative, \
-        NetworkStates
-from publisher.models import Site
+from advertiser.models import (Campaign,
+                               AdGroup,
+                               HtmlCreative)
+
 from publisher.forms import AppForm, AdUnitForm
-from reporting.models import StatsModel
 from account.models import NetworkConfig
 
 ## Query Managers
@@ -36,22 +35,13 @@ from advertiser.query_managers import (AdvertiserQueryManager,
                                        CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
-from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
+from publisher.query_managers import (PublisherQueryManager,
+                                      AppQueryManager,
                                       AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 
-# Util
-from common.utils import sswriter, date_magic, xlwt
-from common.utils.unicode_writer import UnicodeWriter
-from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
-#REFACTOR: only import what we need here
-from common.constants import *
-from common.utils.stats_helpers import (MarketplaceStatsFetcher,
-                                        MPStatsAPIException,
-                                        SummedStatsFetcher)
-
-from budget import budget_service
+from common.utils import tablib
 
 
 class DashboardHandler(RequestHandler):
@@ -62,13 +52,19 @@ class DashboardHandler(RequestHandler):
             'network': 'Ad Networks',
         }
 
-        for key, campaign in AdvertiserQueryManager.get_campaigns_dict_for_account(account=self.account, include_deleted=True).items():
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
+            account=self.account, include_deleted=True)
+        for key, campaign in campaigns.items():
             names[key] = campaign.name
 
-        for key, app in PublisherQueryManager.get_apps_dict_for_account(account=self.account, include_deleted=True).items():
+        apps = PublisherQueryManager.get_apps_dict_for_account(
+            account=self.account, include_deleted=True)
+        for key, app in apps.items():
             names[key] = app.name
 
-        for key, adunit in PublisherQueryManager.get_adunits_dict_for_account(account=self.account, include_deleted=True).items():
+        adunits = PublisherQueryManager.get_adunits_dict_for_account(
+            account=self.account, include_deleted=True)
+        for key, adunit in adunits.items():
             names[key] = adunit.name
 
         return {
@@ -88,6 +84,7 @@ class AppIndexHandler(RequestHandler):
     A list of apps and their real-time stats.
     """
     def get(self):
+
         # Get all of the account's apps.
         apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
         app_keys = simplejson.dumps([str(key) for key in apps_dict.keys()])
@@ -97,116 +94,11 @@ class AppIndexHandler(RequestHandler):
         if len(apps_dict) == 0:
             return HttpResponseRedirect(reverse('publisher_create_app'))
 
-        # account_stats property is a string because it is a json dump.
-        response_dict = {
+
+        return {
             'apps': sorted_apps,
             'app_keys': app_keys,
-            'account_stats': "{}",
-            'stats': {},
         }
-
-        # If there are a lot of apps, don't fetch stats here because it could
-        # result in a DeadlineExceededError.
-        if len(apps_dict) > 50:
-            return response_dict
-
-        # Get stats totals for the stats breakdown pane
-        account_stats_manager = StatsModelQueryManager(
-                self.account, offline=self.offline)
-        stats_model_list = account_stats_manager.get_stats_for_days(
-                days=self.days)
-
-        stats_dict = self._build_stats_dict_from_stats_model_list(
-                stats_model_list)
-        today_and_yesterday_stats = self._build_today_and_yesterday_stats_from_stats_model_list(stats_model_list)
-
-        account_stats = {'status': 200, 'all_stats': stats_dict}
-
-        response_dict['account_stats'] = simplejson.dumps(account_stats)
-        response_dict['stats'] = today_and_yesterday_stats
-
-        return response_dict
-
-    def _build_stats_dict_from_stats_model_list(self, stats_model_list):
-        """
-        Given stats_model_list, generate the appropriate data structure for
-        graphing the data using Highcharts.
-        """
-
-        # REFACTOR: StatsModel field naming
-        stats_dict_list = []
-        for stats_model in stats_model_list:
-            stats_dict_list.append({
-                'req': stats_model.request_count,
-                'imp': stats_model.impression_count,
-                'clk': stats_model.click_count,
-                'usr': stats_model.user_count,
-            })
-
-        summed_stats_model = sum(stats_model_list, StatsModel())
-
-        # The key '||' references the aggregate total across the entire
-        # account (i.e. all apps and adunits)
-        stats_dict = {
-            '||': {
-                'name': '||',
-                'daily_stats': stats_dict_list,
-                'sum': summed_stats_model.to_dict(),
-            }
-        }
-
-        return stats_dict
-
-    def _build_today_and_yesterday_stats_from_stats_model_list(self, stats_model_list):
-        """
-        Given stats_model_list, generate the appropriate data structure for
-        displaying the stats breakdown.  Note: for a custom date range, this
-        actually returns data for the final two days.
-        """
-
-        summed_stats_model = sum(stats_model_list, StatsModel())
-
-        # This is the max active users over the date range, not total
-        # unique users.
-        summed_stats_model.user_count = max([stats_model.user_count for stats_model in stats_model_list])
-
-        today = stats_model_list[-1]
-        try:
-            yesterday = stats_model_list[-2]
-        except IndexError:
-            # If there is only one date given, set yesterday to a blank
-            # StatsModel with default values.
-            yesterday = StatsModel()
-
-        today_and_yesterday_stats = {
-            'req': {
-                'today': today.request_count,
-                'yesterday': yesterday.request_count,
-                'total': summed_stats_model.request_count,
-            },
-            'imp': {
-                'today': today.impression_count,
-                'yesterday': yesterday.impression_count,
-                'total': summed_stats_model.impression_count,
-            },
-            'users': {
-                'today': today.user_count,
-                'yesterday': yesterday.user_count,
-                'total': summed_stats_model.user_count
-            },
-            'ctr': {
-                'today': today.ctr,
-                'yesterday': yesterday.ctr,
-                'total': summed_stats_model.ctr
-            },
-            'clk': {
-                'today': today.click_count,
-                'yesterday': yesterday.click_count,
-                'total': summed_stats_model.click_count
-            },
-        }
-
-        return today_and_yesterday_stats
 
 
 @login_required
@@ -249,9 +141,10 @@ class CreateAppHandler(RequestHandler):
         }
 
     def post(self):
-        app_form = AppForm(data=self.request.POST, files=self.request.FILES)
 
+        app_form = AppForm(data=self.request.POST, files=self.request.FILES)
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
+        logging.warn(self.request.POST)
 
         # If there are validation errors in either the app_form or adunit_form,
         # fail by returning the page rendered with the invalid forms.
@@ -318,416 +211,101 @@ def create_app(request, *args, **kwargs):
 
 
 class AppDetailHandler(RequestHandler):
-    """
-    REFACTOR
 
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
     def get(self, app_key):
 
-        # load the site
-        # 1 GET
         app = AppQueryManager.get(app_key)
-
-        # create a stats manager
-        stats_q = StatsModelQueryManager(self.account, self.offline)
-        mpx_stats_q = MarketplaceStatsFetcher(self.account.key())
-
-        # 1 RunQuery
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
-
         app.adunits = sorted(app.adunits,
                              key=lambda adunit: adunit.name,
                              reverse=True)
 
-        # 1 GET
-        app.all_stats = stats_q.get_stats_for_days(publisher=app, days=self.days)
-
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
 
-        # Create edit form and new adunit forms
-        # 1 memcache GET
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
-        # 1 memcache GET
-        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
+        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(
+            app=app)
 
-        app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
+        line_items = AdGroupQueryManager.get_sorted_line_items_for_app_and_date_range(
+            app, self.start_date, self.end_date)
 
-        # this is the max active users over the date range
-        # NOT total unique users
-        app.stats.user_count = max([sm.user_count for sm in app.all_stats])
+        marketplace_campaign = CampaignQueryManager.get_marketplace(app._account, from_db=True)
 
-        # get adgroups targeting this app
-        # 2 RunQuery???
-        adgroups = AdGroupQueryManager.get_adgroups(app=app)
-        # Total: 2 GETs / 1 urlfetch per adgroup
-        # 1 GET for the campaign per adgroup
-        app_adunits = set([adunit.key() for adunit in app.adunits])
-        def targeted(adgroup):
-            # If it's a new network campaign the adgroup must be targeted and
-            # active
-            if adgroup.campaign.network_type:
-                return set(adgroup.site_keys).intersection(app_adunits) and \
-                        adgroup.active
-            # Otherwiese the adgroup must be targeted
-            else:
-                return set(adgroup.site_keys).intersection(app_adunits)
-
-        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account)
-
-        for adgroup in adgroups:
-            if str(adgroup._campaign) not in campaigns_dict:
-                logging.error("AdGroup %s was in Account %s but its Campaign %s was not in memcache for the account." % (adgroup.key(), self.account.key(), adgroup._campaign))
-                continue
-            adgroup.campaign = campaigns_dict[str(adgroup._campaign)]
-
-        app.campaigns = dict([(adgroup._campaign, adgroup.campaign) for
-            adgroup in adgroups if targeted(adgroup)]).values()
-
-        for campaign in app.campaigns:
-            # Used for non new network campaigns
-            if not campaign.network_type:
-                campaign.adgroup = campaign.adgroups[0]
-
-            if len(app.campaigns) < 20:
-                # 1 GET
-                summed_fetcher = SummedStatsFetcher(self.account.key())
-                campaign.stats =  summed_fetcher.get_campaign_specific_app_stats(
-                        app.key(), campaign, self.start_date, self.end_date)
-                #budget_object = campaign.budget_obj
-                #campaign.percent_delivered = budget_service.percent_delivered(
-                        #budget_object)
-
-                # Overwrite the revenue from MPX if its marketplace
-                # TODO: overwrite clicks as well
-                if campaign.campaign_type in ['marketplace']:
-                    try:
-                        # 1 urlfetch
-                        mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
-                                                                self.start_date,
-                                                                self.end_date)
-                    except MPStatsAPIException, error:
-                        logging.warning("MPStatsAPIException: %s" % error)
-                        mpx_stats = {}
-
-                    campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
-                    campaign.stats['imp'] = int(mpx_stats.get('imp', 0))
-
-                if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
-                        'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
-                    campaign.calculated_ecpm = calculate_ecpm(campaign)
-
-
-        # Sort out all of the campaigns that are targeting this app
-        promo_campaigns = filter_campaigns(app.campaigns, ['promo'])
-        guarantee_campaigns = filter_campaigns(app.campaigns, ['gtee_high', 'gtee_low', 'gtee'])
-        marketplace_campaigns = filter_campaigns(app.campaigns, ['marketplace'])
-        network_campaigns = filter_campaigns(app.campaigns, ['network'])
-        backfill_promo_campaigns = filter_campaigns(app.campaigns, ['backfill_promo'])
-
-        levels = ('high', '', 'low')
-        gtee_str = "gtee_%s"
-        gtee_levels = []
-        for level in levels:
-            this_level = gtee_str % level if level else "gtee"
-            name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign_type == this_level,
-                                 guarantee_campaigns)
-            gtee_levels.append(dict(name = name, campaigns = level_camps))
-
-        # we don't include network or promo campaigns in the revenue totals
-
-        # Figure out if the marketplace is activated and if it has any
-        # activated adgroups so we can mark it as active/inactive
-        active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted)
-                                        for adgroup in filter_campaigns(
-                                            adgroups, ['marketplace'])])
-
-        try:
-            marketplace_activated = marketplace_campaigns[0].active
-        except IndexError:
-            marketplace_activated = False
+        network_campaigns = CampaignQueryManager.get_network_campaigns(app.account, is_new=True)
+        for campaign in network_campaigns:
+            if campaign.active:
+                active = False
+                for adunit in app.adunits:
+                    adgroup = AdGroupQueryManager.get_network_adgroup(campaign, adunit.key(), app.account, get_from_db=True)
+                    if adgroup.active:
+                        active = True
+                        break
+                campaign.active = active
+        network_campaigns = sorted(network_campaigns, key=lambda campaign: campaign.name.lower())
 
         return {
             'app': app,
-            'app_form_fragment':app_form_fragment,
-            'adunit_form_fragment':adunit_form_fragment,
-            'start_date': self.days[0],
-            'end_date': self.days[-1],
-            'date_range': self.date_range,
-            'account': self.account,
+            'app_form_fragment': app_form_fragment,
+            'adunit_form_fragment': adunit_form_fragment,
             'helptext': help_text,
-            'gtee': gtee_levels,
-            'promo': promo_campaigns,
-            'marketplace': marketplace_campaigns,
-            'marketplace_activated': marketplace_activated,
-            'active_mpx_adunit_exists': active_mpx_adunit_exists,
-            'network': network_campaigns,
-            'backfill_promo': backfill_promo_campaigns,
+            'line_items': line_items,
+            'marketplace_campaign': marketplace_campaign,
+            'network_campaigns': network_campaigns,
         }
 
 
 @login_required
 def app_detail(request, *args, **kwargs):
-    handler = AppDetailHandler(id="app_key", template='publisher/app.html')
+    handler = AppDetailHandler(id='app_key', template='publisher/app.html')
     return handler(request, use_cache=False, *args, **kwargs)
 
 
-class ExportFileHandler(RequestHandler):
-    def get(self, key, key_type, f_type):
-        spec = self.params.get('spec')
-        stat_names, stat_models = self.get_desired_stats(key, key_type,
-                                                         self.days, spec=spec)
-        return sswriter.write_stats( f_type, stat_names,
-                                     stat_models, site=key,
-                                     days=self.days, key_type=key_type)
-
-
-    def get_desired_stats(self, key, key_type, days, spec=None):
-        manager = StatsModelQueryManager(self.account, offline=self.offline)
-        """ Given a key, key_type, and specificity, return
-        the appropriate stats to get AND their names"""
-        #default for all
-        stat_names = (IMP_STAT, CLK_STAT, CTR_STAT)
-        #sanity check
-        assert key_type in ('adunit', 'app', 'adgroup', 'account')
-        if spec:
-            assert spec in ('creatives', 'adunits', 'campaigns', 'days', 'apps')
-
-
-
-        #Set up attr getters/names
-        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or \
-                (key_type == 'adunit' and spec == 'days'):
-            stat_names = (REQ_STAT,) + stat_names
-            if spec == 'days':
-                stat_names = (DTE_STAT,) + stat_names
-        elif key_type == 'account' and spec == 'campaigns':
-            stat_names += (CPM_STAT, CNV_RATE_STAT, CPA_STAT)
-        elif key_type == 'adgroup':
-            if spec == 'days':
-                stat_names = (DTE_STAT,) + stat_names
-            stat_names += (REV_STAT, CNV_RATE_STAT, CPA_STAT)
-        elif key_type == 'adunit' and spec == 'campaigns':
-            stat_names += (REV_STAT,)
-
-
-
-        #General rollups for all data
-        if key_type == 'account':
-            if spec == 'apps':
-                apps = AppQueryManager.get_apps(self.account)
-                if len(apps) == 0:
-                    #should probably handle this more gracefully
-                    logging.warning("Apps for account is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=self.days) for a in apps])
-            elif spec == 'campaigns':
-                camps = CampaignQueryManager.get_campaigns(account=self.account)
-                if len(camps) == 0:
-                    logging.warning("Campaigns for account is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=self.days) for c in camps])
-        #Rollups for adgroup data
-        elif key_type == 'adgroup':
-            if spec == 'creatives':
-                creatives = list(CreativeQueryManager.get_creatives(adgroup=key))
-                if len(creatives) == 0:
-                    logging.warning("Creatives for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=self.days) for c in creatives])
-            if spec == 'adunits':
-                adunits = map(lambda x: Site.get(x), AdGroupQueryManager.get(key).site_keys)
-                if len(adunits) == 0:
-                    logging.warning("Adunits for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=self.days) for a in adunits])
-            if spec == 'days':
-                return (stat_names, manager.get_stats_for_days(advertiser=key, days=self.days))
-        #Rollups + not-rollup for adunit data
-        elif key_type == 'adunit':
-            if spec == 'campaigns':
-                adgroups = AdGroupQueryManager.get_adgroups(adunit=key)
-                if len(adgroups) == 0:
-                    logging.warning("Campaigns for adunit is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=self.days) for a in adgroups])
-            if spec == 'days':
-                return (stat_names, manager.get_stats_for_days(publisher=key, days=self.days))
-        #App adunit rollup data
-        elif key_type == 'app':
-            adunits = AdUnitQueryManager.get_adunits(app=key)
-            if len(adunits) == 0:
-                logging.warning("Apps is empty")
-            return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=self.days) for a in adunits])
-
-
-@login_required
-def export_file(request, *args, **kwargs):
-    return ExportFileHandler()(request, *args, **kwargs)
-
-
-class AdUnitShowHandler(RequestHandler):
-    """
-    REFACTOR
-
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
+class AdUnitDetailHandler(RequestHandler):
 
     def get(self, adunit_key):
-        # load the site
+
         adunit = AdUnitQueryManager.get(adunit_key)
 
-        stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
-        adunit.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                                                            days=self.days)
+        # get the form to allow the adunit to be edited
+        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(
+            adunit=adunit)
 
-        adunit.stats = reduce(lambda x, y: x+y,
-                              adunit.all_stats,
-                              StatsModel())
+        line_items = AdGroupQueryManager.get_sorted_line_items_for_adunit_and_date_range(
+            adunit, self.start_date, self.end_date)
 
-        # used the get marketplace stats from mpx servers
-        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        untargeted = True
+        for line_item in line_items:
+            if line_item.active:
+                untargeted = False
+                break
 
-        # Get all of the ad groups for this site
-        adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
-        adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
-        for ag in adunit.adgroups:
-            if len(adunit.adgroups) < 20:
-                campaign = ag.campaign
-                # If its a new network campaign that has been migrated and the
-                # transition date is after the start date
-                if campaign.campaign_type == 'network' and campaign.network_state == \
-                        NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
-                        campaign.old_campaign and self.start_date <= \
-                        campaign.transition_date:
-                    new_stats = None
-                    if self.end_date >= campaign.transition_date:
-                        # get new campaign stats (specific for the single adgroup)
-                        days = date_magic.gen_days(campaign.transition_date,
-                                self.end_date)
-                        new_stats = stats_manager.get_stats_for_days(
-                                publisher=adunit, advertiser=ag,
-                                days=days)
-                        days = date_magic.gen_days(self.start_date,
-                                campaign.transition_date)
-                    else:
-                        # getting only legacy campaign stats (back when campaign
-                        # and adgroup were one to one)
-                        days = self.days
-                    # get old campaign stats
-                    old_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                            advertiser=campaign.old_campaign, days=days)
-                    if new_stats:
-                        transition_stats = old_stats[-1] + new_stats[0]
-                        ag.all_stats = old_stats[:-1] + [transition_stats] + \
-                                new_stats[1:]
-                    else:
-                        ag.all_stats = old_stats
-                else:
-                    # getting only adgroup stats (back when campaign
-                    # and adgroup were one to one)
-                    days = self.days
-                    ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                            advertiser=ag, days=days)
+        marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), adunit._account, get_from_db=True)
+        if untargeted:
+            untargeted = not (marketplace_adgroup.campaign.active and marketplace_adgroup.active)
 
-                ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-                budget_object = campaign.budget_obj
-                ag.percent_delivered = budget_service.percent_delivered(budget_object)
+        network_adgroups = AdGroupQueryManager.get_network_adgroups_for_adunit(adunit)
+        network_adgroups = sorted(network_adgroups, key=lambda adgroup: adgroup.name.lower())
+        if untargeted:
+            for adgroup in network_adgroups:
+                if adgroup.campaign.active and adgroup.active:
+                    untargeted = False
+                    break
 
-                # Overwrite the revenue from MPX if its marketplace
-                # TODO: overwrite clicks as well
-                if campaign.campaign_type in ['marketplace']:
-                    try:
-                        mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
-                                                                   self.start_date,
-                                                                   self.end_date)
-                    except MPStatsAPIException, error:
-                        logging.warning("MPStatsAPIException: %s" % error)
-                        mpx_stats = {}
-                    ag.stats.revenue = float(mpx_stats.get('rev', 0.0))
-                    ag.stats.impression_count = int(mpx_stats.get('imp', 0))
-
-                if campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
-                    ag.calculated_ecpm = calculate_ecpm(ag)
-
-
-        # to allow the adunit to be edited
-        adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
-
-
-        # Sort out all of the campaigns that are targeting this app
-        promo_campaigns = filter_adgroups(adunit.adgroups, ['promo'])
-        guarantee_campaigns = filter_adgroups(adunit.adgroups, ['gtee_high', 'gtee_low', 'gtee'])
-        marketplace_campaigns = filter_adgroups(adunit.adgroups, ['marketplace'])
-        network_campaigns = filter_adgroups(adunit.adgroups, ['network'])
-        backfill_promo_campaigns = filter_adgroups(adunit.adgroups, ['backfill_promo'])
-
-        levels = ('high', '', 'low')
-        gtee_str = "gtee_%s"
-        gtee_levels = []
-        for level in levels:
-            this_level = gtee_str % level if level else "gtee"
-            name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign.campaign_type == this_level,
-                                 guarantee_campaigns)
-            gtee_levels.append(dict(name = name, adgroups = level_camps))
-
-
-        try:
-            marketplace_activated = marketplace_campaigns[0].campaign.active
-        except IndexError:
-            marketplace_activated = False
-
-        today = adunit.all_stats[-1]
-        try:
-            yesterday = adunit.all_stats[-2]
-        except:
-            yesterday = StatsModel()
-
-        # write response
-        return render_to_response(self.request,
-                                  'publisher/adunit.html',
-                                  {
-                                      'site': adunit,
-                                      'adunit': adunit,
-                                      'today': today,
-                                      'yesterday': yesterday,
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'account': self.account,
-                                      'days': self.days,
-                                      'adunit_form_fragment': adunit_form_fragment,
-                                      'gtee': gtee_levels,
-                                      'promo': promo_campaigns,
-                                      'marketplace': marketplace_campaigns,
-                                      'network': network_campaigns,
-                                      'backfill_promo': backfill_promo_campaigns,
-                                      'marketplace_activated': marketplace_activated
-                                  })
+        return {
+            'site': adunit,
+            'adunit': adunit,
+            'adunit_form_fragment': adunit_form_fragment,
+            'line_items': line_items,
+            'marketplace_adgroup': marketplace_adgroup,
+            'network_adgroups': network_adgroups,
+            'untargeted': untargeted,
+        }
 
 
 @login_required
-def adunit_show(request, *args, **kwargs):
-    return AdUnitShowHandler(id='adunit_key')(request, use_cache=False, *args, **kwargs)
+def adunit_detail(request, *args, **kwargs):
+    handler = AdUnitDetailHandler(id='adunit_key', template='publisher/adunit.html')
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class AppUpdateAJAXHandler(RequestHandler):
@@ -901,29 +479,6 @@ def adunit_update_ajax(request, *args, **kwargs):
     return AdUnitUpdateAJAXHandler()(request, *args, **kwargs)
 
 
-class DeleteAdUnitHandler(RequestHandler):
-    """
-    Deletes an adunit and redirects to the adunit's app.
-    """
-    def post(self, adunit_key):
-        adunit = AdUnitQueryManager.get(adunit_key)
-
-        if adunit is None or adunit.account.key() != self.account.key():
-            raise Http404
-
-        adunit.deleted = True
-        AdUnitQueryManager.put(adunit)
-
-        return HttpResponseRedirect(reverse('publisher_app_show',
-                                            kwargs = {
-                                                'app_key': adunit.app.key()
-                                            }))
-
-
-@login_required
-def delete_adunit(request, *args, **kwargs):
-    return DeleteAdUnitHandler()(request, *args, **kwargs)
-
 
 class DeleteAppHandler(RequestHandler):
     """
@@ -953,6 +508,30 @@ def delete_app(request, *args, **kwargs):
     return DeleteAppHandler()(request, *args, **kwargs)
 
 
+class DeleteAdUnitHandler(RequestHandler):
+    """
+    Deletes an adunit and redirects to the adunit's app.
+    """
+    def post(self, adunit_key):
+        adunit = AdUnitQueryManager.get(adunit_key)
+
+        if adunit is None or adunit.account.key() != self.account.key():
+            raise Http404
+
+        adunit.deleted = True
+        AdUnitQueryManager.put(adunit)
+
+        return HttpResponseRedirect(reverse('publisher_app_show',
+                                            kwargs = {
+                                                'app_key': adunit.app.key()
+                                            }))
+
+
+@login_required
+def delete_adunit(request, *args, **kwargs):
+    return DeleteAdUnitHandler()(request, *args, **kwargs)
+
+
 class IntegrationHelpHandler(RequestHandler):
     """
     This page displays some helpful information that helps pubs get
@@ -962,196 +541,198 @@ class IntegrationHelpHandler(RequestHandler):
     def get(self, adunit_key):
         adunit = AdUnitQueryManager.get(adunit_key)
         status = self.params.get('status')
-        return render_to_response(self.request,
-                                  'publisher/integration_help.html',
-                                  {
-                                      'site': adunit,
-                                      'status': status,
-                                      'width': adunit.get_width(),
-                                      'height': adunit.get_height(),
-                                      'account': self.account
-                                  })
+        return {
+            'site': adunit,
+            'status': status,
+            'width': adunit.get_width(),
+            'height': adunit.get_height(),
+        }
 
 
 @login_required
 def integration_help(request, *args, **kwargs):
-    return IntegrationHelpHandler()(request, *args, **kwargs)
+    t = 'publisher/integration_help.html'
+    return IntegrationHelpHandler(template=t)(request, *args, **kwargs)
 
 
-class AppExportHandler(RequestHandler):
-    """
-    REFACTOR
+#############
+# Exporting #
+#############
 
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
-    def post(self, app_key, file_type, start, end):
-        start = datetime.datetime.strptime(start,'%m%d%y')
-        end = datetime.datetime.strptime(end,'%m%d%y')
-        days = date_magic.gen_days(start, end)
+class InventoryExporter(RequestHandler):
+
+    def get(self):
+
+        export_type = self.request.GET.get('type', 'html')
+
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+        app_data = []
+
+        stats = StatsModelQueryManager(self.account)
+
+        for app in apps_dict.values():
+
+            # Make a row for each app with it's summed stats
+            app_stats = stats.get_stats_sum(publisher=app, num_days=self.date_range)
+            app_row = (
+                app.name,
+                'All',
+                str(app.key()),
+                app.global_id,
+                app_stats.req,
+                app_stats.imp,
+                app_stats.imp,
+                app_stats.clk,
+                app_stats.clk,
+                "N/A",
+                app.app_type
+            )
+            app_data.append(app_row)
+
+            # ... then make a row for each adunit with its summed stats
+            for adunit in app.adunits:
+                adunit_stats = stats.get_stats_sum(publisher=adunit,
+                                                   num_days=self.date_range)
+
+                row = (
+                    app.name,
+                    adunit.name,
+                    str(adunit.key()),
+                    app.global_id,
+                    adunit_stats.req,
+                    adunit_stats.imp,
+                    adunit_stats.fill_rate,
+                    adunit_stats.clk,
+                    adunit_stats.ctr,
+                    adunit.format,
+                    app.app_type
+                )
+                app_data.append(row)
+
+        # Put together the header list
+        headers = (
+            'App Name', 'Adunit Name', 'Pub ID', 'Resource ID',
+            'Requests', 'Impressions', 'Fill Rate',
+            'Clicks', 'CTR', 'Ad Size', 'Platform'
+        )
+
+        # Create the data to export from all of the rows
+        data_to_export = tablib.Dataset(headers=headers)
+        data_to_export.extend(app_data)
+
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   ("MoPub inventory", export_type)
+
+        return response
+
+
+@login_required
+def inventory_exporter(request, *args, **kwargs):
+    return InventoryExporter()(request, *args, **kwargs)
+
+
+class AppExporter(RequestHandler):
+
+    def get(self, app_key):
 
         app = AppQueryManager.get(app_key)
-
-        stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
-        all_stats = stats_manager.get_stats_for_days(publisher=app, days=days)
-        f_name_dict = dict(app_title = app.name,
-                           start = start.strftime('%b %d'),
-                           end   = end.strftime('%b %d, %Y'),
-                           )
-
-        f_name = "%(app_title)s AppStats,  %(start)s - %(end)s" % f_name_dict
-        f_name = f_name.encode('ascii', 'ignore')
-        data = map(lambda x: [x[0]] + x[1],
-                   zip([day.strftime('%a, %b %d, %Y') for day in days],
-                       [app_stats(stat) for stat in all_stats]))
-        titles = ['Date', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
-        return sswriter.export_writer(file_type, f_name, titles, data)
-
-
-
-@login_required
-def app_export(request, *args, **kwargs):
-    return AppExportHandler()(request, *args, **kwargs)
-
-
-class DashboardExportHandler(RequestHandler):
-    def post(self, file_type, start, end):
-        start = datetime.datetime.strptime(start,'%m%d%y')
-        end = datetime.datetime.strptime(end,'%m%d%y')
-        days = date_magic.gen_days(start, end)
-
-        data = []
-
-        apps = AppQueryManager.get_apps(self.account)
-
-        stats_fetcher = StatsModelQueryManager(self.account,
-                                               offline=self.offline)
-
-        for app in apps:
-            if app.app_type=="android":
-                resource_id = app.package
-            else:
-                resource_id = app.url
-            if not resource_id:
-                resource_id = 'None'
-            stats = stats_fetcher.get_stats_for_days(publisher=app,
-                                                     days=days)
-            summed_stats = sum(stats, StatsModel())
-            data.append([app.name,
-                         "all",
-                         str(app.key()),
-                         resource_id] + \
-                        app_stats(summed_stats) + \
-                        ["N/A",
-                         app.type])
-            adunits = AdUnitQueryManager.get_adunits(app=app)
-
-            for adunit in adunits:
-                if adunit.format != "custom":
-                    ad_size = adunit.format
-                else:
-                    ad_size = "%sx%s" % (adunit.custom_width, adunit.custom_height)
-                stats = stats_fetcher.get_stats_for_days(publisher=adunit,
-                                                         days=days)
-                summed_stats = sum(stats,StatsModel())
-                data.append([app.name,
-                             adunit.name,
-                             str(adunit.key()),
-                             resource_id] + \
-                            app_stats(summed_stats) +
-                            [ad_size,
-                             app.type])
-
-        f_name_dict = {
-            'start': start.strftime('%b %d'),
-            'end': end.strftime('%b %d, %Y'),
-        }
-
-        f_name = "DashboardStats,  %(start)s - %(end)s" % f_name_dict
-        f_name = f_name.encode('ascii', 'ignore')
-        titles = ['App','Ad Unit','Pub ID','Resource ID', 'Requests',
-                  'Impressions', 'Fill Rate', 'Clicks', 'CTR','Ad Size',
-                  'Platform',]
-
-        return sswriter.export_writer(file_type, f_name, titles, data)
-
-
-@login_required
-def dashboard_export(request, *args, **kwargs):
-    return DashboardExportHandler()(request, *args, **kwargs)
-
-
-class TableExportHandler(RequestHandler):
-    def post(self):
-        try:
-            data = urllib.unquote(self.request.POST['table'])
-            data = simplejson.loads(data)
-            format = self.request.POST['format']
-            filename = urllib.unquote(self.request.POST['filename'])
-        except Exception:
+        if not app.account.key() == self.account.key():
             raise Http404
 
-        headers, body = data['headers'], data['body']
+        export_type = self.request.GET.get('type', 'html')
+        stats = StatsModelQueryManager(self.account)
+        stats_per_day = stats.get_stats_for_days(publisher=app, num_days=self.date_range)
+        app_data = []
 
-        # strip both headers and body cells for leading/trailing whitespace
-        headers = [header.replace('<br>',' ').strip() for header in headers]
-        body = [[cell.replace('<br>',' ').strip() for cell in row] for row in body]
+        for day in stats_per_day:
+            row = (
+                str(day.date),
+                day.req,
+                day.imp,
+                day.fill_rate,
+                day.clk,
+                day.ctr,
+            )
+            app_data.append(row)
 
-        if format == 'xls':
-            # let's build this spreedsheet using xlwt
-            xls = xlwt.Workbook()
-            ws = xls.add_sheet('Worksheet')
+        # Put together the header list
+        headers = (
+            'Date', 'Requests', 'Impressions',
+            'Fill Rate', 'Clicks', 'CTR'
+        )
 
-            # set up a bold style for the header
-            bold_style = xlwt.XFStyle()
-            font = xlwt.Font()
-            font.bold = True
-            bold_style.font = font
+        # Create the data to export from all of the rows
+        data_to_export = tablib.Dataset(headers=headers)
+        data_to_export.extend(app_data)
 
-            # write to spreadsheet
-            for column, header in enumerate(headers):
-                ws.write(0, column, header, bold_style)
-            for i, row in enumerate(body):
-                for j, col in enumerate(row):
-                    ws.write(i + 1, j, body[i][j])
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   (app.name, export_type)
 
-            # make column widths sane and submit
-            ws = set_column_widths(ws, headers, body)
-            response = HttpResponse(mimetype='application/ms-excel')
-            response['Content-Disposition'] = 'attachment; filename=%s' % filename
-            xls.save(response)
-            return response
+        return response
 
-        elif format == 'csv':
-            response = HttpResponse(mimetype='text/csv')
-            response['Content-Disposition'] = 'attachment; filename=%s' % filename
-
-            csv_writer = UnicodeWriter(response)
-            if headers:
-                csv_writer.writerow(headers)
-            csv_writer.writerows(body)
-
-            return response
-
-        raise Http404
 
 
 @login_required
-def table_export(request, *args, **kwargs):
-    return TableExportHandler()(request, *args, **kwargs)
+def app_exporter(request, *args, **kwargs):
+    return AppExporter()(request, *args, **kwargs)
 
 
-# Helper methods
+class AdunitExporter(RequestHandler):
+
+    def get(self, adunit_key):
+
+        adunit = AdUnitQueryManager.get(adunit_key)
+        if not adunit.account.key() == self.account.key():
+            raise Http404
+
+        export_type = self.request.GET.get('type', 'html')
+        stats = StatsModelQueryManager(self.account)
+        stats_per_day = stats.get_stats_for_days(publisher=adunit,
+                                                 num_days=self.date_range)
+        adunit_data = []
+
+        for day in stats_per_day:
+            row = (
+                str(day.date),
+                day.req,
+                day.imp,
+                day.fill_rate,
+                day.clk,
+                day.ctr,
+            )
+            adunit_data.append(row)
+
+        # Put together the header list
+        headers = (
+            'Date', 'Requests', 'Impressions',
+            'Fill Rate', 'Clicks', 'CTR'
+        )
+
+        # Create the data to export from all of the rows
+        data_to_export = tablib.Dataset(headers=headers)
+        data_to_export.extend(adunit_data)
+
+        response = HttpResponse(getattr(data_to_export, export_type),
+                                mimetype="application/octet-stream")
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
+                   (adunit.name, export_type)
+
+        return response
+
+
+@login_required
+def adunit_exporter(request, *args, **kwargs):
+    return AdunitExporter()(request, *args, **kwargs)
+
+
+##################
+# Helper methods #
+##################
+
 def enable_networks(adunit, account):
     """
     Create network adgroups for this adunit for all ad networks.
@@ -1219,17 +800,20 @@ def add_demo_campaign(site):
     Use this to create a default campaign when a user just signed up.
     """
     # Set up a test campaign that returns a demo ad
-    demo_description = "Demo campaign for checking that MoPub works for your application"
-    c = Campaign(name="MoPub Demo Campaign",
+    demo_description = "Demo Order for checking that MoPub works for your application"
+    c = Campaign(name="MoPub Demo Order",
                  u=site.account.user,
                  account=site.account,
-                 campaign_type="backfill_promo",
-                 description=demo_description)
+                 campaign_type="order",
+                 description=demo_description,
+                 active=True)
     CampaignQueryManager.put(c)
 
     # Set up a test ad group for this campaign
-    ag = AdGroup(name="MoPub Demo Campaign",
+    ag = AdGroup(name="MoPub Demo Line Item",
                  campaign=c,
+                 adgroup_type="backfill_promo",
+                 start_datetime=datetime.datetime.now(),
                  account=site.account,
                  priority_level=3,
                  bid=1.0,
@@ -1335,26 +919,3 @@ def filter_campaigns(campaigns, cfilter):
     filtered_campaigns = sorted(filtered_campaigns, lambda x,y: cmp(y.name,
         x.name))
     return filtered_campaigns
-
-
-def set_column_widths(ws, headers, body):
-    # xlwt defines the widtht of '0' character as 256, so let's give a bit
-    # of leeway
-    char_width = 275
-
-    body.insert(0, headers)
-
-    # maximum width of each column, in characters
-    def max_chars_in_column(column):
-        chars_in_column = [len(cell) for cell in column]
-        return max(chars_in_column)
-
-    # Andrew hated my nested list comprehension, so here's this
-    columns = zip(*body)
-    column_widths = [max_chars_in_column(col) for col in columns]
-
-    # traverse worksheet columns and set width appropriately
-    for i in range(len(body[0])):
-        ws.col(i).width = column_widths[i] * char_width
-
-    return ws

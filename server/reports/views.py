@@ -77,7 +77,7 @@ class ReportStatusHandler(RequestHandler):
 
 @login_required
 def report_status(request, *args, **kwargs):
-    return ReportStatusHandler()(request, *args, **kwargs)
+    return ReportStatusHandler()(request, use_cache=False,*args, **kwargs)
 
 class EditReportHandler(RequestHandler):
     def post(self, report_key=None):

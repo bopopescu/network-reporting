@@ -553,8 +553,10 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
                 start, end).values()[0]
         return stats
 
-    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        campaign = CampaignQueryManager.get(campaign_key)
+    def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
+        if isinstance(campaign, str):
+            campaign = CampaignQueryManager.get(campaign)
+
         days = date_magic.gen_days(start, end)
         if campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN:

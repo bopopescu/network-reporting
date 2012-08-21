@@ -566,10 +566,9 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
             return None
         return stats
 
-    def get_campaign_specific_app_stats(self, app_key, campaign, start, end,
+    def get_campaign_specific_app_stats(self, app_key, campaign_key, start, end,
             *args, **kwargs):
-        if isinstance(campaign, str):
-            campaign = CampaignQueryManager.get(campaign)
+        campaign = CampaignQueryManager.get(campaign_key)
 
         app_stats = self._get_publisher_stats(start, end, campaign._account,
                 app_key=app_key, network=campaign.network_type)['sum']

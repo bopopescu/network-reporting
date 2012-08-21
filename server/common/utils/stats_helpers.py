@@ -553,8 +553,10 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
                 start, end).values()[0]
         return stats
 
-    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        campaign = CampaignQueryManager.get(campaign_key)
+    def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
+        if isinstance(campaign, str):
+            campaign = CampaignQueryManager.get(campaign)
+
         days = date_magic.gen_days(start, end)
         if campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
@@ -564,11 +566,16 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
             return None
         return stats
 
-    def get_campaign_specific_app_stats(self, app_key, campaign, start, end,
+    def get_campaign_specific_app_stats(self, app_key, campaign_key, start, end,
             *args, **kwargs):
+        campaign = CampaignQueryManager.get(campaign_key)
+
         app_stats = self._get_publisher_stats(start, end, campaign._account,
                 app_key=app_key, network=campaign.network_type)['sum']
         return app_stats
+
+    def get_adgroup_stats(self, *args, **kwargs):
+        return {}
 
 
 # TODO: refactor stuff that uses this and remove it

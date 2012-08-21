@@ -65,7 +65,8 @@ class Campaign(db.Model):
     # is this a campaign for direct sold (an order), marketplace, or networks?
     campaign_type = db.StringProperty(choices=['order',
                                                'marketplace',
-                                               'network'])
+                                               'network',
+                                               'backfill_marketplace'])
 
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank
@@ -157,8 +158,7 @@ class AdGroup(db.Model):
     # reference redundancy, use the creatives collection instead
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty(verbose_name='Name',
-                             default='Line Item Name',
-                             required=True)
+                             default='Line Item Name')
 
     created = db.DateTimeProperty(auto_now_add=True)
 
@@ -414,7 +414,7 @@ class AdGroup(db.Model):
             return kinds[self.adgroup_type]
         return ''
 
-    def simplify(self):        
+    def simplify(self):
 
         if hasattr(self, 'full_budget'):
             full_budget = self.full_budget
@@ -430,7 +430,7 @@ class AdGroup(db.Model):
             budget_type = self.budget_type
         else:
             budget_type = None
-        
+
         return SimpleAdGroup(
             key=str(self.key()),
             campaign=self.campaign,
@@ -465,7 +465,7 @@ class AdGroup(db.Model):
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,
             network_type=self.network_type,
-            
+
             # Added as part of orders feature
             adgroup_type=self.adgroup_type,
             start_datetime=self.start_datetime,
@@ -879,8 +879,7 @@ LineItem = AdGroup
 
 class Creative(polymodel.PolyModel):
     name = db.StringProperty(verbose_name='Creative Name',
-                             default='Creative',
-                             required=True)
+                             default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False)  # TODO: make this more flexible later

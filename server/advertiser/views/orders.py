@@ -158,14 +158,13 @@ class OrderDetailHandler(RequestHandler):
                                                         archived=True)
         line_items.extend(archived_line_items)
 
-
         if line_items:
             self.start_date = None
             self.end_date = None
 
             for line_item in line_items:
-                if not self.start_date or line_item.start_datetime.date() < self.start_date:
-                    self.start_date = line_item.start_datetime.date()
+                if not self.start_date or (line_item.start_datetime.date() if line_item.start_datetime else line_item.created) < self.start_date:
+                    self.start_date = (line_item.start_datetime.date() if line_item.start_datetime else line_item.created)
 
                 if not line_item.end_datetime:
                     self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
@@ -446,7 +445,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
         # Shouldn't this be order_form.is_valid() if order else True ? why the 'not'?
         order_form_is_valid = order_form.is_valid() if not order else True
         line_item_form_is_valid = line_item_form.is_valid()
-        
+
         if order_form_is_valid and line_item_form_is_valid:
             if not order:
                 order = order_form.save()
@@ -460,7 +459,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             line_item.campaign = order
             line_item.save()
             AdGroupQueryManager.put(line_item)
-            
+
             # Onboarding: user is done after they set up their first campaign
             if self.account.status == "step4":
                 self.account.status = ""
@@ -472,7 +471,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
                                     kwargs={'line_item_key': line_item.key()}),
             })
 
-            
+
         errors = {}
         if not line_item_form_is_valid:
             logging.warn('line')

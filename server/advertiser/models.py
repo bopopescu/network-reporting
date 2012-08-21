@@ -65,7 +65,8 @@ class Campaign(db.Model):
     # is this a campaign for direct sold (an order), marketplace, or networks?
     campaign_type = db.StringProperty(choices=['order',
                                                'marketplace',
-                                               'network'])
+                                               'network',
+                                               'backfill_marketplace'])
 
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank

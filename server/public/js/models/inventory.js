@@ -1135,7 +1135,7 @@ var mopub = mopub || {};
 
     window.Order = Order;
     window.LineItem = LineItem;
-    window.Creative = Creative
+    window.Creative = Creative;
     window.OrderCollection = OrderCollection;
     window.LineItemCollection = LineItemCollection;
     window.CreativeCollection = CreativeCollection;

@@ -105,7 +105,11 @@ var mopub = mopub || {};
           case 'status':
             return value;
           case 'pace':
-            return (value*100).toFixed() + '%';
+            value = value * 100;
+            if(value > 250) {
+                return '>250%';
+            }
+            return value.toFixed() + '%';
         default:
             throw 'Unsupported stat "' + stat + '".';
         }
@@ -160,7 +164,7 @@ var mopub = mopub || {};
                         return stat_val;
                     } else {
                         return 0;
-                    }                        
+                    }
                 default:
                     throw 'Unsupported stat "' + stat + '".';
             }
@@ -268,7 +272,7 @@ var mopub = mopub || {};
                 });
 
                 return cpm_series;
-                
+
             } else {
 
                 // Go through each of the daily stats for each of the
@@ -277,29 +281,29 @@ var mopub = mopub || {};
                 // each inner array has the daily values for the particular stat,
                 // one inner array per model
                 var dailies_for_stat = this.map(function(model) {
-                    var daily_stats = model.get('daily_stats');                    
+                    var daily_stats = model.get('daily_stats');
                     return _.map(daily_stats, function (day) {
-                        return day[stat];                        
+                        return day[stat];
                     });
                 });
-                
+
                 // Now sum by day
                 var memo = [];
                 _.times(dailies_for_stat[0].length, function (t) { memo.push(0); });
-                
+
                 // Turn this 2D Array into a 1D array
                 var full_series = _.reduce(dailies_for_stat, function (memo, day_stats){
                     _.times(memo.length, function (iter){
                         memo[iter] += day_stats[iter];
                     });
-                    
+
                     return memo;
                 }, memo);
-                
+
                 return full_series;
             }
         },
-            
+
         get_date_range: function() {
             var dailies = this.models[0].get('daily_stats');
 
@@ -485,7 +489,7 @@ var mopub = mopub || {};
                     } else {
                         return 0;
                     }
-                        
+
                 default:
                     throw 'Unsupported stat "' + stat + '".';
             }

@@ -1,14 +1,4 @@
 backends:
-- name: stats-updater
-  class: B4
-  instances: 2
-  # options: dynamic
-  options: public
-
-- name: admin-prep
-  class: B8
-  instances: 1
-  options: public
 
 - name: frontend-0
   class: B2
@@ -20,24 +10,19 @@ backends:
   instances: 20
   options: public
 
-- name: frontend-2
-  class: B2
-  instances: 20
-  options: public
-
 - name: frontend-staging
   class: B2
   instances: 10
   options: public
 
-- name: gae-context-fetch
+- name: frontend-beta
   class: B2
   instances: 2
   options: public
 
 - name: frontend-boom
   class: B2
-  instances: 10
+  instances: 2
   options: public
 
 - name: frontend-slam
@@ -45,7 +30,18 @@ backends:
   instances: 2
   options: public
 
-- name: frontend-beta
+- name: admin-prep
+  class: B8
+  instances: 1
+  options: public
+
+- name: gae-context-fetch
   class: B2
   instances: 2
+  options: public
+
+- name: stats-updater
+  class: B4
+  instances: 2
+  # options: dynamic
   options: public

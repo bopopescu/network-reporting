@@ -1,12 +1,19 @@
+# Deployed Tuesday, August 21, 2012 at 03:54AM PST
+### Deployed by John Pena
+### Tagged deploy-182
+### Bugs Fixed: []
+### Included Commits: 
+ * 2246f69 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, August 21, 2012 at 01:52AM PST
 ### Deployed by John Pena
 ### Tagged deploy-181
 ### Bugs Fixed: []
-### Included Commits: 
- * 55050a4 Merge branch 'master' of github.com:mopub/mopub
- * ec6de62 Deployed without finding any bug fixes.
- * 2b97970 Fixed publisher views mptests
- 
+### Included Commits:
+* 55050a4 Merge branch 'master' of github.com:mopub/mopub
+* ec6de62 Deployed without finding any bug fixes.
+* 2b97970 Fixed publisher views mptests
+
 # Deployed Tuesday, August 21, 2012 at 01:02AM PST
 ### Deployed by John Pena
 ### Tagged deploy-180

@@ -54,7 +54,7 @@ handlers:
 
 - url: /placeholders
   static_dir: public/placeholders
-  
+
 ### END STATIC ASSETS ###
 
 ### BEGIN APP ENGINE BUILT-INS ###
@@ -97,11 +97,6 @@ handlers:
 - url: /_ah/queue/.*
   script: stats/views.py
   login: admin
-
-- url: /_ah/warmup
-  script: ad_server/main.py
-  login: admin
-
 
 - url: /mdb/.*
   script: stats/views.py

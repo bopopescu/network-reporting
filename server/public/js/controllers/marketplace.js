@@ -589,25 +589,42 @@ var mopub = mopub || {};
             $("input.content_level").click(function(){
                 var self = $(this);
                 var filter_level = self.attr('value');
-                var loading_img = $("#filter-spinner").show();
-                var saving = $("#filter-save-status .saving").show();
-                var result = $.post("/advertise/marketplace/settings/content_filter/", {
-                    filter_level: filter_level
-                });
+                if(filter_level === 'custom') {
+                    $('#categories_div').show();
+                } else {
+                    $('#categories_div').hide();
 
-                result.success(function(data){
-                    loading_img.hide();
-                    saving.hide();
-                    if (data.hasOwnProperty('success')) {
-                        var saved = $("#filter-save-status .saved").show();
-                        setTimeout(function() { saved.fadeOut(); }, 1000);
+                    var loading_img = $("#filter-spinner").show();
+                    var saving = $("#filter-save-status .saving").show();
+                    var result = $.post("/campaigns/marketplace/settings/content_filter/", {
+                        filter_level: filter_level
+                    });
 
-                    } else {
-                        var errored = $("#filter-save-status .error").show();
-                        setTimeout(function() {errored.fadeOut(); }, 1000);
-                    }
-                });
+
+                    result.success(function(data){
+                        loading_img.hide();
+                        saving.hide();
+                        if (data.hasOwnProperty('success')) {
+                            var saved = $("#filter-save-status .saved").show();
+                            setTimeout(function() { saved.fadeOut(); }, 1000);
+
+                        } else {
+                            var errored = $("#filter-save-status .error").show();
+                            setTimeout(function() {errored.fadeOut(); }, 1000);
+                        }
+                    });
+                }
             });
+
+            // initialize chosen multiple select for IAB categories
+            $("#categories")
+                .chosen({no_results_text: "No results matched"})
+                .click(function() {
+                    var self = $(this);
+
+                    var filter_level = self.attr('value');
+                    console.log(filter_level);
+                });
         }
     };
 

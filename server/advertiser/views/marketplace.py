@@ -16,6 +16,8 @@ from publisher.query_managers import PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import tablib
+from common.constants import IAB_CATEGORIES
+
 
 class MarketplaceIndexHandler(RequestHandler):
     """
@@ -60,7 +62,8 @@ class MarketplaceIndexHandler(RequestHandler):
             'pub_key': self.account.key(),
             'blocklist': blocklist,
             'blind': blind,
-            'network_config': network_config
+            'network_config': network_config,
+            'IAB_CATEGORIES': IAB_CATEGORIES,
         }
 
 
@@ -153,6 +156,13 @@ class ContentFilterHandler(RequestHandler):
                 network_config.set_moderate_filter()
             elif filter_level == "strict":
                 network_config.set_strict_filter()
+            elif filter_level == "custom":
+                blocklist = self.request.POST.get('categories', [])
+
+                network_config.attribute_blocklist = blocklist 
+                network_config.category_blocklist = blocklist 
+
+                AccountQueryManager.update_config_and_put(account, network_config)
             else:
                 return JSONResponse({'error': 'Invalid filter level'})
         else:

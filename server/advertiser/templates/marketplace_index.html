@@ -290,8 +290,32 @@
           <strong>No filtering</strong> - Allow ads including those with provocative or suggestive imagery.
           MoPub always blocks illegal, pornographic and deceptive ads.
         </li>
+        {% if user.is_staff %}
+        <li>
+          <input type="radio" class="content_level level4" value="custom" name="filter" {% ifequal network_config.filter_level 'custom' %}checked='checked'{% endifequal %}/>
+          <strong>Custom</strong> - Staff only setting. Can select specific categories.
+        </li>
+        {% endif %}
       </ul>
+
+      {% if user.is_staff %}
+      <div id="categories_div" class="hidden">
+        <select data-placeholder="Choose a Category" class="chzn-select chzn-done" multiple="" style="width: 350px;" tabindex="-1" id="categories">
+            <option value=""></option>
+
+            {% for category in IAB_CATEGORIES %}
+            <optgroup label="{{ category.1 }}">
+                <option value="{{ category.0 }}">{{ category.1 }}</option>
+
+                {% for sub_category in category.2 %}
+                <option value="{{ sub_category.0 }}">{{ sub_category.1 }}</option>
+                {% endfor %}
+            </optgroup>
+            {% endfor %}
+        </select>
+      </div>
     </div>
+    {% endif %}
 
     <h2>Blocklist</h2>
     <div class="well">

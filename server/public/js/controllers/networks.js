@@ -79,6 +79,74 @@
         }
     });
 
+
+    /*
+     * ## AppView
+     *
+     * See templates/partials/app.html to see how this is rendered in HTML.
+     * This renders an app as a table row. It also adds the call to load
+     * adunits over ajax and put them in the table.
+     */
+    var AppView = Backbone.View.extend({
+        initialize: function () {
+            if (this.options.endpoint_specific) {
+                this.model.bind('change', this.render, this);
+            }
+            try {
+                this.template = _.template($('#app-template').html());
+            } catch (e) {
+                // the template wasn't specified. this is ok if you
+                // intend to renderInline
+            }
+        },
+
+        renderInline: function () {
+            var this_view = this;
+            // Will there be multiple stats endpoints in this app row?
+            if (this_view.options.endpoint_specific) {
+                if (this_view.model.get('stats_endpoint') == 'networks') {
+                    var selector = ' .network-data';
+                } else {
+                    var selector = ' .mopub-data';
+                }
+            } else {
+                var selector = ''
+            }
+            var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
+
+            /*jslint maxlen: 200 */
+            if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
+                $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
+            }
+            var metrics = ['cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            _.each(metrics, function (metric) {
+                if (this_view.model.get('stats_endpoint') != 'networks'
+                        || this_view.options.network != 'mobfox' || (metric != 'att'
+                        && metric != 'fill_rate')) {
+                    $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
+                }
+            });
+            /*jslint maxlen: 110 */
+
+            $(".loading-img", app_row).hide();
+
+            return this;
+        },
+        render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // When we render an appview, we also attach a handler to fetch
+            // and render it's adunits when a link is clicked.
+            $('tbody', this.el).append(renderedContent);
+            return this;
+        }
+    });
+
+
     var toast_error = function () {
          var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){

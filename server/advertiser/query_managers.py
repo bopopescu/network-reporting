@@ -200,7 +200,6 @@ class CampaignQueryManager(QueryManager):
         c_key_name = cls._get_marketplace_key_name(account_key)
 
         if from_db:
-            logging.error("actually from db")
             return Campaign.get_by_key_name(c_key_name)
         return Campaign(key_name=c_key_name,
                         advertiser='marketplace',

@@ -878,8 +878,7 @@ LineItem = AdGroup
 
 class Creative(polymodel.PolyModel):
     name = db.StringProperty(verbose_name='Creative Name',
-                             default='Creative',
-                             required=True)
+                             default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False)  # TODO: make this more flexible later

@@ -255,8 +255,10 @@ class MpxReportHandler(webapp.RequestHandler):
         ROOMS = [("Client", 51581), 
                  ("AdServer", 57170),
                  ("Data", 81833), 
-                 ("FrontEnd", 47652), 
+                 ("FE", 47652), 
                  ("MPX", 80467), 
+                 ("BD/AM", 93494),
+                 ("JPStaff", 93728),
                  ("MoPub", 21565)] 
         date = start.strftime("%Y-%m-%d")
         

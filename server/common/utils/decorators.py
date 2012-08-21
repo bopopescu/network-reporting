@@ -171,7 +171,6 @@ def deprecated(func):
     return new_func
 
 
-
 class wraps_first_arg(object):
     """ Decorator that wraps all nonlist arguments and turns them into lists.
     Only works for bound methods """

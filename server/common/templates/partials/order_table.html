@@ -1,0 +1,24 @@
+{% load filters %}
+{% load elements %}
+
+<table class="inventory_table" id="order_table">
+  <thead>
+    <tr>
+      <th style="width: 24px;"></th>
+      <th class="name">Order Name</th>
+      <th class="stat" style="width: 150px;">Advertiser</th>
+      <th class="stat">Line Items</th>
+      {#<th class="stat">Revenue</th>#}
+      <th class="stat">Impressions</th>
+      <th class="stat">Clicks</th>
+      <th class="stat">CTR</th>
+      <th class="stat">Conv.</th>
+    </tr>
+  </thead>
+
+  {% for order in orders %}
+    <tbody class="{% cycle 'alt' 'primary' %}">
+      {% order_row order %}
+    </tbody>
+  {% endfor %}
+</table>

@@ -8,62 +8,69 @@
 </h1>
 {% endblock pageTitle %}
 
-{% block titleBarRight %}
-<span class="titlebar-right">
-    <a class="button" id="network-settingsButton" href="{% url edit_network campaign_key=network.key %}">Edit Network Settings</a>
-</span>
-{% endblock titleBarRight %}
-
 {% block innerContent %}
-{% if login.state == LoginStates.PULLING_DATA or login.state == LoginStates.ERROR %}
-<section id="login-state-message">
-    <div class="alert-message block-message warning">
+  {% if login.state == LoginStates.PULLING_DATA or login.state == LoginStates.ERROR %}
+    <section id="login-state-message">
+      <div class="alert-message block-message warning">
         {% if login.state == LoginStates.PULLING_DATA %}
-        MoPub is currently collecting data from {{ network.pretty_name }}. You will receive an email when we finish.
+          MoPub is currently collecting data from {{ network.pretty_name }}.
+          You will receive an email when we finish.
         {% else %}
-        MoPub received an error last time we tried to collect data from {{ network.pretty_name }}. Please verify that your login credentials are correct and haven't changed. If the problem persists please reach out to us at support@mopub.com.
+          MoPub received an error last time we tried to collect data
+          from {{ network.pretty_name }}. Please verify that your
+          login credentials are correct and haven't changed. If the
+          problem persists please reach out to us at
+          support@mopub.com.
         {% endif %}
     </div>
 </section>
 {% endif %}
 
+<a class="btn right" id="network-settingsButton" href="{% url edit_network campaign_key=network.key %}">
+  <i class="icon-pencil"></i>
+  Edit Network Settings
+</a>
+
+<div class="right">
+    <img id="active-spinner" class="hidden" src="/images/icons-custom/spinner-12.gif"></img>
+    {% if network.active %}
+    <select id='network-editActive' class='selectmenu chzn-select'>
+        <option value="active"> Running </option>
+        <option value="">Paused</option>
+    </select>
+    {% else %}
+    <select id='network-editActive' class='selectmenu chzn-select'>
+        <option value="">Paused</option>
+        <option value="active">Running</option>
+    </select>
+    {% endif %}
+</div>
+
 <section id="aggregate-stats">
-    <div class="appData-columnHeaders">
-        <table class="dataTable" width=100%>
-            <thead>
-                <th class="networkData-icon" style="width:75px"></th>
-                <th class="dataTable-name"> </th>
-                {% if reporting %}
-                <th class="dataTable-data numeric"> Revenue </th>
-                {% endif %}
-                <th class="dataTable-data numeric"> CPM </th>
-                <th class="dataTable-data numeric"> Attempts </th>
-                <th class="dataTable-data numeric"> Impressions </th>
-                <th class="dataTable-data numeric"> Fill Rate </th>
-                <th class="dataTable-data numeric"> Clicks </th>
+  <div class="appData-columnHeaders">
+    <table class="dataTable" width=100%>
+      <thead>
+        <th class="networkData-icon" style="width:75px"></th>
+        <th class="dataTable-name"> </th>
+        {% if reporting %}
+          <th class="dataTable-data numeric"> Revenue </th>
+        {% endif %}
+        <th class="dataTable-data numeric"> CPM </th>
+        <th class="dataTable-data numeric"> Attempts </th>
+        <th class="dataTable-data numeric"> Impressions </th>
+        <th class="dataTable-data numeric"> Fill Rate </th>
+        <th class="dataTable-data numeric"> Clicks </th>
                 <th class="dataTable-data numeric"> CTR </th>
-            </thead>
-        </table>
-    </div>
-    <div class="appData">
-        <table class="dataTable appData-main">
-            <tbody>
-                <tr id="{{network.key}}-row">
-                    <td class="networkData-icon">
-                        <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                        <div>
-                            {% if network.active %}
-                            <select id='network-editActive' class='selectmenu'>
-                                <option value="active"> Running </option>
-                                <option value="">Paused</option>
-                            </select>
-                            {% else %}
-                            <select id='network-editActive' class='selectmenu'>
-                                <option value="">Paused</option>
-                                <option value="active">Running</option>
-                            </select>
-                            {% endif %}
-                        </div>
+      </thead>
+    </table>
+  </div>
+  
+  <div class="appData">
+    <table class="dataTable appData-main">
+        <tbody>
+            <tr id="{{network.key}}-row">
+                <td class="networkData-icon">
+                    <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
                     </td>
                     <td class="dataTable-name">
                         {{network.pretty_name}}
@@ -156,112 +163,122 @@
     </table>
 </div>
 {% for app, app_bids in network.apps %}
-<div class="{% cycle 'appData' 'appData appData-alt' %} {{ network.key }}-apps-div">
+
+  <div class="{% cycle 'appData' 'appData appData-alt' %} {{ network.key }}-apps-div">
     <table class="dataTable appData-main">
-        <tbody>
-            <tr class="app-row" id="app-{{ app.key }}">
-                <td class="appData-icon">
-                    <a href="/inventory/app/{{ app.key_ }}">
-                        <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
-                    </a>
-                </td>
-                <td class="dataTable-name">
-                    <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
-                    <span class="muted unbold">({{ app.type }})</span>
-                </td>
-                {% if reporting %}
-                <td class="dataTable-data numeric rev" style="color:orange;">
-                </td>
-                {% endif %}
-                <td class="dataTable-data numeric cpm">
-                    {% if network.reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    {# django needs elif #}
-                    {% if app_bids.min_cpm == app_bids.max_cpm %}
-                    {% if app_bids.min_cpm %}
-                    <div>{{ app_bids.min_cpm|currency }}</div>
-                    {% else %}
-                    {% endif %}
-                    {% else %}
-                    <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
-                    {% endif %}
-                </td>
-                <td class="dataTable-data numeric att">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric imp">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric fill_rate">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric clk">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-                <td class="dataTable-data numeric ctr">
-                    {% if reporting %}
-                    <div class="network-data">-</div>
-                    {% endif %}
-                    <div class="mopub-data">-</div>
-                </td>
-            </tr>
-        </tbody>
+      <tbody>
+        <tr class="app-row" id="app-{{ app.key }}">
+          <td class="appData-icon">
+            <a href="/inventory/app/{{ app.key_ }}">
+              <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+            </a>
+          </td>
+          <td class="dataTable-name">
+            <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
+            <span class="muted unbold">({{ app.type }})</span>
+          </td>
+          {% if reporting %}
+            <td class="dataTable-data numeric rev" style="color:orange;">
+            </td>
+          {% endif %}
+          <td class="dataTable-data numeric cpm">
+            {% if network.reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            {# django needs elif #}
+            {% if app_bids.min_cpm == app_bids.max_cpm %}
+              {% if app_bids.min_cpm %}
+                <div>{{ app_bids.min_cpm|currency }}</div>
+              {% else %}
+            {% endif %}
+          {% else %}
+            <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
+          {% endif %}
+          </td>
+          <td class="dataTable-data numeric att">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric imp">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric fill_rate">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric clk">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+          <td class="dataTable-data numeric ctr">
+            {% if reporting %}
+              <div class="network-data">-</div>
+            {% endif %}
+            <div class="mopub-data">-</div>
+          </td>
+        </tr>
+      </tbody>
     </table>
     <div class="appData-details" style="margin: -10px 0 0 86px">
-        <table class="dataTable">
-            <tbody>
-                {% for adunit in app.adunits %}
-                <tr class="adunit-row" id="adunit-{{ adunit.key }}">
-                    <td class="dataTable-name">
-                        {% status_icon adunit.adgroup %}
-                        <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
-                    </td>
-                    <td class="dataTable-data numeric">
-                        {{ adunit.adgroup.bid|currency }}
-                    </td>
-                    <td class="dataTable-data numeric att">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric imp">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric fill_rate">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric clk">
-                        -
-                    </td>
-                    <td class="dataTable-data numeric ctr">
-                        -
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <table class="dataTable">
+        <tbody>
+          {% for adunit in app.adunits %}
+            <tr class="adunit-row" id="adunit-{{ adunit.key }}">
+              <td class="dataTable-name">
+                {% status_icon adunit.adgroup %}
+                <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
+              </td>
+              <td class="dataTable-data numeric">
+                {{ adunit.adgroup.bid|currency }}
+              </td>
+              <td class="dataTable-data numeric att">
+                -
+              </td>
+              <td class="dataTable-data numeric imp">
+                -
+              </td>
+              <td class="dataTable-data numeric fill_rate">
+                -
+              </td>
+              <td class="dataTable-data numeric clk">
+                -
+              </td>
+              <td class="dataTable-data numeric ctr">
+                -
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-</div>
+  </div>
 {% endfor %}
 
 </section>
 
 <section>
     <div class="buttonBank buttonBank-right">
-        <a id="delete-network" style="cursor: pointer;">Delete this network</a>
-        <div class="hidden delete-network">
-            <h3> Are you sure you want to delete this network? </h3>
+        <a data-toggle="modal" href="#deleteModal" class="btn btn-danger">
+            <i class="icon-trash"></i> 
+            Delete this network
+        </a>
+    </div>
+    <div id="deleteModal" class="modal hidden">
+        <div class="modal-header">
+            <h2> Are you sure you want to delete this network? </h2>
+        </div>
+        <div class="modal-footer">
+            <a id="delete-network" class="btn" href="#">Delete</a>
+            <a class="btn" data-dismiss="modal" href="#">Cancel</a>
         </div>
     </div>
 </section>

@@ -1,12 +1,32 @@
 """
+mpdeploy.py [<server_name>]
 Call this script when you want to deploy frontend code.
+
+What this script does when you run it:
+
+1. Tags the deploy in git, and creates a new commit for it (frontend-0 deploys only)
+2. Updates the changelog with a list of commits between this deploy and the last one
+3. Updating all lighthouse tickets that were fixed (they need to have been tagged,
+   e.g. git commit -m '[#123 state:fixed]')
+4. Minifies javascript
+5. Updating all version numbers
+6. Notifies hipchat (notifies the Mopub room for frontend-0 deploys only, notifies
+   the Mopub frontend/product room for all deploys).
+7. Actually deploys using appcfg.py
+
+`server_name` is an optional argument to this script, specifying which server
+(frontend-0, frontend-staging, frontend-boom, etc) you want to deploy to. If
+you don't specify it, it'll default to frontend-staging.
+
+Author: John Pena
 """
+
 # TODO: Figure out why envoy fucks up commands that have messages
 # like git tag and git commit
+
 import sys
 import os
 
-#sys.path.append(os.environ['PWD'])
 PWD = os.path.dirname(__file__)
 sys.path.append(os.path.join(PWD, '..'))
 import common.utils.test.setup
@@ -43,7 +63,6 @@ def prompt_before_executing(original, override=None):
     return inner
 
 
-# Git stuff
 def git(cmd, git_dir=None):
     """
     Calls a git command `cmd` from the repository in `git_dir`.
@@ -385,7 +404,9 @@ def main():
 
     PRODUCTION_SERVERS = ('--production', 'frontend-0', 'frontend-1')
     STAGING_SERVERS = ('--staging', 'frontend-staging', 'frontend-slam', 'frontend-boom')
-    BETA_SERVERS = ('--beta', 'frontend-beta')
+    BETA_SERVERS = ('--beta', 'frontend-beta')    
+
+    skip_tagging = '--skip-production' in clint.args
     
     with indent(2, quote=colored.blue('+')):
         try:
@@ -418,10 +439,13 @@ def main():
                 puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
                 deploy_server = 'frontend-staging'
             
-            if deploy_server in PRODUCTION_SERVERS:
+            if deploy_server in PRODUCTION_SERVERS and not skip_tagging:
                 run_production_steps()
             else:
-                puts("Skipping ticket update process because you're not deploying to production")                
+                if skip_tagging:
+                    puts("Skipping ticket update process because you said to.")
+                else:
+                    puts("Skipping ticket update process because you're not deploying to production")
 
             # Launch the deploy process. If --production, --staging or
             # --beta was passed, go through each of the production/staging/beta
@@ -461,6 +485,13 @@ def main():
                 post_to_hipchat(message, room_id="47652") #frontend chat room
                 
             puts(message)
+
+            if deploy_server == 'frontend-0':
+                # notify people of a successful deploy on hipichat
+                puts("Notifying hipchat")
+                post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
+                                                                         deploy_server,
+                                                                         deployer))
 
         except Exception, error:
             puts(colored.red("Deploy failed."))

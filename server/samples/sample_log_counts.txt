@@ -1,6 +1,0 @@
-[4, 0, 0] k:req:agltb3B1Yi1pbmNyFAsSB0FjY291bnQiB2FjY291bnQM:::20110402
-[3, 0, 0] k:req:agltb3B1Yi1pbmNyFAsSB0FjY291bnQiB2FjY291bnQM:::20110403
-[0, 0, 4] k:aclk:agltb3B1Yi1pbmNyFAsSB0FjY291bnQiB2FjY291bnQM:::20110402
-[0, 0, 2] k:aclk:agltb3B1Yi1pbmNyFAsSB0FjY291bnQiB2FjY291bnQM:::20110403
-[0, 2, 0] k:imp:agltb3B1Yi1pbmNyFAsSB0FjY291bnQiB2FjY291bnQM:::20110402
-[0, 4, 0] k:imp:agltb3B1Yi1pbmNyFAsSB0FjY291bnQiB2FjY291bnQM:::20110403

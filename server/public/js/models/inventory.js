@@ -18,9 +18,36 @@ var mopub = mopub || {};
 (function ($, Backbone, _) {
     "use strict";
 
+    // Gets the url from a backbone model/collection.
+    // Sometimes it's a string, sometimes its a function.
+    // This is used as utility for localStorage caching,
+    // but could be used for anything.
+    var getUrl = function(object) {
+        if (!(object && object.url)) return null;
+        return _.isFunction(object.url) ? object.url() : object.url;
+    };
+
     /*
-     * ## AdGroups
+     * ### UrlError
+     * Throw this when you try to fetch a model and it has an
+     * undefined or invalid url.
      */
+    function UrlError(message) {
+        this.name = "UrlError";
+        this.message = message || "";
+    }
+    UrlError.prototype = Error.prototype;
+
+    /*
+     * ### StatsError
+     * Throw this when a model's stat property doesn't exist or we
+     * don't know how to format it.
+     */
+    function StatsError(message) {
+        this.name = "StatsError";
+        this.message = message || "";
+    }
+    StatsError.prototype = Error.prototype;
 
     /*
      * Helper functions for stats
@@ -29,7 +56,7 @@ var mopub = mopub || {};
         if (imp === null || clk === null || imp === undefined || clk === undefined) {
             return null;
         }
-        return (imp === 0) ? 0 : clk / imp;
+        return (imp === 0) ? 0 : (clk / imp);
     }
 
     function calculate_fill_rate(req, imp) {
@@ -44,6 +71,14 @@ var mopub = mopub || {};
             return null;
         }
         return (imp === 0) ? 0 : rev / imp * 1000;
+    }
+
+    function calculate_conv_rate(conv, clk) {
+        if (conv === null || clk === null || conv === undefined || clk === undefined) {
+            return null;
+        }
+
+        return (clk === 0) ? 0 : conv / clk;
     }
 
     function format_stat(stat, value) {
@@ -75,17 +110,339 @@ var mopub = mopub || {};
             throw 'Unsupported stat "' + stat + '".';
         }
     }
-    
+
     // Records an event in all of the metrics tracking services we
     // use.
     function record_metric (name, args) {
-
+        try {
+            //mixpanel.track(name, args);
+        } catch (x) {
+            console.log(x);
+        }
     }
 
-    
+    /*
+     * ### StatsMixin
+     * Helpful utilities for fetching and formatting stats.
+     */
+    var StatsMixin = {
+
+        /*
+         * `get_stat`
+         * Gets the raw stat value from a model. Calculates
+         * derivative (fill_rate/ctr/cpm/conv_rate) stats from
+         * other raw stats.
+         *
+         * Works for models only.
+         */
+        get_stat: function(stat) {
+            switch(stat) {
+                case 'ctr':
+                    return calculate_ctr(this.get_stat('imp'),
+                                         this.get_stat('clk'));
+                case 'fill_rate':
+                    return calculate_fill_rate(this.get_stat('req'),
+                                               this.get_stat('imp'));
+                case 'cpm':
+                    return this.get(stat) || calculate_cpm(this.get_stat('imp'),
+                                                           this.get_stat('rev'));
+                case 'conv_rate':
+                    return this.get(stat) || calculate_conv_rate(this.get_stat('conv'),
+                                                                 this.get_stat('clk'));
+                case 'clk':
+                case 'conv':
+                case 'imp':
+                case 'req':
+                case 'att':
+                case 'rev':
+                    var stat_val = this.get("sum")[stat];
+                    if (stat_val) {
+                        return stat_val;
+                    } else {
+                        return 0;
+                    }                        
+                default:
+                    throw 'Unsupported stat "' + stat + '".';
+            }
+        },
+
+        get_formatted_stat: function(stat) {
+            return format_stat(stat, this.get_stat(stat));
+        },
+
+        /*
+         * `get_formatted_stat_sum`
+         * Returns the summed (or averaged, for some derivative stats)
+         * stat total, and formats it accordingly.
+         *
+         * e.g. get_formatted_stat_sum('rev')  // "$1,402.53"
+         *
+         * Works for both models and collections.
+         */
+        get_formatted_stat_sum: function(stat) {
+            var these_models = this.models;
+            var sum = these_models.reduce(function(memo, model){
+                return memo + model.get_stat(stat);
+            }, 0);
+
+            if (stat === 'ctr' || stat === 'fill_rate' || stat === 'conv_rate') {
+                sum = sum / these_models.length;
+            }
+
+            return format_stat(stat, sum);
+        },
+
+        /*
+         * `get_formatted_daily_stats`
+         * Returns an object with formatted stats for each day
+         * in daily_stats. So, if daily_stats contains 14 days
+         * of data, this will return an object like this:
+         *
+         * {
+         *    clk: "0",
+         *    conv: "0",
+         *    conv_rate: "0.00%",
+         *    cpm: "$0.00",
+         *    ctr: "0.00%",
+         *    date: "Thursday, Jun 7, 2012",
+         *    fill_rate: "0.00%",
+         *    imp: "0",
+         *    req: "0",
+         *    rev: "$0.00",
+         * }
+         *
+         * for each of the 14 days.
+         *
+         * Works for models only (not for collections).
+         */
+        get_formatted_daily_stats: function () {
+            return _.map(this.get('daily_stats'), function (day) {
+
+                // Calculate derivative values
+                day.fill_rate = calculate_fill_rate(day.req, day.imp);
+                day.ctr = calculate_ctr(day.imp, day.clk);
+                day.cpm = calculate_cpm(day.imp, day.rev);
+                day.conv = day.conv || 0;
+                day.conv_rate = calculate_conv_rate(day.conv, day.clk);
+
+                // Format each of them
+                _.each(_.keys(day), function (key) {
+                    if (key !== 'date') {
+                        day[key] = format_stat(key, day[key]);
+                    } else {
+                        day[key] = moment(day[key], "YYYY-MM-DD").format("dddd, MMM D, YYYY");
+                    }
+                });
+
+                return day;
+            });
+        },
+
+        /*
+         * `get_formatted_stat_series`
+         * For each model in a collection, and for each day in each model's
+         * daily_stats, returns the raw value for the stat. Useful for
+         * putting together graphs.
+         */
+        get_full_stat_series: function(stat) {
+
+            var models_in_collection = this.models.length;
+
+            if (stat === "ctr") {
+                var imp_series = this.get_full_stat_series('imp');
+                var clk_series = this.get_full_stat_series('clk');
+
+                var ctr_series = [];
+                _.each(_.zip(imp_series, clk_series), function (pair) {
+                    ctr_series.push(calculate_ctr(pair[0], pair[1]));
+                });
+
+                return ctr_series;
+            } else if (stat === "cpm") {
+                var imp_series = this.get_full_stat_series('imp');
+                var rev_series = this.get_full_stat_series('rev');
+
+                var cpm_series = [];
+                _.each(_.zip(imp_series, rev_series), function (pair) {
+                    cpm_series.push(calculate_cpm(pair[0], pair[1]));
+                });
+
+                return cpm_series;
+                
+            } else {
+
+                // Go through each of the daily stats for each of the
+                // models in the collection and pull them out.
+                // At the end of this we'll have an array of arrays, where
+                // each inner array has the daily values for the particular stat,
+                // one inner array per model
+                var dailies_for_stat = this.map(function(model) {
+                    var daily_stats = model.get('daily_stats');                    
+                    return _.map(daily_stats, function (day) {
+                        return day[stat];                        
+                    });
+                });
+                
+                // Now sum by day
+                var memo = [];
+                _.times(dailies_for_stat[0].length, function (t) { memo.push(0); });
+                
+                // Turn this 2D Array into a 1D array
+                var full_series = _.reduce(dailies_for_stat, function (memo, day_stats){
+                    _.times(memo.length, function (iter){
+                        memo[iter] += day_stats[iter];
+                    });
+                    
+                    return memo;
+                }, memo);
+                
+                return full_series;
+            }
+        },
+            
+        get_date_range: function() {
+            var dailies = this.models[0].get('daily_stats');
+
+            return _.map(dailies, function (day) {
+                var date = moment(day.date);
+                return date.unix();
+            });
+        },
+
+        get_epoch_date_range: function () {
+
+        }
+    };
+
+
+    /*
+     * ### LocalStorageMixin
+     * If the browser has localstorage, then use it to cache model/collection
+     * properties. If cached properties are found in localstorage, load them
+     * and then perform the sync over ajax to make sure we have the most up
+     * to date data.
+     *
+     * This will *always* sync over ajax to make sure we have the most up to
+     * date data.
+     */
+    var LocalStorageMixin = {
+        sync: function (method, model, options) {
+
+            // Map of backbone methods to their HTTP equivalent,
+            // for utility purposes
+            var methodMap = {
+                create: 'POST',
+                update: 'PUT',
+                delete: 'DELETE',
+                read: 'GET'
+            };
+
+            // Taken from Modernizr. Determines if we have
+            // localstorage or not.
+            function supports_local_storage() {
+                try {
+                    return 'localStorage' in window && window.localStorage !== null;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            var type = methodMap[method];
+
+            // Default JSON-request options.
+            var params = _.extend({
+                type: type,
+                dataType: 'json'
+            }, options);
+
+            // Ensure that we have a URL.
+            if (!params.url) {
+                params.url = getUrl(model);
+                if (params.url === undefined) {
+                    throw new UrlError('Unable to retrieve a valid url from model');
+                }
+            }
+
+            // Ensure that we have the appropriate request data.
+            if (!params.data && model && (method == 'create' || method == 'update')) {
+                params.contentType = 'application/json';
+                params.data = JSON.stringify(model.toJSON());
+            }
+
+            // For older servers, emulate JSON by encoding the request into an HTML-form.
+            if (Backbone.emulateJSON) {
+                params.contentType = 'application/x-www-form-urlencoded';
+                params.data = params.data ? {model : params.data} : {};
+            }
+
+            // For older servers, emulate HTTP by mimicking the HTTP method
+            // with `_method`
+
+            // And an `X-HTTP-Method-Override` header.
+            if (Backbone.emulateHTTP) {
+                if (type === 'PUT' || type === 'DELETE') {
+                if (Backbone.emulateJSON) params.data._method = type;
+                    params.type = 'POST';
+                    params.beforeSend = function(xhr) {
+                        xhr.setRequestHeader('X-HTTP-Method-Override', type);
+                    };
+                }
+            }
+
+            // Don't process data on a non-GET request.
+            if (params.type !== 'GET' && !Backbone.emulateJSON) {
+                params.processData = false;
+            }
+
+            // This is the modified part:
+            // - Look for the cached version and trigger success if it's present.
+            // - Modify the AJAX request so it'll save the data on success.
+            if (method === 'read' && supports_local_storage()) {
+
+                var key = "mopub-cache/" + params.url;
+
+                // Look for the cached version
+                var val = localStorage.getItem(key);
+                var success_function = params.success;
+
+                // If we have the last response cached, use it with
+                // the success callback
+                if (val) {
+                    _.defer(function () {
+                        success_function(JSON.parse(val), "success");
+                    });
+                }
+
+                // Overwrite the success callback to save data to localStorage
+                params.success = function (resp, status, xhr) {
+                    success_function(resp, status, xhr);
+                    localStorage.removeItem(key);
+                    localStorage.setItem(key, xhr.responseText);
+                };
+
+            } else if (method === 'update' || method === 'delete') {
+                // If we're updating or deleting the model, invalidate
+                // everything associated with it. If the model doesn't
+                // have an invalidations method, we can just use the
+                // url.
+                var invalidations = model.invalidations() || [ params.url ];
+                _.each(invalidations, function(invalidation_key){
+                    var key = "mopub-cache/" + invalidation_key;
+                    localStorage.removeItem(key);
+                });
+
+            }
+
+            // Make the request.
+            return $.ajax(params);
+        }
+    };
+
+
     var ModelHelpers = {
         calculate_ctr: calculate_ctr,
         calculate_fill_rate: calculate_fill_rate,
+        calculate_conv_rate: calculate_conv_rate,
         format_stat: format_stat
     };
 
@@ -97,14 +454,17 @@ var mopub = mopub || {};
         get_stat: function(stat) {
             switch(stat) {
                 case 'ctr':
-                    return calculate_ctr(this.get('imp'),
-                                         this.get('clk'));
+                    return calculate_ctr(this.get_stat('imp'),
+                                         this.get_stat('clk'));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get('req'),
-                                               this.get('imp'));
+                    return calculate_fill_rate(this.get_stat('req'),
+                                               this.get_stat('imp'));
+                case 'conv_rate':
+                    return calculate_conv_rate(this.get_stat('conv'),
+                                               this.get_stat('clk'));
                 case 'cpm':
-                    return this.get(stat) || calculate_cpm(this.get('imp'),
-                                                           this.get('rev'));
+                    return this.get(stat) || calculate_cpm(this.get_stat('imp'),
+                                                           this.get_stat('rev'));
                 case 'clk':
                 case 'conv':
                 case 'imp':
@@ -113,8 +473,19 @@ var mopub = mopub || {};
                 case 'rev':
                 case 'goal':
                 case 'pace':
-                case 'conv_rate':
-                    return this.get(stat);
+                    var stat_val;
+                    try {
+                        stat_val = this.get("sum")[stat];
+                    } catch (e) {
+                        stat_val = this.get(stat);
+                    }
+
+                    if (stat_val){
+                        return stat_val;
+                    } else {
+                        return 0;
+                    }
+                        
                 default:
                     throw 'Unsupported stat "' + stat + '".';
             }
@@ -138,7 +509,7 @@ var mopub = mopub || {};
                 return null;
             }
             return day_stats[stat];
-        },
+        }
     });
 
     /*
@@ -291,7 +662,7 @@ var mopub = mopub || {};
         }
     });
 
-    
+
     /*
      * ## Campaign Model
      */
@@ -313,15 +684,15 @@ var mopub = mopub || {};
         },
         parse: function(response) {
             if (response) {
-                var campaign_data = response.sum;
-                campaign_data.daily_stats = response.daily_stats;
+                var campaign_data = response[0].sum;
+                campaign_data.daily_stats = response[0].daily_stats;
 
                 // REFACTOR attempts vs requests
                 if(campaign_data.req == null || campaign_data.req == undefined) {
                     campaign_data.req = campaign_data.att;
                 } else if(campaign_data.att == null || campaign_data.att == undefined) {
                     campaign_data.att = campaign_data.req;
-                } 
+                }
 
                 return campaign_data;
             }
@@ -342,7 +713,6 @@ var mopub = mopub || {};
      * This will most likely need to be refactored soon when we change how
      * AdGroups work on the backend.
      */
-
     var AdGroup = StatsModel.extend({
         url: function() {
             return '/api/adgroup/' + this.id;
@@ -369,20 +739,24 @@ var mopub = mopub || {};
             clk: 0,
             ctr: 0,
             cpm: 0,
+            conv: 0,
             fill_rate: 0,
             imp: 0,
             name: '',
             price_floor: 0,
-            requests: 0,
+            req: 0,
             rev: 0,
             stats_endpoint: 'all'
         },
         validate: function(attributes) {
+
             var current_price_floor = this.get('price_floor');
             if (typeof(attributes.price_floor) !== 'undefined') {
                 var valid_number = Number(attributes.price_floor);
                 if (isNaN(valid_number)) {
                     return "Please enter a valid number for the price floor";
+                } else if (valid_number < 0) {
+                    return "Please enter a non-negative number for the price floor";
                 } else {
                     if (current_price_floor !== valid_number) {
                         record_metric('MPX Price Floor Changed', {
@@ -394,8 +768,9 @@ var mopub = mopub || {};
             }
         },
         url: function() {
-            // window.location.search.substring(1) is used to preserve date ranges from the url
-            // this makes the fetching work with the datepicker.
+            // window.location.search.substring(1) is used to preserve
+            // date ranges from the url this makes the fetching work
+            // with the datepicker.
             var stats_endpoint = this.get('stats_endpoint');
             return '/api/app/'
                 + this.app_id
@@ -405,6 +780,9 @@ var mopub = mopub || {};
                 + window.location.search.substring(1)
                 + '&endpoint='
                 + stats_endpoint;
+        },
+        parse: function(response) {
+            return response[0];
         }
     });
 
@@ -437,15 +815,19 @@ var mopub = mopub || {};
                     + this.stats_endpoint;
             }
         },
-
         parse: function(response) {
+            var collection = this;
             // REFACTOR attempts vs requests
             _.each(response, function(adunit) {
-                if(adunit.req == null || adunit.req == undefined) {
+
+                if ((adunit.req === null || adunit.req === undefined) &&
+                    (adunit.att !== null && adunit.att !== undefined)) {
                     adunit.req = adunit.att;
-                } else if (adunit.att == null || adunit.att == undefined) {
+                } else if ((adunit.att === null || adunit.att === undefined) &&
+                           (adunit.req !== null || adunit.req !== undefined)) {
                     adunit.att = adunit.req;
                 }
+                _.extend(adunit, { stats_endpoint: collection.stats_endpoint });
             });
 
             return response;
@@ -476,10 +858,11 @@ var mopub = mopub || {};
             clk: 0,
             ctr: 0,
             cpm: 0,
+            conv: 0,
             fill_rate: 0,
             imp: 0,
             price_floor: 0,
-            requests: 0,
+            req: 0,
             rev: 0,
             status: 'Running',
             stats_endpoint: 'all'
@@ -510,9 +893,11 @@ var mopub = mopub || {};
             var app = response[0];
 
             // REFACTOR attempts vs requests
-            if(app.req == null || app.req == undefined) {
+            if((app.req === null || app.req === undefined) &&
+               (app.att !== null && app.att !== undefined)) {
                 app.req = app.att;
-            } else if (app.att == null || app.att == undefined) {
+            } else if ((app.att == null || app.att == undefined) &&
+                       (app.rev !== null && app.rev !== undefined)) {
                 app.att = app.req;
             }
 
@@ -525,6 +910,7 @@ var mopub = mopub || {};
             if (app.app_type === 'mweb') {
                 app.app_type = 'Mobile Web';
             }
+
             return app;
         },
         get_summed: function (attr) {
@@ -538,6 +924,8 @@ var mopub = mopub || {};
             return null;
         }
     });
+
+    _.extend(App.prototype, StatsMixin);
 
     /*
      * ## AppCollection
@@ -562,9 +950,174 @@ var mopub = mopub || {};
         }
     });
 
+    _.extend(AppCollection.prototype, StatsMixin);
 
     /*
-     * EXPOSE HIS JUNK
+     *  LineItem
+     */
+    var LineItem = Backbone.Model.extend({
+        defaults: {
+            start_date: null,
+            date_range: 90,
+            name: '',
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            conv: 0,
+            fill_rate: 0,
+            imp: 0,
+            req: 0,
+            rev: 0,
+            allocation: null,
+            frequency_caps: null,
+            country_targeting: null,
+            device_targeting: []
+        },
+        url: function () {
+            var url = '/api/adgroup/' + this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=direct';
+            return url;
+        }
+    });
+
+    _.extend(LineItem.prototype, StatsMixin);
+
+
+    var LineItemCollection = Backbone.Collection.extend({
+        model: LineItem,
+        stats_endpoint: 'direct',
+        url: function() {
+            var stats_endpoint = this.stats_endpoint;
+            return '/api/campaign/'
+                + this.campaign_id
+                + "?r=90"
+                + '&endpoint='
+                + stats_endpoint;
+        },
+        parse: function(response) {
+            return response.adunits;
+        }
+    });
+
+    _.extend(LineItemCollection.prototype, StatsMixin);
+
+
+    var Order = Backbone.Model.extend({
+        defaults: {
+            start_date: null,
+            date_range: 90,
+            name: '',
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            conv: 0,
+            fill_rate: 0,
+            imp: 0,
+            req: 0,
+            rev: 0
+        },
+        url: function () {
+            var url = '/api/campaign/' + this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=direct';
+            return url;
+        },
+        parse: function(response) {
+
+            var order = response[0];
+
+            if((order.req === null || order.req === undefined) &&
+               (order.att !== null && order.att !== undefined)) {
+                order.req = order.att;
+            } else if ((order.att == null || order.att == undefined) &&
+                       (order.rev !== null && order.rev !== undefined)) {
+                order.att = order.req;
+            }
+
+            return order;
+        }
+    });
+
+    _.extend(Order.prototype, StatsMixin);
+
+
+    var OrderCollection = Backbone.Collection.extend({
+        model: Order,
+        stats_endpoint: 'direct',
+        url: function() {
+            return '/api/campaign/'
+                + "?r=90",
+                + '&endpoint=direct';
+        }
+    });
+
+    _.extend(OrderCollection.prototype, StatsMixin);
+
+
+    /*
+     *  Creative
+     */
+    var Creative = Backbone.Model.extend({
+        defaults: {
+            start_date: null,
+            date_range: 90,
+            name: '',
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            conv: 0,
+            fill_rate: 0,
+            imp: 0,
+            req: 0,
+            rev: 0
+        },
+        url: function () {
+            var url = '/api/creative/' + this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=direct';
+            return url;
+        }
+    });
+
+    _.extend(Creative.prototype, StatsMixin);
+
+
+    var CreativeCollection = Backbone.Collection.extend({
+        model: Creative,
+        // url: function() {
+        //     var stats_endpoint = this.stats_endpoint;
+        //     return '/api/campaign/'
+        //         + this.campaign_id
+        //         + "?r=90"
+        //         + '&endpoint='
+        //         + stats_endpoint;
+        // },
+        // parse: function(response) {
+        //     return response.adunits;
+        // }
+    });
+
+    _.extend(CreativeCollection.prototype, StatsMixin);
+
+
+    /*
+     * EXPOSE THIS JUNK
      * (We should find a better way to do this.)
      */
     window.StatsModel = StatsModel;
@@ -578,5 +1131,13 @@ var mopub = mopub || {};
     window.Campaigns = Campaigns;
     window.ModelHelpers = ModelHelpers;
 
+    window.StatsMixin = StatsMixin;
 
-}(this.jQuery, this.Backbone, this._));
+    window.Order = Order;
+    window.LineItem = LineItem;
+    window.Creative = Creative;
+    window.OrderCollection = OrderCollection;
+    window.LineItemCollection = LineItemCollection;
+    window.CreativeCollection = CreativeCollection;
+
+} (this.jQuery, this.Backbone, this._));

@@ -1,0 +1,90 @@
+<div id="adForm-phone-container">
+  <dt>Ad format:</dt>
+  <dd>
+    <div id="adForm-phone-formats" class="clearfix">
+      <div class="adForm-phone-format adForm-format">
+        <div class="adForm-format-name">
+          <input type="radio" class="input-radio {% if not value %}possible-format{% endif%}{% ifequal value '320x50' %}possible-format{% endifequal %}" name="{{ name }}" checked="checked" value="320x50" id="appForm-adUnitFormat-banner" />
+          <label for="appForm-adUnitFormat-banner">Banner</label>
+          <div class="adForm-format-details">320 &times; 50</div>
+        </div>
+        <img class="adForm-format-image" src="/images/setup/ad-format-banner.png" alt="Banner ad" />
+      </div>
+      <div class="adForm-phone-format adForm-format">
+        <div class="adForm-format-name">
+          <input type="radio" class="input-radio {% ifequal value '300x250' %}possible-format{% endifequal %}" name="{{name}}" value="300x250" id="appForm-adUnitFormat-medium"/>
+          <label for="appForm-adUnitFormat-medium">Medium</label>
+          <div class="adForm-format-details">300 &times; 250</div>
+        </div>
+        <img class="adForm-format-image" src="/images/setup/ad-format-medium.png" alt="Medium ad" />
+      </div>
+      <div class="adForm-phone-format adForm-format">
+        <div class="adForm-format-name">
+          <input type="radio" class="input-radio {% ifequal value 'full' %}possible-format{% endifequal %}" name="{{name}}" value="full" id="appForm-adUnitFormat-full"/>
+          <label for="appForm-adUnitFormat-full">Fullscreen</label>
+          <div class="adForm-format-details">320 &times; 480</div>
+        </div>
+        <img class="adForm-format-image" src="/images/setup/ad-format-full.png" alt="Fullscreen ad" />
+      </div>
+
+	  <div class="adForm-phone-format adForm-format">
+        <div class="adForm-format-name">
+          <input type="radio" class="input-radio {% ifequal value 'custom' %}possible-format{% endifequal %}" name="{{name}}" value="custom" id="appForm-adUnitFormat-custom"/>
+          <label for="appForm-adUnitFormat-custom">Custom</label>
+          <div class="adForm-format-details">Custom size</div>
+        </div>
+        <img class="adForm-format-image" src="/images/setup/ad-format-custom.png" alt="Custom ad" />
+
+      </div>
+
+    </div>
+  </dd>
+</div>
+<div id="adForm-tablet-container" class="hidden">
+  <dt>Ad format:</dt>
+  <dd>
+    <div id="adForm-tablet-formats">
+      <div class="adForm-format-name">
+        <input type="radio" class="input-radio {% ifequal value '728x90' %}possible-format{% endifequal %}" name="{{name}}" value="728x90" id="appForm-adUnitFormat-tablet-leaderboard"/>
+        <label for="appForm-adUnitFormat-tablet-leaderboard">Leaderboard</label>
+        <div class="adForm-format-details">728 &times; 90</div>
+      </div>
+      <div class="adForm-format-name">
+        <input type="radio" class="input-radio {% ifequal value '300x250' %}possible-format{% endifequal %}" name="{{name}}" value="300x250" id="appForm-adUnitFormat-tablet-medium"/>
+        <label for="appForm-adUnitFormat-tablet-medium">Medium</label>
+        <div class="adForm-format-details">300 &times; 250</div>
+      </div>
+      <div class="adForm-format-name">
+        <input type="radio" class="input-radio {% ifequal value '160x600' %}possible-format{% endifequal %}" name="{{name}}" value="160x600" id="appForm-adUnitFormat-wide-tablet-skyscraper"/>
+        <label for="appForm-adUnitFormat-wide-tablet-skyscraper">Skyscraper</label>
+        <div class="adForm-format-details">160 &times; 600</div>
+      </div>
+      <div class="adForm-format-name">
+        <input type="radio" class="input-radio {% ifequal value 'full_tablet' %}possible-format{% endifequal %}" name="{{name}}" value="full_tablet" id="appForm-adUnitFormat-full-tablet"/>
+        <label for="appForm-adUnitFormat-full-tablet">Fullscreen</label>
+        <div class="adForm-format-details">1024 &times; 768</div>
+      </div>
+      <div class="adForm-format-name">
+        <input type="radio" class="input-radio {% ifequal value '320x50' %}possible-format{% endifequal %}" name="{{name}}" value="320x50" id="appForm-adUnitFormat-tablet-banner"/>
+        <label for="appForm-adUnitFormat-tablet-banner">Banner</label>
+        <div class="adForm-format-details">320 &times; 50</div>
+      </div>
+
+	<div class="adForm-format-name">
+        <input type="radio" class="input-radio {% ifequal value 'custom' %}possible-format{% endifequal %}" name="{{name}}" value="custom" id="appForm-adUnitFormat-tablet-custom"/>
+        <label for="appForm-adUnitFormat-tablet-custom">Custom</label>
+        <div class="adForm-format-details">Custom size</div>
+      </div>
+    </div>
+
+    <div id="adForm-images-container">
+      <img class="adForm-format-image" src="/images/setup/ad-format-tablet-leaderboard.png" alt="Banner ad" />
+      <img class="adForm-format-image" src="/images/setup/ad-format-tablet-medium.png" alt="Medium ad" />
+      <img class="adForm-format-image" src="/images/setup/ad-format-tablet-wide-skyscraper.png" alt="Wide Skyscraper ad" />
+      <img class="adForm-format-image" src="/images/setup/ad-format-tablet-full.png" alt="Fullscreen ad" />
+      <img class="adForm-format-image" src="/images/setup/ad-format-tablet-banner.png" alt="Fullscreen ad" />
+      <img class="adForm-format-image" src="/images/setup/ad-format-tablet-custom.png" alt="Custom ad">
+    </div>
+  </dd>
+</div>
+{{suffix_html}}

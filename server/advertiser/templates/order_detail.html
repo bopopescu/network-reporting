@@ -1,0 +1,167 @@
+{% extends 'advertiser/base.html' %}
+
+{% load filters %}
+{% load elements %}
+
+{% block pageTitleTag %}
+ MoPub - Order {{ order.name }}
+{% endblock pageTitleTag %}
+
+{% block pageTitle %}
+  <h1><a href="{% url advertiser_order_index %}">Orders</a> / {{ order.name }}</h1>
+{% endblock pageTitle %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block content %}
+
+
+
+  <div class="right" style='margin-bottom: 5px'>
+
+    <a class="left btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
+        {% button_icon "pencil" %}
+        Edit this order
+    </a>
+
+    <div class="right dropdown" id="order-export" style='margin-left: 5px'>
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#order-export">
+        <i class="icon-download-alt"></i> Export
+        <span class="caret"></span>
+      </a>
+
+      <ul class="dropdown-menu">
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xls"
+                data-toggle="running"> Excel XLS </a> </li>
+        {% comment %}
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=xlsx"
+                data-toggle="running"> Excel XLSX </a> </li>
+                {% endcomment %}
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=ods"
+                data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=csv"
+                data-toggle="running"> CSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=tsv"
+                data-toggle="running"> TSV </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=yaml"
+                data-toggle="running"> YAML </a> </li>
+        <li> <a href="{% url advertiser_export_single_order order_key=order.key %}?type=json"
+                data-toggle="running"> JSON </a> </li>
+      </ul>
+    </div>
+  </div>
+
+
+  <div style="clear:both;"></div>
+
+  {% chart_placeholder start_date end_date %}
+
+  <br />
+
+  {# The order edit form, hidden by default #}
+  <section class="offset hidden" id="order_form_container">
+    <form id="order_form" method="post" action="{% url advertiser_order_form_edit order.key %}">
+      {% include 'forms/order_form.html' %}
+      <a class="btn right" id="submit" href="#">Continue</a>
+    </form>
+  </section>
+
+
+  {%comment %}
+  {# Table with all of the line items #}
+  <section>
+    <h3 class="left">
+      Status
+    </h3>
+    <div class="right">
+
+    </div>
+
+  {% order_table order %}
+
+  <br />
+{% endcomment %}
+  <h3 class="left"> Line Items </h3>
+  <div class="right">
+    <a class="left btn" href='{% url advertiser_line_item_form_new order.key %}'>
+      <i class="icon-plus"></i>
+      New Line Item
+    </a>
+
+    <div class="right" style='margin-left: 5px;'>
+    {% filter_buttons %}
+    </div>
+  </div>
+
+  {# shoe_controls:True, show_order_names: False, show_archived: False #}
+  {% line_item_table line_items True False False %}
+
+  <br />
+  <div class="btn-group">
+    <button class="btn status_change"
+            data-target="#line_item_table"
+            data-toggle="pause">
+      <i class="icon-pause"></i> Pause
+    </button>
+    <button class="btn status_change"
+            data-target="#line_item_table"
+            data-toggle="play">
+      <i class="icon-play"></i> Resume
+    </button>
+    <button class="btn status_change"
+            data-target="#line_item_table"
+            data-toggle="archive">
+      <i class="icon-stop"></i> Archive
+    </button>
+  </div>
+  </section>
+
+  {% comment %}
+  {# Table that shows all of the adunits being targeted #}
+  <section>
+    <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
+
+    <div class="right">
+      <a class="btn" href='#'>
+        <i class="icon-random"></i>
+        Change Targeting
+      </a>
+    </div>
+
+    {% inventory_table targeted_apps %}
+  </section>
+  {% endcomment %}
+
+  {% comment %}
+  <div id="daily-counts">
+    <h2>Daily Counts</h2>
+    <img src="/images/loading2.gif" style='margin-left:450px' />
+  </div>
+  {% endcomment %}
+
+{% endblock content %}
+
+{% block extraScripts %}
+
+  {% include_template "chart" %}
+  {% include_template "daily-counts" %}
+  {% include_template "popover" %}
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+
+  <script type="text/javascript">
+    $(function () {
+        OrdersController.initializeOrderDetail({
+            order_key: "{{ order.key }}",
+            start_date: {{ start_date|js_date}},
+            date_range: {{ date_range }},
+            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
+        });
+    });
+  </script>
+
+{% endblock extraScripts %}

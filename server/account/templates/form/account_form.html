@@ -1,51 +1,51 @@
-                 {% load filters %}
+{% load filters %}
 
-					{{ form.first_name|attrs:'{"placeholder":"Johnny"}' }}
-					{{ form.last_name|attrs:'{"placeholder":"Appleseed"}' }}
-					{{ form.title|attrs:'{"placeholder":"President"}' }}
-					{{ form.company|attrs:'{"placeholder":"Acme, Inc."}' }}
-					{{ form.phone|attrs:'{"label":"Phone number","placeholder":"(555) 555-5555"}' }}
-					{{ form.city|attrs:'{"placeholder":"San Francisco"}' }}
-					
-                    <dt><label for="state">State:</label></dt>
-                    <dd>
-                        <select name="{{form.state.name}}">
-                        	<option value="">(select one)</option>
-                            {% for s in form.states %}
-                                <option value="{{s}}" {% ifequal form.state.value s %}selected{% endifequal %}>{{s}}</option>
-                            {% endfor %}
-                        </select>
-                    </dd>
-
-                    <dt><label for="country">Country:</label></dt>
-                    <dd>
-                        <select name="{{form.country.name}}">
-                            <option value="">(select one)</option>
-                            {% for c in form.countries %}
-                                <option value="{{c.0}}" {% ifequal form.country.value c.0 %}selected{% endifequal %}>{{c.1}}</option>
-                            {% endfor %}
-                        </select>
-                        
-                    </dd>
-                    
-                    <dt><label for="traffic">Monthly impressions:</label></dt>
-                    <dd>
-                        <select id="traffic" name="{{form.traffic.name}}" placeholder="50" class="{% if form.traffic.errors %}form-error{% endif %}">
-                            <option value="0">Haven't launched yet</option>
-                            <option value="1" {% ifequal form.traffic.value '1' %}selected{% endifequal %}>1-10MM</option>
-                            <option value="10" {% ifequal form.traffic.value '10' %}selected{% endifequal %}>10-90MM</option>
-                            <option value="100" {% ifequal form.traffic.value '100' %}selected{% endifequal %}>90-200MM</option>
-                            <option value="200" {% ifequal form.traffic.value '200' %}selected{% endifequal %}>200MM+</option>
-                        </select>
-                        {% for error in form.traffic.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                    </dd>
-
-                    <dt><input id="mailing_list" name="{{form.mailing_list.name}}" placeholder="50" class="{% if form.mailing_list.errors %}form-error{% endif %}" {% if form.mailing_list.value %}checked="checked"{% endif %} type="checkbox"/></dt>
-                    <dd>
-                        I would like to receive occasional product update emails from MoPub
-                        {% for error in form.mailing_list.errors %}
-                        <div class="form-error-text">{{error}}</div> 
-                        {% endfor %}
-                    </dd>
+  {{ form.first_name|attrs:'{"placeholder":"Johnny"}' }}
+  {{ form.last_name|attrs:'{"placeholder":"Appleseed"}' }}
+  {{ form.title|attrs:'{"placeholder":"President"}' }}
+  {{ form.company|attrs:'{"placeholder":"Acme, Inc."}' }}
+  {{ form.phone|attrs:'{"label":"Phone number","placeholder":"(555) 555-5555"}' }}
+  {{ form.city|attrs:'{"placeholder":"San Francisco"}' }}
+  
+  <dt><label for="state">State:</label></dt>
+  <dd>
+    <select name="{{form.state.name}}">
+      <option value="">(select one)</option>
+      {% for s in form.states %}
+        <option value="{{s}}" {% ifequal form.state.value s %}selected{% endifequal %}>{{s}}</option>
+      {% endfor %}
+    </select>
+  </dd>
+  
+  <dt><label for="country">Country:</label></dt>
+  <dd>
+    <select name="{{form.country.name}}">
+      <option value="">(select one)</option>
+      {% for c in form.countries %}
+        <option value="{{c.0}}" {% ifequal form.country.value c.0 %}selected{% endifequal %}>{{c.1}}</option>
+      {% endfor %}
+    </select>
+    
+  </dd>
+  
+  <dt><label for="traffic">Monthly impressions:</label></dt>
+  <dd>
+    <select id="traffic" name="{{form.traffic.name}}" placeholder="50" class="{% if form.traffic.errors %}form-error{% endif %}">
+      <option value="0">Haven't launched yet</option>
+      <option value="1" {% ifequal form.traffic.value '1' %}selected{% endifequal %}>1-10MM</option>
+      <option value="10" {% ifequal form.traffic.value '10' %}selected{% endifequal %}>10-90MM</option>
+      <option value="100" {% ifequal form.traffic.value '100' %}selected{% endifequal %}>90-200MM</option>
+      <option value="200" {% ifequal form.traffic.value '200' %}selected{% endifequal %}>200MM+</option>
+    </select>
+    {% for error in form.traffic.errors %}
+      <div class="form-error-text">{{error}}</div> 
+    {% endfor %}
+  </dd>
+  
+  <dt><input id="mailing_list" name="{{form.mailing_list.name}}" placeholder="50" class="{% if form.mailing_list.errors %}form-error{% endif %}" {% if form.mailing_list.value %}checked="checked"{% endif %} type="checkbox"/></dt>
+  <dd>
+    I would like to receive occasional product update emails from MoPub
+    {% for error in form.mailing_list.errors %}
+      <div class="form-error-text">{{error}}</div> 
+    {% endfor %}
+  </dd>

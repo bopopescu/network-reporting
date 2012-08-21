@@ -1,313 +1,785 @@
 {% extends "account/base.html" %}
 {% load filters %}
-{% block pageTitle %}<h1>Your Ad Networks</h1>{% endblock pageTitle %}
+  
+{% block pageTitle %}
+  <h1>Your Ad Networks</h1>
+{% endblock pageTitle %}
 
 
 {% block content %}
-          <section id="account-section">
-            <div class="content-main">
-{% ifequal status 'welcome' %}
-              <div class="alert-message block-message">
-                Now set up any ad networks that you would like to use to serve ads into your inventory.  You may need to set up an account with the network provider first, then enter in the settings below.
-              </div>
-{% endifequal %}
-              <h2>Ad network settings</h2>
+  <section id="account-section">
+    <div class="content-main">
+      {% ifequal status 'welcome' %}
+        <div class="alert-message block-message">
+          Now set up any ad networks that you would like to use to
+          serve ads into your inventory.  You may need to set up an
+          account with the network provider first, then enter in the
+          settings below.
+        </div>
+      {% endifequal %}
+      <h2>Ad network settings</h2>
+      <p>
+        To enable an ad network, fill in the required fields for the network.
+      </p>
+      
+      <form action="" method="POST" accept-charset="utf-8" id="accountForm">
+        <fieldset class="adForm alt">
+          
+          <div class="btn-well right">            
+            <a class="btn btn-micro" href="#admob-moreinfo" data-toggle="modal">
+              <i class="icon-info-sign"></i> More Info
+            </a>
+            <a class="btn btn-micro details-toggle" href="#admob-apps">
+              <i class="icon-list-alt"></i> Show Apps
+            </a>
+          </div>
+
+          
+          <div class="modal hidden" id="admob-moreinfo">
+
+            <div class="modal-header">
+              <a href="#" class="close" data-dismiss="modal">×</a>
+              <h2> AdMob </h2>
+            </div>
+            
+            <div class="modal-body">
               <p>
-                To enable an ad network, fill in the required fields for the network.
+                Monetize your apps by serving AdMob ads on the
+                iPhone, Android, WebOS, and Flash Lite platforms.
               </p>
-              <form action="" method="POST" accept-charset="utf-8" id="accountForm">
-                <fieldset class="adForm alt">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                    <div class="accountInfoForm hidden">
-                      <div class="accountInfoForm-container">
-                        <div class="accountInfoForm-left">
-                          <h2>AdMob</h2>
-                          <img src="http://www.admob.com/img/ad_mob_logo_header.gif" />
-                        </div>
-                        <div class="accountInfoForm-right">
-                          <p>Monetize your apps by serving AdMob ads on the iPhone, Android, WebOS, and Flash Lite platforms.</p>
-                          <ul>
-                            <li>Easy integration with multiple installation options</li>
-                            <li>Real-time reporting to monitor your revenue</li>
-                            <li>Options to transfer your earnings towards promoting your own app</li>
-                          </ul>
-                          <a class="linkIcon breadcrumb-back" href="http://www.admob.com/register" target="_blank">Sign up at AdMob<span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <legend>AdMob {% if admob_status == 1 or admob_status == 2 or admob_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if admob_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if admob_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if admob_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">AdMob Default ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
-                    <div class="adForm-apps {% if admob_status == 2 or admob_status == 3 or admob_status == 4 %} {% else %} show {% endif %}">
-                        {% for app in apps%}
-                        <dt><strong>App</strong> {{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                        <dd><input type="text" class="input-text" name="{{app.key}}-__-admob_pub_id" value="{{app.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
-                      {% for adunit in app.adunits %}
-                      <dt><strong>AdUnit</strong> {{adunit.name}}:</dt>
-                      <dd><input type="text" class="input-text" name="{{adunit.key}}-_ADUNIT_-admob_pub_id" value="{{adunit.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
-                      {% endfor %}
-                        {% endfor %}
+              <ul style='padding-left:10px'>
+                <li>Easy integration with multiple installation options</li>
+                <li>Real-time reporting to monitor your revenue</li>
+                <li>Options to transfer your earnings towards promoting your own app</li>
+              </ul>
+            </div>
+            <div class="modal-footer">
+              <a href="#" class="btn" data-dismiss="modal">Close</a>
+              <a class="btn btn-primary"
+                 href="http://www.admob.com/register"
+                 target="_blank">
+                Sign up at AdMob
+              </a>
+            </div>
+          </div>
 
-                      </div>
-                      <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
-                      <dd>&nbsp;</dd>
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.admob.com/" target="_blank">Go to AdMob<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-                <fieldset class="adForm">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                  </div>
-                  <legend>AdSense {% if adsense_status == 1 or adsense_status == 2 or adsense_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if adsense_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if adsense_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if adsense_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">AdSense Publisher ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="adsense_pub_id" value="{{account.network_config.adsense_pub_id|default_if_none:""}}"  placeholder="ex: ca-mb-pub-5592664190023789"/></dd>
 
-                    <dt><label for="appForm-adUnitName">Company Name:</label></dt>
-                    <dd><input type="text" class="input-text" name="adsense_company_name" value="{{account.adsense_company_name|default_if_none:""}}" placeholder="Optional" /></dd>
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="https://www.google.com/adsense/" target="_blank">Go to AdSense<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-                <fieldset class="adForm alt">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                  </div>
-                  <legend>BrightRoll {% if brightroll_status == 1 or brightroll_status == 2 or brightroll_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if brightroll_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if brightroll_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if brightroll_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">BrightRoll Default ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="brightroll_pub_id" value="{{account.network_config.brightroll_pub_id|default_if_none:""}}" placeholder="ex: 3836789"/></dd>
+          <h2>
+            AdMob
+            {% if admob_status == 1 or admob_status == 2 or admob_status == 4 %}
+              <span class="success unbold">(Enabled)</span>
+            {% endif %}
+            {% if admob_status == 3 %}
+              <span class ="partial unbold">(Partially enabled)</span>
+            {% endif %}
+            {% if admob_status == 0 %}
+              <span class="muted unbold">(Not configured)</span>
+            {% endif %}
+          </h2>
+          
+          <dl class="formFields">
+            <dt>
+              <label for="appForm-adUnitName">
+                AdMob Default ID:
+              </label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="admob_pub_id"
+                     value="{{account.network_config.admob_pub_id|default_if_none:""}}"
+                     placeholder="ex: a14cdb1922f35xx"/>
+            </dd>
+            
+            <div id="admob-apps" class="hidden">
+              
+              {% for app in apps%}                
+                <dt>
+                  <strong>App</strong>
+                  {{app.name}}
+                  <span class="muted">
+                    ({% ifequal app.app_type "iphone" %}
+                      iOS
+                      {% endifequal %}
+                      {% ifequal app.app_type "android" %}
+                        Android
+                      {% endifequal %}
+                      {% ifequal app.app_type "mweb" %}
+                        Mobile Web
+                      {% endifequal %})
+                  </span>:
+                </dt>
+                
+                <dd>
+                  <input type="text"
+                         class="input-text"
+                         name="{{app.key}}-__-admob_pub_id"
+                         value="{{app.network_config.admob_pub_id|default_if_none:""}}"
+                         placeholder="ex: a14cdb1922f35xx"/>
+                </dd>
+                {% for adunit in app.adunits %}
+                  <dt>
+                    <strong>AdUnit</strong>
+                    {{adunit.name}}:
+                  </dt>
+                  <dd>
+                    <input type="text"
+                           class="input-text"
+                           name="{{adunit.key}}-_ADUNIT_-admob_pub_id"
+                           value="{{adunit.network_config.admob_pub_id|default_if_none:""}}"
+                           placeholder="ex: a14cdb1922f35xx"/>
+                  </dd>
+                {% endfor %}
+              {% endfor %}
 
-                    <div class="adForm-apps {% if brightroll_status == 2 or brightroll_status == 3 or brightroll_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
+            </div>
+            
+            <div class="formFields-right">
+              <a class="linkIcon breadcrumb-back" href="http://www.admob.com/" target="_blank">
+                Go to AdMob
+                <span class="ui-icon ui-icon-arrowthick-1-e"></span>
+              </a>
+            </div>
+          </dl>
+        </fieldset>
+        
+        <fieldset class="adForm">
+          {% comment %}
+          <div class="btn-well right">
+            <a class="btn btn-micro details-toggle" href="#">
+              <i class="icon-list-alt"></i> Show Apps
+            </a>
+          </div>
+          {% endcomment %}
+          <h2>
+            AdSense
+            {% if adsense_status == 1 or adsense_status == 2 or adsense_status == 4 %}
+              <span class="success unbold">(Enabled)</span>
+            {% endif %}
+            {% if adsense_status == 3 %}
+              <span class ="partial unbold">(Partially enabled)</span>
+            {% endif %}
+            {% if adsense_status == 0 %}
+              <span class="muted unbold">(Not configured)</span>
+            {% endif %}
+          </h2>
+          
+          <dl class='formFields {% if adsense_status != 0 %}show{% endif %}'>
+            <dt>
+              <label for="appForm-adUnitName">AdSense Publisher ID:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="adsense_pub_id"
+                     value='{{account.network_config.adsense_pub_id|default_if_none:""}}'
+                     placeholder='ex: ca-mb-pub-5592664190023789'/>
+            </dd>
+            
+            <dt>
+              <label for="appForm-adUnitName">Company Name:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="adsense_company_name"
+                     value="{{account.adsense_company_name|default_if_none:""}}"
+                     placeholder="Optional" />
+            </dd>
+            
+            <div class="formFields-right">
+            <a class="linkIcon breadcrumb-back" href="https://www.google.com/adsense/" target="_blank">
+              Go to AdSense
+              <span class="ui-icon ui-icon-arrowthick-1-e"></span>
+            </a>
+            </div>
+          </dl>
+        </fieldset>
+        
+        <fieldset class="adForm alt">
+          <div class="btn-well right">
+            <a class="btn btn-micro details-toggle" href="#brightroll-apps">
+              <i class="icon-list-alt"></i> Show Apps
+            </a>
+          </div>
+          
+          <h2>
+            BrightRoll
+            {% if brightroll_status == 1 or brightroll_status == 2 or brightroll_status == 4 %}
+              <span class="success unbold">(Enabled)</span>
+            {% endif %}
+            {% if brightroll_status == 3 %}
+              <span class ="partial unbold">(Partially enabled)</span>
+            {% endif %}
+            {% if brightroll_status == 0 %}
+              <span class="muted unbold">(Not configured)</span>
+            {% endif %}
+          </h2>
+          
+          <dl class="formFields {% if brightroll_status != 0 %}show{% endif %}">
+            <dt>
+              <label for="appForm-adUnitName">BrightRoll Default ID:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="brightroll_pub_id"
+                     value="{{account.network_config.brightroll_pub_id|default_if_none:""}}"
+                    placeholder="ex: 3836789"/>
+            </dd>
+            
+            <div class="hidden" id="brightroll-apps">
+              {% for app in apps%}
+                
+                <dt>
+                  {{app.name}}
+                  <span class="muted">
+                    ({% ifequal app.app_type "iphone" %}
+                      iOS
+                    {% endifequal %}
+                    {% ifequal app.app_type "android" %}
+                      Android
+                    {% endifequal %}
+                    {% ifequal app.app_type "mweb" %}
+                      Mobile Web
+                    {% endifequal %})
+                    </span>:
+                </dt>
+                <dd>
+                  <input type="text"
+                         class="input-text"
+                         name="{{app.key}}-__-brightroll_pub_id"
+                         value="{{app.network_config.brightroll_pub_id|default_if_none:""}}"
+                    placeholder="ex: 3836789"/>
+                </dd>
+              {% endfor %}
+            </div>          
+            
+            <div class="formFields-right">
+              <a class="linkIcon breadcrumb-back" href="http://www.brightroll.com/" target="_blank">
+                Go to BrightRoll
+                <span class="ui-icon ui-icon-arrowthick-1-e"></span>
+              </a>
+            </div>
+          </dl>
+        </fieldset>
 
-                      <dt>{{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-brightroll_pub_id" value="{{app.network_config.brightroll_pub_id|default_if_none:""}}"  placeholder="ex: 3836789"/></dd>
-                      {% endfor %}
-                    </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#"></a></dt>
-                    <dd>&nbsp;</dd>
+        <fieldset class="adForm">
+          <div class="btn-well right">
+            <a class="btn btn-micro details-toggle" href="#tapit-apps">
+              <i class="icon-list-alt"></i> Show Apps
+            </a>
+          </div>
+          
+          <h2>
+            TapIt
+            {% if ejam_status == 1 or ejam_status == 2 or ejam_status == 4 %}
+              <span class="success unbold">
+                (Enabled)
+              </span>
+            {% endif %}
+            {% if ejam_status == 3 %}
+              <span class ="partial unbold">(Partially enabled)</span>
+            {% endif %}
+            {% if ejam_status == 0 %}
+              <span class="muted unbold">(Not configured)</span>
+            {% endif %}
+          </h2>
+          
+          <dl class="formFields {% if ejam_status != 0 %}show{% endif %}">
+            <dt>
+              <label for="appForm-adUnitName">TapIt Zone ID:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="ejam_pub_id"
+                     value="{{account.network_config.ejam_pub_id|default_if_none:""}}"
+                placeholder="ex: 23710" />
+            </dd>
+            
+            <div class="hidden" id="tapit-apps">
+              {% for app in apps%}
+                <dt>
+                  {{app.name}}
+                  <span class="muted">
+                    ({% ifequal app.app_type "iphone" %}
+                      iOS
+                    {% endifequal %}
+                    {% ifequal app.app_type "android" %}
+                      Android
+                    {% endifequal %}
+                    {% ifequal app.app_type "mweb" %}
+                      Mobile Web
+                    {% endifequal %})
+                    </span>:
+                </dt>
+                <dd>
+                  <input type="text"
+                         class="input-text"
+                         name="{{app.key}}-__-ejam_pub_id"
+                         value="{{app.network_config.ejam_pub_id|default_if_none:""}}"
+                    placeholder="ex: 23710"/>
+                </dd>
+              {% endfor %}
+            </div>
+            
+            <div class="formFields-right">
+              <a class="linkIcon breadcrumb-back" href="http://www.tapit.com/" target="_blank">
+                Go to TapIt
+                <span class="ui-icon ui-icon-arrowthick-1-e">
+                </span>
+              </a>
+            </div>
+          </dl>
+        </fieldset>
+        
+        <fieldset class="adForm alt">
+          
+          <div class="btn-well right">
+            <a class="btn btn-micro" data-toggle="modal" href="#inmobi-moreinfo">
+              <i class="icon-info-sign"></i> More Info
+            </a>
+            <a class="btn btn-micro details-toggle" href="#inmobi-apps">
+              <i class="icon-list-alt"></i> Show Apps
+            </a>
+          </div>
 
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.brightroll.com/" target="_blank">Go to BrightRoll<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-{% comment %}
-                <fieldset class="adForm">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                  </div>
-                  <legend>ChartBoost {% if chartboost_status == 1 or chartboost_status == 2 or chartboost_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if chartboost_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if chartboost_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if chartboost_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">ChartBoost Default ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="chartboost_pub_id" value="{{account.network_config.chartboost_pub_id|default_if_none:""}}" placeholder="ex: 4cf55942bb93162f4500006g"/></dd>
+          {# modal #}
+          <div class="modal hidden" id="inmobi-moreinfo">
+            
+            <div class="modal-header">
+              <a href="#" class="close" data-dismiss="modal">×</a>
+              <h2> InMobi </h2>
+            </div>
+            
+            <div class="modal-body">
+              <p>
+                InMobi is the world's largest independent mobile
+                advertising network. With offices on four continents
+                InMobi provide advertisers, publishers and developers
+                with a uniquely global solution for advertising.
+              </p>
+              <ul style='margin-left:10px'>
+                <li>Monetize in over 115 countries, through more than 31.5 Billion mobile ad impressions monthly</li>
+                <li>Simple and straightforward CPC (Cost Per Click) model means developers get paid every time a user clicks</li>
+                <li>Support for all major mobile operating systems including: iOS, Android, Blackberry, Web OS and WP7</li>
+              </ul>
+            </div>
+            <div class="modal-footer">
+              <a href="#" class="btn" data-dismiss="modal">Close</a>              
+              <a class="btn btn-primary"
+                 href="https://www.inmobi.com/advertiser/registeruser.html"
+                 target="_blank">
+                Sign up at InMobi
+              </a>
+            </div>
+          </div>
+          {# end modal #}
+          
+          <h2>
+            InMobi
+            {% if inmobi_status == 1 or inmobi_status == 2 or inmobi_status == 4 %}
+              <span class="success unbold">
+                (Enabled)
+              </span>
+            {% endif %}
+            {% if inmobi_status == 3 %}
+              <span class ="partial unbold">
+                (Partially enabled)
+              </span>
+            {% endif %}            
+            {% if inmobi_status == 0 %}
+              <span class="muted unbold">
+                (Not configured)
+              </span>
+            {% endif %}
+          </h2>
+          
+          <dl class="formFields">
+            <dt>
+              <label for="appForm-adUnitName">InMobi Default ID:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="inmobi_pub_id"
+                     value="{{account.network_config.inmobi_pub_id|default_if_none:""}}"
+                placeholder="ex: 4028cb962b75ff06012b792fc5fb6789" />
+            </dd>
+            
+            <div class="hidden" id="inmobi-apps">
+              {% for app in apps%}
+                <dt>
+                {{app.name}}
+                <span class="muted">
+                ({% ifequal app.app_type "iphone" %}
+                  iOS
+                 {% endifequal %}
+                 {% ifequal app.app_type "android" %}
+                   Android
+                 {% endifequal %}
+                 {% ifequal app.app_type "mweb" %}
+                   Mobile Web
+                 {% endifequal %})
+                 </span>:
+                </dt>
+                <dd>                  
+                  <input type="text"
+                         class="input-text"
+                         name="{{app.key}}-__-inmobi_pub_id"
+                         value="{{app.network_config.inmobi_pub_id|default_if_none:""}}"
+                    placeholder="ex: 4028cb962b75ff06012b792fc5fb6789"/>
+                </dd>
+              {% endfor %}
+            </div>
+            
 
-                    <div class="adForm-apps {% if chartboost_status == 2 or chartboost_status == 3 or chartboost_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
+            <div class="formFields-right">
+              <a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">
+                Go to InMobi
+                <span class="ui-icon ui-icon-arrowthick-1-e">
+                </span>
+              </a>
+            </div>
+          </dl>
+        </fieldset>
+        <fieldset class="adForm">
+          <div class="btn-well right">
+            <a class="btn btn-micro" data-toggle="modal" href="#jumptap-moreinfo">
+              <i class="icon-info-sign"></i> More Info
+            </a>
+            <a class="btn btn-micro details-toggle" href="#jumptap-apps">
+              <i class="icon-list-alt"></i> Show Apps
+            </a>
+          </div>
+          
+          {# modal #}
+          <div class="modal hidden" id="jumptap-moreinfo">
+            
+            <div class="modal-header">
+              <a href="#" class="close" data-dismiss="modal">×</a>
+              <h2> Jumptap </h2>
+            </div>
+            
+            <div class="modal-body">
+              <p>
+                Jumptap is the leader in targeted mobile
+                advertising, offering a network of thousands of
+                premium sites and applications.
+              </p>
+              <ul style='margin-left:10px;'>
+                <li>Delivers the highest publisher yield</li>
+                <li>Widest spectrum of ad units from banners to video and rich media</li>
+                <li>CPM and CPC solutions available for iPhone, Android, and Mobile Web</li>
+              </ul>
+            </div>
+            <div class="modal-footer">
+              <a href="#" class="btn" data-dismiss="modal">Close</a>              
+              <a class="btn btn-primary"
+                 href="http://www.jumptap.com/sign-up"
+                 target="_blank">
+                Sign up at Jumptap
+              </a>
+            </div>
+          </div>
+          {# end modal #}
+            
+          
+          <h2>
+            Jumptap
+              {% if jumptap_status == 1 or jumptap_status == 2 or jumptap_status == 4 %}
+                <span class="success unbold">
+                  (Enabled)
+                </span>
+              {% endif %}
+              {% if jumptap_status == 3 %}
+                <span class ="partial unbold">(Partially enabled)</span>
+              {% endif %}
+              {% if jumptap_status == 0 %}
+                <span class="muted unbold">(Not configured)</span>
+              {% endif %}
+          </h2>
+          
+          <dl class="formFields {% if jumptap_status != 0 %}show{% endif %}">
+            
+            <dt>
+              <label for="appForm-adUnitName">Jumptap Publisher ID:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="jumptap_pub_id"
+                     value="{{account.network_config.jumptap_pub_id|default_if_none:""}}"
+                placeholder="ex: pa_company_inc"/>
+            </dd>
+            <div class="hidden" id="jumptap-apps">
+              {% for app in apps%}                
+                <dt>
+                  <strong>App</strong>
+                  {{app.name}}
+                  <span class="muted">
+                    ({% ifequal app.app_type "iphone" %}
+                      iOS
+                    {% endifequal %}
+                    {% ifequal app.app_type "android" %}
+                      Android
+                    {% endifequal %}
+                    {% ifequal app.app_type "mweb" %}
+                      Mobile Web
+                    {% endifequal %})
+                    </span>:
+                </dt>
+                <dd>
+                  <input type="text"
+                         class="input-text"
+                         name="{{app.key}}-__-jumptap_pub_id"
+                         value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"
+                    placeholder="ex: pa_company_inc_app (Site Alias) "/>
+                </dd>
 
-                      <dt>{{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-chartboost_pub_id" value="{{app.network_config.chartboost_pub_id|default_if_none:""}}"  placeholder="ex: 4cf55942bb93162f4500006g"/></dd>
-                      {% endfor %}
-                    </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#"></a></dt>
-                    <dd>&nbsp;</dd>
+                {% for adunit in app.adunits %}
 
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.chartboost.com/" target="_blank">Go to ChartBoost<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-{% endcomment %}
-                <fieldset class="adForm">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                  </div>
-                  <legend>TapIt {% if ejam_status == 1 or ejam_status == 2 or ejam_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if ejam_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if ejam_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if ejam_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">TapIt Zone ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="ejam_pub_id" value="{{account.network_config.ejam_pub_id|default_if_none:""}}" placeholder="ex: 23710" /></dd>
+                  <dt>
+                    <strong>AdUnit</strong>
+                    {{adunit.name}}:
+                  </dt>
+                  <dd>
+                  <input type="text"
+                         class="input-text"
+                         name="{{adunit.key}}-_ADUNIT_-jumptap_pub_id"
+                         value="{{adunit.network_config.jumptap_pub_id|default_if_none:""}}"
+                    placeholder="ex: pa_company_inc_app_spot (Spot Alias)"/>
+                  </dd>
+                {% endfor %}
+                
+              {% endfor %}
 
-                    <div class="adForm-apps {% if ejam_status == 2 or ejam_status == 3 or ejam_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
-                      <dt>{{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-ejam_pub_id" value="{{app.network_config.ejam_pub_id|default_if_none:""}}"  placeholder="ex: 23710"/></dd>
-                      {% endfor %}
-                    </div>
-                        <dt><a class="button button-small adForm-fields-appButton" href="#"> </a></dt>
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.tapit.com/" target="_blank">Go to TapIt<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-                <fieldset class="adForm alt">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                    <div class="accountInfoForm hidden">
-                      <div class="accountInfoForm-container">
-                        <div class="accountInfoForm-left">
-                          <h2>InMobi</h2>
-                          <img src="http://www.inmobi.com/wp-content/themes/twentyten/images/logo.png" />
-                        </div>
-                        <div class="accountInfoForm-right">
-                          <p>InMobi is the world’s largest independent mobile advertising network. With offices on four continents we provide advertisers, publishers and developers with a uniquely global solution for advertising.</p>
-                          <ul>
-                            <li>Monetize in over 115 countries, through more than 31.5 Billion mobile ad impressions monthly</li>
-                            <li>Simple and straightforward CPC (Cost Per Click) model means developers get paid every time a user clicks</li>
-                            <li>Support for all major mobile operating systems including: iOS, Android, Blackberry, Web OS and WP7</li>
-                          </ul>
-                          <a class="linkIcon breadcrumb-back" href="https://www.inmobi.com/advertiser/registeruser.html" target="_blank">Sign up at InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <legend>InMobi {% if inmobi_status == 1 or inmobi_status == 2 or inmobi_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if inmobi_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if inmobi_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if inmobi_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">InMobi Default ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="inmobi_pub_id" value="{{account.network_config.inmobi_pub_id|default_if_none:""}}" placeholder="ex: 4028cb962b75ff06012b792fc5fb6789" /></dd>
-                    <div class="adForm-apps {% if inmobi_status == 2 or inmobi_status == 3 or inmobi_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
-                      <dt>{{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-inmobi_pub_id" value="{{app.network_config.inmobi_pub_id|default_if_none:""}}"  placeholder="ex: 4028cb962b75ff06012b792fc5fb6789"/></dd>
-                      {% endfor %}
-                    </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
-                    <dd>&nbsp;</dd>
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.inmobi.com/" target="_blank">Go to InMobi<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-                <fieldset class="adForm">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                    <div class="accountInfoForm hidden">
-                      <div class="accountInfoForm-container">
-                        <div class="accountInfoForm-left">
-                          <h2>Jumptap</h2>
-                          <img src="/images/jumptap_logo_160px.png" />
-                        </div>
-                        <div class="accountInfoForm-right">
-                          <p>Jumptap is the leader in targeted mobile advertising, offering a network of thousands of premium sites and applications.</p>
-                          <ul>
-                            <li>Delivers the highest publisher yield</li>
-                            <li>Widest spectrum of ad units from banners to video and rich media</li>
-                            <li>CPM and CPC solutions available for iPhone, Android, and Mobile Web</li>
-                          </ul>
-                          <a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/sign-up" target="_blank">Sign up at Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <legend>Jumptap {% if jumptap_status == 1 or jumptap_status == 2 or jumptap_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if jumptap_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if jumptap_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if jumptap_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">Jumptap Publisher ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="jumptap_pub_id" value="{{account.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc"/></dd>
-                    <div class="adForm-apps {% if jumptap_status == 2 or jumptap_status == 3 or jumptap_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
+            </div>
+            
+            <div class="formFields-right">
+              <a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">
+                Go to Jumptap
+                <span class="ui-icon ui-icon-arrowthick-1-e"></span>
+              </a>
+            </div>
+          </dl>
+        </fieldset>
+        
+        <fieldset class="adForm alt">
+          <div class="btn-well right">
+            <a class="btn btn-micro" data-toggle="modal" href="#millenial-moreinfo">
+              <i class="icon-info-sign"></i> More Info
+            </a>
+            <a class="btn btn-micro details-toggle" href="#millenial-apps">
+              <i class="icon-list-alt"></i> Show Apps
+            </a>
+          </div>
 
-                      <dt><strong>App</strong> {{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-jumptap_pub_id" value="{{app.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app (Site Alias) "/></dd>
-                      <!-- here -->
-                      {% for adunit in app.adunits %}
-                      <!-- here -->
-                      <dt><strong>AdUnit</strong> {{adunit.name}}:</dt>
-                      <dd><input type="text" class="input-text" name="{{adunit.key}}-_ADUNIT_-jumptap_pub_id" value="{{adunit.network_config.jumptap_pub_id|default_if_none:""}}"  placeholder="ex: pa_company_inc_app_spot (Spot Alias)"/></dd>
-                      {% endfor %}
+          <div class="modal hidden" id="millenial-moreinfo">
+            
+            <div class="modal-header">
+              <a href="#" class="close" data-dismiss="modal">×</a>
+              <h2> Millenial </h2>
+            </div>
+            
+            <div class="modal-body">
+              <p>
+                Millennial Media's extensive network, including
+                more than 7000 sites and applications, is the
+                largest and deepest in the US.
+              </p>
+              <ul style='margin-left:10px;'>
+                <li>The largest independent mobile ad network</li>
+                <li>Rich media advertising units for higher return</li>
+                <li>CPM and CPC ads with real-time reporting</li>
+              </ul>
+            </div>
+            
+            <div class="modal-footer">
+              <a href="#" class="btn" data-dismiss="modal">Close</a>              
+              <a class="btn btn-primary"
+                 href="http://developer.millennialmedia.com/register.php"
+                 target="_blank">
+                Sign up at Millennial
+              </a>
+            </div>
+            
+          </div>
+          
+                    
+          <h2>
+            Millennial Media
+            {% if millennial_status == 1 or millennial_status == 2 or millennial_status == 4 %}
+              <span class="success unbold">(Enabled)</span>
+            {% endif %}
+            {% if millennial_status == 3 %}
+              <span class ="partial unbold">(Partially enabled)</span>
+            {% endif %}
+            {% if millennial_status == 0 %}
+              <span class="muted unbold">(Not configured)</span>
+            {% endif %}
+          </h2>
+          
+          <dl class="formFields {% if millennial_status != 0 %}show{% endif %}">
+            <dt>
+              <label for="appForm-adUnitName">Millennial Default ID:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="millennial_pub_id"
+                     value="{{account.network_config.millennial_pub_id|default_if_none:""}}"
+                placeholder="ex: 36789"/>
+            </dd>
+            
+            <div class="hidden" id="millenial-apps">
+              {% for app in apps%}
+                <dt>
+                  <strong>App</strong>
+                  {{app.name}}
+                <span class="muted">
+                  ({% ifequal app.app_type "iphone" %}
+                    iOS
+                  {% endifequal %}
+                  {% ifequal app.app_type "android" %}
+                    Android
+                  {% endifequal %}
+                  {% ifequal app.app_type "mweb" %}
+                    Mobile Web
+                  {% endifequal %})
+                  </span>:
+                </dt>
+                <dd>
+                  <input type="text"
+                         class="input-text"
+                         name="{{app.key}}-__-millennial_pub_id"
+                         value="{{app.network_config.millennial_pub_id|default_if_none:""}}"
+                    placeholder="ex: 36789"/>
+                </dd>
+                {% for adunit in app.adunits %}
+                  <dt>
+                    <strong>AdUnit</strong>
+                    {{adunit.name}}:
+                  </dt>
+                  <dd>
+                    <input type="text"
+                           class="input-text"
+                           name="{{adunit.key}}-_ADUNIT_-millennial_pub_id"
+                           value="{{adunit.network_config.millennial_pub_id|default_if_none:""}}"
+                      placeholder="ex: 36789"/>
+                  </dd>
+                {% endfor %}
+              {% endfor %}
+              
+            </div>
 
-                      {% endfor %}
+            <div class="formFields-right">
+              <a class="linkIcon breadcrumb-back"
+                 href="http://www.millennialmedia.com"
+                 target="_blank">
+                Go to Millennial Media
+                <span class="ui-icon ui-icon-arrowthick-1-e"></span>
+              </a>
+            </div>
+          </dl>
+        </fieldset>
+        <fieldset class="adForm">
+          
+          <div class="btn-well right">
+            <a class="btn btn-micro details-toggle" href="#mobfox-apps"><i class="icon-list-alt"></i> Show Apps</a>
+          </div>
+          
+          <h2>
+            MobFox
+            {% if mobfox_status == 1 or mobfox_status == 2 or mobfox_status == 4 %}
+              <span class="success unbold">(Enabled)</span>
+            {% endif %}
+            {% if mobfox_status == 3 %}
+              <span class ="partial unbold">(Partially enabled)</span>
+            {% endif %}
+            {% if mobfox_status == 0 %}
+              <span class="muted unbold">(Not configured)</span>
+            {% endif %}
+          </h2>
+          
+          <dl class="formFields {% if mobfox_status != 0 %}show{% endif %}">
+            <dt>
+              <label for="appForm-adUnitName">MobFox Default ID:</label>
+            </dt>
+            <dd>
+              <input type="text"
+                     class="input-text"
+                     name="mobfox_pub_id"
+                     value="{{account.network_config.mobfox_pub_id|default_if_none:""}}"
+                placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/>
+            </dd>
+            <div class="hidden" id="mobfox-apps">
+              {% for app in apps%}
+                <dt>
+                  {{app.name}}
+                  <span class="muted">
+                    ({% ifequal app.app_type "iphone" %}
+                      iOS
+                    {% endifequal %}
+                    {% ifequal app.app_type "android" %}
+                      Android
+                    {% endifequal %}
+                    {% ifequal app.app_type "mweb" %}
+                      Mobile Web
+                    {% endifequal %})
+                  </span>:
+                </dt>
+                <dd>
+                  <input type="text"
+                         class="input-text"
+                         name="{{app.key}}-__-mobfox_pub_id"
+                         value="{{app.network_config.mobfox_pub_id|default_if_none:""}}"
+                    placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/>
+                </dd>
+              {% endfor %}
+            </div>
 
-                    </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
-                    <dd>&nbsp;</dd>
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.jumptap.com/" target="_blank">Go to Jumptap<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-                <fieldset class="adForm alt">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-infoButton" href="#">More info</a>
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                    <div class="accountInfoForm hidden">
-                      <div class="accountInfoForm-container">
-                        <div class="accountInfoForm-left">
-                          <h2>Millennial Media</h2>
-                          <img src="http://www.millennialmedia.com/wp-content/themes/mm-0-8/static/img/mm_logo.gif" />
-                        </div>
-                        <div class="accountInfoForm-right">
-                          <p>Millennial Media's extensive network, including more than 7000 sites and applications, is the largest and deepest in the US.</p>
-                          <ul>
-                            <li>The largest independent mobile ad network</li>
-                            <li>Rich media advertising units for higher return</li>
-                            <li>CPM and CPC ads with real-time reporting</li>
-                          </ul>
-                          <a class="linkIcon breadcrumb-back" href="http://developer.millennialmedia.com/register.php" target="_blank">Sign up at Millennial<span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <legend>Millennial Media {% if millennial_status == 1 or millennial_status == 2 or millennial_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if millennial_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if millennial_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if millennial_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">Millennial Default ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="millennial_pub_id" value="{{account.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
-                    <div class="adForm-apps {% if millennial_status == 2 or millennial_status == 3 or millennial_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
-                        <dt><strong>App</strong> {{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                        <dd><input type="text" class="input-text" name="{{app.key}}-__-millennial_pub_id" value="{{app.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
-                      {% for adunit in app.adunits %}
-                      <!-- here -->
-                      <dt><strong>AdUnit</strong> {{adunit.name}}:</dt>
-                      <dd><input type="text" class="input-text" name="{{adunit.key}}-_ADUNIT_-millennial_pub_id" value="{{adunit.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
-                      {% endfor %}
-                      {% endfor %}
-
-                    </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
-                    <dd>&nbsp;</dd>
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.millennialmedia.com" target="_blank">Go to Millennial Media<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-                <fieldset class="adForm">
-                  <div class="buttonBank buttonBank-right">
-                    <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
-                  </div>
-                  <legend>MobFox {% if mobfox_status == 1 or mobfox_status == 2 or mobfox_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
-                                        {% if mobfox_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
-                                        {% if mobfox_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
-                  <dl class="formFields {% if mobfox_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">MobFox Default ID:</label></dt>
-                    <dd><input type="text" class="input-text" name="mobfox_pub_id" value="{{account.network_config.mobfox_pub_id|default_if_none:""}}"  placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/></dd>
-                    <div class="adForm-apps {% if mobfox_status == 2 or mobfox_status == 3 or mobfox_status == 4 %} {% else %} show {% endif %}">
-                      {% for app in apps%}
-                      <dt>{{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
-                      <dd><input type="text" class="input-text" name="{{app.key}}-__-mobfox_pub_id" value="{{app.network_config.mobfox_pub_id|default_if_none:""}}"  placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/></dd>
-                      {% endfor %}
-                    </div>
-                    <dt><a class="button button-small adForm-fields-appButton" href="#">Show apps</a></dt>
-                    <dd>&nbsp;</dd>
-
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.mobfox.com/" target="_blank">Go to MobFox<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
-                  </dl>
-                </fieldset>
-
-                <div class="form-submit">
-{% ifequal account.status 'step3' %}
-                  <a class="button" id="accountForm-skip" href="{% url account_index %}?skip=true">Skip this step</a>
-{% endifequal %}
-                  <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Submit</a></span>
-                </div>
-              </form>
-
+            <div class="formFields-right">
+              <a class="linkIcon breadcrumb-back"
+                 href="http://www.mobfox.com/"
+                 target="_blank">
+                Go to MobFox
+                <span class="ui-icon ui-icon-arrowthick-1-e"></span>
+              </a>
+            </div>
+          </dl>
+        </fieldset>
+        
+        <div class="form-submit">
+          {% ifequal account.status 'step3' %}
+            <a class="btn" id="accountForm-skip" href="{% url account_index %}?skip=true">
+              Skip this step
+            </a>
+          {% endifequal %}
+          <a href="#" class="btn btn-primary btn-large" id="accountForm-submit">
+            Save Settings
+          </a>
+        </div>
+        
+      </form>
+    </div>
+  </section>
 {% endblock %}
+
+{% block extraScripts %}
+  <script type="text/javascript">
+    $(function () {
+        $("#accountForm-submit").click(function (e) {
+            e.preventDefault();
+            $("#accountForm").submit();
+        });
+
+        $(".details-toggle").click(function(e) {
+            e.preventDefault();
+            var href = $(this).attr('href');
+            $(href).toggleClass('hidden');
+        });
+    });
+  </script>
+{% endblock extraScripts %}

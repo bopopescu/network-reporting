@@ -1,0 +1,89 @@
+/*
+ * New style rollups
+ */
+.new-rollup {
+    margin: 0 auto;
+    @include clearfix();
+    
+    .rollup-box {        
+        margin: 4px;
+        padding: 10px;
+        width: 208px;
+        display: inline-block;
+        overflow: hidden;
+        background: #B4CEE1;
+        @include border-radius(6px);
+        @include box-shadow(0 3px 1px rgba(0,0,0,0.1));        
+        @include transition(background .2s ease-in);
+
+        &:first-child {
+            margin-left: 0;
+        }
+        &:last-child {
+            margin-right: 0;
+        }
+        
+        &.active {
+            background: darken(#B4CEE1, 15%);
+        }
+
+        &:hover {
+            cursor: pointer;
+            background: lighten($link_color_hover, 20%);
+            &.active {
+                background: darken(#B4CEE1, 15%);
+            }
+        }
+        
+        .rollup-title {
+            margin: 0 auto 5px auto;
+            text-align: center;
+            padding: 9px 15px;
+            line-height: 1;
+            background-color: $white;
+            border-bottom:1px solid #eee;
+            
+            @include border-radius(3px 3px 0 0);
+        }
+
+        .rollup-stat {
+            padding: 10px;
+            background-color: $white;
+            @include border-radius(0 0 3px 3px);
+            @include background-clip(padding-box);
+            p, ul, ol {
+                margin-bottom: 0;
+            }
+
+            p {
+                margin-bottom: 0;
+                text-align: center;
+            }
+
+            .stat-value {
+                text-align: center;
+                font-size: 34px;
+            }
+
+            .delta-value {
+                text-align: center;
+                font-size: 18px;
+                &.positive {
+                    color: #62c462;
+                }
+                &.negative {
+                    color: #ee5f5b;
+                }
+            }
+        }
+    }
+}
+
+.rollup {
+    @include border-radius(5px);
+    background: #EBF2F7;
+    color: #444;
+    margin-bottom: 20px;
+    padding: 5px;
+    border: none;
+}

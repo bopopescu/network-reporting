@@ -452,7 +452,7 @@ class StringListProperty(db.StringListProperty):
     This defaults to a Textarea widget with a blank initial value.
     """
     # changed to use mpwidgets
-    defaults = {'widget': mpfields.MPTextareaField,
+    defaults = {'widget': mpwidgets.MPTextarea,
                 'initial': ''}
     defaults.update(kwargs)
     return super(StringListProperty, self).get_form_field(**defaults)
@@ -781,7 +781,12 @@ class ModelFormMetaclass(type):
     #    new_class.media = media_property(new_class)
     return new_class
 
+"""
+TODO: fix common.utils.djangoforms.ModelForm to conform to
+https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
 
+TODO: make Media.js and Media.css work correctly
+"""
 class BaseModelForm(forms.BaseForm):
   """Base class for ModelForm.
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 export DJANGO_SETTINGS_MODULE='settings'
 export PYTHONPATH="$PYTHONPATH:$PWD"
-nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox --verbose --with-xcoverage --with-xunit --xcoverage-file="$PWD/coverage.xml" --cover-package='server'
+nosetests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox --with-xcoverage --with-xunit --xcoverage-file="$PWD/coverage.xml" --cover-package='server'
 
 
 

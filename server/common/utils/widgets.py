@@ -31,7 +31,6 @@ class MPWidget(Widget):
         suffix_html = mark_safe(attrs.pop(u'suffix',''))
 
         flat_attrs = mark_safe(self.flatatt(attrs))
-
         context_dict = dict(widget = self, name = name, value = value,
                             flat_attrs = flat_attrs, suffix_html = suffix_html)
         c = Context(context_dict)
@@ -55,7 +54,7 @@ class MPWidget(Widget):
         return attrs
 
 class MPTextarea(MPWidget):
-    TEMPLATE = 'widgets/textarea.html'
+    TEMPLATE = 'common/widgets/textarea.html'
     DEFAULT_CLASSES = "input-text"
     def __init__(self, cols=50, rows=3, required=False):
            # The 'rows' and 'cols' attributes are required for HTML correctness.
@@ -64,18 +63,18 @@ class MPTextarea(MPWidget):
            super(MPTextarea, self).__init__(required=required)
 
 class MPTextInput(MPWidget):
-    TEMPLATE = 'widgets/text_input.html'
+    TEMPLATE = 'common/widgets/text_input.html'
     DEFAULT_CLASSES = "input-text"
 
 class MPPasswordInput(MPTextInput):
-    TEMPLATE = 'widgets/password_input.html'
+    TEMPLATE = 'common/widgets/password_input.html'
 
 class MPDeviceFormatRadioInput(MPWidget):
-    TEMPLATE = 'widgets/adunit_device_format.html'
+    TEMPLATE = 'common/widgets/adunit_device_format.html'
     DEFAULT_CLASSES = "input-text"
 
 class MPSelectWidget(MPWidget):
-    TEMPLATE = 'widgets/select.html'
+    TEMPLATE = 'common/widgets/select.html'
     DEFAULT_CLASSES = ''
 
     def __init__(self, attrs=None, choices=()):
@@ -111,13 +110,13 @@ class MPSelectWidget(MPWidget):
         return t.render(c)
 
 class MPRadioWidget(MPSelectWidget):
-    TEMPLATE = 'widgets/radio.html'
+    TEMPLATE = 'common/widgets/radio.html'
     DEFAULT_CLASSES = "input-text"
 
 class MPFormatWidget(MPWidget):
-    TEMPLATE = 'widgets/adunit_format.html'
+    TEMPLATE = 'common/widgets/adunit_format.html'
 
 class MPNumberInput(MPTextInput):
-    TEMPLATE = 'widgets/number_input.html'
+    TEMPLATE = 'common/widgets/number_input.html'
     DEFAULT_CLASSES = "input-text input-text-number number"
 

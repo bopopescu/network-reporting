@@ -1,4 +1,152 @@
 (function($, _) {
+
+    /*
+     * ## App
+     * We might consider turning derivative values (cpm, fill_rate, ctr) into
+     * functions.
+     */
+    var App = StatsModel.extend({
+        defaults : {
+            name: '',
+            url:'#',
+            icon_url: "/placeholders/image.gif",
+            app_type: '',
+            active: false,
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            fill_rate: 0,
+            imp: 0,
+            price_floor: 0,
+            requests: 0,
+            rev: 0,
+            status: 'Running',
+            stats_endpoint: 'all'
+        },
+        url: function () {
+            var stats_endpoint = this.get('stats_endpoint');
+            if (this.get('campaign_id')) {
+                return '/api/campaign/'
+                    + this.get('campaign_id')
+                    + '/apps/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            } else {
+                return '/api/app/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            }
+        },
+        parse: function (response) {
+            // The api returns everything from this url as a list,
+            // so that you can request one or all apps.
+            var app = response[0];
+
+            // REFACTOR attempts vs requests
+            if(app.req == null || app.req == undefined) {
+                app.req = app.att;
+            } else if (app.att == null || app.att == undefined) {
+                app.att = app.req;
+            }
+
+            if (app.app_type === 'iphone') {
+                app.app_type = 'iOS';
+            }
+            if (app.app_type === 'android') {
+                app.app_type = 'Android';
+            }
+            if (app.app_type === 'mweb') {
+                app.app_type = 'Mobile Web';
+            }
+            return app;
+        },
+        get_summed: function (attr) {
+            if (typeof(this.get(attr)) !== 'undefined') {
+                var series = this.get(attr);
+                var sum = _.reduce(series, function(memo, num){
+                    return memo + num;
+                }, 0);
+                return sum;
+            }
+            return null;
+        }
+    });
+
+
+    /*
+     * ## AppView
+     *
+     * See templates/partials/app.html to see how this is rendered in HTML.
+     * This renders an app as a table row. It also adds the call to load
+     * adunits over ajax and put them in the table.
+     */
+    var AppView = Backbone.View.extend({
+        initialize: function () {
+            if (this.options.endpoint_specific) {
+                this.model.bind('change', this.render, this);
+            }
+            try {
+                this.template = _.template($('#app-template').html());
+            } catch (e) {
+                // the template wasn't specified. this is ok if you
+                // intend to renderInline
+            }
+        },
+
+        renderInline: function () {
+            var this_view = this;
+            // Will there be multiple stats endpoints in this app row?
+            if (this_view.options.endpoint_specific) {
+                if (this_view.model.get('stats_endpoint') == 'networks') {
+                    var selector = ' .network-data';
+                } else {
+                    var selector = ' .mopub-data';
+                }
+            } else {
+                var selector = ''
+            }
+            var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
+
+            /*jslint maxlen: 200 */
+            if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
+                $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
+            }
+            var metrics = ['cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            _.each(metrics, function (metric) {
+                if (this_view.model.get('stats_endpoint') != 'networks'
+                        || this_view.options.network != 'mobfox' || (metric != 'att'
+                        && metric != 'fill_rate')) {
+                    $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
+                }
+            });
+            /*jslint maxlen: 110 */
+
+            $(".loading-img", app_row).hide();
+
+            return this;
+        },
+        render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // When we render an appview, we also attach a handler to fetch
+            // and render it's adunits when a link is clicked.
+            $('tbody', this.el).append(renderedContent);
+            return this;
+        }
+    });
+
+
     var toast_error = function () {
          var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
@@ -15,6 +163,13 @@
         }
         return d;
     }
+    // TODO: move to a utils package
+    // checks if email is valid
+    function isValidEmailAddress(emailAddress) {
+        var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
+        return pattern.test(emailAddress);
+    };
+
 
     function convertSerializedArrayToHash(a) { 
         var r = {}; 
@@ -36,7 +191,8 @@
         return r;
     }
 
-    function initialize_campaign_data(campaign_data, apps, include_adunits) {
+    function initialize_campaign_data(campaign_data, apps, include_adunits) {        
+
         // create mopub campaign
         // endpoint=all
         var mopub_campaign = new Campaign(campaign_data);
@@ -54,10 +210,11 @@
             all_campaigns.push(network_campaign);
         }
 
-        // Create CampaignView and fetch mopub campaign and network
+        // Create NetworkView and fetch mopub campaign and network
         // campaign if campaign has reporting
         _.each(all_campaigns, function(campaign) {
-            new CampaignView({
+            
+            new NetworkView({
                 model: campaign
             });
 
@@ -66,6 +223,9 @@
                     campaign.fetch({
                         error: toast_error
                     });
+                },
+                success: function () {
+                    
                 }
             });
         });
@@ -73,26 +233,32 @@
         var network_apps = [];
         _.each(all_campaigns, function(campaign) {
             _.each(apps, function(app) {
-                var network_app = new App({id: app.id,
-                                           campaign_id: campaign.id,
-                                           stats_endpoint: campaign.get('stats_endpoint')});
+                var network_app = new App({
+                    id: app.id,
+                    campaign_id: campaign.id,
+                    stats_endpoint: campaign.get('stats_endpoint')
+                });
 
-                var app_view = new AppView({model: network_app,
-                             endpoint_specific: true,
-                             network: campaign.get('network')});
+                var app_view = new AppView({
+                    model: network_app,
+                    endpoint_specific: true,
+                    network: campaign.get('network')
+                });
                 app_view.el = '.' + campaign.id + '-apps-div';
 
                 network_apps.push(network_app);
             });
         });
 
-        if(include_adunits) {
+        if (include_adunits) {
             var adunits = new AdUnitCollection();
             adunits.campaign_id = mopub_campaign.id;
             adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
 
-            new AdUnitCollectionView({collection: adunits,
-                                      campaign: mopub_campaign});
+            new AdUnitCollectionView({
+                collection: adunits,
+                campaign: mopub_campaign
+            });
 
             return [all_campaigns, network_apps, adunits];
         } else {
@@ -144,35 +310,58 @@
                         setTimeout(hide_network_trafficChart_series, 50);//wait 50 millisecnds then recheck
                     }
                 }
-                hide_network_trafficChart_series()
+                hide_network_trafficChart_series();
             }
         });
 
+        // We drop a cookie when someone clicks on the 'show reporting data'
+        // check box, so that their preference is saved. If that cookie exists,
+        // check the box automatically. 
         if (!$.cookie("show-network-data")) {
             $('#show-network').click();
         } else {
             $('#show-network').change();
         }
-    }
+    };
 
     var NetworksController = { 
+
         initialize: function(bootstrapping_data) {
+            
+            // Set up variables from the boostrapping data
             var campaigns_data = bootstrapping_data.campaigns_data,
                 apps = bootstrapping_data.apps,
                 date_range = bootstrapping_data.date_range,
                 graph_start_date = bootstrapping_data.graph_start_date;
 
+            // Initialize common stuff
             // TODO: move fuction to mopub.js
             initializeDateButtons();
 
+            // Make the new network selector really fancy
+            function network_option_format(network) {
+                console.log(network);
+                return "<img src='/images/" + network.id.toLowerCase()  + "-transparent.png'/>" + network.text;
+            }
+
+            
+            $("#network-editSelect").chosen().bind("change", function() {
+                window.location = $(this).val();
+            });
+
+
+            // Fetch all the campaign data and render each network as a table row
             var all_campaigns = [];
             var apps_by_campaign = {};
             _.each(campaigns_data, function(campaign_data) {
+
                 var result = initialize_campaign_data(campaign_data, apps, false);
                 all_campaigns = all_campaigns.concat(result[0]);
-                network_apps = apps_by_campaign[result[0][0].id] = result[1];
+                var network_apps = apps_by_campaign[result[0][0].id] = result[1];
             });
 
+            // Set up the click handler that shows the apps targeted
+            // by each network
             $('.show-apps').click(function() {
                 var key = $(this).attr('id');
                 var div = $('.' + key + '-apps-div');
@@ -180,7 +369,7 @@
                     div.show();
                     $(this).children('span').text("Hide Apps");
                 } else {
-                    div.hide()
+                    div.hide();
                     $(this).children('span').text("Show Apps");
                 }
                 // load the apps via ajax
@@ -203,44 +392,28 @@
                 date_range: date_range,
                 start_date: graph_start_date,
                 line_graph: false,
-                mopub_optimized: false,
+                mopub_optimized: false
             });
 
-            new NetworkDailyCountsView({collection: campaigns});
+            new NetworkDailyCountsView({
+                collection: campaigns
+            });
 
             initialize_show_network();
 
             $('.appData').hover(
                 function() {
-                    $(this).find('.edit-link').show()
+                    $(this).find('.edit-link').show();
                 },
                 function() {
-                    $(this).find('.edit-link').hide()
+                    $(this).find('.edit-link').hide();
                 }
             );
 
-            $('#network-editSelect').change(function() {
-                if ($(this).val()) {
-                    window.location = $(this).val();
-                }
-                $(this).selectmenu('index', 0);
-            });
 
-            $('#network-editSelect-menu').find('li').first().hide();
-
-            // TODO: move to a utils package
-            // checks if email is valid
-            function isValidEmailAddress(emailAddress) {
-                var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
-                return pattern.test(emailAddress);
-            };
 
             // taken from mopub-dashboard.js #appEditForm (could be combined)
             $('#networkSettingsForm-submit')
-                .button({
-                    icons: { secondary: "ui-icon-circle-triangle-e" }
-                })
-
                 .click(function(e) {
                     e.preventDefault();
                     $('#networkSettingsForm-loading').show();
@@ -285,7 +458,6 @@
                 });
 
             $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" } })
                 .click(function(e) {
                     e.preventDefault();
                     if ($('#network-settingsForm').is(':visible')) {
@@ -296,15 +468,12 @@
                 });
 
             $('.dailyCount-toggleButton')
-                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
                 .click(function(e) {
                     e.preventDefault();
                     if ($('#dailyCounts-individual').is(':hidden')) {
                         $('#dailyCounts-individual').slideDown('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
                     } else {
                         $('#dailyCounts-individual').slideUp('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
                     }
                 });
 
@@ -363,7 +532,6 @@
             });
 
             $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" } })
                 .click(function(e) {
                     e.preventDefault();
                     if ($('#network-settingsForm').is(':visible')) {
@@ -491,7 +659,7 @@
                     }
 
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
-                    var tbody = $(this).closest('tbody')
+                    var tbody = $(this).closest('tbody');
                     var input = tbody.find('.app-cpm-input input');
                     // change app level cpm
                     input.val(cpm);
@@ -503,16 +671,13 @@
 
             // set up 'show advanced settings' button
             $('#advanced')
-                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
                 .click(function() {
                     if ($('.advanced').is(':hidden')) {
                         $('.advanced').slideDown();
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                        $('.ui-button-text', this).text('Hide Advanced Settings');
+                        $('#advanced').html('<i class="icon-eye-close"></i>Hide Advanced Settings');
                     } else {
                         $('.advanced').slideUp();
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                        $('.ui-button-text', this).text('Show Advanced Settings');
+                        $('#advanced').html('<i class="icon-eye-open"></i>Show Advanced Settings');
                     }
                 });
 
@@ -535,7 +700,7 @@
                             $('#loading').hide();
                             if(jsonData.success) {
                                 if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
-                                    data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
+                                    var data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
 
                                     $.ajax({url: 'https://checklogincredentials.mopub.com',
                                         data: data,
@@ -544,25 +709,19 @@
                                     });
                                 }
                                 window.location = jsonData.redirect;
-                                $('form#campaign_and_adgroup #submit').button({
-                                    label: 'Success...',
-                                    disabled: true
-                                });
+                                $('form#campaign_and_adgroup #submit').text('Success...');
+                                $('form#campaign_and_adgroup #submit').attr('disabled', 'disabled');
                             } else {
                                 console.log(jsonData.errors);
                                 validator.showErrors(jsonData.errors);
-                                $('form#campaign_and_adgroup #submit').button({
-                                    label: 'Try Again',
-                                    disabled: false
-                                });
+                                $('form#campaign_and_adgroup #submit').text('Try Again');
+                                $('form#campaign_and_adgroup #submit').removeAttr('disabled');
                             }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             $('#loading').hide();
-                            $('form#campaign_and_adgroup #submit').button({
-                                label: 'Try Again',
-                                disabled: false
-                            });
+                            $('form#campaign_and_adgroup #submit').text('Try Again');
+                                $('form#campaign_and_adgroup #submit').removeAttr('disabled');
                         },
                         beforeSubmit: function(arr, $form, options) {
                             if(campaign_key) {
@@ -606,15 +765,14 @@
                             }
 
                             $('#loading').css('display', 'inline');
-                            $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                           disabled: true});
+                            $('form#campaign_and_adgroup #submit').text('Submitting...');
+                            $('form#campaign_and_adgroup #submit').attr('disabled', 'disabled');
                         }
                     });
                 }
             });
 
             $('form#campaign_and_adgroup #submit')
-                .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
                 .click(function(e) {
                     e.preventDefault();
                     $('form#campaign_and_adgroup').submit();
@@ -635,7 +793,7 @@
                             // Remove the form.
                             $('#form-to-submit').remove();
                         }
-                        data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
+                    data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
 
                         // Check if data submitted in the form is valid login
                         // information for the ad network
@@ -688,12 +846,6 @@
 
                 $(this).removeClass('ui-state-hover');
                 $('#network-login-form').html(fieldset.clone());
-
-                // rebuild buttons
-                // TODO: remove terrible designer buttons so hacks like this
-                // aren't needed
-                $('form#network-login-form .button').addClass('button-small');
-                $('form#network-login-form .button').button();
 
                 fieldset.slideUp(400, function () {
                     fieldset.remove();
@@ -760,7 +912,7 @@
             $('.pub-id-edit').click(function (event) {
                 event.preventDefault();
                 $(this).hide();
-                var div = $(this).siblings('.pub-id-input')
+                var div = $(this).siblings('.pub-id-input');
                 div.show();
                 div.find('input').addClass('initialized');
             });
@@ -779,7 +931,7 @@
                 var input_div = $(this).closest('.pub-id-input');
                 input_div.hide();
 
-                var value = input_div.children('input').val()
+                var value = input_div.children('input').val();
                 if (value) {
                     $(this).closest('td').find('.pub-id-edit').text(value);
                 } else {
@@ -790,7 +942,7 @@
 
 
             /* Setting cpm, custom_html and custom_native */
-            var fields = [['cpm', 'input']]
+            var fields = [['cpm', 'input']];
             if(network_type == 'custom') {
                 fields.push(['custom_html', 'textarea']);
             } else if(network_type == 'custom_native') {
@@ -844,9 +996,9 @@
                 });
 
                 $('.app-' + field + '-close').click(function (event) {
-                    event.preventDefault;
+                    event.preventDefault();
                     if($('.global-' + field + '-input').is(':hidden')) {
-                        elements = $(this);
+                        var elements = $(this);
                     } else {
                         $('.global-' + field + '-input').hide();
                         $('.global-' + field + '-close').show();
@@ -854,7 +1006,7 @@
                         $('.app-' + field + '-input').show();
                         $('.app-' + field + '-close').hide();
 
-                        elements = $('.app-' + field + '-close');
+                        var elements = $('.app-' + field + '-close');
                     }
 
                     elements.each(function() {
@@ -896,7 +1048,7 @@
                 });
 
                 $('.global-' + field + '-close').click(function (event) {
-                    event.preventDefault;
+                    event.preventDefault();
                     // copy value of first adunit to all field inputs
                     var value = $('.' + field + '-input ' + type).val();
                     $('.global-' + field + '-input ' + type).val(value);
@@ -981,8 +1133,12 @@
                 }
             });
 
-            var MODAL_FIELDS = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
-                ['hourly_frequency_cap', '/h']]);
+            var MODAL_FIELDS = ([
+                ['allocation_percentage', '%, '],
+                ['daily_frequency_cap', '/d '],
+                ['hourly_frequency_cap', '/h']
+            ]);
+            
             var ALL_KEYS = _.keys(app_for_adunit).concat(_.keys(adunits_for_app)).concat(['global']);
             function check_global(text, global_values) {
                 // text and global_values are candidates for global values
@@ -1030,11 +1186,11 @@
                     }
                 });
                 if(!text) {
-                    text = "None"
+                    text = "None";
                 }
 
                 if($(row).hasClass('adunit-row')) {
-                    app_key = app_for_adunit[key];
+                    var app_key = app_for_adunit[key];
                     // adunit level
                     $('#' + key + '-options-edit').text(text);
 
@@ -1110,7 +1266,7 @@
                         $(modal_div).modal('hide');
                     });
 
-                    $(modal_div).find('.close').click(function() {
+                    $(modal_div).find('.cancel').click(function() {
                         $(modal_div).modal('hide');
                     });
                 });
@@ -1120,8 +1276,8 @@
             // mimic an entry for each adunit to prepopulate settings
             // at app and global levels
             _.each(_.flatten(_.values(adunits_for_app)), function(adunit_key) {
-                adunit_row = $('#' + adunit_key + '-row')
-
+                var adunit_row = $('#' + adunit_key + '-row')
+                
                 // prepopulate advanced options modals
                 var modal_div = $('#' + adunit_key +'-options');
                 modal_ok(adunit_row, modal_div);
@@ -1202,7 +1358,7 @@
             }
 
         }
-    }
+    };
 
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
@@ -1237,7 +1393,7 @@
             });
 
             // create campaigns collection
-            campaigns = new Campaigns(all_campaigns);
+            var campaigns = new Campaigns(all_campaigns);
 
             new NetworkGraphView({
                 collection: campaigns,
@@ -1248,43 +1404,33 @@
 
             initialize_show_network();
 
-            $('#network-settingsButton')
-                .button({ icons: { primary: "ui-icon-wrench" } })
+            $('.chzn-select').chosen({no_results_text: "No results matched"});
 
             $('#delete-network')
                 .click(function () {
-                    var key = $(this).attr('id');
-                    var div = $('.' + key);
-                    div.dialog({
-                        buttons: {
-                            "Delete": function() {
                                 $.post('/networks/delete',
                                     {campaign_key: campaign_data.id},
                                     function() {
                                       window.location = '/networks';
                                 });
-                                },
-                            "Cancel": function() { $(this).dialog('close');} }
-                    });
-                });
-
-            $('#network-editActive').change(function () {
-                var hidden_li = $('#network-editActive-menu').find('li:hidden');
-                var shown_li = $('#network-editActive-menu').find('li:not(:hidden)');
-                hidden_li.show();
-                shown_li.hide();
-
-                $.post('/networks/pause', { campaign_key: campaign_data.id,
-                                             active: $(this).val() } );
             });
 
-            $('#network-editActive-menu').find('li').first().hide();
+            $('#network-editActive').change(function () {
+                $('#active-spinner').show();
+                $.post('/networks/pause',
+                       { campaign_key: campaign_data.id,
+                         active: $(this).val() } ,
+                       function(data) {
+                           $('#active-spinner').hide();
+                       });
+            });
 
             }
-    }
+    };
 
     window.NetworkDetailsController = NetworkDetailsController;
     window.NetworksController = NetworksController;
     window.EditNetworkController = EditNetworkController;
-})(window.jQuery, window._);
+
+})(this.jQuery, this._);
 

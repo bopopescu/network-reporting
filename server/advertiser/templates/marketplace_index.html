@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends 'common/base.html' %}
 {% load filters %}
 {% load elements %}
 {% block pageTitle %}
@@ -7,7 +7,7 @@
 
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
-  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url advertiser_order_index %}">Orders</a></li>
   <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li><a href="{% url networks %}">Networks</a></li>
 {% endblock navLinks %}
@@ -28,9 +28,11 @@
   {% endif %}
 
   <div class="alert-message block-message hidden" id="first_time_toast">
-    The MoPub Marketplace is now active. Visit the settings tab if you'd like to change how the Marketplace works.
+    The MoPub Marketplace is now active. Visit the settings tab if
+    you'd like to change how the Marketplace works.
   </div>
 
+  {% comment %}
   <div class="campaignData-rollup">
     <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
       <thead>
@@ -55,7 +57,7 @@
       </tbody>
     </table>
   </div>
-
+  {% endcomment %}
   <ul class="tabs">
     <li class="active"> <a href="#performance"> Performance </a> </li>
     <li> <a href="#controls"> Creative Review </a> </li>
@@ -85,18 +87,13 @@
   </div>
 
   <div class="active tab-section" id="performance">
-    <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">
-        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-      </h3>
-      <div class="stats">
-        {% stats_breakdown stats %}
-        <div class="chart stats-chart" id="dashboard-stats-chart">
-        </div>
-      </div>
-      <div class="clear"></div>
-    </section>
-    <div class="muted right">* Your payment from Marketplace may be less than the estimate shown here. <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-" target="_blank">Learn why</a></div>
+
+    {% chart_placeholder start_date end_date%}
+
+    <div class="muted right">* Your payment from Marketplace may be less than the estimate shown here.
+    <a href="http://help.mopub.com/customer/portal/articles/457031-why-would-the-revenue-displayed-in-the-dashboard-be-different-than-the-payment-"
+    target="_blank">Learn why</a>.
+    </div>
 
     <section id="marketplace-apps">
     <div class="appData-columnHeaders">
@@ -114,7 +111,9 @@
               </a>
               Minimum Acceptable CPM
             </th>
-            <th class="dataTable-data numeric">Enabled</th>
+            <th class="dataTable-data numeric" style="text-align:right;">
+              Enabled
+            </th>
           </tr>
         </thead>
       </table>
@@ -159,7 +158,9 @@
                 <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
                   <input id="{{ adunit.key }}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
                 </td>
-                <td class="dataTable-data numeric targeting" style="border:none;"></td>
+                <td class="dataTable-data numeric targeting" style='border:none; text-align:right;'>
+                  <input type="checkbox" disabled> </input>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -168,7 +169,39 @@
       </div>
     </div>
     {% endfor %}
+
+    <br />
+    
+    <div class="right">
+      <div class="dropdown" id="marketplace-export">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#marketplace-export">
+          <i class="icon-download-alt"></i> Export
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="{% url marketplace_export %}?type=xls"
+                  data-toggle="running"> Excel XLS </a> </li>
+          {% comment %}
+          <li> <a href="{% url marketplace_export %}?type=xlsx"
+                  data-toggle="running"> Excel XLSX </a> </li>
+                  {% endcomment %}
+          <li> <a href="{% url marketplace_export %}?type=ods"
+                  data-toggle="running"> OpenOffice Spreadsheet </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=csv"
+                  data-toggle="running"> CSV </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=tsv"
+                  data-toggle="running"> TSV </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=yaml"
+                  data-toggle="running"> YAML </a> </li>
+          <li> <a href="{% url marketplace_export %}?type=json"
+                  data-toggle="running"> JSON </a> </li>
+        </ul>
+      </div>
+    </div>
+
   </section>
+
+
   </div>
 
 
@@ -267,15 +300,14 @@
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
-          <ul id="blocked_domains">
+          <ul id="blocked_domains" style="width: 220px">
+          <li id="none_currently_blocked" {% if blocklist %}class="hidden"{% endif%}>There are no blocked advertisers</li>
           {% for domain in blocklist %}
-            <li>
+            <li id="blocked_domain">
               {{domain}}
               <a class="blocklist_remove" id="{{domain|escape}}" href="#"> Remove </a>
               <img id="{{domain|escape}}" class="loading-img invisible" src="/images/icons-custom/spinner-12.gif"></img>
             </li>
-          {% empty %}
-            <li>There are no blocked advertisers</li>
           {% endfor %}
           </ul>
         </div>
@@ -297,12 +329,14 @@
 
 {% block extraScripts %}
   <script type="text/html" id="app-template">
-    {% include "partials/app.html" %}
+    {% include "common/partials/app.html" %}
   </script>
   <script type="text/html" id="adunit-template">
-    {% include "partials/adunit.html" %}
+    {% include "common/partials/adunit.html" %}
   </script>
-
+  <script type="text/html" id="chart-template">
+    {% include "common/partials/chart.html" %}
+  </script>
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/marketplace" %}
@@ -316,14 +350,9 @@
          marketplace_active: {% if marketplace.active %}true{% else %}false{% endif %},
          blocklist: {{ blocklist|safe }},
          pub_key: "{{ pub_key }}",
-         start_date: "{{start_date|date:"m-d-Y"}}",
-         end_date: "{{end_date|date:"m-d-Y"}}"
+         start_date: {{start_date|js_date}},
+         end_date: {{end_date|js_date}}
       };
-
-      mopub.graphStartDate = Date.UTC({{start_date.year}},
-            {{start_date.month|add:"-1"}},
-            {{start_date.day}});
-      mopub.accountStats = {{mpx_stats|safe}};
 
       MarketplaceController.initializeIndex(bootstrapping_data);
     });

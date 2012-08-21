@@ -1,0 +1,109 @@
+{% extends "advertiser/base.html" %}
+{% load filters %}
+{% load elements %}
+
+{% block content %}
+
+  <ul class="tabs">
+    <li class="active">
+      <a href="#orders"> Orders </a>
+    </li>
+    <li>
+      <a href="#line_items"> Line Items </a>
+    </li>
+  </ul>
+
+
+  {% comment %}
+    Order Tab
+  {% endcomment %}
+  <div class="active tab-section" id="orders">
+
+    {# Order activity controls #}
+    <div class="left">
+      <button class="btn status_change"
+              data-toggle="play"
+              data-target="#order_table">
+        {% button_icon "play" %}
+        Resume
+      </button>
+
+      <button id="delete-button" class="btn btn-danger">
+        {% button_icon "trash" %}
+        Delete
+      </button>
+    </div>
+
+    {% order_table orders %}
+
+    <br />
+
+    <a href="{% url advertiser_order_index %}#orders-tab" class="right">
+      Back to Orders
+    </a>
+  </div>
+
+
+  {% comment %}
+    Line Items Tab
+  {% endcomment %}
+  <div class="tab-section" id="line_items">
+
+    {# Line item activity controls #}
+    <a class="btn status_change" data-toggle="play" data-target="#line_item_table">
+      <i class="icon-play"></i> Resume
+    </a>
+
+    {% line_item_table line_items True True True %}
+
+    <br />
+
+    <a href="{% url advertiser_order_index %}#line_items-tab" class="right">
+      Back to Line Items
+    </a>
+
+  </div>
+
+
+
+  <div class="modal hidden" id="confirm_delete_modal" style='overflow: visible;'>
+
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">×</a>
+    <h3> Confirm deletion </h3>
+  </div>
+
+  <div class="modal-body" style='overflow: visible;'>
+    <p> Are you sure you want to delete the items you have selected? This cannot be undone. </p>
+  </div>
+
+  <div class="modal-footer">
+    <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
+    <a href="#" class="btn" data-dismiss="modal">Don't delete</a>
+    <a id="confirm_delete_button" href="#" class="btn btn-danger">
+      {% button_icon "trash" %}
+      <span style='color:white;'>Delete</span>
+    </a>
+  </div>
+
+</div>
+
+{% endblock content %}
+
+{% block extraScripts %}
+
+  {% include_template "popover" %}
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+
+  <script type="text/javascript">
+    $(function() {
+        OrdersController.initializeIndex({
+            order_keys: [ {% for order in orders %}"{{order.key}}", {% endfor %} ],
+            line_item_keys: [ {% for line_item in line_items %} "{{ line_item.key }}", {% endfor %}]
+        });
+        OrdersController.initializeArchive();
+    });
+  </script>
+{% endblock extraScripts %}

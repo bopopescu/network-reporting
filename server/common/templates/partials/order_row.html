@@ -1,0 +1,61 @@
+{% load elements %}
+{% load filters %}
+
+<tr class='sub order-row {% if order.archived %} archived{% endif %}' id="{{ order.key }}">
+
+  {% comment %}
+    Status (active/paused/archived) We need to display a table cell if
+    either the order or line item needs controls, otherwise the table
+    wont render correctly.
+  {% endcomment %}
+  <td class="controls">
+    <input class="status_change_control" id="{{order.key}}" type="checkbox" />
+    <img id="status-{{ order.key }}" src="{{ order.status_icon_url }}" height=9 width=9  style="margin-top:4px"/>
+  </td>
+
+  {% comment %}
+    If we're rendering a single order, then we just display "Totals"
+    as the name.
+  {% endcomment %}
+  <td class="name">
+    {% if singular %} Totals {% else %}
+      <a href="{% url advertiser_order_detail order_key=order.key %}">
+        {{ order.name }}
+      </a>
+    {% endif %}
+    <img id="{{ order.key }}-img" class="loading-img" src="/images/spin-small.gif" />
+  </td>
+
+  {% comment %}
+    These stats will be loaded over ajax.
+  {% endcomment %}
+  <td class="advertiser stat">
+    {{ order.advertiser }}
+  </td>
+  <td class="lineitems stat">
+    --
+  </td>
+  {% comment %}
+  <td class="rev stat">
+    --
+  </td>
+  {% endcomment %}
+  <td class="imp stat">
+    --
+  </td>
+  <td class="clk stat">
+    --
+  </td>
+  <td class="ctr stat">
+    --
+  </td>
+  <td class="stat">
+    <div class="conv">
+      --
+    </div>
+    <div class="muted conv_rate">
+      (--)
+    </div>
+  </td>
+</tr>
+

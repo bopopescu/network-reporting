@@ -21,7 +21,7 @@
       <span class="ui-icon ui-icon-arrow-1-e"></span>
       <span class="stepProgress-step">Step 2: Integrate</span>
       <span class="ui-icon ui-icon-arrow-1-e"></span>
-      <span class="stepProgress-step">Step 3: Add campaigns</span>
+      <span class="stepProgress-step">Step 3: Setup ad sources</span>
     </div>
   {% endifequal %}
 {% endblock titleBarRight %}
@@ -43,6 +43,7 @@
         </div>
       {% endifequal %}
 
+
       <form enctype='multipart/form-data'
             action=""
             method="POST"
@@ -52,15 +53,17 @@
         {% if app_key %}
           <input type="hidden" name="app_key" value="{{app_key}}"/>
         {% endif %}
+
+        <h2> App Details </h2>
         <fieldset id="appForm-details" class="alt">
-          <legend>
-            App Details
-          </legend>
           {{ app_form.as_template }}
         </fieldset>
 
+        <br />
+        
+        <h2>Ad Unit</h2>
         <fieldset id="appForm-ad" class="adForm">
-          <legend>Ad Unit</legend>
+          
           <p>
             An ad unit is a single place in your app or mobile website
             where an ad of a specific size can appear. Your app can have
@@ -73,9 +76,7 @@
           <span id="appForm-loading" class="hidden">
             <img src="/images/loading2.gif"/>
           </span>
-          <span class="buttonWrap">
-            <a href="#" class="button" id="appForm-submit">Continue</a>
-          </span>
+          <a href="#" class="btn" id="appForm-submit">Continue</a>
         </div>
       </form>
     </div>

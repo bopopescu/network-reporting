@@ -6,18 +6,49 @@ urlpatterns = patterns(
     url(r'^$', 'app_index', name='app_index'),
     url(r'^dashboard/', 'dashboard', name='dashboard'),
 
-    url(r'^app/create/$', 'create_app', name='publisher_create_app'),
-    url(r'^app/(?P<app_key>[-\w\.]+)/delete/$', 'delete_app', name='publisher_delete_app'),
-    url(r'^app/(?P<app_key>[-\w\.]+)/update/ajax/$', 'app_update_ajax', name='publisher_app_update_ajax'),
-    url(r'^app/(?P<app_key>[-\w\.]+)/$', 'app_detail', name='publisher_app_show'),
+    url(r'^app/create/$', 
+        'create_app',
+        name='publisher_create_app'),
+    
+    url(r'^app/(?P<app_key>[-\w\.]+)/delete/$',
+        'delete_app',
+        name='publisher_delete_app'),
+    
+    url(r'^app/(?P<app_key>[-\w\.]+)/update/ajax/$',
+        'app_update_ajax',
+        name='publisher_app_update_ajax'),
+    
+    url(r'^app/(?P<app_key>[-\w\.]+)/$',
+        'app_detail',
+        name='publisher_app_show'),
 
-    url(r'^adunit/(?P<adunit_key>[-\w\.]+)/delete/$', 'delete_adunit', name='publisher_delete_adunit'),
-    url(r'^adunit/(?P<adunit_key>[-\w\.]+)/generate/$', 'integration_help', name='publisher_integration_help'),
-    url(r'^adunit/update/ajax/$', 'adunit_update_ajax', name='publisher_adunit_update_ajax'),
-    url(r'^adunit/(?P<adunit_key>[-\w\.]+)/$', 'adunit_show', name='publisher_adunit_show'),
+    url(r'^adunit/(?P<adunit_key>[-\w\.]+)/delete/$',
+        'delete_adunit',
+        name='publisher_delete_adunit'),
+    
+    url(r'^adunit/(?P<adunit_key>[-\w\.]+)/generate/$',
+        'integration_help',
+        name='publisher_integration_help'),
+    
+    url(r'^adunit/update/ajax/$',
+        'adunit_update_ajax',
+        name='publisher_adunit_update_ajax'),
+    
+    url(r'^adunit/(?P<adunit_key>[-\w\.]+)/$',
+        'adunit_detail',
+        name='publisher_adunit_show'),
 
-    url(r'^export/(?P<f_type>xls|csv)/(?P<key_type>adunit|app|adgroup|account)/(?P<key>[-\w\.]+)/$', 'export_file', name='exporter'),
-    url(r'^app_export$', 'app_export', name='publisher_app_export'),
-    url(r'^dashboard_export$', 'dashboard_export', name='dashboard_export'),
-    url(r'^table_export/$', 'table_export', name='table_export'),
+    # Exporting
+
+    url(r'^export/inventory/$',
+        'inventory_exporter',
+        name='publisher_inventory_exporter'),
+    
+    url(r'^export/app/(?P<app_key>[-\w\.]+)/$',
+        'app_exporter',
+        name='publisher_app_exporter'),
+
+    url(r'^export/adunit/(?P<adunit_key>[-\w\.]+)/$',
+        'adunit_exporter',
+        name='publisher_adunit_exporter'),
 )

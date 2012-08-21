@@ -2,12 +2,6 @@
  * # MoPub Global JS
  */
 
-//For JSLint Validation:
-//global console: true, Highcharts: true
-
-//mopub singleton object
-var mopub = mopub || {};
-mopub.Utils = mopub.Utils || {};
 
 /*
  * Make sure there's a console.log function in case we forgot to remove debug statements
@@ -26,101 +20,172 @@ if (window.console === undefined) {
 (function($) {
     
     var mopub = window.mopub || {};
-    var Chart = window.Chart || {};
-    var Stats = window.Stats || {};
-
-    $(function() {
+    var Chart = mopub.Chart || {};
+    var Stats = mopub.Stats || {};
+    var Utils = mopub.Utils || {};
         
 
-        // export tables as xls/csv
-        // id is the html table's id attribute
-        // format (optional) is either 'csv' or 'xls'
-        // filename (optional) desired name of output file with extension
-        function export_table(id, format, filename) {
-            if (format != 'csv')
-                format = 'xls';
+    
+    /*
+     * Sets up the date range buttons at the top of each page.
+     * In the future, this should be refactored to use a backbone
+     * router.
+     */
+    function initializeDateButtons () {
+        
+        /*
+         * Utils for making the date range url params
+         */
+        var parse_date = function (date) {
+            var d = new Date(date);
+            var non_retarded_month = d.getMonth() + 1;
+            return d.getFullYear() + 
+                "-" + non_retarded_month + 
+                "-" + d.getDate();
+        };
 
-            filename = filename || 'ExportData.' + format;
+        /*
+         * Get the number of days between start and end.
+         * Not inclusive of the start date. 
+         */
+        var days_between = function (start, end) {
+            
+            // cast, in case they passed in strings
+            var start_date = new Date(start);
+            var end_date = new Date(end);            
 
-            output = {
-                'headers': [],
-                'body': [],
-            };
+            var daylight_savings_adjust = 0;
 
-            $table = $('#' + id);
+            // constants used for our calculations below
+            var one_minute = 1000 * 60;
+            var one_day = one_minute * 60 * 24;
 
-            $table.find('thead tr th').each(function() {
-                output.headers.push($(this).text());
+            // equalize times in case date objects have them
+            start_date.setHours(0);
+            start_date.setMinutes(0);
+            start_date.setSeconds(0);
+            end_date.setHours(0);
+            end_date.setMinutes(0);
+            end_date.setSeconds(0);
+
+            // take care of spans across Daylight Saving Time changes
+            if (end_date > start_date) {
+                daylight_savings_adjust = (end_date.getTimezoneOffset() - 
+                             start_date.getTimezoneOffset()) * one_minute;
+            } else {
+                daylight_savings_adjust = (start_date.getTimezoneOffset() -
+                             end_date.getTimezoneOffset()) * one_minute;    
+            }
+            var diff = Math.abs(end_date.getTime() - start_date.getTime()) 
+                - daylight_savings_adjust;
+            return Math.ceil(diff/one_day);
+        };
+
+        /*
+         * Set up the custom date range button. Dates one day later
+         * than today and two months before today can't be picked.
+         * When the custom button is clicked, it opens up the date
+         * range picker right underneath it. 
+         */
+
+        // Set up the two date fields with datepickers
+        var valid_date_range = {
+            startDate: "-2m",
+            endDate: "+1d"
+        };
+        $("input[name='start-date']").datepicker(valid_date_range);
+        $("input[name='end-date']").datepicker(valid_date_range);
+
+        // Set up the click event that opens the date range picker
+        var currently_active = $("#date-range-controls .btn.active");
+        var custom_controls = $("#datepicker-custom");
+        custom_controls.click(function(event) {
+            currently_active.toggleClass("active");
+            custom_controls.toggleClass("active");            
+            $("#datepicker-custom-range").toggleClass('hidden');
+            $(".caret", custom_controls).toggleClass('flip-vertical');
+        });
+
+        // On submit, get the date range from the two inputs and
+        // form the url, and reload the page.
+        $("#custom-date-submit").click(function() {
+            var start_date = $("#datepicker-start-input").val();
+            var end_date = $("#datepicker-end-input").val();
+
+            // days_between is not inclusive, we add +1 to the range
+            // because the server expects inclusive.
+            var date_range = days_between(start_date, end_date) + 1;
+            var formatted_start_date = parse_date(start_date);
+
+            if (date_range > 0) {
+                var url_params = "?r="
+                                 + date_range
+                                 + "&s="
+                                 + formatted_start_date;
+
+                window.location = window.location.protocol + "//"
+                    + window.location.host + window.location.pathname 
+                    + url_params;
+            } else {
+                // handle error
+            }
+        });
+
+        /*
+         * The other date buttons.
+         * Figure out the appropriate url parameters for the date range
+         * and set up the url. On click, load that url if the button isnt
+         * disabled.
+         */
+        _.each(['today', 'yesterday', '7', '14'], function(value) {
+
+            var anchor = $(this);
+            var url_params = "";
+
+            // button click handler for today
+            if (value === 'today') {
+                var today = new Date();
+                var today_string = parse_date(today);
+                
+                url_params = "?r=1"
+                    + "&s="
+                    + today_string;
+            } else if (value === 'yesterday'){
+                var today = new Date();
+                today.setDate(today.getDate() - 1);
+                var yesterday_string = parse_date(today);
+                
+                url_params = "?r=1"
+                    + "&s="
+                    + yesterday_string;
+            } else {
+                url_params = "?r="
+                    + value;
+            }
+
+            $("#datepicker-" + value).click(function(event){
+                event.preventDefault();
+                if (!anchor.hasClass('disabled')){
+                    window.location = window.location.protocol + "//"
+                        + window.location.host + window.location.pathname 
+                        + url_params;
+                }
             });
+        });
+    }
 
-            $table.find('tbody tr').each(function() {
-                row = [];
-                $(this).find('th, td').each(function() {
-                    row.push($(this).text());
-                });
-                output.body.push(row);
-            });
-
-            output = escape(JSON.stringify(output));
-            filename = escape(JSON.stringify(filename));
-
-            // add and submit a hidden form to propagate POST data
-            // submit 'table' (the json data), 'format' (xls or csv), and 'filename' (string including extension)
-            table_export_url = '/inventory/table_export/'
-            $table.append('<form id="hidden-export-form" action="' + table_export_url + '" method="POST">');
-            $hidden_export_form = $('#hidden-export-form');
-            $hidden_export_form.append($('<input type="hidden" name="table" value="' + output + '">'));
-            $hidden_export_form.append($('<input type="hidden" name="format" value="' + format + '">'));
-            $hidden_export_form.append($('<input type="hidden" name="filename" value="' + filename + '">'));
-            $hidden_export_form.submit();
-        }
+    
+    $(function() {        
+        initializeDateButtons();
+        
+        /*
+         * ## Mixpanel Event Tracking
+         */
 
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
         }
-
-        // preload images (defined below)
-        var JQUERY_UI_IMAGE_PATH = '/js/libs/jquery-ui-1.8.7.custom/css/mopub/images';
-        $.preLoadImages(
-            '/images/ui/ui-button-active.png',
-            '/images/ui/ui-button-default.png',
-            '/images/ui/ui-button-hover.png',
-            '/images/ui/ui-icons-active.png',
-            '/images/ui/ui-icons-focus.png',
-            '/images/ui/ui-icons-hover.png',
-            '/images/ui/ui-icons-progress.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_25_e57300_1x100.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_50_dddddd_1x100.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-bg_highlight-hard_100_f3f3f3_1x100.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-bg_inset-soft_25_595959_1x100.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-icons_0090d9_256x240.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-icons_cc2929_256x240.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png',
-            '/placeholders/image.gif'
-        );
-
-        // replace <legend> with <h2>
-        $('legend').each(function() {
-            var legend = $(this);
-            var h2 = $('<h2>'+legend.html()+'</h2>');
-            h2.attr('class', legend.attr('class'));
-            h2.attr('id', legend.attr('id'));
-            legend.replaceWith(h2);
-        });
-
-        // set up buttons
-        $('.button').button().css({ visibility: 'visible' });
-
-        // set up buttonsets
-        $('.buttonset').buttonset().css({ visibility: 'visible' });
-
-        // gray out any buttonsets that ought to be disabled
-        $('.buttonset-start-disabled').buttonset();
-        $('.buttonset-start-disabled').buttonset({ disabled: true });
-
-        // set up selectmenus
-        $('.selectmenu').selectmenu().css({ visibility: 'visible' });
 
         // set up validation to be run on form submit
         $('.validate').validate();
@@ -128,12 +193,12 @@ if (window.console === undefined) {
         // Tables with the 'sortable' class will be made sortable by default
         $(".sortable").tablesorter();
 
+        $('.dropdown-toggle').dropdown();
+
         // Tabify tabs
         $('.tabs').tabs();
         $('.pills').tabs();
 
-        // Where is this used?
-        // $(".tree").treeview();
 
         // Override default jQuery UI dialog options
         $.extend($.ui.dialog.prototype.options, {
@@ -143,74 +208,25 @@ if (window.console === undefined) {
             width: 400
         });
 
-        // Override default jQuery UI datepicker options
-        $.xdatepicker.setDefaults({
-            dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        });
-
         // Set up form placeholders
-        $('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
+        $('input[placeholder], textarea[placeholder]').placeholder({ 
+            preventRefreshIssues: true 
+        });
 
         // Set up text overflow elements
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
 
-        // Set up dropdowns
-        $(".dropdown-head").mopub_dropdown('.dropdown');
-
+        //REFACTOR: replace this with something from bootstrap
+        //$("#account-dropdown").dropdown();
+        
         // Set up alert-message closing
         $(".alert-message .close").click(function() {
             $(this).parent().fadeOut();
         });
 
-        $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
-
-
-
-        // Message Center
-        // hide message center when page loads if there are no messages
-        function hideMessageCenterIfNoMessages() {
-            if($('.messageCenter-message').length === 0) {
-                $('#messageCenter').hide();
-            }
-        }
-        hideMessageCenterIfNoMessages();
-
-        // Set up "More info" links
-        $('.messageCenter-message-moreInfoLink').click(function(e) {
-            e.preventDefault();
-            var link = $(this);
-            var info = $('.messageCenter-message-moreInfo', link.parents('.messageCenter-message'));
-            // clone info (so the original doesn't get moved around) and make the dialog
-            info.clone().dialog({
-                buttons: { "Close": function() { $(this).dialog("close"); } },
-                close: function(e, u) { $(this).remove(); } // remove clone
-            });
+        $('.formFields-field-help-link[title]').click(function(e) { 
+            e.preventDefault(); 
         });
-
-        // Set up "Hide this" links
-        $('.messageCenter-message-hide').click(function(e) {
-            e.preventDefault();
-            var link = $(this);
-            var message = link.parents('.messageCenter-message');
-            message.fadeOut('fast', function() {
-                message.remove();
-                hideMessageCenterIfNoMessages();
-            });
-        });
-        // TODO: tell server that message.attr('id') has been hidden
-
-        // Set up stats breakdown
-        // Should be done in backbone view
-        /*
-        $('.stats-breakdown tr').click(function(e) {
-            var row = $(this);
-            if (!row.hasClass('active')) {
-                var table = row.parents('table');
-                $('tr.active', table).removeClass('active');
-                row.addClass('active');
-            }
-        });
-        */
 
         // Set up highcharts default options
         Highcharts.setOptions({
@@ -347,8 +363,7 @@ if (window.console === undefined) {
 
     }); // end $(document).ready
 
-    function getUrlParameters()
-    {
+    function getUrlParameters() {
         var parameters = {};
         var url_params = window.location.search.slice(1).split('&');
         var param;
@@ -382,59 +397,14 @@ if (window.console === undefined) {
         }
     };
 
-    /*
-     * ## Dropdown Menus
-         *
-             * Usage:
-             *
-             * `$(dropdown-trigger).dropdown(things-that-dropdown);`
-             */
-    $.fn.mopub_dropdown = function(selector) {
-        var self = this;
-        var over_trigger, over_body = false;
-
-        // Make sure the dropdown starts closed (in case class="invisible" wasnt set)
-        dropdownClose();
-
-        function dropdownOpen() {
-            if ($(selector).hasClass('invisible')); {
-                $(selector).removeClass('invisible');
-            }
-            $(self).addClass('hovered');
+    $.fn.fadeThenSlideToggle = function(speed, easing, callback) {
+        if (this.is(":hidden")) {
+            return this.slideDown(speed, easing).fadeTo(speed, 1, easing, callback);
+        } else {
+            return this.fadeTo(speed, 0, easing).slideUp(speed, easing, callback);
         }
-
-        function dropdownClose() {
-            if (!$(selector).hasClass('invisible')) {
-                $(selector).addClass('invisible');
-            }
-            $(self).removeClass('hovered');
-        }
-
-            // Set the hover states
-        $(this).hover(function() {
-            over_trigger = true;
-        }, function () {
-            over_trigger = false;
-        });
-
-        $(selector).hover(function() {
-            over_body = true;
-        }, function () {
-            over_body = false;
-        });
-
-        // Open/close the dropdown if the state has changed
-        // Breaks in firefox if setInterval isn't given a number for the time.
-        setInterval(function() {
-            if (over_trigger || over_body) {
-                dropdownOpen();
-            } else {
-                dropdownClose();
-            }
-        }, 1);
     };
-
-
+    
     /*
      * ## Activity utility functions
      */
@@ -1018,66 +988,15 @@ if (window.console === undefined) {
         $('#dashboard-stats-chart').removeClass('chart-loading');
      };
 
-    /*
-     * ## Pie charts
-     * Utility function for creating a pie chart with default options
-     */
-    Chart.setupPieChart = function (selector, title, chart_data) {
-
-        this.impressionPieChart = new Highcharts.Chart({
-            chart: {
-                renderTo: selector,
-                plotBackgroundColor: null,
-                plotShadow: true,
-                margin: 0
-            },
-            title: {
-                text: title
-            },
-            tooltip: {
-                formatter: function() {
-                    return "<b>"+ this.point.name +"</b>: "+ this.point.total + " " + title;
-                }
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: "pointer",
-                    dataLabels: {
-                        enabled: false,
-                        color:  "#000000",
-                        connectorColor: "#000000",
-                        formatter: function() {
-                            return "<b>"+ this.point.name +"</b>: "+ this.percentage.toFixed(2) +" %";
-                        }
-                    },
-                    showInLegend: true
-                }
-            },
-            legend: {
-                verticalAlign: "bottom"
-            },
-            series: [{
-                type: "pie",
-                name: title,
-                data: chart_data
-            }]
-        });
-
-    };
-
-
     Chart.chartError = function() {
         $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
     };
 
 
-    window.Chart = Chart;
-    window.Stats = Stats;
     window.mopub = mopub;
     window.mopub.Stats = Stats;
     window.mopub.Chart = Chart;
-    window.Mopub = mopub;
+    window.mopub.Controllers = {};
 
 
 })(this.jQuery);
@@ -1086,7 +1005,7 @@ if (window.console === undefined) {
 (function(){
 
     var config = window.ToastjsConfig = {
-        defaultTimeOut: 3000,
+        defaultTimeOut: 5000,
         position: ["top", "right"],
         notificationStyles: {
             padding: "12px 18px",

@@ -1,24 +1,24 @@
 import logging
-import random
 
-from google.appengine.api import memcache, taskqueue
+from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
+from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import utc
 
 from common.constants import CAMPAIGN_LEVELS, \
         NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
 
 from advertiser.models import Campaign, AdGroup, \
-                              Creative, TextCreative, \
+                              Creative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
                               ImageCreative, \
                               NetworkStates
 
-from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 import copy
@@ -36,12 +36,15 @@ def chunks(l, n):
         yield l[i:i+n]
 
 class AdvertiserQueryManager(CachedQueryManager):
+
     @classmethod
     def get_objects_dict_for_account(cls, account, include_deleted=False):
         """
-        Returns a dictionary mapping Campaign keys to Campaign entities carrying Adgroup data.
-        Adgroups for each campaign can be retrieved as a list by using campaign._adgroups. Similarly,
-        each Adgroup contains a list of its creatives, accessible as adgroup._creatives.
+        Returns a dictionary mapping Campaign keys to Campaign
+        entities carrying Adgroup data.  Adgroups for each campaign
+        can be retrieved as a list by using campaign._adgroups.
+        Similarly, each Adgroup contains a list of its creatives,
+        accessible as adgroup._creatives.
         """
         campaigns_dict = cls.get_campaigns_dict_for_account(account,
                 include_deleted=include_deleted)
@@ -56,23 +59,27 @@ class AdvertiserQueryManager(CachedQueryManager):
 
         # Associate each creative with its adgroup.
         for creative in creatives_dict.values():
-            # Looks weird, but we're just avoiding creative.app_group.key() since it incurs a fetch.
+            # Looks weird, but we're just avoiding
+            # creative.app_group.key() since it incurs a fetch.
             adgroup_key = str(Creative.ad_group.get_value_for_datastore(creative))
             try:
                 adgroup_for_this_creative = adgroups_dict[adgroup_key]
                 adgroup_for_this_creative._creatives.append(creative)
             except KeyError:
-                # If we get here, it means that the creative belongs to an adgroup that is not
-                # owned by this account. This is clearly a sign of data corruption, and these objects
-                # need to be fixed manually.
+
+                # If we get here, it means that the creative belongs
+                # to an adgroup that is not owned by this
+                # account. This is clearly a sign of data corruption,
+                # and these objects need to be fixed manually.
                 logging.error("KeyError: Creative %s belongs to AdGroup %s which is not owned by %s" % (str(creative.key()), str(adgroup_key), account.mpuser.email))
 
         # Initialize the _adgroups property for all of our campaigns.
         for campaign in campaigns_dict.values():
             campaign._adgroups = []
 
-        # Now we have a dictionary (adgroups_dict) mapping adgroup keys to adgroup objects, where
-        # each adgroup object has a list of its creatives. We can take this one step further to
+        # Now we have a dictionary (adgroups_dict) mapping adgroup
+        # keys to adgroup objects, where each adgroup object has a
+        # list of its creatives. We can take this one step further to
         # work campaigns into this dict.
         for adgroup in adgroups_dict.values():
             # Again, getting around the fetch.
@@ -103,6 +110,18 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
+    def get_order_campaigns(cls, account):
+        """
+        Gets all campaigns for `account` that are orders (direct sold campaigns).
+        """
+        campaigns = cls.Model.all().filter('account =', account)\
+                                   .filter('deleted =', False)\
+                                   .filter('campaign_type =', 'order')\
+                                   .order('name')\
+                                   .fetch(1000)
+        return campaigns
+
+    @classmethod
     def get_campaigns_by_types(cls, account, types):
         campaigns = cls.Model.all().filter('account =', account)\
                                    .filter('campaign_type IN', types)\
@@ -117,19 +136,16 @@ class CampaignQueryManager(QueryManager):
         app).
         """
         # get campaigns for the account from memcache
-        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
-                account)
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(account)
 
         def network_campaign_filter(campaign):
             if campaign.campaign_type == 'network':
                 if network_type:
                     return campaign.network_type == network_type
                 elif is_new:
-                    return campaign.network_state != NetworkStates. \
-                            STANDARD_CAMPAIGN
+                    return campaign.network_state != NetworkStates.STANDARD_CAMPAIGN
                 else:
-                    return campaign.network_state == NetworkStates. \
-                            STANDARD_CAMPAIGN
+                    return campaign.network_state == NetworkStates.STANDARD_CAMPAIGN
 
         return filter(network_campaign_filter, campaigns.values())
 
@@ -186,6 +202,7 @@ class CampaignQueryManager(QueryManager):
         if from_db:
             return Campaign.get_by_key_name(c_key_name)
         return Campaign(key_name=c_key_name,
+                        advertiser='marketplace',
                         campaign_type='marketplace',
                         name='MarketPlace',
                         account=account_key)
@@ -224,23 +241,25 @@ class CampaignQueryManager(QueryManager):
                 """
             acct = adunit.account
             camp = Campaign(name = 'Marketplace Campaign',
-                                    campaign_type = 'marketplace',
-                                    account = acct,
-                                    )
+                            campaign_type = 'marketplace',
+                            account = acct)
             camp.put()
+
             ag = AdGroup(campaign = camp,
-                                 account = acct,
-                                 name = 'Marketplace adgroup',
-                                 site_keys = [adunit.key()],
-                                 )
+                         account = acct,
+                         name = 'Marketplace adgroup',
+                         site_keys = [adunit.key()],)
             ag.put()
+
             creative = ag.default_creative()
             creative.account = acct
             creative.put()
+
             return camp
 
     @classmethod
-    def get_campaigns(cls, account=None, adunit=None, deleted=False, limit=MAX_OBJECTS):
+    def get_campaigns(cls, account=None, adunit=None,
+                      deleted=False, limit=MAX_OBJECTS):
         campaigns = Campaign.all()
         if not (deleted == None):
             campaigns = campaigns.filter("deleted =",deleted)
@@ -256,7 +275,7 @@ class CampaignQueryManager(QueryManager):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
 
-        # Save campaigns.
+        # Put campaigns so if they're new they have a key
         put_response = db.put(campaigns)
 
         # Clear cache
@@ -289,7 +308,8 @@ class CampaignQueryManager(QueryManager):
                 return advertiser
 
         if publisher:
-            #publisher is either an app or an adunit, assume it's an adunit first and make it a list
+            # publisher is either an app or an adunit, assume it's an
+            # adunit first and make it a list
             adunits = [publisher]
             if hasattr(publisher, 'all_adunits'):
                 #if it's not an adunit, make it
@@ -323,52 +343,64 @@ class CampaignQueryManager(QueryManager):
         return camps
 
 
-
 class AdGroupQueryManager(QueryManager):
+
     Model = AdGroup
 
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None,
-            account=None, deleted=False, limit=MAX_OBJECTS, archived=False,
-            network_type=False):
-        """ archived=True means we only show archived adgroups. """
+    def get_adgroups(cls, account=None, app=None, adunit=None, campaigns=None,
+                     campaign=None, active=None, deleted=False, archived=False,
+                     network_type=False, limit=MAX_OBJECTS):
+        """
+        archived=True means we only show archived adgroups.
+        """
+
         adgroups = AdGroup.all()
-        if not (deleted == None):
-            adgroups = adgroups.filter("deleted =", deleted)
+
         if account:
             adgroups = adgroups.filter("account =", account)
 
-        if network_type != False:
-            adgroups = adgroups.filter("network_type =", network_type)
+        if active is not None:
+            adgroups = adgroups.filter("active =", active)
 
-        if not (archived == None):
+        if deleted is not None:
+            adgroups = adgroups.filter("deleted =", deleted)
+
+        if archived is not None:
             adgroups = adgroups.filter("archived =", archived)
+
+        if network_type is not False:
+            adgroups = adgroups.filter("network_type =", network_type)
 
         if campaigns:
             # if the number of campaigns is greater than 30 we must "chunk" the query
             if len(campaigns) > MAX_ALLOWABLE_QUERIES:
                 total_adgroups = []
-                for sub_campaigns in chunks(campaigns,MAX_ALLOWABLE_QUERIES):
+                for sub_campaigns in chunks(campaigns, MAX_ALLOWABLE_QUERIES):
                     adgroups_current = copy.deepcopy(adgroups)
-                    total_adgroups += adgroups_current.filter("campaign IN", sub_campaigns).fetch(limit)
+                    total_adgroups += adgroups_current.filter("campaign IN",
+                                                              sub_campaigns)\
+                                                      .fetch(limit)
                 return total_adgroups
             else:
-                adgroups = adgroups.filter("campaign IN",campaigns)
+                adgroups = adgroups.filter("campaign IN", campaigns)
         elif campaign:
-            adgroups = adgroups.filter("campaign =",campaign)
+            adgroups = adgroups.filter("campaign =", campaign)
 
         if adunit:
-            if isinstance(adunit,db.Model):
+            if isinstance(adunit, db.Model):
                 adunit_key = adunit.key()
             else:
                 adunit_key = adunit
-            adgroups = adgroups.filter("site_keys =",adunit_key)
+            adgroups = adgroups.filter("site_keys =", adunit_key)
 
         if app:
             adgroups_dict = {}
             adunits = AdUnitQueryManager.get_adunits(app=app)
             for adunit in adunits:
-                adgroups_per_adunit = cls.get_adgroups(adunit=adunit, limit=limit)
+                adgroups_per_adunit = cls.get_adgroups(
+                    adunit=adunit, active=active, deleted=deleted,
+                    archived=archived, network_type=network_type, limit=limit)
                 for adgroup in adgroups_per_adunit:
                     adgroups_dict[adgroup.key()] = adgroup
             return adgroups_dict.values()[:limit]
@@ -376,8 +408,115 @@ class AdGroupQueryManager(QueryManager):
         return list(adgroups.run(limit=limit, batch_size=limit))
 
     @classmethod
-    def get_network_adgroup(cls, campaign, adunit_key, account_key,
-            get_from_db=False):
+    def get_line_items(cls, account=None, order=None,
+                       orders=None, limit=1000, keys_only=False,
+                       archived=False, deleted=False, **kwargs):
+        """
+        Return a list of line items for the specified account and/or order(s).
+        """
+        if order:
+            adgroups = AdGroup.all(keys_only=keys_only)
+
+            if account:
+                adgroups = adgroups.filter("account =", account)
+
+            adgroups = adgroups.filter("campaign =", order)
+
+            if not (deleted == None):
+                adgroups = adgroups.filter("deleted =", deleted)
+
+            if not (archived == None):
+                adgroups = adgroups.filter("archived =", archived)
+
+            return list(adgroups.run(limit=limit, batch_size=limit))
+
+        if not orders:
+            orders = CampaignQueryManager.get_order_campaigns(account)
+
+        # TODO: keys_only=True
+        return cls.get_adgroups(account=account, campaigns=orders,
+                                limit=limit, archived=archived, deleted=deleted,
+                                **kwargs)
+
+    @staticmethod
+    def get_line_items_for_adunit(adunit):
+        adgroup_query = AdGroup.all().filter('account =', adunit._account)
+        adgroup_query = adgroup_query.filter('archived =', False)
+        adgroup_query = adgroup_query.filter('deleted =', False)
+        adgroup_query = adgroup_query.filter('adgroup_type IN', ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
+        adgroup_query = adgroup_query.filter('site_keys =', adunit.key())
+        adgroups = filter(lambda adgroup: not adgroup.campaign.archived, adgroup_query.run())
+        return adgroups
+
+    @classmethod
+    def get_sorted_line_items_for_app_and_date_range(cls, app, start_date, end_date):
+        line_item_dict = {}
+        for adunit in app.adunits:
+            # TODO: move to a real database so this case is impossible...
+            if not adunit._account == app._account:
+                logging.error("App %s AdUnit %s account mismatch." % (app._account, adunit._account))
+                continue
+            for line_item in cls.get_line_items_for_adunit(adunit):
+                line_item_dict[str(line_item.key())] = line_item
+        line_items = line_item_dict.values()
+
+        return cls._filter_and_sort_line_items(line_items, start_date, end_date)
+
+    @classmethod
+    def get_sorted_line_items_for_adunit_and_date_range(cls, adunit, start_date, end_date):
+        line_items = cls.get_line_items_for_adunit(adunit)
+
+        return cls._filter_and_sort_line_items(line_items, start_date, end_date)
+
+    @staticmethod
+    def _filter_and_sort_line_items(line_items, start_date, end_date):
+        gtee_high_line_items = []
+        gtee_line_items = []
+        gtee_low_line_items = []
+        promo_line_items = []
+        backfill_promo_line_items = []
+
+        for line_item in line_items:
+            line_item_start_date = line_item.start_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date() if line_item.start_datetime else None
+            line_item_end_date = line_item.end_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date() if line_item.end_datetime else None
+            if (not line_item_start_date or line_item_start_date <= end_date) and (not line_item_end_date or line_item_end_date >= start_date):
+                if line_item.adgroup_type == 'gtee_high':
+                    gtee_high_line_items.append(line_item)
+                elif line_item.adgroup_type == 'gtee':
+                    gtee_line_items.append(line_item)
+                elif line_item.adgroup_type == 'gtee_low':
+                    gtee_low_line_items.append(line_item)
+                elif line_item.adgroup_type == 'promo':
+                    promo_line_items.append(line_item)
+                elif line_item.adgroup_type == 'backfill_promo':
+                    backfill_promo_line_items.append(line_item)
+                else:
+                    logging.error("AdGroup %s has adgroup_type %s but was in line_items list." % (
+                        line_item.key(), line_item.adgroup_type))
+
+        gtee_high_line_items = sorted(gtee_high_line_items, key=lambda line_item: line_item.name.lower())
+        gtee_line_items = sorted(gtee_line_items, key=lambda line_item: line_item.name.lower())
+        gtee_low_line_items = sorted(gtee_low_line_items, key=lambda line_item: line_item.name.lower())
+        promo_line_items = sorted(promo_line_items, key=lambda line_item: line_item.name.lower())
+        backfill_promo_line_items = sorted(backfill_promo_line_items, key=lambda line_item: line_item.name.lower())
+
+        return (gtee_high_line_items + gtee_line_items + gtee_low_line_items +
+                promo_line_items + backfill_promo_line_items)
+
+    @classmethod
+    def get_network_adgroups_for_adunit(cls, adunit):
+        network_campaigns = CampaignQueryManager.get_network_campaigns(adunit.account, is_new=True)
+        network_adgroups = []
+        for network_campaign in network_campaigns:
+            network_adgroup = cls.get_network_adgroup(network_campaign, adunit.key(), adunit.account.key(), get_from_db=True)
+            network_adgroup.campaign = network_campaign
+            network_adgroups.append(network_adgroup)
+        return network_adgroups
+
+    @classmethod
+    def get_network_adgroup(cls, campaign,
+                            adunit_key, account_key,
+                            get_from_db=False):
         """
         Returns the only adgroup that can belong to this adunit
         and account. The magic of key_names allows us to
@@ -459,9 +598,11 @@ class AdGroupQueryManager(QueryManager):
             adgroup = AdGroup.get_by_key_name(ag_key_name)
             return adgroup
 
-        adgroup = AdGroup(key_name=ag_key_name, name='Marketplace')
+        adgroup = AdGroup(key_name=ag_key_name,
+                          name='Marketplace',
+                          bid_strategy='cpm',
+                          adgroup_type='marketplace')
         # set up the rest of the properties
-        adgroup.bid_strategy = 'cpm'
         adgroup.account = db.Key(account_key)
         adgroup.campaign = campaign
         # only targetted at one adunit
@@ -482,12 +623,11 @@ class AdGroupQueryManager(QueryManager):
         put_response = db.put(adgroups)
 
         # Update campaign budgets asynchronously using a Task Queue.
-        campaign_keys = set([adgroup.campaign.key() for adgroup in adgroups])
+        adgroup_keys = [adgroup.key() for adgroup in adgroups]
         queue = taskqueue.Queue()
-        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
+        task = taskqueue.Task(params=dict(adgroup_keys=adgroup_keys),
                               method='POST',
-                              url='/fetch_api/budget/update_or_create'
-                              )
+                              url='/fetch_api/budget/update_or_create')
         queue.add(task)
 
         # Clear cache
@@ -510,7 +650,7 @@ class CreativeQueryManager(QueryManager):
     Model = Creative
 
     @classmethod
-    def get_creatives(cls,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=MAX_OBJECTS):
+    def get_creatives(cls, adgroup=None, ad_type=None, ad_types=None, account=None, deleted=False, limit=MAX_OBJECTS):
         creatives = Creative.all()
         if not (deleted == None):
             creatives = creatives.filter("deleted =", deleted)
@@ -524,7 +664,7 @@ class CreativeQueryManager(QueryManager):
             creatives = creatives.filter("ad_type =", ad_type)
         return list(creatives.run(limit=limit, batch_size=limit))
 
-    def put_creatives(self,creatives):
+    def put_creatives(self, creatives):
         return db.put(creatives)
 
     @classmethod
@@ -555,13 +695,11 @@ class CreativeQueryManager(QueryManager):
             else:
                 adgroups = pub_ags
         if adgroups:
-            return reduce(lambda x, y: x+y, [[c for c in ag.creatives] for ag in adgroups])
+            return reduce(lambda x, y: x + y, [[c for c in ag.creatives] for ag in adgroups])
         crtvs = Creative.all().filter('account =', account)
         if deleted is not None:
             crtvs = crtvs.filter('deleted =', deleted)
         return crtvs
-
-
 
     @classmethod
     @wraps_first_arg
@@ -581,11 +719,13 @@ class CreativeQueryManager(QueryManager):
         return put_response
 
 
-class TextCreativeQueryManager(CreativeQueryManager):
-    Model = TextCreative
 class TextAndTileCreativeQueryManager(CreativeQueryManager):
     Model = TextAndTileCreative
+
+
 class HtmlCreativeQueryManager(CreativeQueryManager):
     Model = HtmlCreative
+
+
 class ImageCreativeQueryManager(CreativeQueryManager):
     Model = ImageCreative

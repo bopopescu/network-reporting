@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.environ['PWD'])
 
+import inspect
 from datetime import timedelta
 from collections import defaultdict
 
@@ -155,10 +156,10 @@ def model_to_dict(model, exclude=[], reference_only=False,
     return model_dict
 
 
-def time_almost_eq(time1, time2, delta=None):
+def time_almost_eq(time1, time2, delta=None, message=None):
     if not delta:
         delta = timedelta(minutes=1)
-    ok_(time1 < time2 + delta and time1 > time2 - delta)
+    ok_(time1 < time2 + delta and time1 > time2 - delta, message)
 
 
 def confirm_model_changes(method,
@@ -336,7 +337,8 @@ def get_arg_name(key):
                               'AdNetworkAppMapper':
                                 'adnetwork_app_mapper',
                               'NetworkConfig':
-                                'network_config'}
+                                'network_config',
+                              'Site': 'adunit'}
 
     if isinstance(key, db.Key):
         class_name = db.get(key).__class__.__name__
@@ -491,3 +493,12 @@ def _db_to_dict(models):
 
         instances_dict[Model] = instances_of_model_dict
     return instances_dict
+
+def decorate_all_test_methods(decorator, exclude=[]):
+    def decorate(cls):
+        for method in inspect.getmembers(cls, inspect.ismethod):
+            method_name = method[1].__name__
+            if 'mptest' in method_name and method_name not in exclude:
+                setattr(cls, method_name, decorator(getattr(cls, method_name)))
+        return cls
+    return decorate

@@ -1,7 +1,8 @@
 from account.models import MarketPlaceConfig, NetworkConfig
 from account.query_managers import AccountQueryManager
 from advertiser.models import (Campaign, AdGroup, Creative, MarketplaceCreative,
-                               HtmlCreative, NetworkStates)
+                               HtmlCreative, NetworkStates, ImageCreative,
+                               TextAndTileCreative)
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
@@ -22,7 +23,7 @@ def _generate_model_instance(model, put, defaults, **kwargs):
     return model_instance
 
 
-def generate_account(username, password):
+def generate_account(username="test@mopub.com", password="test"):
     # Create a user and profile based on passed-in credentials.
     manager = RegistrationManager()
     user = manager.create_active_user(send_email=False, username=username,
@@ -48,6 +49,7 @@ def generate_account(username, password):
 
     # This account also needs a default marketplace campaign.
     marketplace_campaign = CampaignQueryManager.get_marketplace(account)
+    marketplace_campaign.active = False
     marketplace_campaign.put()
 
     account.put()
@@ -93,7 +95,7 @@ def generate_campaign(account, put=False, **kwargs):
     defaults = {
         'account': account,
         'name': 'Test Campaign',
-        'campaign_type': 'gtee',
+        'campaign_type': 'order',
     }
     return _generate_model_instance(Campaign, put, defaults, **kwargs)
 
@@ -151,9 +153,36 @@ def generate_adgroup(account, campaign, put=False, **kwargs):
 def generate_creative(account, adgroup, put=False, **kwargs):
     defaults = {
         'account': account,
-        'adgroup': adgroup,
+        'ad_group': adgroup,
     }
     return _generate_model_instance(Creative, put, defaults, **kwargs)
+
+
+def generate_text_and_tile_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+        'ad_type': 'text_icon',
+    }
+    return _generate_model_instance(TextAndTileCreative, put, defaults, **kwargs)
+
+
+def generate_html_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+        'ad_type': 'html',
+    }
+    return _generate_model_instance(HtmlCreative, put, defaults, **kwargs)
+
+
+def generate_image_creative(account, adgroup, put=False, **kwargs):
+    defaults = {
+        'account': account,
+        'ad_group': adgroup,
+        'ad_type': 'image'
+    }
+    return _generate_model_instance(ImageCreative, put, defaults, **kwargs)
 
 
 def generate_marketplace_creative(account, adgroup, put=False, **kwargs):
@@ -162,11 +191,3 @@ def generate_marketplace_creative(account, adgroup, put=False, **kwargs):
         'ad_group': adgroup,
     }
     return _generate_model_instance(MarketplaceCreative, put, defaults, **kwargs)
-
-
-def generate_html_creative(account, adgroup, put=False, **kwargs):
-    defaults = {
-        'account': account,
-        'ad_group': adgroup,
-    }
-    return _generate_model_instance(HtmlCreative, put, defaults, **kwargs)

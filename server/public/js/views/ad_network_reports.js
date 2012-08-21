@@ -75,7 +75,7 @@
     /*
      * ## AppOnNetworkView
      *
-     * See templates/partials/app_on_network.html to see how this is rendered in HTML.
+     * See common/templates/partials/app_on_network.html to see how this is rendered in HTML.
      * This renders an app on a network as a table row.
      */
     var AppOnNetworkView = Backbone.View.extend({

@@ -1,0 +1,67 @@
+{% load filters %}
+  
+<div class="stats-breakdown">
+  <table>
+    <tbody>
+      {% if stats.rev %}
+        <tr class="active" id="stats-breakdown-rev">
+          <td class="stats-breakdown-value today">
+          <span class="inner">{{stats.revenue.total|currency}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Revenue</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.req %}
+        <tr class="active" id="stats-breakdown-req">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.req.total|withsep}}</span>
+          </td>          
+          <th class="stats-breakdown-name">
+            <span class="inner">Requests</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.imp %}
+        <tr id="stats-breakdown-imp">
+          <td class="stats-breakdown-value today">
+          <span class="inner">{{stats.imp.total|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Impressions</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.clk %}
+        <tr id="stats-breakdown-clk">
+          <td class="stats-breakdown-value today">
+            <span class="inner">
+              {% if stats.ctr.total >= 0 %}
+                <span class="muted unbold">({{stats.ctr.total|percentage}})</span>
+              {% endif %}
+              {{stats.clk.total|withsep}}
+            </span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Clicks</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.cpm %}
+        <tr id="stats-breakdown-cpm">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.cpm.total|currency}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">eCPM</span>
+          </th>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>

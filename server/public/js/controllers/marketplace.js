@@ -586,44 +586,48 @@ var mopub = mopub || {};
              * ## Content filtering
              */
 
+            function post_categories(filter_level, categories) {
+                var loading_img = $("#filter-spinner").show();
+                var saving = $("#filter-save-status .saving").show();
+
+                var result = $.post("/advertise/marketplace/settings/content_filter/", {
+                    filter_level: filter_level,
+                    categories: categories,
+                });
+
+
+                result.success(function(data){
+                    loading_img.hide();
+                    saving.hide();
+                    if (data.hasOwnProperty('success')) {
+                        var saved = $("#filter-save-status .saved").show();
+                        setTimeout(function() { saved.fadeOut(); }, 1000);
+
+                    } else {
+                        var errored = $("#filter-save-status .error").show();
+                        setTimeout(function() {errored.fadeOut(); }, 1000);
+                    }
+                });
+            }
+
             $("input.content_level").click(function(){
-                var self = $(this);
-                var filter_level = self.attr('value');
+                var filter_level = $(this).val();
                 if(filter_level === 'custom') {
                     $('#categories_div').show();
                 } else {
                     $('#categories_div').hide();
 
-                    var loading_img = $("#filter-spinner").show();
-                    var saving = $("#filter-save-status .saving").show();
-                    var result = $.post("/campaigns/marketplace/settings/content_filter/", {
-                        filter_level: filter_level
-                    });
-
-
-                    result.success(function(data){
-                        loading_img.hide();
-                        saving.hide();
-                        if (data.hasOwnProperty('success')) {
-                            var saved = $("#filter-save-status .saved").show();
-                            setTimeout(function() { saved.fadeOut(); }, 1000);
-
-                        } else {
-                            var errored = $("#filter-save-status .error").show();
-                            setTimeout(function() {errored.fadeOut(); }, 1000);
-                        }
-                    });
+                    post_categories(filter_level, []);
                 }
             });
 
             // initialize chosen multiple select for IAB categories
             $("#categories")
                 .chosen({no_results_text: "No results matched"})
-                .click(function() {
-                    var self = $(this);
+                .change(function() {
+                    var categories = $(this).val();
 
-                    var filter_level = self.attr('value');
-                    console.log(filter_level);
+                    post_categories('custom', categories);
                 });
         }
     };

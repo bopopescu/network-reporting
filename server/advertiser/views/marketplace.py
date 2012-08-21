@@ -44,10 +44,12 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # Set up the blocklist
         blocklist = []
+        category_blocklist = set()
         network_config = self.account.network_config
         if network_config:
             blocklist = [str(domain) for domain in network_config.blocklist \
                          if not str(domain) in ("", "#")]
+            category_blocklist = set(network_config.category_blocklist)
 
         try:
             blind = self.account.network_config.blind
@@ -63,6 +65,7 @@ class MarketplaceIndexHandler(RequestHandler):
             'blocklist': blocklist,
             'blind': blind,
             'network_config': network_config,
+            'category_blocklist': category_blocklist,
             'IAB_CATEGORIES': IAB_CATEGORIES,
         }
 
@@ -157,12 +160,12 @@ class ContentFilterHandler(RequestHandler):
             elif filter_level == "strict":
                 network_config.set_strict_filter()
             elif filter_level == "custom":
-                blocklist = self.request.POST.get('categories', [])
+                categories = self.request.POST.getlist('categories[]')
 
-                network_config.attribute_blocklist = blocklist 
-                network_config.category_blocklist = blocklist 
+                network_config.attribute_blocklist = [] 
+                network_config.category_blocklist = categories 
 
-                AccountQueryManager.update_config_and_put(account, network_config)
+                AccountQueryManager.update_config_and_put(self.account, network_config)
             else:
                 return JSONResponse({'error': 'Invalid filter level'})
         else:

@@ -1,11 +1,19 @@
+# Deployed Tuesday, August 21, 2012 at 08:32AM PST
+### Deployed by John Pena
+### Tagged deploy-185
+### Bugs Fixed: []
+### Included Commits: 
+ * 9db0e88 order and line item promotional/explanatory text
+ * 5643b25 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, August 21, 2012 at 07:59AM PST
 ### Deployed by John Pena
 ### Tagged deploy-184
 ### Bugs Fixed: []
-### Included Commits: 
- * 2e6afb1 forgot https for google ajax loads
- * a632803 [#1208 state:resolved] [#1060 state:resolved] [#1168 state:resolved]
- 
+### Included Commits:
+* 2e6afb1 forgot https for google ajax loads
+* a632803 [#1208 state:resolved] [#1060 state:resolved] [#1168 state:resolved]
+
 # Deployed Tuesday, August 21, 2012 at 07:51AM PST
 ### Deployed by John Pena
 ### Tagged deploy-183

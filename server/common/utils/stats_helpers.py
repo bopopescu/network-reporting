@@ -572,6 +572,9 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
                 app_key=app_key, network=campaign.network_type)['sum']
         return app_stats
 
+    def get_adgroup_stats(self, *args, **kwargs):
+        return {}
+
 
 # TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):

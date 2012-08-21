@@ -1,15 +1,81 @@
+# Deployed Tuesday, August 21, 2012 at 01:52AM PST
+### Deployed by John Pena
+### Tagged deploy-181
+### Bugs Fixed: []
+### Included Commits: 
+ * 55050a4 Merge branch 'master' of github.com:mopub/mopub
+ * ec6de62 Deployed without finding any bug fixes.
+ * 2b97970 Fixed publisher views mptests
+ 
+# Deployed Tuesday, August 21, 2012 at 01:02AM PST
+### Deployed by John Pena
+### Tagged deploy-180
+### Bugs Fixed: []
+### Included Commits:
+* 838efc5 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, August 21, 2012 at 12:36AM PST
+### Deployed by John Pena
+### Tagged deploy-179
+### Bugs Fixed: []
+### Included Commits:
+* 0c35626 Merge branch 'new-reports-integration'
+* 1d09fb8 Merge branch 'master' of github.com:mopub/mopub
+* 4b97f76 integration with the new reports backend, removing communication with the old reports backend
+* 3ad2400 Merge branch 'master' of github.com:mopub/mopub
+* 291abad Added comment for NewCreateAppViewTestCase
+* 6a0326a removed some logging from publisher create app mptests
+* 9337c3d working on making the edit page better
+* 15c0f33 Deployed without finding any bug fixes.
+* e0a23a1 Wrote a couple tests for CreateAppView using confirm_all_models
+
+# Deployed Saturday, August 18, 2012 at 12:05AM PST
+### Deployed by John Pena
+### Tagged deploy-178
+### Bugs Fixed: []
+### Included Commits:
+* bd4fb8c Merge branch 'master' of github.com:mopub/mopub
+* be35a65 -- add snippets
+* 594ffb9 Merge branch 'master' of github.com:mopub/mopub
+* 94f9764 Merge branch 'master' of github.com:mopub/mopub
+* 1424d4a added alert message for OLI launch
+* 1ac67b9 added test
+* 5885c59 UI-90 hack to fix network geo predicate bug
+* 0688a07 Merge
+* 94f8b66 Made copying device targeting to new network adgroups explicit
+* 274d8cc [ui-83 state:fixed]
+* 6156cfa Deployed without finding any bug fixes.
+* 163aa37 Merge branch 'master' of github.com:mopub/mopub
+* d34aee2 Merge branch 'master' of github.com:mopub/mopub
+* e6e4243 -- clear rate into email
+
+# Deployed Wednesday, August 15, 2012 at 02:22AM PST
+### Deployed by John Pena
+### Tagged deploy-177
+### Bugs Fixed: []
+### Included Commits:
+* 30f7df7 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, August 15, 2012 at 01:50AM PST
+### Deployed by John Pena
+### Tagged deploy-176
+### Bugs Fixed: []
+### Included Commits:
+* 82dadd0 removed calls to new reports backend
+* 6c42567 Deployed without finding any bug fixes.
+
 # Deployed Monday, August 13, 2012 at 06:50PM PST
 ### Deployed by John Pena
 ### Tagged deploy-175
 ### Bugs Fixed: []
-### Included Commits: 
- * 65be0df some small changes to reports so we can hit the done endpoint from aws
- * 439ba08 Add even more comments
- * abce439 Add more comments
- * 2857caf Add authentication to report server calls
- * de490ab Change report server callback
- * fdab382 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 65be0df some small changes to reports so we can hit the done endpoint from aws
+* 439ba08 Add even more comments
+* abce439 Add more comments
+* 2857caf Add authentication to report server calls
+* de490ab Change report server callback
+* fdab382 Deployed without finding any bug fixes.
+
 # Deployed Thursday, August 09, 2012 at 05:53PM PST
 ### Deployed by John Pena
 ### Tagged deploy-174

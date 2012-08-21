@@ -19,13 +19,22 @@ from common.utils.test.fixtures import (generate_app, generate_adunit,
                                         generate_marketplace_creative,
                                         generate_html_creative,
                                         generate_network_campaign)
-from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
-                                          model_key_eq, time_almost_eq,
-                                          model_eq, ADDED_1, EDITED_1)
+from common.utils.test.test_utils import (confirm_all_models, confirm_db,
+                                          dict_eq, list_eq, model_key_eq,
+                                          time_almost_eq, model_eq, ADDED_1,
+                                          EDITED_1)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
-from publisher.query_managers import PublisherQueryManager
+from publisher.query_managers import (PublisherQueryManager,
+                                      AppQueryManager,
+                                      AdUnitQueryManager)
+from reporting.models import StatsModel
+
+
+from account.models import NetworkConfig
+from publisher.models import App, AdUnit
+from advertiser.models import Campaign, AdGroup, Creative
 
 
 class DashboardViewTestCase(BaseViewTestCase):
@@ -202,10 +211,33 @@ class AppDetailViewTestCase(BaseViewTestCase):
         # There is no helptext if you have created a campaign.
         ok_(get_response.context['helptext'] is None)
 
-        # TODO:
-        # list_eq(get_response.context['line_items'], [self.gtee_high_adgroup, self.gtee_adgroup, self.gtee_low_adgroup, self.promo_adgroup, self.backfill_promo_adgroup])
-        # list_eq(get_response.context['marketplace'], [self.marketplace_campaign])
-        # list_eq(get_response.context['networks'], [self.network_campaign])
+        # This view creates this fucking dumb structure for guaranteed campaigns
+        # and their level.  This really should not be a list of dicts of lists.
+        expected_gtee = [
+            {
+                'name': 'high',
+                'campaigns': [self.gtee_high_campaign],
+            },
+            {
+                'name': 'normal',
+                'campaigns': [self.gtee_campaign],
+            },
+            {
+                'name': 'low',
+                'campaigns': [self.gtee_low_campaign],
+            },
+        ]
+        list_eq(get_response.context['gtee'], expected_gtee)
+
+        list_eq(get_response.context['promo'], [self.promo_campaign])
+
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account)
+        list_eq(get_response.context['marketplace'],
+            [marketplace_campaign])
+        list_eq(get_response.context['network'], [self.network_campaign])
+        list_eq(get_response.context['backfill_promo'],
+            [self.backfill_promo_campaign])
 
     @confirm_db()
     def mptest_get_authorization(self):
@@ -318,10 +350,36 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
 
         model_key_eq(get_response.context['account'], self.account)
 
-        # TODO:
-        # list_eq(get_response.context['line_items'], [self.gtee_high_adgroup, self.gtee_adgroup, self.gtee_low_adgroup, self.promo_adgroup, self.backfill_promo_adgroup])
-        # list_eq(get_response.context['marketplace'], [self.marketplace_campaign])
-        # list_eq(get_response.context['networks'], [self.network_campaign])
+        # This view creates this fucking dumb structure for guaranteed campaign
+        # adgroups and their level.  This really should not be a list of dicts
+        # of lists.
+        # Note: this view is different than the app view in that the gtee,
+        # promo, etc. contain adgroups instead of campaigns.
+        expected_gtee = [
+            {
+                'name': 'high',
+                'adgroups': [self.gtee_high_adgroup],
+            },
+            {
+                'name': 'normal',
+                'adgroups': [self.gtee_adgroup],
+            },
+            {
+                'name': 'low',
+                'adgroups': [self.gtee_low_adgroup],
+            },
+        ]
+        list_eq(get_response.context['gtee'], expected_gtee)
+
+        list_eq(get_response.context['promo'], [self.promo_adgroup])
+        list_eq(get_response.context['marketplace'],
+                [self.marketplace_adgroup])
+
+        network_adgroup = AdGroupQueryManager.get_network_adgroup(
+            self.network_campaign, self.adunit.key(), self.account.key())
+        list_eq(get_response.context['network'], [network_adgroup])
+        list_eq(get_response.context['backfill_promo'],
+                [self.backfill_promo_adgroup])
 
     @confirm_db()
     def mptest_get_authorization(self):
@@ -482,6 +540,129 @@ class IntegrationHelpViewTestCase(BaseViewTestCase):
 ################################################################################
 ################################################################################
 
+class NewCreateAppViewTestCase(BaseViewTestCase):
+    """
+    NewCreateAppViewTestCase will replcae CreateAppViewTestCase because it uses
+    the confirm_all_models helper which makes tests cleaner and tests for more things.
+    It's not replcaed yet because I'm being lazy and don't want to look into
+    everything that CreateAppViewTestCase tests for
+
+        Author: Tiago Bandeira (8/16/2012)
+    """
+    def setUp(self):
+        super(NewCreateAppViewTestCase, self).setUp()
+
+        self.post_data = {
+            u'adunit-name': [u'Banner Ad'],
+            u'adunit-description': [u''],
+            u'adunit-custom_height': [u''],
+            u'app_type': [u'iphone'],
+            u'name': [u'Book App'],
+            u'package': [u''],
+            u'url': [u'', u''],
+            u'img_file': [u''],
+            u'secondary_category': [u''],
+            u'adunit-custom_width': [u''],
+            u'adunit-format': [u'320x50'],
+            u'adunit-app_key': [u''],
+            u'adunit-device_format': [u'phone'],
+            u'img_url': [u''],
+            u'primary_category': [u'books'],
+            u'adunit-refresh_interval': [u'0'],
+        }
+
+        self.url = reverse('publisher_create_app')
+
+    def mptest_create_app_and_adunit(self):
+        """Create an app and adunit
+
+        Author: Tiago Bandeira (8/16/2012)
+        """
+        c = Campaign.all().get()
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={self.account.key(): {'status': 'step4'}},
+                           added={App: 1,
+                                  AdUnit: 1,
+                                  NetworkConfig: 2,
+                                  Campaign: 1,
+                                  AdGroup: 2,
+                                  Creative: 2},
+                           response_code=302)
+
+    def mptest_create_network_adgroup(self):
+        """Create an app and adunit. Make sure adgroup is created for the network campaign for the new adunit.
+
+        Author: Tiago Bandeira (8/16/2012)
+        """
+        self.network_campaign = generate_network_campaign(
+                self.account, 'admob', put=True)
+
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={self.account.key(): {'status': 'step4'}},
+                           added={App: 1,
+                                  AdUnit: 1,
+                                  NetworkConfig: 2,
+                                  Campaign: 1,
+                                  AdGroup: 3,
+                                  Creative: 3},
+                           response_code=302)
+
+    def mptest_create_network_adgroup_and_copy_settings(self):
+        """Create an app and adunit. Make sure adgroup is created for the network campaign for the new adunit.
+
+        Author: Tiago Bandeira (8/16/2012)
+        """
+        app = generate_app(self.account)
+        AppQueryManager.put(app)
+        adunit = generate_adunit(self.account, app)
+        AdUnitQueryManager.put(adunit)
+
+        self.network_campaign = generate_network_campaign(
+                self.account, 'admob', put=True)
+
+        adgroup = self.network_campaign.adgroups[0]
+
+        # modify global adgroup settings
+        adgroup.device_targeting = True
+
+        adgroup.target_iphone = True
+        adgroup.target_ipod = True
+        adgroup.target_ipad = False
+        adgroup.target_android = True
+        adgroup.target_other = False
+
+        adgroup.ios_version_min = '2.1+'
+        adgroup.ios_version_max = '3.2+'
+
+        adgroup.android_version_min = '1.6'
+        adgroup.android_version_max = '2.2'
+
+        adgroup.geo_predicates = [u'country_name=BR']
+        adgroup.cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        adgroup.keywords = ['abc', 'de', 'fg']
+
+        AdGroupQueryManager.put(adgroup)
+
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited={self.account.key(): {'status': 'step4'}},
+                           added={App: 1,
+                                  AdUnit: 1,
+                                  NetworkConfig: 2,
+                                  AdGroup: 2,
+                                  Creative: 2},
+                           response_code=302)
+
+        # verify settings have been copied over
+        new_adgroup = [ag for ag in self.network_campaign.adgroups if ag.key() != adgroup.key()][0]
+        model_eq(adgroup, new_adgroup, exclude=['site_keys', 't', 'active', 'created'], check_primary_key=False)
+
+
 class CreateAppViewTestCase(BaseViewTestCase):
     """
     author: Ignatius, Peter
@@ -538,11 +719,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         ok_(isinstance(get_response.context['adunit_form'], AdUnitForm))
         ok_(not get_response.context['adunit_form'].is_bound)
 
-    @confirm_db(app=ADDED_1, adunit=ADDED_1, campaign={'added': 1, 'edited': 1},
+    @confirm_db(app=ADDED_1, adunit=ADDED_1, campaign=ADDED_1,
                 adgroup={'added': 2}, creative={'added': 2},
                 account={'edited': 1}, network_config={'added': 2})
     def mptest_create_first_app_and_adunit(self):
-        """
+        """mptest_create_first_app_and_adunit
+
         Confirm the entire app creation workflow by submitting known good
         parameters, and confirming the app/adunit were created as expected.
         """
@@ -689,11 +871,12 @@ class CreateAppViewTestCase(BaseViewTestCase):
         model_eq(backfill_promo_creative, expected_backfill_promo_creative,
             check_primary_key=False, exclude=['t'])
 
-    @confirm_db(app={'added': 2}, adunit={'added': 2}, campaign=EDITED_1,
+    @confirm_db(app={'added': 2}, adunit={'added': 2},
                 adgroup={'added': 1}, creative={'added': 1},
                 account={'edited': 1}, network_config={'added': 2})
     def mptest_create_additional_app_and_adunit(self):
-        """
+        """mptest_create_additional_app_and_adunit
+
         Confirm the entire app creation workflow by submitting known good
         parameters, and confirming the app/adunit were created as expected.
         """

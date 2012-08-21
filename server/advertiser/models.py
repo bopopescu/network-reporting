@@ -1,5 +1,4 @@
 import datetime
-import logging
 
 from google.appengine.api import images
 from google.appengine.ext import blobstore
@@ -20,6 +19,7 @@ from simple_models import (SimpleAdGroup,
                            SimpleCreative,
                            SimpleHtmlCreative,
                            SimpleImageCreative,
+                           SimpleTextCreative,
                            SimpleTextAndTileCreative,
                            SimpleNullCreative,
                            SimpleDummyFailureCreative,
@@ -48,8 +48,7 @@ class Campaign(db.Model):
     advertiser = db.StringProperty(verbose_name='Advertiser:',
                                    default='None',
                                    required=True)
-    description = db.StringProperty(verbose_name='Description:',
-                                    multiline=True)
+    description = db.TextProperty(verbose_name='Description:')
 
     # current state
     active = db.BooleanProperty(default=True)
@@ -895,7 +894,7 @@ class Creative(polymodel.PolyModel):
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
-    ad_type = db.StringProperty(choices=["text_icon", "image", "html",
+    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "html",
                                          "iAd", "adsense", "admob",
                                          "greystripe", "html_full", "clear",
                                          "custom_native", "admob_native",
@@ -1051,6 +1050,28 @@ class Creative(polymodel.PolyModel):
             'key': str(self.key()),
             'name': self.name
         }
+
+
+class TextCreative(Creative):
+    SIMPLE = SimpleTextCreative
+    # text ad properties
+    headline = db.StringProperty()
+    line1 = db.StringProperty()
+    line2 = db.StringProperty()
+
+    #@property
+    #def Renderer(self):
+    #    return None
+
+    def __repr__(self):
+        return "'%s'" % (self.headline,)
+
+    def build_simplify_dict(self):
+        spec_dict = dict(headline=self.headline,
+                         line1=self.line1,
+                         line2=self.line2)
+        spec_dict.update(super(TextCreative, self).build_simplify_dict())
+        return spec_dict
 
 
 class TextAndTileCreative(Creative):

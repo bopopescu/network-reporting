@@ -48,8 +48,7 @@ class Campaign(db.Model):
     advertiser = db.StringProperty(verbose_name='Advertiser:',
                                    default='None',
                                    required=True)
-    description = db.StringProperty(verbose_name='Description:',
-                                    multiline=True)
+    description = db.TextProperty(verbose_name='Description:')
 
     # current state
     active = db.BooleanProperty(default=True)

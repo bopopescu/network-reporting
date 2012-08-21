@@ -163,8 +163,8 @@ class OrderDetailHandler(RequestHandler):
             self.end_date = None
 
             for line_item in line_items:
-                if not self.start_date or (line_item.start_datetime.date() if line_item.start_datetime else line_item.created) < self.start_date:
-                    self.start_date = (line_item.start_datetime.date() if line_item.start_datetime else line_item.created)
+                if not self.start_date or (line_item.start_datetime if line_item.start_datetime else line_item.created).date() < self.start_date:
+                    self.start_date = (line_item.start_datetime if line_item.start_datetime else line_item.created).date()
 
                 if not line_item.end_datetime:
                     self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()

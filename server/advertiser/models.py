@@ -157,8 +157,7 @@ class AdGroup(db.Model):
     # reference redundancy, use the creatives collection instead
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty(verbose_name='Name',
-                             default='Line Item Name',
-                             required=True)
+                             default='Line Item Name')
 
     created = db.DateTimeProperty(auto_now_add=True)
 
@@ -414,7 +413,7 @@ class AdGroup(db.Model):
             return kinds[self.adgroup_type]
         return ''
 
-    def simplify(self):        
+    def simplify(self):
 
         if hasattr(self, 'full_budget'):
             full_budget = self.full_budget
@@ -430,7 +429,7 @@ class AdGroup(db.Model):
             budget_type = self.budget_type
         else:
             budget_type = None
-        
+
         return SimpleAdGroup(
             key=str(self.key()),
             campaign=self.campaign,
@@ -465,7 +464,7 @@ class AdGroup(db.Model):
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,
             network_type=self.network_type,
-            
+
             # Added as part of orders feature
             adgroup_type=self.adgroup_type,
             start_datetime=self.start_datetime,

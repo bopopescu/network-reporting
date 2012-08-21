@@ -23,6 +23,7 @@ from common.ragendja.template import render_to_response, JSONResponse
 from common.utils import helpers, tablib, stats_helpers
 from common.utils.request_handler import RequestHandler
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import utc
 
 from account.query_managers import AccountQueryManager
 from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
@@ -34,6 +35,7 @@ from advertiser.query_managers import (CampaignQueryManager,
 from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
                                       AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
+from budget.query_managers import BudgetQueryManager
 import logging
 
 flatten = lambda l: [item for sublist in l for item in sublist]
@@ -63,7 +65,7 @@ class OrderIndexHandler(RequestHandler):
         # Sort by multiple keys - case sensitive
         # from operator import itemgetter
         # mylist = sorted(mylist, key=itemgetter('priority', 'name'))
-        
+
         gtee_high_line_items = []
         gtee_line_items = []
         gtee_low_line_items = []
@@ -155,15 +157,14 @@ class OrderDetailHandler(RequestHandler):
                                                         order=order,
                                                         archived=True)
         line_items.extend(archived_line_items)
-        logging.warn(line_items)
-        
+
         if line_items:
             self.start_date = None
             self.end_date = None
 
             for line_item in line_items:
-                if not self.start_date or line_item.start_datetime.date() < self.start_date:
-                    self.start_date = line_item.start_datetime.date()
+                if not self.start_date or (line_item.start_datetime if line_item.start_datetime else line_item.created).date() < self.start_date:
+                    self.start_date = (line_item.start_datetime if line_item.start_datetime else line_item.created).date()
 
                 if not line_item.end_datetime:
                     self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
@@ -205,9 +206,9 @@ class LineItemDetailHandler(RequestHandler):
 
         line_item = AdGroupQueryManager.get(line_item_key)
 
-        self.start_date = line_item.start_datetime.date()
+        self.start_date = line_item.start_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date()
         if line_item.end_datetime:
-            self.end_date = line_item.end_datetime.date()
+            self.end_date = line_item.end_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date()
         else:
             self.end_date = datetime.datetime.now(Pacific_tzinfo()).date()
 
@@ -408,6 +409,8 @@ class OrderAndLineItemFormHandler(RequestHandler):
         if len(self.request.POST.keys()) == 0:
             raise Http404
 
+        # Fetch the objects we're going to edit from their keys.
+        # If both keys are None, we're making new objects.
         if line_item_key:
             line_item = AdGroupQueryManager.get(line_item_key)
             order = line_item.campaign
@@ -418,6 +421,8 @@ class OrderAndLineItemFormHandler(RequestHandler):
             order = None
             line_item = None
 
+        # Sanity checks. Make sure the order and line item are valid
+        # and owned by the requester.
         if order:
             if (not order.is_order) or order.account.key() != self.account.key():
                 raise Http404
@@ -428,13 +433,19 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
         order_form = OrderForm(self.request.POST, instance=order, prefix='order')
 
-        # TODO: do this in the form? maybe pass the account in?
+        # We grab the adunits available for targeting here, but we could probably
+        # pass in the account and do it in the form.
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
-        line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys, apps_choices=get_apps_choices(self.account))
+        line_item_form = LineItemForm(self.request.POST,
+                                      instance=line_item,
+                                      site_keys=site_keys,
+                                      apps_choices=get_apps_choices(self.account))
 
+        # Shouldn't this be order_form.is_valid() if order else True ? why the 'not'?
         order_form_is_valid = order_form.is_valid() if not order else True
         line_item_form_is_valid = line_item_form.is_valid()
+
         if order_form_is_valid and line_item_form_is_valid:
             if not order:
                 order = order_form.save()
@@ -460,6 +471,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
                                     kwargs={'line_item_key': line_item.key()}),
             })
 
+
         errors = {}
         if not line_item_form_is_valid:
             logging.warn('line')
@@ -484,6 +496,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             'errors': errors,
             'success': False,
         })
+
 
 @login_required
 def order_and_line_item_form_new_order(request, *args, **kwargs):
@@ -602,7 +615,7 @@ class DisplayCreativeHandler(RequestHandler):
             if creative.ad_type == "html":
                 html_data = creative.html_data or ''
                 return HttpResponse("<html><body style='margin:0px;'>" + \
-                                    html_data + "</body></html")
+                                    html_data + "</body></html>")
         else:
             raise Http404
 
@@ -1063,6 +1076,57 @@ class AdServerTestHandler(RequestHandler):
 @login_required
 def adserver_test(request, *args, **kwargs):
     return AdServerTestHandler()(request, *args, **kwargs)
+
+
+class AdminPushBudget(RequestHandler):
+    def get(self):
+
+        adgroup_key = self.request.GET.get('adgroup_key', None)
+
+        if not adgroup_key:
+            logging.error("user " +
+                          str(self.request.account.key()) +
+                          "tried to access line item push budget for line item " +
+                          adgroup_key)
+            raise Http404
+
+        logging.warn('pushing budget for ' + adgroup_key)
+
+        testing = bool(self.request.GET.get('testing', False))
+        staging = bool(int(self.request.GET.get('staging', 0)))
+        total_spent = float(self.request.GET.get('total_spent', 0.0))
+
+
+
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        put_result = BudgetQueryManager.update_or_create_budget_for_adgroup(
+            adgroup,
+            total_spent = total_spent,
+            testing = testing,
+            staging = staging
+        )
+
+        if put_result:
+            if staging:
+                message = "Successfully updated budget on staging"
+            else:
+                message = "Successfully updated budget in production"
+        else:
+            message = "Unsuccessful in updating budget"
+
+        return JSONResponse({
+            'status': message
+        })
+
+
+@login_required
+def push_budget(request, *args, **kwargs):
+    if not request.user.is_staff:
+        raise Http404
+
+    return AdminPushBudget()(request, *args, **kwargs)
+
+
 
 ###########
 # Helpers #

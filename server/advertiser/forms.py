@@ -150,7 +150,11 @@ class LineItemForm(forms.ModelForm):
                                          required=False,
                                          widget=forms.RadioSelect)
 
-    cities   = forms.Field(required=False, widget=forms.SelectMultiple)
+    cities = forms.Field(required=False, widget=forms.SelectMultiple)
+
+    keywords = forms.CharField(
+        label='Keywords:', required=False, widget=forms.Textarea(
+            attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
 
     def __init__(self, *args, **kwargs):
         # initial
@@ -233,6 +237,12 @@ class LineItemForm(forms.ModelForm):
         else:
             return budget
 
+    def clean_adgroup_type(self):
+        adgroup_type = self.cleaned_data.get('adgroup_type', None)
+        if not adgroup_type:
+            raise forms.ValidationError("This field is required.")
+        return adgroup_type
+
     def clean_name(self):
         name = self.cleaned_data.get('name', '')
         name = name.strip()
@@ -278,6 +288,7 @@ class LineItemForm(forms.ModelForm):
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords')
+            keywords = "\n".join([keyword.strip() for keyword in keywords.split("\n") if keyword.strip()])
         return keywords
 
     def _clean_start_and_end_datetime(self, data):
@@ -331,6 +342,11 @@ class LineItemForm(forms.ModelForm):
             data['adgroup_type'] = 'backfill_promo'
 
     def _clean_promo_budget(self, data):
+        """
+        Promo campaigns are currently unbudgeted, so we remove all
+        budgeting information if they've somehow been set (we shouldn't
+        be exposing budgeting controls in the UI).
+        """
         data['daily_budget'] = None
         data['full_budget'] = None
         data['budget_type'] = None
@@ -345,11 +361,11 @@ class LineItemForm(forms.ModelForm):
 
         self._clean_start_and_end_datetime(cleaned_data)
 
-        if cleaned_data['adgroup_type'] == 'gtee':
+        if cleaned_data.get('adgroup_type', '') == 'gtee':
             self._clean_gtee_adgroup_type(cleaned_data)
             self._clean_gtee_budget(cleaned_data)
 
-        elif cleaned_data['adgroup_type'] == 'promo':
+        elif cleaned_data.get('adgroup_type', '') == 'promo':
             self._clean_promo_adgroup_type(cleaned_data)
             self._clean_promo_budget(cleaned_data)
 

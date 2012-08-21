@@ -258,6 +258,17 @@ var mopub = mopub || {};
                 });
 
                 return ctr_series;
+            } else if (stat === "cpm") {
+                var imp_series = this.get_full_stat_series('imp');
+                var rev_series = this.get_full_stat_series('rev');
+
+                var cpm_series = [];
+                _.each(_.zip(imp_series, rev_series), function (pair) {
+                    cpm_series.push(calculate_cpm(pair[0], pair[1]));
+                });
+
+                return cpm_series;
+                
             } else {
 
                 // Go through each of the daily stats for each of the
@@ -287,9 +298,9 @@ var mopub = mopub || {};
                 
                 return full_series;
             }
-            },
+        },
             
-            get_date_range: function() {
+        get_date_range: function() {
             var dailies = this.models[0].get('daily_stats');
 
             return _.map(dailies, function (day) {
@@ -1124,7 +1135,7 @@ var mopub = mopub || {};
 
     window.Order = Order;
     window.LineItem = LineItem;
-    window.Creative = Creative
+    window.Creative = Creative;
     window.OrderCollection = OrderCollection;
     window.LineItemCollection = LineItemCollection;
     window.CreativeCollection = CreativeCollection;

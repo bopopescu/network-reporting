@@ -5,21 +5,23 @@ from datetime import timedelta, \
 from django import forms
 from reports.models import ScheduledReport
 
-DIMENSIONS = [('','------------'),
-              ('app', 'App'),
-              ('adunit', 'Ad Unit'),
-              ('priority', 'Priority'),
-              ('campaign', 'Campaign'),
-              ('creative', 'Creative'),
-              ('month', 'Month'),
-              ('week', 'Week'),
-              ('day', 'Day'),
-              ('hour', 'Hour'),
-              ('country', 'Country'),
-              ('marketing', 'Device'),
-              ('os', 'OS'),
-              ('os_ver', 'OS Version'),
-           ]
+DIMENSIONS = [
+    ('','------------'),
+    ('app', 'App'),
+    ('adunit', 'Ad Unit'),
+    ('priority', 'Priority'),
+    ('campaign', 'Order'),
+    ('adgroup', 'Line Item'),
+    ('creative', 'Creative'),
+    ('month', 'Month'),
+    ('week', 'Week'),
+    ('day', 'Day'),
+    ('hour', 'Hour'),
+    ('country', 'Country'),
+    ('marketing', 'Device'),
+    ('os', 'OS'),
+    ('os_ver', 'OS Version'),
+]
 
 
 
@@ -127,6 +129,16 @@ class ReportForm(forms.ModelForm):
 
     class Meta:
         model = ScheduledReport
-        fields = ('name', 'd1', 'd2', 'd3', 'start', 'end', 'days', 'name',
-                'interval', 'sched_interval', 'recipients', 'saved')
+        fields = ('name',
+                  'd1',
+                  'd2',
+                  'd3',
+                  'start',
+                  'end',
+                  'days',
+                  'name',
+                  'interval',
+                  'sched_interval',
+                  'recipients',
+                  'saved')
 

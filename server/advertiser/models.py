@@ -19,6 +19,7 @@ from simple_models import (SimpleAdGroup,
                            SimpleCreative,
                            SimpleHtmlCreative,
                            SimpleImageCreative,
+                           SimpleTextCreative,
                            SimpleTextAndTileCreative,
                            SimpleNullCreative,
                            SimpleDummyFailureCreative,
@@ -47,8 +48,7 @@ class Campaign(db.Model):
     advertiser = db.StringProperty(verbose_name='Advertiser:',
                                    default='None',
                                    required=True)
-    description = db.StringProperty(verbose_name='Description:',
-                                    multiline=True)
+    description = db.TextProperty(verbose_name='Description:')
 
     # current state
     active = db.BooleanProperty(default=True)
@@ -64,7 +64,8 @@ class Campaign(db.Model):
     # is this a campaign for direct sold (an order), marketplace, or networks?
     campaign_type = db.StringProperty(choices=['order',
                                                'marketplace',
-                                               'network'])
+                                               'network',
+                                               'backfill_marketplace'])
 
     # If the campaign is a new network campaign then the network field is
     # set otherwise it's left blank
@@ -150,13 +151,13 @@ Order = Campaign
 
 
 class AdGroup(db.Model):
+
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     # net_creative is not set for new network campaigns due to circular
     # reference redundancy, use the creatives collection instead
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty(verbose_name='Name',
-                             default='Line Item Name',
-                             required=True)
+                             default='Line Item Name')
 
     created = db.DateTimeProperty(auto_now_add=True)
 
@@ -206,7 +207,8 @@ class AdGroup(db.Model):
 
     adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
                                               'network', 'promo',
-                                              'backfill_promo', 'marketplace'])
+                                              'backfill_promo', 'marketplace',
+                                              'backfill_marketplace'])
 
     ##################################
     # /end moved from campaign class #
@@ -413,60 +415,81 @@ class AdGroup(db.Model):
         return ''
 
     def simplify(self):
-        if self.start_date and not self.start_datetime:
-            strt = self.start_date
-            start_datetime = datetime.datetime(strt.year, strt.month, strt.day)
-        else:
-            start_datetime = self.start_datetime
-        if self.end_date and not self.end_datetime:
-            end = self.end_date
-            end_datetime = datetime.datetime(end.year, end.month, end.day)
-        else:
-            end_datetime = self.end_datetime
 
-        return SimpleAdGroup(key=str(self.key()),
-                             campaign=self.campaign,
-                             account=self.account,
-                             name=self.name,
-                             bid=self.bid,
-                             bid_strategy=self.bid_strategy,
-                             active=self.active,
-                             deleted=self.deleted,
-                             minute_frequency_cap=self.minute_frequency_cap,
-                             hourly_frequency_cap=self.hourly_frequency_cap,
-                             daily_frequency_cap=self.daily_frequency_cap,
-                             weekly_frequency_cap=self.weekly_frequency_cap,
-                             monthly_frequency_cap=self.monthly_frequency_cap,
-                             lifetime_frequency_cap=self.lifetime_frequency_cap,
-                             keywords=self.keywords,
-                             site_keys=[str(key) for key in self.site_keys],
-                             mktplace_price_floor=self.mktplace_price_floor,
-                             device_targeting=self.device_targeting,
-                             target_iphone=self.target_iphone,
-                             target_ipad=self.target_ipad,
-                             target_ipod=self.target_ipod,
-                             ios_version_max=self.ios_version_max,
-                             ios_version_min=self.ios_version_min,
-                             target_android=self.target_android,
-                             android_version_max=self.android_version_max,
-                             android_version_min=self.android_version_min,
-                             target_other=self.target_other,
-                             cities=self.cities,
-                             geo_predicates=self.geo_predicates,
-                             allocation_percentage=self.allocation_percentage,
-                             optimizable=self.optimizable,
-                             default_cpm=self.default_cpm,
-                             network_type=self.network_type,
-                             # Added as part of orders feature
-                             adgroup_type=self.adgroup_type,
-                             start_datetime=start_datetime,
-                             end_datetime=end_datetime,
-                             full_budget=self.full_budget,
-                             daily_budget=self.budget,
-                             budget_type=self.budget_type,
-                             included_apps=self.included_apps_global_ids,
-                             excluded_apps=self.excluded_apps_global_ids,
-                             )
+        if hasattr(self, 'full_budget'):
+            full_budget = self.full_budget
+        else:
+            full_budget = 0
+
+        if hasattr(self, 'daily_budget'):
+            daily_budget = self.daily_budget
+        else:
+            daily_budget = 0
+
+        if hasattr(self, 'budget_type'):
+            budget_type = self.budget_type
+        else:
+            budget_type = None
+
+        return SimpleAdGroup(
+            key=str(self.key()),
+            campaign=self.campaign,
+            account=self.account,
+            name=self.name,
+            bid=self.bid,
+            bid_strategy=self.bid_strategy,
+            active=self.active,
+            deleted=self.deleted,
+            minute_frequency_cap=self.minute_frequency_cap,
+            hourly_frequency_cap=self.hourly_frequency_cap,
+            daily_frequency_cap=self.daily_frequency_cap,
+            weekly_frequency_cap=self.weekly_frequency_cap,
+            monthly_frequency_cap=self.monthly_frequency_cap,
+            lifetime_frequency_cap=self.lifetime_frequency_cap,
+            keywords=self.keywords,
+            site_keys=[str(key) for key in self.site_keys],
+            mktplace_price_floor=self.mktplace_price_floor,
+            device_targeting=self.device_targeting,
+            target_iphone=self.target_iphone,
+            target_ipad=self.target_ipad,
+            target_ipod=self.target_ipod,
+            ios_version_max=self.ios_version_max,
+            ios_version_min=self.ios_version_min,
+            target_android=self.target_android,
+            android_version_max=self.android_version_max,
+            android_version_min=self.android_version_min,
+            target_other=self.target_other,
+            cities=self.cities,
+            geo_predicates=self.geo_predicates,
+            allocation_percentage=self.allocation_percentage,
+            optimizable=self.optimizable,
+            default_cpm=self.default_cpm,
+            network_type=self.network_type,
+
+            # Added as part of orders feature
+            adgroup_type=self.adgroup_type,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+            full_budget=full_budget,
+            daily_budget=daily_budget,
+            budget_type=budget_type,
+            included_apps=self.included_apps_global_ids,
+            excluded_apps=self.excluded_apps_global_ids,
+        )
+
+    def _cleaned_geo_predicates(self):
+        """
+        This is a HACK to fix a frontend bug that sometimes sometimes
+        geo_predicates to ['country='] instead of ['country=*']
+        Jira: https://mopubinc.atlassian.net/browse/UI-90
+
+        This is going to be removed entirely very soon, so i'm
+        just going to implement this fix now.
+
+        """
+        if self.geo_predicates == ['country=']:
+            return ['country=*']
+        return self.geo_predicates
 
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
@@ -732,8 +755,11 @@ class AdGroup(db.Model):
         for country in self.geo_predicates:
             country_id = country.strip("country_name=")
             if country_id.find("*") == -1:
-                country_name = ISO_COUNTRY_LOOKUP_TABLE[country_id]
-                display.append(country_name)
+                try:
+                    country_name = ISO_COUNTRY_LOOKUP_TABLE[country_id]
+                    display.append(country_name)
+                except KeyError:
+                    pass
 
         if not display:
             return "All countries"
@@ -856,8 +882,7 @@ LineItem = AdGroup
 
 class Creative(polymodel.PolyModel):
     name = db.StringProperty(verbose_name='Creative Name',
-                             default='Creative',
-                             required=True)
+                             default='Creative')
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
     landscape = db.BooleanProperty(default=False)  # TODO: make this more flexible later
@@ -869,7 +894,7 @@ class Creative(polymodel.PolyModel):
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
-    ad_type = db.StringProperty(choices=["text_icon", "image", "html",
+    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "html",
                                          "iAd", "adsense", "admob",
                                          "greystripe", "html_full", "clear",
                                          "custom_native", "admob_native",
@@ -1025,6 +1050,28 @@ class Creative(polymodel.PolyModel):
             'key': str(self.key()),
             'name': self.name
         }
+
+
+class TextCreative(Creative):
+    SIMPLE = SimpleTextCreative
+    # text ad properties
+    headline = db.StringProperty()
+    line1 = db.StringProperty()
+    line2 = db.StringProperty()
+
+    #@property
+    #def Renderer(self):
+    #    return None
+
+    def __repr__(self):
+        return "'%s'" % (self.headline,)
+
+    def build_simplify_dict(self):
+        spec_dict = dict(headline=self.headline,
+                         line1=self.line1,
+                         line2=self.line2)
+        spec_dict.update(super(TextCreative, self).build_simplify_dict())
+        return spec_dict
 
 
 class TextAndTileCreative(Creative):

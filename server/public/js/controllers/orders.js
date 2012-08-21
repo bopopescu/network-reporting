@@ -181,7 +181,7 @@
             + "support@mopub.com";
 
         $("#copy-button").addClass('disabled');
-        
+
         // Hit the copy endpoint with our form data
         var copy_promise = $.ajax({
             url: '/advertise/line_item_copy/',
@@ -222,6 +222,31 @@
         });
 
         return copy_promise;
+    }
+
+    function initializeBudgetControls(line_item_key) {
+
+        $("#update-budget").click(function () {
+
+            var use_staging = $("#use_staging").is(":checked");
+            var budget_promise = $.ajax({
+                url: '/advertise/push_budget/',
+                data: {
+                    adgroup_key: line_item_key,
+                    staging: use_staging ? 1 : 0
+                }
+
+            });
+
+            budget_promise.success(function (response) {
+                Toast.info(response.status);
+                $("#budget-admin-modal").modal('hide');
+            });
+
+            budget_promise.error(function (response) {
+                Toast.error("Couldn't access the push endpoint");
+            });
+        });
     }
 
     /*
@@ -508,6 +533,7 @@
 
             initializeDateButtons();
             initializeStatusControls(true);
+            initializeBudgetControls(bootstrapping_data.line_item_key);
 
             /*
              * Load the stats for the line item
@@ -536,6 +562,66 @@
 
             line_item.fetch();
 
+
+
+            /*
+             * Load the data in the targetting table
+             */
+
+            // Get all of the apps that are targeted by this line item
+            // and fill in their stats in the targeted table.
+            _.each(bootstrapping_data.targeted_apps, function(app_key) {
+                var app = new App({
+                    id: app_key,
+                    stats_endpoint: 'direct'
+                });
+
+                app.url = function () {
+                    var stats_endpoint = this.get('stats_endpoint');
+                    return '/api/adgroup/'
+                        + bootstrapping_data.line_item_key
+                        + '/apps/'
+                        + this.id
+                        + "?"
+                        + window.location.search.substring(1)
+                        + '&endpoint='
+                        + stats_endpoint;
+                };
+
+                app.bind('change', function(current_app){
+                    renderApp(current_app);
+                });
+                app.fetch();
+            });
+
+            // Same deal with the adunits. Get all of the adunits that are
+            // targeted by this line item and fill in their stats in the
+            // targeted table.
+            _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
+                var adunit = new AdUnit({
+                    id: adunit_key,
+                    stats_endpoint: 'direct'
+                });
+
+                adunit.url = function () {
+                    var stats_endpoint = this.get('stats_endpoint');
+                    return '/api/adgroup/'
+                        + bootstrapping_data.line_item_key
+                        + '/adunits/'
+                        + this.id
+                        + "?"
+                        + window.location.search.substring(1)
+                        + '&endpoint='
+
+                        + stats_endpoint;
+                };
+
+                adunit.bind('change', function(current_adunit){
+                    renderAdUnit(current_adunit);
+                });
+
+                adunit.fetch();
+            });
 
             // Set up the handler for the copy button
             var copy_modal = $("#copy_modal").modal({
@@ -810,9 +896,9 @@
             });
 
             // toggle fields based on adgroup_type
-            $('[name="adgroup_type"]').change(function() {
+            $('[name="adgroup_type"]').change(function () {
                 var adgroup_type = $(this).val();
-                $('.adgroup_type_dependent').each(function() {
+                $('.adgroup_type_dependent').each(function () {
                     $(this).toggle($(this).hasClass(adgroup_type));
                 });
             }).change(); // update on document ready
@@ -925,17 +1011,21 @@
                 $(this).val(val);
             });
 
-            $('input[name="end_datetime_0"], input[name="end_datetime_1"], select[name="budget_type"], select[name="budget_strategy"]').change(function(){
+            $('input[name="end_datetime_0"], input[name="end_datetime_1"], select[name="budget_type"], input[name="budget_strategy"]').change(function (){
                 if(!$('input[name="end_datetime_0"]').val() &&
-                   !$('input[name="end_datetime_1"]').val() &&
-                   $('select[name="budget_type"]').val() == 'full_campaign') {
-                    $('input#id_budget_strategy_1').prop('checked', 'checked');
-                    $('input#id_budget_strategy_0').removeProp('checked');
-                    $('input#id_budget_strategy_0').attr('disabled', 'disabled');
+                   !$('input[name="end_datetime_1"]').val()) {
+                    if($('select[name="budget_type"]').val() == 'full_campaign') {
+                        $('input[name="budget_strategy"][value="evenly"]').attr('disabled', 'disabled');
+                        return;
+                    }
+                    if($('input[name="budget_strategy"][value="evenly"]').prop('checked')) {
+                        $('select[name="budget_type"] option[value="full_campaign"]').attr('disabled', 'disabled');
+                        return;
+                    }
                 }
-                else {
-                    $('input#id_budget_strategy_0').removeAttr('disabled');
-                }
+
+                $('select[name="budget_type"] option[value="full_campaign"]').removeAttr('disabled');
+                $('input[name="budget_strategy"][value="evenly"]').removeAttr('disabled');
             }).change();
 
             $('#all-adunits').change(function() {

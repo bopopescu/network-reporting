@@ -232,6 +232,15 @@ class AppDetailHandler(RequestHandler):
         marketplace_campaign = CampaignQueryManager.get_marketplace(app._account, from_db=True)
 
         network_campaigns = CampaignQueryManager.get_network_campaigns(app.account, is_new=True)
+        for campaign in network_campaigns:
+            if campaign.active:
+                active = False
+                for adunit in app.adunits:
+                    adgroup = AdGroupQueryManager.get_network_adgroup(campaign, adunit.key(), app.account, get_from_db=True)
+                    if adgroup.active:
+                        active = True
+                        break
+                campaign.active = active
         network_campaigns = sorted(network_campaigns, key=lambda campaign: campaign.name.lower())
 
         return {
@@ -746,10 +755,23 @@ def enable_networks(adunit, account):
             preexisting_adgroup = adgroups[0]
             # Copy over targeting for the NetworkDetails page
             adgroup.device_targeting = preexisting_adgroup.device_targeting
-            for device, pretty_name in adgroup.DEVICE_CHOICES:
-                setattr(adgroup, 'target_' + device, getattr(
-                    preexisting_adgroup, 'target_' + device, False))
+
+            adgroup.target_iphone = preexisting_adgroup.target_iphone
+            adgroup.target_ipod = preexisting_adgroup.target_ipod
+            adgroup.target_ipad = preexisting_adgroup.target_ipad
+            adgroup.target_android = preexisting_adgroup.target_android
             adgroup.target_other = preexisting_adgroup.target_other
+
+            adgroup.ios_version_min = preexisting_adgroup.ios_version_min
+            adgroup.ios_version_max = preexisting_adgroup.ios_version_max
+
+            adgroup.android_version_min = preexisting_adgroup.android_version_min
+            adgroup.android_version_max = preexisting_adgroup.android_version_max
+
+            adgroup.geo_predicates = preexisting_adgroup.geo_predicates
+            adgroup.cities = preexisting_adgroup.cities
+            adgroup.keywords = preexisting_adgroup.keywords
+
         creatives.append(adgroup.default_creative())
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)

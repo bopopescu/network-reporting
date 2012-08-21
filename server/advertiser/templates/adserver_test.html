@@ -96,74 +96,75 @@
     </script>
   
 <body>
-    <br/>
-    <dl class="formFields thin">
-        <dt><label>AdUnit:</label></dt>
-        <dd>
-            <select id="adunit">
-                {% for adunit in adunits %}
-                    <option value="{{adunit.key}}">{{adunit.app.name}} &gt; {{adunit.name}}</option>
-                {% endfor %}
-            </select>
-        </dd>
 
-        <dt><label>Device:</label></dt>
-        <dd>
-            <select id="device">
-                {% for device in devices %}
-                    <option value="{{device.0}}">{{device.1}}</option>
-                {% endfor %}
-            </select>
-        </dd>
-        <dt><label>Country:</label></dt>
-        <dd>
-            <select id="country">
-                {% for country in countries %}
-                <option value="{{country}}" {% ifequal country "US"%}selected="selected"{% endifequal %}>{{country}}</option>
-                {% endfor %}
-            </select>
-        </dd>
-        <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
-            <label>Keywords:</label>
-        </dt>
-        <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
-            <input id="keywords" type="text"/>
-        </dd>
-        <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
-            <label>User:</label>
-        </dt>
-        <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
-            <select id="user">
-                <option value="user1">User 1</option>
-                <option value="user2">User 2</option>
-                <option value="user3">User 3</option>
-                <option value="user4">User 4</option>
-                <option value="user5">User 5</option>
-                <option value="user6">User 6</option>
-                <option value="user7">User 7</option>
-                <option value="user8">User 8</option>
-                <option value="user9">User 9</option>
-                <option value="user10">User 10</option>
-            </select>
-        </dd>
-        <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
-            <label>Exclude:</label>
-        </dt>
-        <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
-            <input id="exclude" type="text"/>
-        </dd>
-    </dl>
-    <div class="clear"></div>
-    <div class="form-submit-left">
-      <a class="btn" id="run">
-        Run Again
-        <i class="icon-play-circle"></i>
+  <dl class="formFields thin">
+    <dt><label>AdUnit:</label></dt>
+    <dd>
+      <select id="adunit">
+        {% for adunit in adunits %}
+          <option value="{{adunit.key}}">{{adunit.app.name}} &gt; {{adunit.name}}</option>
+        {% endfor %}
+      </select>
+    </dd>
+    
+    <dt><label>Device:</label></dt>
+    <dd>
+      <select id="device">
+        {% for device in devices %}
+          <option value="{{device.0}}">{{device.1}}</option>
+        {% endfor %}
+      </select>
+    </dd>
+    <dt><label>Country:</label></dt>
+    <dd>
+      <select id="country">
+        {% for country in countries %}
+          <option value="{{country}}" {% ifequal country "US"%}selected="selected"{% endifequal %}>{{country}}</option>
+        {% endfor %}
+      </select>
+    </dd>
+    <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
+      <label>Keywords:</label>
+    </dt>
+    <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
+      <input id="keywords" type="text"/>
+    </dd>
+    <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
+      <label>User:</label>
+    </dt>
+    <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
+      <select id="user">
+        <option value="user1">User 1</option>
+        <option value="user2">User 2</option>
+        <option value="user3">User 3</option>
+        <option value="user4">User 4</option>
+        <option value="user5">User 5</option>
+        <option value="user6">User 6</option>
+        <option value="user7">User 7</option>
+        <option value="user8">User 8</option>
+        <option value="user9">User 9</option>
+        <option value="user10">User 10</option>
+      </select>
+    </dd>
+    <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
+      <label>Exclude:</label>
+    </dt>
+    <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
+      <input id="exclude" type="text"/>
+    </dd>
+  </dl>
+  
+  <div class="clear"></div>
+  
+  <div class="form-submit-left">
+    <a class="btn" id="run">
+      Run Again
+      <i class="icon-play-circle"></i>
       </a>
-    </div>
-    <div style="height:10px"></div>
-    <div>
-      <iframe id="frame" src="" style="width:100%;" frameBorder="0" scrolling="yes">
-      </iframe>
-    </div>
+  </div>
+
+  <iframe id="frame" src="" style="width:100%;" frameBorder="0" scrolling="yes">
+  </iframe>
+  </div>
 </body>
 {% endblock body_content %}

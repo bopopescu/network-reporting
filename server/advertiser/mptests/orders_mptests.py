@@ -1,53 +1,40 @@
-__doc__="""
+__doc__ = """
 Tests for the order and line item views.
 
 Author: Haydn Dufrene and John Pena
 """
 
-# don't remove, necessary to set up the test env
-import sys
 import os
+import sys
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-from common.utils.test.views import BaseViewTestCase
-from common.utils.test.test_utils import (dict_eq, time_almost_eq,
-                                          model_eq, model_key_eq, model_to_dict,
-                                          confirm_db, decorate_all_test_methods,
-                                          ADDED_1, EDITED_1, DELETED_1)
+import uuid
+from datetime import datetime
 
 from google.appengine.ext import db
 from django.core.files.uploadedfile import SimpleUploadedFile
-
-import logging
-import simplejson as json
-from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
-
 from django.test.utils import setup_test_environment
 from nose.tools import eq_, ok_
-import uuid
+import simplejson as json
 
-from admin.randomgen import (generate_campaign,
-                             generate_adgroup,
-                             generate_creative,
-                             generate_app,
-                             generate_adunit,
-                             generate_account,
-                             generate_marketplace_campaign)
-
-from advertiser.query_managers import (CampaignQueryManager,
-                                       AdGroupQueryManager,
-                                       CreativeQueryManager)
-
-from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
-                              HtmlCreativeForm, ImageCreativeForm)
-from advertiser.models import (Creative, TextAndTileCreative,
-                               HtmlCreative, ImageCreative, AdGroup, Campaign)
-from account.models import Account
-from advertiser.views.orders import get_targeted_apps
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from account.query_managers import AccountQueryManager
+from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
+                              HtmlCreativeForm)
+from advertiser.models import Creative
+from advertiser.query_managers import (
+    CampaignQueryManager, AdGroupQueryManager, CreativeQueryManager)
+from advertiser.views.orders import get_targeted_apps
+from common.utils.test.fixtures import (generate_app, generate_adunit,
+                                        generate_campaign, generate_adgroup,
+                                        generate_html_creative)
+from common.utils.test.test_utils import (confirm_db, decorate_all_test_methods,
+                                          dict_eq, model_eq, model_key_eq,
+                                          time_almost_eq, ADDED_1, EDITED_1)
+from common.utils.test.views import BaseViewTestCase
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+
 
 setup_test_environment()
 
@@ -61,13 +48,15 @@ class OrderViewTestCase(BaseViewTestCase):
 
         # Set up some basic items. These can be used for
         # initial objects and for resolving urls.
-        self.app = generate_app(self.account)
-        self.adunit = generate_adunit(self.app, self.account)
-        self.order = generate_campaign(self.account)
-        self.line_item = generate_adgroup(self.order, [],
-                                          self.account, 'gtee')
+        self.app = generate_app(self.account, True)
+        self.adunit = generate_adunit(self.account, self.app, True)
+        self.order = generate_campaign(self.account, True)
+        self.line_item = generate_adgroup(
+            self.account, self.order, True, adgroup_type='gtee',
+            start_datetime=datetime.now())
         # HTML Creative
-        self.creative = generate_creative(self.account, self.line_item)
+        self.creative = generate_html_creative(self.account, self.line_item,
+                                               True, html_data="<b>Test</b>")
 
         # A post body for an order form, used for testing
         # form submits that need an order.
@@ -196,10 +185,8 @@ class OrderIndexTestCase(OrderViewTestCase):
         for order in orders:
             ok_(order.is_order)
 
-    @confirm_db(campaign=ADDED_1, adgroup=ADDED_1)
+    @confirm_db()
     def mptest_all_line_items_are_for_orders(self):
-        mpx_campaign = generate_marketplace_campaign(self.account)
-        mpx_adgroup = generate_adgroup(mpx_campaign, [], self.account, 'marketplace')
         response = self.client.get(self.url)
         line_items = response.context['line_items']
         for line_item in line_items:
@@ -618,8 +605,8 @@ class NewOrEditLineItemGetTestCase(OrderViewTestCase):
 
         Author: Haydn Dufrene
         """
-        app1 = generate_app(self.account)
-        app2 = generate_app(self.account)
+        app1 = generate_app(self.account, True)
+        app2 = generate_app(self.account, True)
         response = self.client.get(self.edit_url)
 
         expected_apps = AppQueryManager.get_apps(account=self.account,
@@ -681,7 +668,7 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
         response = self.client.post(self.edit_url)
         eq_(response.status_code, 404)
 
-    @confirm_db(campaign={'added': 2})
+    @confirm_db()
     def mptest_graceful_fail_for_non_order(self):
         """
         Posting to the edit form handler with a non-order campaign (marketplace
@@ -689,20 +676,22 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         Author: John Pena
         """
-        non_order_mpx = generate_marketplace_campaign(self.account)
+        non_order_mpx = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
         url = reverse('advertiser_line_item_form_new',
                       kwargs={
                         'order_key': unicode(non_order_mpx.key())
                       })
-        response = self.client.post(url)
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
-        non_order_network = generate_marketplace_campaign(self.account)
+        non_order_network = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
         url = reverse('advertiser_line_item_form_new',
                       kwargs={
                         'order_key': unicode(non_order_network.key())
                       })
-        response = self.client.post(url)
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         eq_(response.status_code, 404)
 
     @confirm_db()
@@ -1347,69 +1336,15 @@ class DisplayCreativeHandlerTestCase(OrderViewTestCase):
         response = self.client.get(url)
         eq_(response.content, '')
 
-    @confirm_db(creative=ADDED_1)
-    def mptest_returns_html_for_image_creative(self):
-        """
-        When the key for an image creative is passed, the url for
-        the image is generated from the blob and placed in an image
-        tag, which is returned in the response.
-
-        Author: John Pena
-        """
-        new_creative = generate_creative(self.account,
-                                         self.line_item,
-                                         ad_type='image')
+    def mptest_returns_html_for_creative(self):
         url = reverse('advertiser_creative_image', kwargs={
-            'creative_key': unicode(new_creative.key())
+            'creative_key': unicode(self.creative.key())
         })
         response = self.client.get(url)
-        eq_(response.content, '')
+        eq_(response.content, "<html><body style='margin:0px;'><b>Test</b></body></html>")
 
-    @confirm_db(creative=ADDED_1)
-    def mptest_returns_html_for_text_tile(self):
-        """
-        When the key for an html creative is passed, the url for the
-        tile image is generated from the blob and rendered in the text
-        and tile template, which is returned in the response.
 
-        Author: John Pena
-        """
-
-        new_creative = generate_creative(self.account,
-                                         self.line_item,
-                                         ad_type='text_icon')
-        url = reverse('advertiser_creative_image', kwargs={
-            'creative_key': unicode(new_creative.key())
-        })
-        response = self.client.get(url)
-        eq_(response.content, '')
-
-    @confirm_db(creative=ADDED_1)
-    def mptest_returns_html_for_html(self):
-        """
-        When the key for an html creative is passed, the html for the
-        creative is generated, which is returned in the response.
-
-        Author: John Pena
-        """
-        new_creative = generate_creative(self.account,
-                                         self.line_item,
-                                         ad_type='html')
-        url = reverse('advertiser_creative_image', kwargs={
-            'creative_key': unicode(new_creative.key())
-        })
-        response = self.client.get(url)
-        ok_(response.content.find("<html><body style='margin:0px;'>") >= 0)
-
-        # clean up -- all tests in this class expect the database to be the
-        # same before and after the request/response, so we get rid of the
-        # creative we made
-        CreativeQueryManager.delete(new_creative)
-
-exclude = ['mptest_returns_html_for_image_creative',
-            'mptest_returns_html_for_text_tile',
-            'mptest_returns_html_for_html']
-decorate_all = decorate_all_test_methods(confirm_db(), exclude=exclude)
+decorate_all = decorate_all_test_methods(confirm_db())
 DisplayCreativeHandlerTestCase = decorate_all(DisplayCreativeHandlerTestCase)
 
 
@@ -1492,6 +1427,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         self.text_tile_creative_post_body.update({
             u'ad_type': u'text_icon',
+            u'name': u'Text Tile Creative',
         })
         test_tile_path = os.path.join(pwd, 'test_tile.png')
         test_tile = open(test_tile_path, 'rb')
@@ -1520,23 +1456,7 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         ok_(edit_response.status_code in [200, 302])
 
-    @confirm_db()
-    def mptest_graceful_fail_without_ajax(self):
-        """
-        Non-AJAX (i.e. non-XHR's) POST requests should fail gracefully.
-
-        Author: John Pena
-        """
-
-        self.html_creative_post_body.pop('ajax')
-
-        new_response = self.client.post(self.new_url, self.html_creative_post_body)
-        eq_(new_response.status_code, 404)
-
-        edit_response = self.client.post(self.edit_url, self.html_creative_post_body)
-        eq_(edit_response.status_code, 404)
-
-    @confirm_db(creative={'added': 1, 'edited':1})
+    @confirm_db(creative={'added': 1, 'edited': 1})
     def mptest_ensure_proper_redirect(self):
         new_response = self.client.post(self.new_url, self.html_creative_post_body,
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -1605,8 +1525,12 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
 
         model_eq(creative, updated_creative, check_primary_key=False)
 
-    @confirm_db(creative={'addded': 3})
+    @confirm_db(creative={'added': 3})
     def mptest_uses_correct_form_for_html(self):
+        self.image_creative_post_body.update(self.image_creative_post_files)
+
+        self.text_tile_creative_post_body.update(self.text_tile_creative_post_files)
+
         ad_type_dict = {
                         'html': self.html_creative_post_body,
                         'image': self.image_creative_post_body,
@@ -1618,9 +1542,11 @@ class NewOrEditCreativeViewTestCase(OrderViewTestCase):
                                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
             response_json = json.loads(response.content)
 
+            ok_(response_json['success'], response_json.get('errors', "'errors' not in response."))
             line_item_key = get_line_item_key_from_redirect_url(response_json['redirect'])
             line_item = AdGroupQueryManager.get(line_item_key)
 
+            eq_(line_item.creatives.filter('name =', post_body['name']).count(), 1)
             creatives = line_item.creatives.filter('name =', post_body['name']).fetch(1)
             creative = creatives[0]
             eq_(creative.ad_type, ad_type)

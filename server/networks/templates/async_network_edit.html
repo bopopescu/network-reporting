@@ -1,0 +1,47 @@
+{% extends 'advertiser/base.html' %}
+
+{% load filters %}
+{% load elements %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block pageTitle %}
+<h1>
+  <a href="{% url networks %}">Networks</a> / {{network.name}}
+</h1>
+{% endblock pageTitle %}
+
+{% block titleBarRight %}
+  {% if login_form %}
+    <span id="title-bar-button"
+          class="titlebar-right{% if network.show_login %} hidden{% endif %}">
+      <a class="button" id="network-settingsButton" href="#">
+        Edit Revenue Reporting
+      </a>
+    </span>
+  {% endif %}
+{% endblock titleBarRight %}
+
+
+{% block content %}
+  {{ network }}
+
+  <br />
+  <br />
+  
+  {{ apps }}
+  
+{% endblock content %}
+
+{% block extraScripts %}
+
+  {% include_script "controllers/networks" %}
+
+<script type="text/javascript">
+  $(function () {
+
+  });
+</script>
+{% endblock extraScripts %}
+

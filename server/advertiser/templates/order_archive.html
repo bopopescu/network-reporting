@@ -20,8 +20,10 @@
   <div class="active tab-section" id="orders">
 
     {# Order activity controls #}
-    <div class="left">      
-      <button class="btn status_change" data-toggle="play">
+    <div class="left">
+      <button class="btn status_change"
+              data-toggle="play"
+              data-target="#order_table">
         {% button_icon "play" %}
         Resume
       </button>
@@ -31,7 +33,7 @@
         Delete
       </button>
     </div>
-    
+
     {% order_table orders %}
 
     <br />
@@ -48,10 +50,10 @@
   <div class="tab-section" id="line_items">
 
     {# Line item activity controls #}
-    <a class="btn status_change" data-toggle="play">
+    <a class="btn status_change" data-toggle="play" data-target="#line_item_table">
       <i class="icon-play"></i> Resume
     </a>
-    
+
     {% line_item_table line_items True True True %}
 
     <br />
@@ -85,7 +87,7 @@
   </div>
 
 </div>
-  
+
 {% endblock content %}
 
 {% block extraScripts %}
@@ -94,7 +96,7 @@
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}
-  
+
   <script type="text/javascript">
     $(function() {
         OrdersController.initializeIndex({

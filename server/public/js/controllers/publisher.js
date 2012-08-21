@@ -933,7 +933,7 @@ var mopub = mopub || {};
                 key: bootstrapping_data.marketplace_adgroup_key
             });
             marketplace.url = function () {
-                url = '/api/app/' + bootstrapping_data.app_key + '/adunits?';
+                url = '/api/app/' + bootstrapping_data.app_key + '/adunits/?';
                 var start_date = bootstrapping_data.start_date;
                 if(start_date) {
                     url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();

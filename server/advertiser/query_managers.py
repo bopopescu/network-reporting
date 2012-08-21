@@ -1,11 +1,12 @@
 import logging
-import random
 
-from google.appengine.api import memcache, taskqueue
+from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
+from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import utc
 
 from common.constants import CAMPAIGN_LEVELS, \
         NETWORKS, \
@@ -444,7 +445,8 @@ class AdGroupQueryManager(QueryManager):
         adgroup_query = adgroup_query.filter('deleted =', False)
         adgroup_query = adgroup_query.filter('adgroup_type IN', ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
         adgroup_query = adgroup_query.filter('site_keys =', adunit.key())
-        return list(adgroup_query.run())
+        adgroups = filter(lambda adgroup: not adgroup.campaign.archived, adgroup_query.run())
+        return adgroups
 
     @classmethod
     def get_sorted_line_items_for_app_and_date_range(cls, app, start_date, end_date):
@@ -475,7 +477,9 @@ class AdGroupQueryManager(QueryManager):
         backfill_promo_line_items = []
 
         for line_item in line_items:
-            if (not line_item.start_datetime or line_item.start_datetime.date() <= end_date) and (not line_item.end_datetime or line_item.end_datetime.date() >= start_date):
+            line_item_start_date = line_item.start_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date() if line_item.start_datetime else None
+            line_item_end_date = line_item.end_datetime.replace(tzinfo=utc).astimezone(Pacific_tzinfo()).date() if line_item.end_datetime else None
+            if (not line_item_start_date or line_item_start_date <= end_date) and (not line_item_end_date or line_item_end_date >= start_date):
                 if line_item.adgroup_type == 'gtee_high':
                     gtee_high_line_items.append(line_item)
                 elif line_item.adgroup_type == 'gtee':

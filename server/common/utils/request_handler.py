@@ -217,10 +217,6 @@ class RequestHandler(object):
             self.account = AccountQueryManager.get_current_account(self.request, cache=True)
 
 
-class AjaxRequestHandler(RequestHandler):
-    pass
-
-
 def get_start_and_end_dates(request):
     start_date_string = request.GET.get('s', None)
     date_range = abs(int(request.GET.get('r', 14)))

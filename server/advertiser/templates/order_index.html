@@ -4,6 +4,15 @@
 
 {% block content %}
 
+
+  <div class="alert-message block-message info">
+    Your account has been upgraded to a new layout based on Orders &
+    Line Items - each of your existing Guaranteed and Promotional
+    campaigns are structured as an Order containing a Line Item.
+    <br /><br />
+    Learn more about the new features <a href="http://help.mopub.com/customer/portal/articles/692791-creating-orders-line-items">here</a>.
+  </div>
+  
   <ul class="tabs">
     <li class="active">
       <a href="#orders"> Orders </a>
@@ -64,9 +73,9 @@
         {% button_icon "plus" %}
         Add a new order
       </a>
-      
+
     </div>
-      
+
     {% order_table orders %}
 
     <br />
@@ -129,7 +138,7 @@
       <button class="btn status_change"
               data-target="#line_item_table"
               data-toggle="archive">
-        {% button_icon "inbox" %}
+        {% button_icon "stop" %}
         Archive
       </button>
     </div>
@@ -149,7 +158,7 @@
         {% endfor %}
       </select>
 
-        
+
       <a class="btn"
          style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
          href='{% url advertiser_order_and_line_item_form_new %}'>
@@ -157,12 +166,12 @@
         Add a new order
       </a>
       </div>
-      
+
       <div class="right" style='margin-left: 5px;'>
         {% filter_buttons %}
       </div>
     </div>
-    
+
     {% line_item_table line_items %}
 
     <br />
@@ -172,7 +181,7 @@
         Archived Line Items
       </a>
     </div>
-    
+
     <div class="right">
       <div class="dropdown" id="line-item-export">
         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#line-item-export">
@@ -207,7 +216,7 @@
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}
-  
+
   <script type="text/javascript">
     $(function() {
         OrdersController.initializeIndex({

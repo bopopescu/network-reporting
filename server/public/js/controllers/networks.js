@@ -1,5 +1,152 @@
 (function($, _) {
 
+    /*
+     * ## App
+     * We might consider turning derivative values (cpm, fill_rate, ctr) into
+     * functions.
+     */
+    var App = StatsModel.extend({
+        defaults : {
+            name: '',
+            url:'#',
+            icon_url: "/placeholders/image.gif",
+            app_type: '',
+            active: false,
+            att: 0,
+            clk: 0,
+            ctr: 0,
+            cpm: 0,
+            fill_rate: 0,
+            imp: 0,
+            price_floor: 0,
+            requests: 0,
+            rev: 0,
+            status: 'Running',
+            stats_endpoint: 'all'
+        },
+        url: function () {
+            var stats_endpoint = this.get('stats_endpoint');
+            if (this.get('campaign_id')) {
+                return '/api/campaign/'
+                    + this.get('campaign_id')
+                    + '/apps/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            } else {
+                return '/api/app/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            }
+        },
+        parse: function (response) {
+            // The api returns everything from this url as a list,
+            // so that you can request one or all apps.
+            var app = response[0];
+
+            // REFACTOR attempts vs requests
+            if(app.req == null || app.req == undefined) {
+                app.req = app.att;
+            } else if (app.att == null || app.att == undefined) {
+                app.att = app.req;
+            }
+
+            if (app.app_type === 'iphone') {
+                app.app_type = 'iOS';
+            }
+            if (app.app_type === 'android') {
+                app.app_type = 'Android';
+            }
+            if (app.app_type === 'mweb') {
+                app.app_type = 'Mobile Web';
+            }
+            return app;
+        },
+        get_summed: function (attr) {
+            if (typeof(this.get(attr)) !== 'undefined') {
+                var series = this.get(attr);
+                var sum = _.reduce(series, function(memo, num){
+                    return memo + num;
+                }, 0);
+                return sum;
+            }
+            return null;
+        }
+    });
+
+
+    /*
+     * ## AppView
+     *
+     * See templates/partials/app.html to see how this is rendered in HTML.
+     * This renders an app as a table row. It also adds the call to load
+     * adunits over ajax and put them in the table.
+     */
+    var AppView = Backbone.View.extend({
+        initialize: function () {
+            if (this.options.endpoint_specific) {
+                this.model.bind('change', this.render, this);
+            }
+            try {
+                this.template = _.template($('#app-template').html());
+            } catch (e) {
+                // the template wasn't specified. this is ok if you
+                // intend to renderInline
+            }
+        },
+
+        renderInline: function () {
+            var this_view = this;
+            // Will there be multiple stats endpoints in this app row?
+            if (this_view.options.endpoint_specific) {
+                if (this_view.model.get('stats_endpoint') == 'networks') {
+                    var selector = ' .network-data';
+                } else {
+                    var selector = ' .mopub-data';
+                }
+            } else {
+                var selector = ''
+            }
+            var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
+
+            /*jslint maxlen: 200 */
+            if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
+                $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
+            }
+            var metrics = ['cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            _.each(metrics, function (metric) {
+                if (this_view.model.get('stats_endpoint') != 'networks'
+                        || this_view.options.network != 'mobfox' || (metric != 'att'
+                        && metric != 'fill_rate')) {
+                    $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
+                }
+            });
+            /*jslint maxlen: 110 */
+
+            $(".loading-img", app_row).hide();
+
+            return this;
+        },
+        render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // When we render an appview, we also attach a handler to fetch
+            // and render it's adunits when a link is clicked.
+            $('tbody', this.el).append(renderedContent);
+            return this;
+        }
+    });
+
+
     var toast_error = function () {
          var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){

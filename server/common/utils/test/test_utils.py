@@ -126,7 +126,7 @@ def model_eq(model1, model2, exclude=None, check_primary_key=True):
 
     # many models have unimportant 't' property, also the last login is not
     # particular useful
-    exclude = exclude or ['t', 'last_login']
+    exclude = exclude or ['t', 'last_login', 'created']
     model1_dict = model_to_dict(model1, exclude, reference_only=True)
     model2_dict = model_to_dict(model2, exclude, reference_only=True)
 

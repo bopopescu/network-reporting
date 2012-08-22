@@ -171,7 +171,7 @@ class AppDetailViewTestCase(BaseViewTestCase):
             adgroup_type='gtee',
             site_keys=site_keys
         )
-        
+
         # Guaranteed low order/line item
         self.gtee_low_campaign = generate_campaign(
             self.account,

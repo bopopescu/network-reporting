@@ -329,44 +329,42 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
             self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
-    # Nothing changes with this test because deactive is the default.
+        # Nothing changes with this test because active is the default.
     @confirm_db()
     def mptest_activate_deactivate(self):
         """
-        The marketplace starts out activated. Deactivate it and then
-        reactivate it, checking the db state each time.
+        The marketplace starts out de-activated. Activate it and then
+        re-deactivate it, checking the db state each time.
         """
         
         # Deactivate marketplace.
         post_response = self.client.post(self.url, {
-            'activate': 'false',
-        })
-        ok_(post_response.status_code, 200)
-    
-        dict_eq(json.loads(post_response.content), {'success': 'success'})
-
-        # Check that the db has been updated to reflect marketplace
-        # deactivation.
-        marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account, from_db=True
-        )
-        ok_(not marketplace_campaign.active)
-
-        # Activate marketplace.
-        post_response = self.client.post(self.url, {
             'activate': 'true',
         })
         ok_(post_response.status_code, 200)
-
+        
         dict_eq(json.loads(post_response.content), {'success': 'success'})
-
+        
+        # Check that the db has been updated to reflect marketplace
+        # deactivation.
+        marketplace_campaign = CampaignQueryManager.get_marketplace(
+            self.account, from_db=True)
+        ok_(marketplace_campaign.active)
+        
+        # De-activate marketplace.
+        post_response = self.client.post(self.url, {
+            'activate': 'false',
+        })
+        ok_(post_response.status_code, 200)
+        
+        dict_eq(json.loads(post_response.content), {'success': 'success'})
+        
         # Check that the db has been updated to reflect marketplace activation.
         marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account
-        )
-        ok_(marketplace_campaign.active)    
+            self.account, from_db=True)
+        ok_(not marketplace_campaign.active)
 
-
+        
 class MarketplaceBlindnessViewTestCase(BaseViewTestCase):
     """
     author: Ignatius, Peter

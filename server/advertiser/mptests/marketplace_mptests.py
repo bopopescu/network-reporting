@@ -8,18 +8,34 @@ import simplejson as json
 from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
-from account.models import (DEFAULT_CATEGORIES, LOW_CATEGORIES,
-                            MODERATE_CATEGORIES, STRICT_CATEGORIES,
-                            DEFAULT_ATTRIBUTES, LOW_ATTRIBUTES,
-                            MODERATE_ATTRIBUTES, STRICT_ATTRIBUTES,
-                            NetworkConfig)
-from account.query_managers import (NetworkConfigQueryManager,
-                                    AccountQueryManager)
+from account.models import (
+    DEFAULT_CATEGORIES,
+    LOW_CATEGORIES,
+    MODERATE_CATEGORIES,
+    STRICT_CATEGORIES,
+    DEFAULT_ATTRIBUTES,
+    LOW_ATTRIBUTES,
+    MODERATE_ATTRIBUTES,
+    STRICT_ATTRIBUTES,
+    NetworkConfig
+)
+from account.query_managers import (
+    NetworkConfigQueryManager,
+    AccountQueryManager
+)
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
-from common.utils.test.fixtures import (generate_app, generate_adunit,
-                                        generate_network_config)
-from common.utils.test.test_utils import (confirm_db, dict_eq, list_eq,
-                                          model_eq, EDITED_1)
+from common.utils.test.fixtures import (
+    generate_app,
+    generate_adunit,
+    generate_network_config
+)
+from common.utils.test.test_utils import (
+    confirm_db,
+    dict_eq,
+    list_eq,
+    model_eq,
+    EDITED_1
+)
 from common.utils.test.views import BaseViewTestCase
 
 
@@ -313,26 +329,27 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
             self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
-    # Nothing changes with this test because active is the default.
+    # Nothing changes with this test because deactive is the default.
     @confirm_db()
     def mptest_activate_deactivate(self):
         """
         The marketplace starts out activated. Deactivate it and then
         reactivate it, checking the db state each time.
         """
-
+        
         # Deactivate marketplace.
         post_response = self.client.post(self.url, {
             'activate': 'false',
         })
         ok_(post_response.status_code, 200)
-
+    
         dict_eq(json.loads(post_response.content), {'success': 'success'})
 
         # Check that the db has been updated to reflect marketplace
         # deactivation.
         marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account, from_db=True)
+            self.account, from_db=True
+        )
         ok_(not marketplace_campaign.active)
 
         # Activate marketplace.
@@ -345,8 +362,9 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
 
         # Check that the db has been updated to reflect marketplace activation.
         marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
-        ok_(marketplace_campaign.active)
+            self.account
+        )
+        ok_(marketplace_campaign.active)    
 
 
 class MarketplaceBlindnessViewTestCase(BaseViewTestCase):

@@ -20,18 +20,36 @@ from nose.tools import eq_, ok_
 import simplejson as json
 
 from account.query_managers import AccountQueryManager
-from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
-                              HtmlCreativeForm)
+from advertiser.forms import (
+    OrderForm,
+    LineItemForm,
+    NewCreativeForm,
+    HtmlCreativeForm
+)
 from advertiser.models import Creative
 from advertiser.query_managers import (
-    CampaignQueryManager, AdGroupQueryManager, CreativeQueryManager)
+    CampaignQueryManager,
+    AdGroupQueryManager,
+    CreativeQueryManager
+)
 from advertiser.views.orders import get_targeted_apps
-from common.utils.test.fixtures import (generate_app, generate_adunit,
-                                        generate_campaign, generate_adgroup,
-                                        generate_html_creative)
-from common.utils.test.test_utils import (confirm_db, decorate_all_test_methods,
-                                          dict_eq, model_eq, model_key_eq,
-                                          time_almost_eq, ADDED_1, EDITED_1)
+from common.utils.test.fixtures import (
+    generate_app,
+    generate_adunit,
+    generate_campaign,
+    generate_adgroup,
+    generate_html_creative
+)
+from common.utils.test.test_utils import (
+    confirm_db,
+    decorate_all_test_methods,
+    dict_eq,
+    model_eq,
+    model_key_eq,
+    time_almost_eq,
+    ADDED_1,
+    EDITED_1
+)
 from common.utils.test.views import BaseViewTestCase
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 

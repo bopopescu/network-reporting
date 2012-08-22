@@ -4,9 +4,10 @@
 
 
 /*
- * Make sure there's a console.log function in case we forgot to remove debug statements
+ * Make sure there's a console.log function in case we forgot to
+ * remove debug statements
  */
-if (window.console === undefined) {
+if (typeof window.console === "undefined") {
     window.console = {
         log: function() {}
     };

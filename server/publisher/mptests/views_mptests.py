@@ -10,26 +10,34 @@ import common.utils.test.setup
 from django.core.urlresolvers import reverse
 from nose.tools import ok_, eq_
 
-from advertiser.query_managers import (AdvertiserQueryManager,
-                                       CampaignQueryManager,
-                                       AdGroupQueryManager)
+from advertiser.query_managers import (
+    AdvertiserQueryManager,
+    CampaignQueryManager,
+    AdGroupQueryManager
+)
 from common.utils.date_magic import gen_days
-from common.utils.test.fixtures import (generate_app, generate_adunit,
-                                        generate_campaign, generate_adgroup,
-                                        generate_marketplace_creative,
-                                        generate_html_creative,
-                                        generate_network_campaign)
-from common.utils.test.test_utils import (confirm_all_models, confirm_db,
-                                          dict_eq, list_eq, model_key_eq,
-                                          time_almost_eq, model_eq, ADDED_1,
-                                          EDITED_1)
+from common.utils.test.fixtures import (
+    generate_app, generate_adunit,
+    generate_campaign, generate_adgroup,
+    generate_marketplace_creative,
+    generate_html_creative,
+    generate_network_campaign
+)
+from common.utils.test.test_utils import (
+    confirm_all_models, confirm_db,
+    dict_eq, list_eq, model_key_eq,
+    time_almost_eq, model_eq, ADDED_1,
+    EDITED_1
+)
 from common.utils.test.views import BaseViewTestCase
 from common.utils.timezones import Pacific_tzinfo
 from publisher.forms import AppForm, AdUnitForm
-from publisher.query_managers import (PublisherQueryManager,
-                                      AppQueryManager,
-                                      AdUnitQueryManager)
-from reporting.models import StatsModel
+from publisher.query_managers import (
+    PublisherQueryManager,
+    AppQueryManager,
+    AdUnitQueryManager
+)
+
 
 
 from account.models import NetworkConfig
@@ -128,41 +136,83 @@ class AppDetailViewTestCase(BaseViewTestCase):
         # Create a campaign and adgroup that doesn't target our app's adunit to
         # confirm that it doesn't show up on this page.
         self.untargetted_campaign = generate_campaign(self.account, put=True)
-        self.untargetted_adgroup = generate_adgroup(self.account, self.untargetted_campaign, put=True)
+        self.untargetted_adgroup = generate_adgroup(self.account,
+                                                    self.untargetted_campaign,
+                                                    put=True)
 
         # Create campaigns and adgroups of each adgroup_type. Each adgroup
         # targets our adunit by setting its site_keys property.
         site_keys = [self.adunit.key()]
 
+        # Guaranteed high order/line item
         self.gtee_high_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account,
+            put=True,
+            campaign_type='order'
+        )
         self.gtee_high_adgroup = generate_adgroup(
-            self.account, self.gtee_high_campaign, put=True,
-            adgroup_type='gtee_high', site_keys=site_keys)
+            self.account,
+            self.gtee_high_campaign,
+            put=True,
+            adgroup_type='gtee_high',
+            site_keys=site_keys
+        )
 
+        # Guaranteed normal order/line item
         self.gtee_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account,
+            put=True,
+            campaign_type='order'
+        )
         self.gtee_adgroup = generate_adgroup(
-            self.account, self.gtee_campaign, put=True, adgroup_type='gtee',
-            site_keys=site_keys)
-
+            self.account,
+            self.gtee_campaign,
+            put=True,
+            adgroup_type='gtee',
+            site_keys=site_keys
+        )
+        
+        # Guaranteed low order/line item
         self.gtee_low_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account,
+            put=True,
+            campaign_type='order'
+        )
         self.gtee_low_adgroup = generate_adgroup(
-            self.account, self.gtee_low_campaign, put=True,
-            adgroup_type='gtee_low', site_keys=site_keys)
+            self.account,
+            self.gtee_low_campaign,
+            put=True,
+            adgroup_type='gtee_low',
+            site_keys=site_keys
+        )
 
+        # Promo order/line item
         self.promo_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account,
+            put=True,
+            campaign_type='order'
+        )
         self.promo_adgroup = generate_adgroup(
-            self.account, self.promo_campaign, put=True, adgroup_type='promo',
-            site_keys=site_keys)
+            self.account,
+            self.promo_campaign,
+            put=True,
+            adgroup_type='promo',
+            site_keys=site_keys
+        )
 
+        # Backfill promo order/line item
         self.backfill_promo_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account,
+            put=True,
+            campaign_type='order'
+        )
         self.backfill_promo_adgroup = generate_adgroup(
-            self.account, self.backfill_promo_campaign, put=True,
-            adgroup_type='backfill_promo', site_keys=site_keys)
+            self.account,
+            self.backfill_promo_campaign,
+            put=True,
+            adgroup_type='backfill_promo',
+            site_keys=site_keys
+        )
 
         # Use the query manager methods to create the marketplace campaign and
         # adgroup and put them to the db.
@@ -325,10 +375,11 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         the status_code and context.
         """
 
+        # Generate a 200 response
         get_response = self.client.get(self.url)
         ok_(get_response.status_code, 200)
 
-        # I HATE MY LIFE
+        # Test that both 'site' and 'adunit' are the adunit
         model_key_eq(get_response.context['site'], self.adunit)
         model_key_eq(get_response.context['adunit'], self.adunit)
 
@@ -345,8 +396,7 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
 
         # We really shouldn't be passing up HTML fragments here, so here is a
         # simple test until we refactor.
-        ok_(isinstance(get_response.context['adunit_form_fragment'],
-                       basestring))
+        ok_(isinstance(get_response.context['adunit_form_fragment'], basestring))
 
         model_key_eq(get_response.context['account'], self.account)
 
@@ -369,6 +419,10 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
                 'adgroups': [self.gtee_low_adgroup],
             },
         ]
+
+        print get_response.context['line_items']
+
+        #fail:
         list_eq(get_response.context['gtee'], expected_gtee)
 
         list_eq(get_response.context['promo'], [self.promo_adgroup])

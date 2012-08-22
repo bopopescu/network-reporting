@@ -53,17 +53,20 @@ class DashboardHandler(RequestHandler):
         }
 
         campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
-            account=self.account, include_deleted=True)
+            account=self.account, include_deleted=True
+        )
         for key, campaign in campaigns.items():
             names[key] = campaign.name
 
         apps = PublisherQueryManager.get_apps_dict_for_account(
-            account=self.account, include_deleted=True)
+            account=self.account, include_deleted=True
+        )
         for key, app in apps.items():
             names[key] = app.name
 
         adunits = PublisherQueryManager.get_adunits_dict_for_account(
-            account=self.account, include_deleted=True)
+            account=self.account, include_deleted=True
+        )
         for key, adunit in adunits.items():
             names[key] = adunit.name
 
@@ -279,12 +282,18 @@ class AdUnitDetailHandler(RequestHandler):
                 untargeted = False
                 break
 
-        marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), adunit._account, get_from_db=True)
+        marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
+            adunit.key(),
+            adunit._account,
+            get_from_db=True
+        )
         if untargeted:
-            untargeted = not (marketplace_adgroup.campaign.active and marketplace_adgroup.active)
+            untargeted = not (marketplace_adgroup.campaign.active \
+                              and marketplace_adgroup.active)
 
         network_adgroups = AdGroupQueryManager.get_network_adgroups_for_adunit(adunit)
-        network_adgroups = sorted(network_adgroups, key=lambda adgroup: adgroup.name.lower())
+        network_adgroups = sorted(network_adgroups,
+                                  key=lambda adgroup: adgroup.name.lower())
         if untargeted:
             for adgroup in network_adgroups:
                 if adgroup.campaign.active and adgroup.active:

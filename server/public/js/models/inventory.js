@@ -185,7 +185,12 @@ var mopub = mopub || {};
                 return memo + model.get_stat(stat);
             }, 0);
 
-            if (stat === 'ctr' || stat === 'fill_rate' || stat === 'conv_rate') {
+            // Note: this is treating derivative stats as an average.
+            // it should be a weighted average.
+            if (stat === 'ctr' || 
+                stat === 'fill_rate' || 
+                stat === 'conv_rate' ||
+                stat === 'cpm') {
                 sum = sum / these_models.length;
             }
 

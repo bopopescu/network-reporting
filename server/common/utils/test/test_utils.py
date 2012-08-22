@@ -364,7 +364,8 @@ def confirm_db(modified=None,
                creative=UNMODIFIED,
                adnetwork_login_credentials=UNMODIFIED,
                adnetwork_app_mapper=UNMODIFIED):
-    """Decorator that confirms that the rest of the db is unchanged
+    """
+    Decorator that confirms that the rest of the db is unchanged
 
     Args:
         modified: list of Models (one of above `MODELS`) that
@@ -403,16 +404,18 @@ def confirm_db(modified=None,
             messages = []  # compiles all the failures
             error = False
 
-            for (model_change_dict, Model) in [(account, Account),
-                                            (user, User),
-                                            (network_config, NetworkConfig),
-                                            (app, App),
-                                            (adunit, AdUnit),
-                                            (campaign, Campaign),
-                                            (adgroup, AdGroup),
-                                            (creative, Creative),
-                                            (adnetwork_login_credentials, AdNetworkLoginCredentials),
-                                            (adnetwork_app_mapper, AdNetworkAppMapper)]:
+            for (model_change_dict, Model) in [
+                (account, Account),
+                (user, User),
+                (network_config, NetworkConfig),
+                (app, App),
+                (adunit, AdUnit),
+                (campaign, Campaign),
+                (adgroup, AdGroup),
+                (creative, Creative),
+                (adnetwork_login_credentials, AdNetworkLoginCredentials),
+                (adnetwork_app_mapper, AdNetworkAppMapper)
+            ]:
                 print Model.__name__
                 expected_additions = model_change_dict.get('added', 0)
                 expected_edits = model_change_dict.get('edited', 0)
@@ -422,9 +425,10 @@ def confirm_db(modified=None,
 
                 # makes sure that the number of objects in the db are as expected
                 # according to edits, creates and deletes
-                if len(post_test_instances_dict[Model]) != len(pre_test_instances_dict[Model]) + expected_delta:
+                if len(post_test_instances_dict[Model]) != \
+                   len(pre_test_instances_dict[Model]) + expected_delta:
                     messages.append('%s has %s new models instead of the expected %s' %
-                                     (Model.__name__,
+                                    (Model.__name__,
                                      len(post_test_instances_dict[Model]) - len(pre_test_instances_dict[Model]),
                                      expected_additions)
                                     )

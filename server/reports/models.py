@@ -198,7 +198,7 @@ class ScheduledReport(db.Model):
         if self.most_recent:
             return self.most_recent.status
         else:
-            return self.status
+            return self._status
 
     def __init__(self, *args, **kwargs):
         if 'next_sched_date' not in kwargs and 'sched_interval' in kwargs:
@@ -210,7 +210,7 @@ class ScheduledReport(db.Model):
 
         super(ScheduledReport, self).__init__(*args, **kwargs)
 
-        
+
 class Report(db.Model):
     #standard
     account = db.ReferenceProperty(collection_name='reports')
@@ -268,7 +268,7 @@ class Report(db.Model):
             end = self.end.strftime('%m/%d/%y')
         )
         mesg.body = REPORT_FINISHED_SIMPLE % mesg_dict
-        
+
         if self.email and self.recipients:
             mesg.to = self.recipients
         else:
@@ -278,7 +278,7 @@ class Report(db.Model):
             mesg.send()
         except mail.InvalidEmailError, e:
             logging.warn(str(e))
-            
+
 
     def notify_failure(self, reason=OTHER):
         mesg_dict = dict(
@@ -288,7 +288,7 @@ class Report(db.Model):
             start = self.start.strftime('%m/%d/%y'),
             end = self.end.strftime('%m/%d/%y')
         )
-        
+
         if reason == NODAT:
             mesg = mail.EmailMessage(
                 sender = 'olp@mopub.com',
@@ -543,7 +543,7 @@ class Report(db.Model):
     all the resolution is done here.  In the future it might makes sense to take this and put it
     into a second mapreduce job that's run when the report finalizes.
     """
-    
+
     def parse_report_blob(self, blobreader, dimkey_to_obj, testing=False):
         """ turns a reports report_blob blobstore object into a dictionary
 
@@ -861,7 +861,7 @@ class Report(db.Model):
         else:
             logging.warning("Not handling KW's yet")
 
-            
+
 def rename_for_oli(report_dimension):
     """
     Hack: The old reports system uses 'campaign' and 'adgroup' as
@@ -877,4 +877,4 @@ def rename_for_oli(report_dimension):
                                 .replace('Campaign', 'Order')\
                                 .replace('Adgroup', 'Line Item')\
                                 .replace('AdGroup', 'Line Item')
-    
+

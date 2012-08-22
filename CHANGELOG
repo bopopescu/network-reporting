@@ -1,18 +1,46 @@
+# Deployed Wednesday, August 22, 2012 at 01:22AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-188
+### Bugs Fixed: []
+### Included Commits: 
+ * 7677345 fixed line item city targeting bug
+ * 65b1a55 cleaned up backends.yaml, fixed pacing issue
+ * d414461 removed handlers for _ah/warmup
+ * e937fda Merge branch 'master' of github.com:mopub/mopub
+ * c9650f4 fixed reports status bug
+ * 17b9248 removed some unnecessary logging
+ * 0318baa Merge branch 'master' of github.com:mopub/mopub
+ * 422ce34 -- add BD/AM and JPStaff rooms
+ * 1ddfe49 Deployed without finding any bug fixes.
+ 
+# Deployed Tuesday, August 21, 2012 at 09:05AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-187
+### Bugs Fixed: []
+### Included Commits:
+* c27ac6f fucking merge conflicts fixed
+* 0808ec0 merge conflicts fixed
+* c0407d9 fixed merge conflicts with master. ORDERS AND LINE ITEMS F YEAH
+* 7aca181 Deployed without finding any bug fixes.
+* 935dcaf Deployed without finding any bug fixes.
+* 9db0e88 order and line item promotional/explanatory text
+* 943cc9a Deployed without finding any bug fixes.
+
 # Deployed Tuesday, August 21, 2012 at 08:54AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-186
 ### Bugs Fixed: []
-### Included Commits: 
- * f67863f fixed two bugs
- * 9db0e88 order and line item promotional/explanatory text
- * 52fa11e added textcreative back it
- * 2a9e247 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
- * a479e45 returned text as valid ad_type
- 
+### Included Commits:
+* f67863f fixed two bugs
+* 9db0e88 order and line item promotional/explanatory text
+* 52fa11e added textcreative back it
+* 2a9e247 Merge branch 'adgroups' of github.com:mopub/mopub into adgroups
+* a479e45 returned text as valid ad_type
+
 # Deployed Tuesday, August 21, 2012 at 07:59AM PST
-### Included Commits: 
- * 2246f69 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 2246f69 Deployed without finding any bug fixes.
+
 # Deployed Tuesday, August 21, 2012 at 01:52AM PST
 ### Deployed by John Pena
 ### Tagged deploy-181

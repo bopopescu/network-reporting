@@ -82,10 +82,6 @@ handlers:
   script: stats/views.py
   login: admin
 
-- url: /_ah/warmup
-  script: fetch_api/api_server.py
-  login: admin
-
 - url: /fetch_api/.*
   script: fetch_api/api_server.py
 

@@ -3,7 +3,6 @@ from google.appengine.ext import blobstore
 from google.appengine.ext import db
 
 import datetime
-import logging
 import re
 import time
 import urlparse
@@ -109,8 +108,8 @@ class App(db.Model):
             match = re.search('\/id(\d+)$', parse_result.path.lower())
             if match:
                 return match.group(1)
-            else:
-                logging.error("No global_id match for URL %s" % self.url)
+            # else:
+            #     logging.error("No global_id match for URL %s" % self.url)
 
         elif self.app_type == 'mweb' and self.url:
             parse_result = urlparse.urlparse(self.url)
@@ -119,7 +118,7 @@ class App(db.Model):
             elif parse_result.path:
                 domain = parse_result.path.lower()
             else:
-                logging.error("No domain match for URL %s" % self.url)
+                # logging.error("No domain match for URL %s" % self.url)
                 return None
 
             if domain.startswith('www.'):

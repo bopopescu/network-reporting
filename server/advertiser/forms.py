@@ -192,12 +192,9 @@ class LineItemForm(forms.ModelForm):
                 geo_predicates.append(','.join([str(pred.split('=')[1]) for pred in preds]))
             initial['geo_predicates'] = geo_predicates
 
-            # TODO: seems like we don't need this?
-            """
             if len(geo_predicates) == 1 and len(instance.cities):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
-            """
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])

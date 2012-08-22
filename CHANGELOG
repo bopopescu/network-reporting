@@ -1,12 +1,19 @@
+# Deployed Wednesday, August 22, 2012 at 10:28PM PST
+### Deployed by John Pena
+### Tagged deploy-190
+### Bugs Fixed: []
+### Included Commits: 
+ * 7072e9d Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, August 22, 2012 at 09:41PM PST
 ### Deployed by John Pena
 ### Tagged deploy-189
 ### Bugs Fixed: []
-### Included Commits: 
- * 5b149a9 Merge branch 'master' of github.com:mopub/mopub
- * 34e682b fixed a bug where marketplace top-line eCPM was incorrect
- * 0b07b4b Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 5b149a9 Merge branch 'master' of github.com:mopub/mopub
+* 34e682b fixed a bug where marketplace top-line eCPM was incorrect
+* 0b07b4b Deployed without finding any bug fixes.
+
 # Deployed Wednesday, August 22, 2012 at 01:22AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-188

@@ -6,7 +6,6 @@
      * REFACTOR: move to views/inventory.js
      */
     function renderOrder(order, render_line_items) {
-
         if (typeof render_line_items === 'undefined') {
             render_line_items = true;
         }
@@ -19,7 +18,7 @@
 
         if (render_line_items) {
             var line_items = new LineItemCollection(order.get('adgroups'));
-            line_items.each(function(line_item){
+            line_items.each(function (line_item) {
                 renderLineItem(line_item, false);
             });
         }
@@ -38,8 +37,8 @@
 
         if (render_creatives) {
             var creatives = new CreativeCollection(line_item.get('creatives'));
-            creatives.each(function(creative){
-                renderCreative(creative, false);
+            creatives.each(function (creative) {
+                renderCreative(creative);
             });
         }
     }
@@ -360,16 +359,18 @@
             // Fetch stats for each order and render the row
             _.each(bootstrapping_data.order_keys, function (order_key) {
                 var order = new Order({
-                    id: order_key
+                    id: order_key,
+                    include_adgroups: true
                 });
 
                 order.bind('change', function() {
-                    renderOrder(order, false);
+                    renderOrder(order, true);
                 });
 
                 order.fetch();
             });
 
+            /*
             // Fetch stats for each line item and render the row
             _.each(bootstrapping_data.line_item_keys, function (line_item_key) {
                 var line_item = new LineItem({
@@ -382,7 +383,7 @@
 
                 line_item.fetch();
             });
-
+            */
 
             /*
              * Clear the checked rows when you click a different tab.
@@ -392,7 +393,6 @@
                     $(this).attr('checked', false);
                 });
             });
-
 
             // Set up the quick jump dropdowns
             $("#order-quick-navigate").chosen().change(function() {
@@ -482,13 +482,15 @@
             // Fill in stats for the order/line item table
             var order = new Order({
                 id: bootstrapping_data.order_key,
+                include_daily: true,
+                include_adgroups: true,
                 start_date: bootstrapping_data.start_date,
                 date_range: bootstrapping_data.date_range
             });
 
             order.bind('change', function(current_order) {
                 // Render the order row
-                renderOrder(order);
+                renderOrder(order, true);
 
                 // Make the chart. The chart takes a collection as a parameter,
                 // so we add the single order to a collection.
@@ -541,12 +543,14 @@
 
             var line_item = new LineItem({
                 id: bootstrapping_data.line_item_key,
+                include_daily: true,
+                include_creatives: true,
                 start_date: bootstrapping_data.start_date,
                 date_range: bootstrapping_data.date_range
             });
 
             line_item.bind('change', function (current_line_item) {
-                renderLineItem(current_line_item);
+                renderLineItem(current_line_item, true);
 
                 var line_items = new LineItemCollection();
                 line_items.add(line_item);

@@ -33,7 +33,7 @@
                 <span class="hidden" id="networkSettingsForm-loading">
                     <img src="/images/loading2.gif"/>
                 </span>
-                <a href="#" class="btn" id="networkSettingsForm-cancel">Cancel</a>          
+                <a href="#" class="btn" id="networkSettingsForm-cancel">Cancel</a>
                 <a href="#" class="btn" id="networkSettingsForm-submit">Save</a>
             </div>
         </fieldset>
@@ -324,6 +324,9 @@ Make a table for the main ad networks that are not setup
             campaigns_data: [{% for network in networks %}{
                 id: '{{ network.key }}',
                 network: '{{ network.name }}',
+                include_daily: true,
+                start_date: {{ start_date|js_date}},
+                date_range: {{ date_range }},
                 reporting: {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
             apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
             date_range: {{ date_range }},

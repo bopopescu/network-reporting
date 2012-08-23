@@ -64,7 +64,7 @@
       </thead>
     </table>
   </div>
-  
+
   <div class="appData">
     <table class="dataTable appData-main">
         <tbody>
@@ -268,7 +268,7 @@
 <section>
     <div class="buttonBank buttonBank-right">
         <a data-toggle="modal" href="#deleteModal" class="btn btn-danger">
-            <i class="icon-trash"></i> 
+            <i class="icon-trash"></i>
             Delete this network
         </a>
     </div>
@@ -301,6 +301,9 @@
         NetworkDetailsController.initialize({
             campaign_data: {'id': '{{ network.key }}',
                             'network': '{{ network.name }}',
+                            include_daily: true,
+                            start_date: {{ start_date|js_date}},
+                            date_range: {{ date_range }},
                             'reporting': {% if network.reporting %}true{% else %}false{% endif %}},
             apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
             graph_start_date: graph_start_date,});

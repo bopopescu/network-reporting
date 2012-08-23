@@ -1,3 +1,5 @@
+from adserver_constants import ADSERVER_HOSTNAME
+
 ## Global Constants
 
 # True for production, False for not production
@@ -190,3 +192,5 @@ NETWORK_ADGROUP_TRANSLATION = {'iad': 'iAd',
                                'admob': 'admob_native',
                                'millennial': 'millennial_native'}
 
+PERCENT_DELIVERED_URL = "http://%s/admin/budget/api/delivered" % ADSERVER_HOSTNAME
+PACING_URL = "http://%s/admin/budget/api/pacing" % ADSERVER_HOSTNAME

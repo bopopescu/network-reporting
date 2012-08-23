@@ -111,22 +111,7 @@ def app_index(request, *args, **kwargs):
 
 
 class CreateAppHandler(RequestHandler):
-    """
-    REFACTOR
 
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
     def get(self, app_form=None, adunit_form=None, reg_complete=None):
 
         # create the forms
@@ -147,7 +132,6 @@ class CreateAppHandler(RequestHandler):
 
         app_form = AppForm(data=self.request.POST, files=self.request.FILES)
         adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
-        logging.warn(self.request.POST)
 
         # If there are validation errors in either the app_form or adunit_form,
         # fail by returning the page rendered with the invalid forms.
@@ -318,22 +302,7 @@ def adunit_detail(request, *args, **kwargs):
 
 
 class AppUpdateAJAXHandler(RequestHandler):
-    """
-    REFACTOR
 
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
     TEMPLATE  = 'publisher/forms/app_form.html'
     def get(self,app_form=None,app=None):
         app_form = app_form or AppForm(instance=app, is_edit_form=True)

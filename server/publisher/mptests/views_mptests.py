@@ -39,7 +39,6 @@ from publisher.query_managers import (
 )
 
 
-
 from account.models import NetworkConfig
 from publisher.models import App, AdUnit
 from advertiser.models import Campaign, AdGroup, Creative
@@ -261,33 +260,21 @@ class AppDetailViewTestCase(BaseViewTestCase):
         # There is no helptext if you have created a campaign.
         ok_(get_response.context['helptext'] is None)
 
-        # This view creates this fucking dumb structure for guaranteed campaigns
-        # and their level.  This really should not be a list of dicts of lists.
-        expected_gtee = [
-            {
-                'name': 'high',
-                'campaigns': [self.gtee_high_campaign],
-            },
-            {
-                'name': 'normal',
-                'campaigns': [self.gtee_campaign],
-            },
-            {
-                'name': 'low',
-                'campaigns': [self.gtee_low_campaign],
-            },
+
+        # Test that the line items in the targeting table are the correct ones.
+        # List order matters here.
+        expected_line_items = [
+            self.gtee_high_adgroup,
+            self.gtee_adgroup,
+            self.gtee_low_adgroup,
+            self.promo_adgroup,
+            self.backfill_promo_adgroup
         ]
-        list_eq(get_response.context['gtee'], expected_gtee)
+        list_eq(get_response.context['line_items'], expected_line_items)
 
-        list_eq(get_response.context['promo'], [self.promo_campaign])
-
-        marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
-        list_eq(get_response.context['marketplace'],
-            [marketplace_campaign])
-        list_eq(get_response.context['network'], [self.network_campaign])
-        list_eq(get_response.context['backfill_promo'],
-            [self.backfill_promo_campaign])
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        model_eq(get_response.context['marketplace_campaign'], marketplace_campaign)
+        list_eq(get_response.context['network_campaigns'], [self.network_campaign])
 
     @confirm_db()
     def mptest_get_authorization(self):
@@ -316,54 +303,69 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         # Create a campaign and adgroup that doesn't target our adunit to
         # confirm that it doesn't show up on this page.
         self.untargetted_campaign = generate_campaign(self.account, put=True)
-        self.untargetted_adgroup = generate_adgroup(self.account, self.untargetted_campaign, put=True)
+        self.untargetted_adgroup = generate_adgroup(
+            self.account, self.untargetted_campaign, put=True
+        )
 
         # Create campaigns and adgroups of each adgroup_type. Each adgroup
         # targets our adunit by setting its site_keys property.
         site_keys = [self.adunit.key()]
 
         self.gtee_high_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account, put=True, campaign_type='order'
+        )
         self.gtee_high_adgroup = generate_adgroup(
             self.account, self.gtee_high_campaign, put=True,
-            adgroup_type='gtee_high', site_keys=site_keys)
+            adgroup_type='gtee_high', site_keys=site_keys
+        )
 
         self.gtee_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account, put=True, campaign_type='order'
+        )
         self.gtee_adgroup = generate_adgroup(
-            self.account, self.gtee_campaign, put=True, adgroup_type='gtee',
-            site_keys=site_keys)
+            self.account, self.gtee_campaign,
+            put=True, adgroup_type='gtee',
+            site_keys=site_keys
+        )
 
         self.gtee_low_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account, put=True, campaign_type='order'
+        )
         self.gtee_low_adgroup = generate_adgroup(
             self.account, self.gtee_low_campaign, put=True,
-            adgroup_type='gtee_low', site_keys=site_keys)
+            adgroup_type='gtee_low', site_keys=site_keys
+        )
 
         self.promo_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account, put=True, campaign_type='order'
+        )
         self.promo_adgroup = generate_adgroup(
-            self.account, self.promo_campaign, put=True, adgroup_type='promo',
-            site_keys=site_keys)
+            self.account, self.promo_campaign,
+            put=True, adgroup_type='promo',
+            site_keys=site_keys
+        )
 
         self.backfill_promo_campaign = generate_campaign(
-            self.account, put=True, campaign_type='order')
+            self.account, put=True, campaign_type='order'
+        )
         self.backfill_promo_adgroup = generate_adgroup(
             self.account, self.backfill_promo_campaign, put=True,
-            adgroup_type='backfill_promo', site_keys=site_keys)
+            adgroup_type='backfill_promo', site_keys=site_keys
+        )
 
         # Use the query manager methods to create the marketplace campaign and
         # adgroup and put them to the db.
-        self.marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account)
+        self.marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
         self.marketplace_campaign.put()
         self.marketplace_adgroup = AdGroupQueryManager.get_marketplace_adgroup(
-            self.adunit.key(), self.account.key())
+            self.adunit.key(), self.account.key()
+        )
         self.marketplace_adgroup.put()
 
         # Create network campaign and adgroups.
         self.network_campaign = generate_network_campaign(
-                self.account, 'mobfox', put=True)
+                self.account, 'mobfox', put=True
+        )
 
         self.url = reverse('publisher_adunit_show',
                            args=[str(self.adunit.key())])
@@ -398,42 +400,29 @@ class AdUnitShowViewTestCase(BaseViewTestCase):
         # simple test until we refactor.
         ok_(isinstance(get_response.context['adunit_form_fragment'], basestring))
 
+        # Test that the view is using the right account
         model_key_eq(get_response.context['account'], self.account)
 
-        # This view creates this fucking dumb structure for guaranteed campaign
-        # adgroups and their level.  This really should not be a list of dicts
-        # of lists.
-        # Note: this view is different than the app view in that the gtee,
-        # promo, etc. contain adgroups instead of campaigns.
-        expected_gtee = [
-            {
-                'name': 'high',
-                'adgroups': [self.gtee_high_adgroup],
-            },
-            {
-                'name': 'normal',
-                'adgroups': [self.gtee_adgroup],
-            },
-            {
-                'name': 'low',
-                'adgroups': [self.gtee_low_adgroup],
-            },
+        # Test that the line items in the targeting table are the correct ones.
+        # List order matters here.
+        expected_line_items = [
+            self.gtee_high_adgroup,
+            self.gtee_adgroup,
+            self.gtee_low_adgroup,
+            self.promo_adgroup,
+            self.backfill_promo_adgroup
         ]
+        list_eq(get_response.context['line_items'], expected_line_items)
 
-        print get_response.context['line_items']
-
-        #fail:
-        list_eq(get_response.context['gtee'], expected_gtee)
-
-        list_eq(get_response.context['promo'], [self.promo_adgroup])
-        list_eq(get_response.context['marketplace'],
-                [self.marketplace_adgroup])
-
+        # Test that the network adgroups in the targeting table are the correct ones
         network_adgroup = AdGroupQueryManager.get_network_adgroup(
-            self.network_campaign, self.adunit.key(), self.account.key())
-        list_eq(get_response.context['network'], [network_adgroup])
-        list_eq(get_response.context['backfill_promo'],
-                [self.backfill_promo_adgroup])
+            self.network_campaign, self.adunit.key(), self.account.key()
+        )
+        list_eq(get_response.context['network_adgroups'], [network_adgroup])
+
+        # Test that the marketplace adgroup in the targeting table is
+        # the correct one, and that only one exists.
+        model_eq(get_response.context['marketplace_adgroup'], self.marketplace_adgroup)
 
     @confirm_db()
     def mptest_get_authorization(self):

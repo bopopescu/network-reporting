@@ -37,6 +37,7 @@ from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
 from reporting.query_managers import StatsModelQueryManager
 from budget.query_managers import BudgetQueryManager
 import logging
+from operator import attrgetter
 
 flatten = lambda l: [item for sublist in l for item in sublist]
 
@@ -60,42 +61,8 @@ class OrderIndexHandler(RequestHandler):
                       if not (line_item.archived or line_item.deleted) and
                       not (line_item.campaign.archived or line_item.campaign.deleted)]
 
-
-
         # Sort by multiple keys - case sensitive
-        # from operator import itemgetter
-        # mylist = sorted(mylist, key=itemgetter('priority', 'name'))
-
-        gtee_high_line_items = []
-        gtee_line_items = []
-        gtee_low_line_items = []
-        promo_line_items = []
-        backfill_promo_line_items = []
-
-        for line_item in line_items:
-            if line_item.adgroup_type == 'gtee_high':
-                gtee_high_line_items.append(line_item)
-            elif line_item.adgroup_type == 'gtee':
-                gtee_line_items.append(line_item)
-            elif line_item.adgroup_type == 'gtee_low':
-                gtee_low_line_items.append(line_item)
-            elif line_item.adgroup_type == 'promo':
-                promo_line_items.append(line_item)
-            elif line_item.adgroup_type == 'backfill_promo':
-                backfill_promo_line_items.append(line_item)
-            else:
-                logging.error("AdGroup %s has adgroup_type %s but was in line_items list." % (
-                    line_item.key(), line_item.adgroup_type))
-
-        gtee_high_line_items = sorted(gtee_high_line_items, key=lambda line_item: line_item.name.lower())
-        gtee_line_items = sorted(gtee_line_items, key=lambda line_item: line_item.name.lower())
-        gtee_low_line_items = sorted(gtee_low_line_items, key=lambda line_item: line_item.name.lower())
-        promo_line_items = sorted(promo_line_items, key=lambda line_item: line_item.name.lower())
-        backfill_promo_line_items = sorted(backfill_promo_line_items, key=lambda line_item: line_item.name.lower())
-
-        line_items = (gtee_high_line_items + gtee_line_items +
-                      gtee_low_line_items + promo_line_items +
-                      backfill_promo_line_items)
+        line_items = sorted(line_items, key=attrgetter('line_item_priority', 'name'))
 
         return {
             'orders': orders,

@@ -190,10 +190,10 @@ class AdGroup(db.Model):
     bid = db.FloatProperty(default=0.05, required=False)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
-    #############################
-    # moved from campaign class #
-    #############################
-
+    ########################
+    # Budgeting attributes #
+    ########################
+    
     # budget per day
     daily_budget = db.FloatProperty()
     full_budget = db.FloatProperty()
@@ -213,9 +213,9 @@ class AdGroup(db.Model):
                                               'backfill_promo', 'marketplace',
                                               'backfill_marketplace'])
 
-    ##################################
-    # /end moved from campaign class #
-    ##################################
+    ##################
+    # /end budgeting #
+    ##################
 
     # state of this ad group
     active = db.BooleanProperty(default=True)

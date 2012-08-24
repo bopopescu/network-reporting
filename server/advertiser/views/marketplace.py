@@ -44,8 +44,8 @@ class MarketplaceIndexHandler(RequestHandler):
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = [sanitize(domain) for domain in network_config.blocklist \
-                         if not sanitize(domain) in ("", "#")]
+            blocklist = [str(sanitize(domain)) for domain in network_config.blocklist \
+                         if not str(sanitize(domain)) in ("", "#")]
 
         try:
             blind = self.account.network_config.blind

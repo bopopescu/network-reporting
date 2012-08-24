@@ -1032,25 +1032,6 @@
                 $('input[name="budget_strategy"][value="evenly"]').removeAttr('disabled');
             }).change();
 
-            $('#all-adunits').change(function() {
-                // select or deselect all adunits
-                $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
-            });
-
-            // device targeting
-            $('input[name="device_targeting"]').change(function() {
-                if($(this).val() == '0') {
-                    $('#device_targeting').slideUp();
-                }
-                else {
-                    $('#device_targeting').slideDown();
-                }
-            });
-            // update on document ready
-            if($('input[name="device_targeting"]:checked').val() == '0') {
-                $('#device_targeting').hide();
-            }
-
             // change form based on bid_strategy
             $('select[name="bid_strategy"]').change(function() {
                 var bid_strategy = $(this).val();
@@ -1072,24 +1053,110 @@
                 });
             }).change(); // update on document ready
 
-            // Toggling for advanced options
-            $('#toggle_advanced')
-                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
-                .click(function(e) {
-                    e.preventDefault();
-                    var buttonTextElem = $('.ui-button-text', this);
-                    if ($('fieldset#advanced').is(':hidden')) {
-                        $('fieldset#advanced').slideDown('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                        $(this).text('Hide Advanced Targeting');
-                    } else {
-                        $('fieldset#advanced').slideUp('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                        $(this).text('Show Advanced Targeting');
-                    }
-                }); // TODO: need to update on document ready
+            $('#all-adunits').change(function() {
+                // select or deselect all adunits
+                $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
+            });
 
-            /* GEO TARGETING */
+            // Device Targeting
+            $('input[name="device_targeting"]').change(function () {
+                if($(this).val() == '0') {
+                    $('#device_targeting_details').slideUp();
+                }
+                else {
+                    $('#device_targeting_details').slideDown();
+                }
+            });
+            // update on document ready
+            if($('input[name="device_targeting"]:checked').val() == '0') {
+                $('#device_targeting_details').hide();
+            }
+
+            // Geography Targeting
+            $('select[name="targeted_countries"]').chosen();
+            $('select[name="targeted_cities"]').chosen();
+            $('select[name="targeted_regions"]').chosen();
+            $('select[name="targeted_zip"]').chosen();
+            $('input[name="region_targeting_type"]').change(function () {
+                var val = $(this).val();
+                if(val == 'all') {
+                    $('#id_targeted_cities_chzn').hide();
+                    $('#id_targeted_regions_chzn').hide();
+                    $('#id_targeted_zip_chzn').hide();
+                }
+                else if(val == 'city-region') {
+                    $('#id_targeted_cities_chzn').show();
+                    $('#id_targeted_regions_chzn').show();
+                    $('#id_targeted_zip_chzn').hide();
+                }
+                else {
+                    $('#id_targeted_cities_chzn').hide();
+                    $('#id_targeted_regions_chzn').hide();
+                    $('#id_targeted_zip_chzn').show();
+                }
+            });
+            // update on document ready
+            var val = $('input[name="region_targeting_type"]:checked').val();
+            if(val == 'all') {
+                $('#id_targeted_cities_chzn').hide();
+                $('#id_targeted_regions_chzn').hide();
+                $('#id_targeted_zip_chzn').hide();
+            }
+            else if(val == 'city-region') {
+                $('#id_targeted_cities_chzn').show();
+                $('#id_targeted_regions_chzn').show();
+                $('#id_targeted_zip_chzn').hide();
+            }
+            else {
+                $('#id_targeted_cities_chzn').hide();
+                $('#id_targeted_regions_chzn').hide();
+                $('#id_targeted_zip_chzn').show();
+            }
+
+            // Connectivity Targeting
+            $('[name="targeted_carriers"]').chosen();
+            $('input[name="connectivity_targeting_type"]').change(function () {
+                if($(this).val() == 'carriers') {
+                    $('#id_targeted_carriers_chzn').show();
+                }
+                else {
+                    $('#id_targeted_carriers_chzn').hide();
+                }
+            });
+            // update on document ready
+            if($('input[name="connectivity_targeting_type"]:checked').val() != 'carriers') {
+                $('#id_targeted_carriers_chzn').hide();
+            }
+
+            // User Targeting
+            $('[name="included_apps"]').chosen();
+            $('[name="excluded_apps"]').chosen();
+
+            if($('[name="included_apps"] option:selected').length > 0) {
+                $('#user_targeting_type').val('included_apps');
+            }
+            else {
+                $('#user_targeting_type').val('excluded_apps');
+            }
+
+            $('#user_targeting_type').change(function() {
+                var $this = $(this);
+                if($this.val() == 'included_apps') {
+                    $('#id_excluded_apps_chzn').hide();
+                    $('[name="excluded_apps"] option:selected').removeAttr('selected');
+                    $('[name="excluded_apps"]').trigger("liszt:updated");
+                    $('#id_included_apps_chzn').show();
+                }
+                else {
+                    $('#id_included_apps_chzn').hide();
+                    $('[name="included_apps"] option:selected').removeAttr('selected');
+                    $('[name="included_apps"]').trigger("liszt:updated");
+                    $('#id_excluded_apps_chzn').show();
+                }
+            }).change();
+
+            // Geography Targeting
+            /*
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
             var pre = {type: 'country', data: []};
             var city_pre = {type: 'city', data: []};
@@ -1161,33 +1228,7 @@
                     });
                 }
             }).filter(':checked').click();
-
-            // Negative User Targeting
-            $('[name="included_apps"]').chosen();
-            $('[name="excluded_apps"]').chosen();
-
-            if($('[name="included_apps"] option:selected').length > 0) {
-                $('#user_targeting_type').val('included_apps');
-            }
-            else {
-                $('#user_targeting_type').val('excluded_apps');
-            }
-
-            $('#user_targeting_type').change(function() {
-                var $this = $(this);
-                if($this.val() == 'included_apps') {
-                    $('#id_excluded_apps_chzn').hide();
-                    $('[name="excluded_apps"] option:selected').removeAttr('selected');
-                    $('[name="excluded_apps"]').trigger("liszt:updated");
-                    $('#id_included_apps_chzn').show();
-                }
-                else {
-                    $('#id_included_apps_chzn').hide();
-                    $('[name="included_apps"] option:selected').removeAttr('selected');
-                    $('[name="included_apps"]').trigger("liszt:updated");
-                    $('#id_excluded_apps_chzn').show();
-                }
-            }).change();
+            */
         }
     };
 

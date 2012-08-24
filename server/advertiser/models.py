@@ -154,186 +154,132 @@ Order = Campaign
 
 
 class AdGroup(db.Model):
+    account = db.ReferenceProperty(Account)
 
-    campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
-    # net_creative is not set for new network campaigns due to circular
-    # reference redundancy, use the creatives collection instead
-    net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
-    name = db.StringProperty(verbose_name='Name',
-                             default='Line Item Name')
+    campaign = db.ReferenceProperty(Campaign, collection_name='adgroups')
 
     created = db.DateTimeProperty(auto_now_add=True)
-
-    # the priority level at which this ad group should be auctioned
-    network_type = db.StringProperty(choices=["dummy",  # ?
-                                              "adsense",
-                                              "iAd",
-                                              "admob",  # deprecated, but may still be used by some accounts
-                                              "millennial",  # deprecated, but may still be used by some accounts
-                                              "ejam",
-                                              "chartboost",  # deprecated
-                                              "appnexus",  # deprecated
-                                              "inmobi",
-                                              "mobfox",
-                                              "jumptap",
-                                              "brightroll",
-                                              "greystripe",  # deprecated, but may still be used by some accounts
-                                              "custom",
-                                              "custom_native",
-                                              "admob_native",
-                                              "millennial_native"])
-
-    # Note that bid has different meaning depending on the bidding strategy.
-    # if CPC: bid = cost per 1 click
-    # if CPM: bid = cost per 1000 impressions
-    # if CPA: bid = cost per 1000 conversions
-    bid = db.FloatProperty(default=0.05, required=False)
-    bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
-
-    ########################
-    # Budgeting attributes #
-    ########################
-    
-    # budget per day
-    daily_budget = db.FloatProperty()
-    full_budget = db.FloatProperty()
-    # Determines whether we redistribute if we underdeliver during a day
-    budget_type = db.StringProperty(choices=['daily', 'full_campaign'],
-                                    default="daily")
-    # Determines whether we smooth during a day
-    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'],
-                                        default="allatonce")
-
-    # New start and end date properties
-    start_datetime = db.DateTimeProperty()
-    end_datetime = db.DateTimeProperty()
-
-    adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
-                                              'network', 'promo',
-                                              'backfill_promo', 'marketplace',
-                                              'backfill_marketplace'])
-
-    ##################
-    # /end budgeting #
-    ##################
 
     # state of this ad group
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
     archived = db.BooleanProperty(default=False)
 
-    # percent of users to be targetted
-    percent_users = db.FloatProperty(default=100.0)
-    allocation_percentage = db.FloatProperty(verbose_name='Allocation',
-                                             default=100.0)
-    allocation_type = db.StringProperty(choices=["users", "requests"])
+    # TODO: this should be moved to Campaign
+    network_type = db.StringProperty(choices=[
+        'dummy',  # ?
+        'adsense',
+        'iAd',
+        'admob',  # deprecated, but may still be used by some accounts
+        'millennial',  # deprecated, but may still be used by some accounts
+        'ejam',
+        'chartboost',  # deprecated
+        'appnexus',  # deprecated
+        'inmobi',
+        'mobfox',
+        'jumptap',
+        'brightroll',
+        'greystripe',  # deprecated, but may still be used by some accounts
+        'custom',
+        'custom_native',
+        'admob_native',
+        'millennial_native'])
 
-    # frequency caps
-    minute_frequency_cap = db.IntegerProperty(default=0)
-    hourly_frequency_cap = db.IntegerProperty(default=0)
-    daily_frequency_cap = db.IntegerProperty(default=0)
-    weekly_frequency_cap = db.IntegerProperty(default=0)
-    monthly_frequency_cap = db.IntegerProperty(default=0)
-    lifetime_frequency_cap = db.IntegerProperty(default=0)
+    # TODO: document
+    optimizable = db.BooleanProperty(default=False)
+    default_cpm = db.FloatProperty()  # TODO: default
 
-    # all keyword and category bids are tracked here
-    # categories use the category:games convention
-    # if any of the input keywords match the n-grams here then we
-    # trigger a match
-    keywords = db.StringListProperty()
+    name = db.StringProperty(default='Line Item Name', required=True)
 
-    # all placements that are considered for this ad group
-    # this is a list of keys corresponding to Site objects
+    adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
+                                              'network', 'promo',
+                                              'backfill_promo', 'marketplace',
+                                              'backfill_marketplace'])
+
+    # TODO: one of these three fields is always unused, do something different.
+    # budget per day
+    daily_budget = db.FloatProperty()
+    full_budget = db.FloatProperty()
+    # Determines whether we redistribute if we underdeliver during a day
+    budget_type = db.StringProperty(choices=['daily', 'full_campaign'],
+                                    default='daily')
+    # Determines whether we smooth during a day
+    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'],
+                                        default='allatonce')
+
+    # Note that bid has different meaning depending on the bidding strategy.
+    # if CPC: bid = cost per 1 click
+    # if CPM: bid = cost per 1000 impressions
+    # if CPA: bid = cost per 1000 conversions
+    bid = db.FloatProperty(default=0.05, required=False)
+    bid_strategy = db.StringProperty(choices=['cpc', 'cpm', 'cpa'], default='cpm')
+
+    # New start and end date properties
+    start_datetime = db.DateTimeProperty()
+    end_datetime = db.DateTimeProperty()
+
+    # Targeting: all placements that are considered for this ad group. This is a
+    # list of keys corresponding to Site objects.
     site_keys = db.ListProperty(db.Key)
-
-    account = db.ReferenceProperty(Account)
-    t = db.DateTimeProperty(auto_now_add=True)
-
-    # marketplace price floor
-    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
-
-    DEVICE_CHOICES = (
-        ('any', 'Any'),
-        ('iphone', 'iPhone'),
-        ('ipod', 'iPod Touch'),
-        ('ipad', 'iPad'),
-        ('android', 'Android'),
-        ('blackberry', 'Blackberry'),
-        ('windows7', 'Windows Phone 7'),
-    )
-    devices = db.StringListProperty(default=['any'])
-
-    MIN_OS_CHOICES = (
-        ('any', 'Any'),
-        ('iphone__2_0', '2.0+'),
-        ('iphone__2_1', '2.1+'),
-        ('iphone__3_0', '3.0+'),
-        ('iphone__3_1', '3.1+'),
-        ('iphone__3_2', '3.2+'),
-        ('iphone__4_0', '4.0+'),
-        ('iphone__4_1', '4.1+'),
-    )
-    min_os = db.StringListProperty(default=['any'])
 
     # Device Targeting
     device_targeting = db.BooleanProperty(default=False)
+    target_iphone = db.BooleanProperty(default=True)
+    target_ipod = db.BooleanProperty(default=True)
+    target_ipad = db.BooleanProperty(default=True)
+    ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
+    ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
+    target_android = db.BooleanProperty(default=True)
+    android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
+    android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
+    target_other = db.BooleanProperty(default=True)
 
-    target_iphone = db.BooleanProperty(verbose_name='iPhone', default=True)
-    target_ipod = db.BooleanProperty(verbose_name='iPod', default=True)
-    target_ipad = db.BooleanProperty(verbose_name='iPad', default=True)
-    ios_version_min = db.StringProperty(verbose_name='Min:',
-                                        default=MIN_IOS_VERSION)
-    ios_version_max = db.StringProperty(verbose_name='Max:',
-                                        default=MAX_IOS_VERSION)
+    # Geography Targeting
+    accept_targeted_locations = db.BooleanProperty(default=True)
+    targeted_countries = db.StringListProperty()
+    targeted_cities = db.StringListProperty()
+    targeted_regions = db.StringListProperty()
+    targeted_zip = db.StringListProperty()
 
-    target_android = db.BooleanProperty(verbose_name='Android', default=True)
-    android_version_min = db.StringProperty(verbose_name='Min:',
-                                            default=MIN_ANDROID_VERSION)
-    android_version_max = db.StringProperty(verbose_name='Max:',
-                                            default=MAX_ANDROID_VERSION)
+    # Connectivity Targeting
+    targeted_carriers = db.StringListProperty()
 
-    # MobileWeb on blackberry etc.
-    target_other = db.BooleanProperty(verbose_name='Other:', default=True)
+    # User Targeting
+    included_apps = db.ListProperty(db.Key)
+    excluded_apps = db.ListProperty(db.Key)
 
-    optimizable = db.BooleanProperty(default=False)
-    default_cpm = db.FloatProperty()
+    # Keywords: all keyword and category bids are tracked here. Categories use
+    # the category:games convention. If any of the input keywords match the
+    # n-grams here then we trigger a match.
+    keywords = db.StringListProperty()
 
-    USER_TYPES = (
-        ('any', 'Any'),
-        ('active_7', '7 day active user'),
-        ('active_15', '15 day active user'),
-        ('active_30', '30 day active user'),
-        ('inactive_7', '7 day active user'),
-        ('inactive_15', '15 day active user'),
-        ('inactive_30', '30 day inactive user'),
-    )
+    # Frequency Caps
+    daily_frequency_cap = db.IntegerProperty(default=0)
+    hourly_frequency_cap = db.IntegerProperty(default=0)
 
-    active_user = db.StringListProperty(default=['any'])
-    active_app = db.StringListProperty(default=['any'])
-    cities = db.StringListProperty(default=[])
+    # Allocation
+    allocation_percentage = db.FloatProperty(default=100.0)
 
+    # Deprecated
+    cities = db.StringListProperty()
+    t = db.DateTimeProperty(auto_now_add=True)
+    net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
+    minute_frequency_cap = db.IntegerProperty(default=0)
+    weekly_frequency_cap = db.IntegerProperty(default=0)
+    monthly_frequency_cap = db.IntegerProperty(default=0)
+    lifetime_frequency_cap = db.IntegerProperty(default=0)
+    allocation_type = db.StringProperty(choices=["users", "requests"])
+    percent_users = db.FloatProperty(default=100.0)
+    devices = db.StringListProperty(default=['any'])
+    min_os = db.StringListProperty(default=['any'])
+    geo_predicates = db.StringListProperty(default=["country_name=*"])
     country = db.StringProperty()
     region = db.StringProperty()
     state = db.StringProperty()
     city = db.StringProperty()
-
-    # Geographic preferences are expressed as string tuples that can match
-    # the city, region or country that is resolved via reverse geocode at
-    # request time.    If the list is blank, any value will match. If the list
-    # is not empty, the value must match one of the elements of the list.
-    #
-    # Valid predicates are:
-    # city_name=X,region_name=X,country_name=X
-    # region_name=X,country_name=X
-    # country_name=X
-    # zipcode=X
-    #
-    # Each incoming request will be matched against all of these combinations
-    geo_predicates = db.StringListProperty(default=["country_name=*"])
-
-    # negative user targeting
-    included_apps = db.ListProperty(db.Key)
-    excluded_apps = db.ListProperty(db.Key)
+    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
+    active_user = db.StringListProperty(default=['any'])
+    active_app = db.StringListProperty(default=['any'])
 
     @property
     def included_apps_global_ids(self):

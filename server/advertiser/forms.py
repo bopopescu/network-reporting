@@ -10,7 +10,8 @@ from google.appengine.ext.db import Key
 
 from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
                                ImageCreative, HtmlCreative)
-from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
+from common.constants import (ISO_COUNTRIES, US_STATES, CA_PROVINCES,
+                              IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
 
 from common.utils import helpers
@@ -19,6 +20,9 @@ from common.utils.date_magic import utc_to_pacific, pacific_to_utc
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 from advertiser.widgets import CustomizableSplitDateTimeWidget
+
+
+STATES_AND_PROVINCES = US_STATES + CA_PROVINCES
 
 
 class OrderForm(forms.ModelForm):
@@ -59,102 +63,136 @@ class OrderForm(forms.ModelForm):
         fields = ('name', 'advertiser', 'description')
 
 
+CARRIER_CHOICES = (
+    ('verizon', 'Verizon'),
+    ('at&t', 'AT&T'),
+    ('sprint', 'Sprint'),
+)
+
+
 class LineItemForm(forms.ModelForm):
-    # TODO: include campaign and confirm campaign.is_order
-    adgroup_type   = forms.ChoiceField(label='Line Item Type:',
-                                       choices=(('gtee', 'Guaranteed'),
-                                                ('promo', 'Promotional')))
-
-    gtee_priority  = forms.ChoiceField(label='Priority:', initial='normal',
-                                       choices=(('high', 'High'),
-                                                ('normal', 'Normal'),
-                                                ('low', 'Low')),
-                                       required=False)
-
-
-    promo_priority = forms.ChoiceField(label='Priority:', initial='normal',
-                                       choices=(('normal', 'Normal'),
+    # name
+    adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
+                                              ('promo', 'Promotional')),
+                                     label='Line Item Type:')
+    # non-db field
+    gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
+                                               ('normal', 'Normal'),
+                                               ('low', 'Low')),
+                                      initial='normal', label='Priority:',
+                                      required=False)
+    # non-db field
+    promo_priority = forms.ChoiceField(choices=(('normal', 'Normal'),
                                                 ('backfill', 'Backfill')),
+                                       initial='normal', label='Priority:',
                                        required=False)
-
-    start_datetime = forms.DateTimeField(label='Start Time:', required=False,
-                                         input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
-                                         widget=CustomizableSplitDateTimeWidget(date_attrs={
-                                                                                             'class': 'date',
-                                                                                             'placeholder': 'MM/DD/YYYY'
-                                                                                            },
-                                                                                time_attrs={
-                                                                                             'class': 'time',
-                                                                                             'placeholder': 'HH:MM'
-                                                                                            },
-                                                                                date_format='%m/%d/%Y',
-                                                                                time_format='%I:%M %p'))
-    end_datetime  = forms.DateTimeField(label='Stop Time:', required=False,
-                                        input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
-                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
-                                                                                           'placeholder': 'MM/DD/YYYY'},
-                                                                              time_attrs={'class': 'time',
-                                                                                          'placeholder': 'HH:MM'},
-                                                                              date_format='%m/%d/%Y',
-                                                                              time_format='%I:%M %p'))
-
-
-    bid_strategy    = forms.ChoiceField(label='Rate:',
-                                        choices=(('cpm', 'CPM'),
-                                                 ('cpc', 'CPC')))
-
-    budget          = forms.FloatField(label='Budget:', required=False,
-                                       widget=forms.TextInput(attrs={'class': 'float'}))
-
-    budget_type     = forms.ChoiceField(initial='daily',
-                                        choices=(('daily', 'USD/day'),
-                                                 ('full_campaign', 'total USD')),
-                                        required=False)
-
-    budget_strategy = forms.ChoiceField(label='Delivery Speed:', initial='allatonce',
-                                        choices=(('evenly', 'Spread Evenly'),
+    # non-db field
+    budget = forms.FloatField(label='Budget:', required=False,
+                              widget=forms.TextInput(attrs={'class': 'float'}))
+    # daily_budget
+    # full_budget
+    budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
+                                             ('full_campaign', 'total USD')),
+                                    initial='daily', required=False)
+    budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
-                                        required=False,
+                                        initial='allatonce',
+                                        label='Delivery Speed:', required=False,
                                         widget=forms.RadioSelect)
+    # bid
+    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'),
+                                              ('cpc', 'CPC')), label='Rate:')
+    start_datetime = forms.DateTimeField(
+        input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
+        label='Start Time:', required=False,
+        widget=CustomizableSplitDateTimeWidget(
+            date_attrs={'class': 'date', 'placeholder': 'MM/DD/YYYY'},
+            time_attrs={'class': 'time', 'placeholder': 'HH:MM'},
+            date_format='%m/%d/%Y', time_format='%I:%M %p'))
+    end_datetime = forms.DateTimeField(
+        input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
+        label='Stop Time:', required=False,
+        widget=CustomizableSplitDateTimeWidget(
+            date_attrs={'class': 'date', 'placeholder': 'MM/DD/YYYY'},
+            time_attrs={'class': 'time', 'placeholder': 'HH:MM'},
+            date_format='%m/%d/%Y', time_format='%I:%M %p'))
 
+    # Targeting
     # site_keys defined in __init__
 
-    daily_frequency_cap   = forms.IntegerField(label='Frequency Caps:', initial=0,
-                                               required=False,
-                                               widget=forms.TextInput(attrs={'class': 'float'}))
-    hourly_frequency_cap  = forms.IntegerField(initial=0, required=False,
-                                               widget=forms.TextInput(attrs={'class': 'float'}))
-
-    device_targeting = forms.TypedChoiceField(label='Device Targeting:', initial=False,
-                                              choices=(('0', 'All'),
-                                                       ('1', 'Filter by device and OS')),
-                                              coerce=lambda x: bool(int(x)),
-                                              required=False,
-                                              widget=forms.RadioSelect)
-
-    ios_version_min = forms.ChoiceField(label='Min', choices=IOS_VERSION_CHOICES[1:],
+    # Device Targting
+    device_targeting = forms.TypedChoiceField(
+        choices=(('0', 'All'),
+                 ('1', 'Filter by device and OS')),
+        coerce=lambda x: bool(int(x)), initial=False,
+        label='Device Targeting:', required=False, widget=forms.RadioSelect)
+    target_iphone = forms.BooleanField(initial=True, label='iPhone',
+                                       required=False)
+    target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
+    target_ipad = forms.BooleanField(initial=True, label='iPad', required=False)
+    ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
+                                        label='Min', required=False)
+    ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
+                                        label='Max', required=False)
+    target_android = forms.BooleanField(initial=True, label='Android',
                                         required=False)
-    ios_version_max = forms.ChoiceField(label='Max', choices=IOS_VERSION_CHOICES,
-                                        required=False)
+    android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
+                                            label='Min', required=False)
+    android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
+                                            label='Max', required=False)
+    target_other = forms.BooleanField(initial=True, label='Other',
+                                      required=False)
 
-    android_version_min = forms.ChoiceField(label='Min', choices=ANDROID_VERSION_CHOICES[1:],
-                                            required=False)
-    android_version_max = forms.ChoiceField(label='Max', choices=ANDROID_VERSION_CHOICES,
-                                            required=False)
+    # Geography Targeting
+    accept_targeted_locations = forms.BooleanField()
+    targeted_countries = forms.MultipleChoiceField(
+        choices=ISO_COUNTRIES, label='Country:', required=False,
+        widget=forms.SelectMultiple(
+            attrs={'data-placeholder': ' '}))
+    # non-db field
+    region_targeting_type = forms.ChoiceField(
+        choices=(('all', ''),
+                 ('city-region', ''),
+                 ('zip', '')),
+        initial='all', label='Region:', widget=forms.RadioSelect)
+    targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': ' '}))
+    targeted_regions = forms.MultipleChoiceField(
+        choices=STATES_AND_PROVINCES, required=False,
+        widget=forms.SelectMultiple(
+            attrs={'data-placeholder': ' '}))
+    targeted_zip = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': ' '}))
 
-    geo_predicates   = forms.Field(required=False, widget=forms.SelectMultiple)
+    # Connectivity Targeting
+    # non-db field
+    connectivity_targeting_type = forms.ChoiceField(
+        choices=(('all', 'All Carriers and Wi-Fi'),
+                 ('wi-fi', 'Wi-Fi Only'),
+                 ('carriers', 'Selected Carriers')), initial='all',
+        label='Connectivity:', widget=forms.RadioSelect(attrs={'id': 'connectivity_targeting_type'}))
+    targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': ' '}))
 
-    region_targeting = forms.ChoiceField(label='Region Targeting:', initial='all',
-                                         choices=(('all', 'Everywhere'),
-                                                  ('city', 'City')),
-                                         required=False,
-                                         widget=forms.RadioSelect)
+    # User Targeting
+    # included_apps defined in __init__
+    # excluded_apps defined in __init__
 
-    cities = forms.Field(required=False, widget=forms.SelectMultiple)
-
+    # Keywords
     keywords = forms.CharField(
         label='Keywords:', required=False, widget=forms.Textarea(
             attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
+
+    # Frequency Caps
+    daily_frequency_cap = forms.IntegerField(
+        initial=0, label='Frequency Caps:', required=False,
+        widget=forms.TextInput(attrs={'class': 'float'}))
+    hourly_frequency_cap = forms.IntegerField(
+        initial=0, required=False,
+        widget=forms.TextInput(attrs={'class': 'float'}))
+
+    # Allocation
+    # allocation_percentage
 
     def __init__(self, *args, **kwargs):
         # initial

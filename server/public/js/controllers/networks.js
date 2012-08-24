@@ -689,7 +689,13 @@
 
             var validator = $('form#campaign_and_adgroup').validate({
                 errorPlacement: function(error, element) {
-                    element.parents('div').not(':hidden').first().append(error);
+                    div = element.parents('div').not(':hidden').first()
+                    $(div).append(error);
+                    if(error.attr('for').indexOf('pub_id') > -1) {
+                        $(error).click(function() {
+                            $(div).find('.pub-id-edit').click();
+                        });
+                    }
                 },
                 submitHandler: function(form) {
                     // Submit only the fields that have changed using ajaxSubmit

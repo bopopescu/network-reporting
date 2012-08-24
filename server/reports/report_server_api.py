@@ -50,6 +50,8 @@ def submit_report_request(report):
     # This is done because the key is too long for Postgres partition names.
     params = {
         'report_id': str(report.key()),
+        'report_name': report_schedule.name,
+        'requested_by': ', '.join(report_schedule.recipients),
         'account_num_id': str(account_id),
         'account_key': str(account_key),
         'group_by_list': ','.join(group_by_list),

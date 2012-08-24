@@ -692,9 +692,7 @@
                     div = element.parents('div').not(':hidden').first()
                     $(div).append(error);
                     if(error.attr('for').indexOf('pub_id') > -1) {
-                        $(error).click(function() {
-                            $(div).find('.pub-id-edit').click();
-                        });
+                        $(div).find('.pub-id-edit').click();
                     }
                 },
                 submitHandler: function(form) {

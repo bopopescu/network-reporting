@@ -84,16 +84,9 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        if not self.account.display_new_networks:
-            return HttpResponseRedirect(reverse('network_index'))
-
         additional_networks_set = set(NETWORKS.keys())
         networks = []
         reporting = False
-
-        # Once memcache is fixed consider which approach is faster
-#        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
-#                self.account).values()
 
         apps = PublisherQueryManager.get_objects_dict_for_account(
                 self.account).values()
@@ -104,25 +97,10 @@ class NetworksHandler(RequestHandler):
         for campaign in campaigns:
             network = str(campaign.network_type)
 
-            # MoPub reported campaign cpm comes from meta data not stats so
-            # we calculate it here instead of over ajax
-            #campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
-            # Get adgroup by key name
-            campaign_adgroups = []
-            for app in apps:
-                for adunit in app.adunits:
-                    adgroup = AdGroupQueryManager.get(AdGroupQueryManager.get_network_adgroup(campaign, adunit.key(), self.account.key()).key())
-                    if adgroup:
-                        campaign_adgroups.append(adgroup)
-                    else:
-                        logging.error("AdGroup for Campaign %s and AdUnit %s does not exist." % (campaign.key(), adunit.key()))
-            bid_range = get_bid_range(campaign_adgroups)
             network_data = {'name': network,
                             'pretty_name': campaign.name,
                             'active': campaign.active,
                             'key': campaign.key(),
-                            'min_cpm': bid_range[0],
-                            'max_cpm': bid_range[1],
                             }
 
             # If this campaign is the first campaign of this
@@ -139,25 +117,9 @@ class NetworksHandler(RequestHandler):
                     reporting = True
                     network_data['reporting'] = True
 
-            # TODO: determine which is faster? get by key or memcache
-            #adgroups_by_adunit = get_adgroups_by_adunit(campaign_adgroups)
-
-            app_bids = []
-            index = 0
-            for app in apps:
-                app_adgroups = []
-                for adunit in app.adunits:
-                    # TODO: put bids in app?
-                    adunit.adgroup = campaign_adgroups[index]
-                    app_adgroups.append(adunit.adgroup)
-                    index += 1
-                bid_range = get_bid_range(app_adgroups)
-                app_bids.append({'min_cpm': bid_range[0],
-                                 'max_cpm': bid_range[1]})
-
-            network_data['apps'] = zip(apps, app_bids)
+            network_data['apps'] = apps
             network_data['apps'] = sorted(network_data['apps'], key=lambda
-                    app_and_bid: app_and_bid[0].identifier)
+                    app: app.identifier)
 
             # Add this network to the list that goes in the page
             networks.append(network_data)

@@ -543,7 +543,8 @@ class AdGroupQueryManager(QueryManager):
             adgroup = AdGroup.get_by_key_name(ag_key_name)
             return adgroup
 
-        adgroup = AdGroup(key_name=ag_key_name, name=campaign.name)
+        adgroup = AdGroup(
+            key_name=ag_key_name, name=campaign.name, adgroup_type='network')
         # set up the rest of the properties
         adgroup.account = db.Key(account_key)
         adgroup.campaign = db.Key(campaign_key)

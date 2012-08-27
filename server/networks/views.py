@@ -779,6 +779,7 @@ class EditNetworkHandler(RequestHandler):
             if adgroup_form.is_valid():
                 logging.info("default adgroup form is valid")
                 default_adgroup = adgroup_form.save(commit=False)
+                default_adgroup.adgroup_type = 'network'
 
                 adgroup_forms_are_valid = True
                 network_config_field = "%s_pub_id" % network

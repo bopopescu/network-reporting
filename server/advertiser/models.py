@@ -490,8 +490,8 @@ class AdGroup(db.Model):
         just going to implement this fix now.
 
         """
-        if self.geo_predicates == ['country=']:
-            return ['country=*']
+        if self.geo_predicates == ['country='] or self.geo_predicates == [u'country=']:
+            return [u'country=*']
         return self.geo_predicates
 
     def default_creative(self, custom_html=None, key_name=None):

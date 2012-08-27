@@ -190,7 +190,7 @@ class AdGroup(db.Model):
     ########################
     # Budgeting attributes #
     ########################
-    
+
     # budget per day
     daily_budget = db.FloatProperty()
     full_budget = db.FloatProperty()
@@ -460,7 +460,7 @@ class AdGroup(db.Model):
             android_version_min=self.android_version_min,
             target_other=self.target_other,
             cities=self.cities,
-            geo_predicates=self.geo_predicates,
+            geo_predicates=self._cleaned_geo_predicates(),
             allocation_percentage=self.allocation_percentage,
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,

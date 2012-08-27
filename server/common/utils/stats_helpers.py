@@ -140,7 +140,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
 
             return self.format_stats(all_stats)
 
-
     def _get_advertiser_stats(self, advertiser, start, end,
                               publisher=None, daily=True,
                               *args, **kwargs):
@@ -154,17 +153,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         else:
             return self.format_stats(stats)
 
-
-    def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
-
-        if isinstance(campaign, str):
-            campaign = CampaignQueryManager.get(campaign)
-
-        campaign_stats = self._get_campaign_stats(start, end,
-                                                  campaign,
-                                                  daily=True)
-        return campaign_stats
-
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)
@@ -177,11 +165,14 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         adunit_stats = self._get_publisher_stats(start, end, publisher=adunit)
         return adunit_stats
 
-    def get_adgroup_stats(self, adgroup, start, end, daily=True):
-        if isinstance(adgroup, str):
-            adgroup = AdGroupQueryManager.get(adgroup)
-        adgroup_stats = self._get_advertiser_stats(adgroup, start, end)
-        return adgroup_stats
+    def get_campaign_stats(self, campaign, start, end, daily=False, *args, **kwargs):
+        return self._get_campaign_stats(start, end, campaign, daily=daily)
+
+    def get_adgroup_stats(self, adgroup, start, end, daily=False, *args, **kwargs):
+        return self._get_advertiser_stats(adgroup, start, end, daily=daily)
+
+    def get_creative_stats(self, creative, start, end, daily=False, *args, **kwargs):
+        return self._get_advertiser_stats(creative, start, end, daily=daily)
 
     def get_network_app_stats(self, app_key, campaign,
                                         start, end, *args, **kwargs):
@@ -200,39 +191,31 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                 publisher=adunit)
         return adunit_stats
 
-    def get_campaign_specific_app_stats(self, app_key, campaign_key,
+    def get_campaign_specific_app_stats(self, app, campaign,
                                         start, end, daily=True):
         # mongo
-        app = AppQueryManager.get(app_key)
-        campaign = CampaignQueryManager.get(campaign_key)
         app_stats = self._get_publisher_stats(start, end, publisher=app,
                                               advertiser=campaign, daily=daily)
         return app_stats
 
-    def get_campaign_specific_adunit_stats(self, adunit_key, campaign_key,
+    def get_campaign_specific_adunit_stats(self, adunit, campaign,
                                            start, end, daily=True):
         # mongo
-        adunit = AdUnitQueryManager.get(adunit_key)
-        campaign = CampaignQueryManager.get(campaign_key)
         adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
                                                  advertiser=campaign,
                                                  daily=daily)
         return adunit_stats
 
-    def get_adgroup_specific_app_stats(self, app_key, adgroup_key, start, end,
+    def get_adgroup_specific_app_stats(self, app, adgroup, start, end,
                                        daily=True):
         # mongo
-        app = AppQueryManager.get(app_key)
-        adgroup = AdGroupQueryManager.get(adgroup_key)
         app_stats = self._get_publisher_stats(start, end, publisher=app,
                                               advertiser=adgroup, daily=daily)
         return app_stats
 
-    def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key, start,
+    def get_adgroup_specific_adunit_stats(self, adunit, adgroup, start,
                                           end, daily=True):
         # mongo
-        adunit = AdUnitQueryManager.get(adunit_key)
-        adgroup = AdGroupQueryManager.get(adgroup_key)
         adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
                                                  advertiser=adgroup,
                                                  daily=daily)
@@ -275,15 +258,8 @@ class DirectSoldStatsFetcher(AbstractStatsFetcher):
         else:
             return self.format_stats(stats)
 
-    def get_campaign_stats(self, campaign, start, end, daily=True):
-
-        if isinstance(campaign, str):
-            campaign = CampaignQueryManager.get(campaign)
-
-        campaign_stats = self._get_advertiser_stats(start, end,
-                                                    advertiser=campaign,
-                                                    daily=daily)
-        return campaign_stats
+    def get_campaign_stats(self, campaign, start, end, daily=False, *args, **kwargs):
+        return self._get_advertiser_stats(start, end, campaign, daily=daily)
 
     def get_adgroup_stats(self, adgroup, start, end, daily=True):
 
@@ -545,6 +521,7 @@ class MarketplaceStatsFetcher(object):
 
         return {}
 
+
 class NetworkStatsFetcher(AbstractStatsFetcher):
     def _get_publisher_stats(self, start, end, account_key, app_key='*',
             network='*'):
@@ -554,17 +531,10 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
         return stats
 
     def get_campaign_stats(self, campaign, start, end, *args, **kwargs):
-        if isinstance(campaign, str):
-            campaign = CampaignQueryManager.get(campaign)
-
-        days = date_magic.gen_days(start, end)
-        if campaign.network_state == \
-                NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-            stats = self._get_publisher_stats(start, end, campaign._account,
+        if campaign.network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+            return self._get_publisher_stats(start, end, campaign._account,
                     network=campaign.network_type)
-        else:
-            return None
-        return stats
+        return None
 
     def get_campaign_specific_app_stats(self, app_key, campaign_key, start, end,
             *args, **kwargs):

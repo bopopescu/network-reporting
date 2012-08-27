@@ -2,30 +2,28 @@ __doc__ = """
 API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
 
+from datetime import date
 import logging
 import urllib
 import urllib2
 
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
-from django.utils import simplejson
+from django.utils import simplejson as json
 
-from adserver_constants import ADSERVER_HOSTNAME
 from advertiser.query_managers import (AdGroupQueryManager,
                                        CampaignQueryManager)
+from common.constants import PERCENT_DELIVERED_URL, PACING_URL
 from common.ragendja.template import JSONResponse
 from common.utils.request_handler import RequestHandler
 from common.utils.stats_helpers import (MarketplaceStatsFetcher,
                                         SummedStatsFetcher,
                                         DirectSoldStatsFetcher,
                                         NetworkStatsFetcher)
+from publisher.models import App, AdUnit
 from publisher.query_managers import (PublisherQueryManager,
                                       AdUnitQueryManager,
                                       AppQueryManager)
-
-
-REMOTE_PACING_PATH = '/admin/budget/api/pacing'
-REMOTE_DELIVERED_PATH = '/admin/budget/api/delivered'
 
 
 class AppService(RequestHandler):
@@ -218,9 +216,8 @@ class AdUnitService(RequestHandler):
                 # needs to know about is the adgroup's price floor
                 # and whether the marketplace is on/off for that
                 # adunit (active=True/False)
-                adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit['id'],
-                                                                      str(self.account.key()),
-                                                                      get_from_db=True)
+                adgroup = AdGroupQueryManager.get_marketplace_adgroup(
+                    adunit['id'], str(self.account.key()), get_from_db=True)
                 try:
                     adunit.update(price_floor=adgroup.mktplace_price_floor)
                 except AttributeError, e:
@@ -251,7 +248,7 @@ class AdUnitService(RequestHandler):
         """
         # Hack. Django doesn't have request.PUT by default, and instead
         # includes the PUT params in request.raw_post_data
-        put_data = simplejson.loads(self.request.raw_post_data)
+        put_data = json.loads(self.request.raw_post_data)
 
         new_price_floor = put_data['price_floor']
         activity = put_data['active']
@@ -290,6 +287,55 @@ def adunit_service(request, *args, **kwargs):
 # Advertiser services #
 #######################
 
+class CampaignServiceHandler(RequestHandler):
+    def get(self, campaign_key):
+        campaign = CampaignQueryManager.get(campaign_key)
+
+        endpoint = self.request.GET.get('endpoint', 'all')
+        stats_fetcher = get_stats_fetcher(campaign._account, endpoint)
+
+        app_key = self.request.GET.get('app', None)
+        if app_key:
+            publisher = AppQueryManager.get(app_key)
+            if publisher._account != campaign._account:
+                raise Http404
+        else:
+            adunit_key = self.request.GET.get('adunit', None)
+            if adunit_key:
+                publisher = AdUnitQueryManager.get(adunit_key)
+                if publisher._account != campaign._account:
+                    raise Http404
+            else:
+                publisher = None
+
+        include_daily = self.request.GET.get('daily', '0') == '1'
+
+        include_adgroups = self.request.GET.get('adgroups', '0') == '1'
+
+        include_creatives = self.request.GET.get('creatives', '0') == '1'
+
+        campaign_dict = get_campaign_dict(
+            campaign, stats_fetcher, self.start_date, self.end_date, publisher,
+            include_daily, include_adgroups, include_creatives)
+
+        return JSONResponse(campaign_dict)
+
+    def post(self, *args, **kwargs):
+        return JSONResponse({'error': 'Not implemented'})
+
+    def put(self, *args, **kwargs):
+        return JSONResponse({'error': 'Not implemented'})
+
+    def delete(self, *args, **kwargs):
+        return JSONResponse({'error': 'Not implemented'})
+
+
+@login_required
+def campaign_service(request, *args, **kwargs):
+    handler = CampaignServiceHandler(id='campaign_key')
+    return handler(request, use_cache=False, *args, **kwargs)
+
+
 class AdGroupServiceHandler(RequestHandler):
     """
     API Service for delivering serialized AdGroup data
@@ -300,46 +346,38 @@ class AdGroupServiceHandler(RequestHandler):
         endpoint = self.request.GET.get('endpoint', 'all')
         stats_fetcher = get_stats_fetcher(adgroup._account, endpoint)
 
-        # adgroup dict
-        adgroup_dict = adgroup.toJSON()
-
-        # progress
-        adgroup_dict.update(get_progress_dict(adgroup.key()))
-
-        # stats
-        if self.request.GET.get('app', ''):
-            stats_dict = stats_fetcher.get_adgroup_specific_app_stats(
-                self.request.GET['app'], adgroup.key(), self.start_date, self.end_date, True)
-        elif self.request.GET.get('adunit', ''):
-            stats_dict = stats_fetcher.get_adgroup_specific_adunit_stats(
-                self.request.GET['adunit'], adgroup.key(), self.start_date, self.end_date, True)
+        app_key = self.request.GET.get('app', None)
+        if app_key:
+            publisher = AppQueryManager.get(app_key)
+            if publisher._account != adgroup._account:
+                raise Http404
         else:
-            stats_dict = stats_fetcher.get_adgroup_stats(
-                adgroup, self.start_date, self.end_date, True)
+            adunit_key = self.request.GET.get('adunit', None)
+            if adunit_key:
+                publisher = AdUnitQueryManager.get(adunit_key)
+                if publisher._account != adgroup._account:
+                    raise Http404
+            else:
+                publisher = None
 
-            # creatives
-            adgroup_dict['creatives'] = []
-            for creative in adgroup.creatives:
-                # adgroup dict
-                creative_dict = creative.toJSON()
+        include_daily = self.request.GET.get('daily', '0') == '1'
 
-                # stats
-                creative_dict.update(stats_fetcher.get_creative_stats(
-                    creative, self.start_date, self.end_date, False))
+        include_creatives = self.request.GET.get('creatives', '0') == '1'
 
-                adgroup_dict['creatives'].append(creative_dict)
-        adgroup_dict.update(stats_dict)
+        adgroup_dict = get_adgroup_dict(
+            adgroup, stats_fetcher, self.start_date, self.end_date, publisher,
+            include_daily, include_creatives)
 
         return JSONResponse(adgroup_dict)
 
     def post(self, *args, **kwargs):
-        return JSONResponse({'error': 'Not yet implemented'})
+        return JSONResponse({'error': 'Not implemented'})
 
     def put(self, *args, **kwargs):
-        return JSONResponse({'error': 'Not yet implemented'})
+        return JSONResponse({'error': 'Not implemented'})
 
     def delete(self, *args, **kwargs):
-        return JSONResponse({'error': 'Not yet implemented'})
+        return JSONResponse({'error': 'Not implemented'})
 
 
 @login_required
@@ -348,105 +386,141 @@ def adgroup_service(request, *args, **kwargs):
     return handler(request, use_cache=False, *args, **kwargs)
 
 
-class CampaignServiceHandler(RequestHandler):
-    def get(self, campaign_key=None, *args, **kwargs):
-        # Get the campaign from the campaign key if it was
-        # given. Otherwise, get all of the campaigns for the account.
-        if campaign_key:
-            campaign = CampaignQueryManager.get(campaign_key)
-            if not campaign or campaign.account.key() != self.account.key():
-                raise Http404
-            campaigns = [campaign]
-        else:
-            campaigns = CampaignQueryManager.get_campaigns(self.account)
-
-        endpoint = self.request.GET.get('endpoint', 'all')
-        stats_fetcher = get_stats_fetcher(campaign._account, endpoint)
-
-        campaigns_dicts = []
-        for campaign in campaigns:
-            # campaign dict
-            campaign_dict = campaign.toJSON()
-
-            # stats
-            campaign_dict.update(stats_fetcher.get_campaign_stats(
-                campaign, self.start_date, self.end_date, True))
-
-            # adgroups
-            campaign_dict['adgroups'] = []
-            for adgroup in campaign.adgroups:
-                if not adgroup.deleted and not adgroup.archived:
-                    # adgroup dict
-                    adgroup_dict = adgroup.toJSON()
-
-                    # stats
-                    adgroup_dict.update(stats_fetcher.get_adgroup_stats(
-                        adgroup, self.start_date, self.end_date, False))
-
-                    # progress
-                    adgroup_dict.update(get_progress_dict(adgroup.key()))
-
-                    campaign_dict['adgroups'].append(adgroup_dict)
-
-            campaigns_dicts.append(campaign_dict)
-
-        return JSONResponse(campaigns_dicts)
-
-    def post(self, *args, **kwargs):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-    def put(self, *args, **kwargs):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-
-@login_required
-def campaign_service(request, *args, **kwargs):
-    handler = CampaignServiceHandler()
-    return handler(request, use_cache=False, *args, **kwargs)
-
-
 ####################
 # Helper Functions #
 ####################
 
-def get_progress_dict(adgroup_key):
-    progress_dict = {}
+def get_campaign_dict(campaign, stats_fetcher, start_date, end_date,
+                      publisher=None, include_daily=False,
+                      include_adgroups=False, include_creatives=False):
+    campaign_dict = campaign.to_dict()
 
-    query_string = urllib.urlencode({
+    if publisher:
+        if isinstance(publisher, App):
+            stats_dict = stats_fetcher.get_campaign_specific_app_stats(
+                publisher, campaign, start_date, end_date, include_daily)
+        elif isinstance(publisher, AdUnit):
+            stats_dict = stats_fetcher.get_campaign_specific_adunit_stats(
+                publisher, campaign, start_date, end_date, include_daily)
+        else:
+            raise TypeError("Publisher must be an instance of App or AdUnit.")
+    else:
+        stats_dict = stats_fetcher.get_campaign_stats(
+            campaign, start_date, end_date, include_daily)
+    campaign_dict.update(stats_dict)
+
+    if include_adgroups:
+        campaign_dict['adgroups'] = [
+            get_adgroup_dict(adgroup, stats_fetcher, start_date, end_date,
+                             publisher, False, include_creatives)
+                for adgroup in campaign.adgroups if (not adgroup.deleted and
+                                                     not adgroup.archived)]
+
+    return campaign_dict
+
+
+def get_adgroup_dict(adgroup, stats_fetcher, start_date, end_date,
+                     publisher=None, include_daily=False,
+                     include_creatives=False):
+    adgroup_dict = adgroup.to_dict()
+
+    if adgroup.gtee() and (adgroup.has_daily_budget or adgroup.has_full_budget):
+        percent_delivered = get_percent_delivered(adgroup.key())
+        if percent_delivered is not None:
+            adgroup_dict['percent_delivered'] = percent_delivered
+
+        if (adgroup.budget_strategy == 'evenly' and adgroup.active and
+                date.today() >= adgroup.start_datetime.date() and
+                (not adgroup.end_datetime or
+                 date.today() <= adgroup.end_datetime.date())):
+            pacing = get_pacing(adgroup.key())
+            if pacing is not None:
+                adgroup_dict['pacing'] = pacing
+
+    if publisher:
+        if isinstance(publisher, App):
+            stats_dict = stats_fetcher.get_adgroup_specific_app_stats(
+                publisher, adgroup, start_date, end_date, include_daily)
+        elif isinstance(publisher, AdUnit):
+            stats_dict = stats_fetcher.get_adgroup_specific_adunit_stats(
+                publisher, adgroup, start_date, end_date, include_daily)
+        else:
+            raise TypeError("Publisher must be an instance of App or AdUnit.")
+    else:
+        stats_dict = stats_fetcher.get_adgroup_stats(
+            adgroup, start_date, end_date, include_daily)
+    adgroup_dict.update(stats_dict)
+
+    if include_creatives:
+        adgroup_dict['creatives'] = [
+            get_creative_dict(creative, stats_fetcher, start_date, end_date,
+                              publisher, False)
+                for creative in adgroup.creatives if not creative.deleted]
+
+    return adgroup_dict
+
+
+def get_creative_dict(creative, stats_fetcher, start_date, end_date,
+                      publisher=None, include_daily=False):
+    creative_dict = creative.to_dict()
+
+    if publisher:
+        if isinstance(publisher, App):
+            stats_dict = stats_fetcher.get_creative_specific_app_stats(
+                publisher, creative, start_date, end_date, include_daily)
+        elif isinstance(publisher, AdUnit):
+            stats_dict = stats_fetcher.get_creative_specific_adunit_stats(
+                publisher, creative, start_date, end_date, include_daily)
+        else:
+            raise TypeError("Publisher must be an instance of App or AdUnit.")
+    else:
+        stats_dict = stats_fetcher.get_creative_stats(
+            creative, start_date, end_date, include_daily)
+    creative_dict.update(stats_dict)
+
+    return creative_dict
+
+
+def get_percent_delivered(adgroup_key):
+    percent_delivered_url = "%s?%s" % (PERCENT_DELIVERED_URL, urllib.urlencode({
         'key': str(adgroup_key),
         'key_type': 'adgroup',
-    })
+    }))
 
-    adserver_url = 'http://' + ADSERVER_HOSTNAME
-
-    pacing_url = adserver_url + REMOTE_PACING_PATH + '?' + query_string
     try:
-        pacing_dict = simplejson.loads(urllib2.urlopen(pacing_url).read())
+        percent_delivered_dict = json.loads(
+            urllib2.urlopen(percent_delivered_url).read())
     except:
-        pass
-    else:
-        pacing_tuple = pacing_dict['pacing']
-        if pacing_tuple is not None and pacing_tuple[0] == 'Pacing':
-            progress_dict['pace'] = float(pacing_tuple[1])
-            if progress_dict['pace'] < .5:
-                progress_dict['pace_type'] = "pace-failure"
-            elif progress_dict['pace'] < .85:
-                progress_dict['pace_type'] = "pace-warning"
-            else:
-                progress_dict['pace_type'] = "pace-success"
-        else:
-            progress_dict['pace_type'] = "delivery"
+        logging.error("Error reading %s" % percent_delivered_url)
+        return None
 
-    delivered_url = adserver_url + REMOTE_DELIVERED_PATH + '?' + query_string
+    if percent_delivered_dict['percent_delivered'] is not None:
+        return float(percent_delivered_dict['percent_delivered'])
+
+    logging.error("%s return an invalid response %s" % (percent_delivered_url,
+                                                        percent_delivered_dict))
+    return None
+
+
+def get_pacing(adgroup_key):
+    pacing_url = "%s?%s" % (PACING_URL, urllib.urlencode({
+        'key': str(adgroup_key),
+        'key_type': 'adgroup',
+    }))
+
     try:
-        delivered_dict = simplejson.loads(urllib2.urlopen(delivered_url).read())
+        pacing_dict = json.loads(urllib2.urlopen(pacing_url).read())
     except:
-        pass
-    else:
-        if delivered_dict['percent_delivered'] is not None:
-            progress_dict['percent_delivered'] = float(delivered_dict['percent_delivered'])
+        logging.error("Error reading %s" % pacing_url)
+        return None
 
-    return progress_dict
+    if (pacing_dict['pacing'] is not None and
+            pacing_dict['pacing'][0] == 'Pacing'):
+        return float(pacing_dict['pacing'][1])
+
+    logging.error("%s return an invalid response %s" % (pacing_url,
+                                                        pacing_dict))
+    return None
 
 
 def get_stats_fetcher(account_key, stats_endpoint):

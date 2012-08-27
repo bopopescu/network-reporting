@@ -81,7 +81,7 @@ var mopub = window.mopub || {};
 
         var time = new Rickshaw.Fixtures.MoPubTime();
         var timeUnit = time.unit('days');
-        
+
         var xaxes = new Rickshaw.Graph.Axis.Time({
 	        graph: graph,
             //timeUnit: timeUnit
@@ -585,7 +585,7 @@ var mopub = window.mopub || {};
                 var selector = ' .network-data';
 
                 $('.rev', row).text(this_view.model.get_formatted_stat('rev'));
-                $('.cpm' + selector, row).text(this_view.model.get_formatted_stat('cpm'));
+                $('.cpm', row).text(this_view.model.get_formatted_stat('cpm'));
             } else {
                 var selector = ' .mopub-data';
             }
@@ -784,17 +784,36 @@ var mopub = window.mopub || {};
             });
 
             if(current_model.has('percent_delivered')) {
-                var percent_delivered = current_model.get('percent_delivered');
+                var percent_delivered = Math.round(current_model.get('percent_delivered') * 100);
                 var $percent_delivered = $('.progress', row);
-                $('div.bar', $percent_delivered).css('width', '' + percent_delivered*100 + '%');
-                $('#progress-bar-text', $percent_delivered).text('' + Math.round(percent_delivered*100) + '%');
+                $('div.bar', $percent_delivered).css('width', percent_delivered + '%');
+                if(percent_delivered > 250) {
+                    $('#progress-bar-text', $percent_delivered).text('>250%');
+                }
+                else {
+                    $('#progress-bar-text', $percent_delivered).text(percent_delivered + '%');
+                }
                 $percent_delivered.show();
             }
 
-            if(current_model.has('pace') && current_model.has('pace_type')) {
+            if(current_model.has('pacing')) {
+                var pace = Math.round(current_model.get('pacing') * 100);
                 var $pace = $('.pace', row);
-                $pace.addClass(current_model.get('pace_type'));
-                $pace.text('Pace: ' + Math.round(current_model.get('pace')*100) + '%');
+                if(pace < 50) {
+                    $pace.addClass('pace-failure');
+                }
+                else if(pace < 85) {
+                    $pace.addClass('pace-warning');
+                }
+                else {
+                    $pace.addClass('pace-success');
+                }
+                if(pace > 250) {
+                    $pace.text('Pace: >250%');
+                }
+                else {
+                    $pace.text('Pace: ' + pace + '%');
+                }
                 $pace.show();
             }
 

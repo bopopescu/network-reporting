@@ -124,8 +124,7 @@ class Campaign(db.Model):
     def owner(self):
         return property(self.get_owner, self.set_owner)
 
-    # TODO: Rename because this returns a dictionary, not JSON.
-    def toJSON(self):
+    def to_dict(self):
         return {
             'name': self.name,
             'advertiser': self.advertiser,
@@ -134,6 +133,10 @@ class Campaign(db.Model):
             'deleted': self.deleted,
             'key': str(self.key())
         }
+
+    # TODO: remove, as it returns a dict, not JSON
+    # deprecated
+    toJSON = to_dict
 
     @property
     def status_icon_url(self):
@@ -803,9 +806,8 @@ class AdGroup(db.Model):
 
         return ["All devices"]
 
-    # TODO: Rename because this returns a dictionary, not JSON.
-    def toJSON(self):
-        d = {
+    def to_dict(self):
+        return {
             'key': str(self.key()),
             'campaign_key': str(self.campaign.key()),
             'name': self.name,
@@ -823,7 +825,10 @@ class AdGroup(db.Model):
             'frequency_caps': self.frequency_cap_display,
             'allocation': self.allocation_percentage,
         }
-        return d
+
+    # TODO: remove, as it returns a dict, not JSON
+    # deprecated
+    toJSON = to_dict
 
     #############################
     # moved from campaign class #
@@ -1044,12 +1049,15 @@ class Creative(polymodel.PolyModel):
         simplify_dict = self.build_simplify_dict()
         return self.SIMPLE(**simplify_dict)
 
-    # TODO: rename
-    def toJSON(self):
+    def to_dict(self):
         return {
             'key': str(self.key()),
             'name': self.name
         }
+
+    # TODO: remove, as it returns a dict, not JSON
+    # deprecated
+    toJSON = to_dict
 
 
 class TextCreative(Creative):

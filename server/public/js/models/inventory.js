@@ -191,8 +191,8 @@ var mopub = mopub || {};
 
             // Note: this is treating derivative stats as an average.
             // it should be a weighted average.
-            if (stat === 'ctr' || 
-                stat === 'fill_rate' || 
+            if (stat === 'ctr' ||
+                stat === 'fill_rate' ||
                 stat === 'conv_rate' ||
                 stat === 'cpm') {
                 sum = sum / these_models.length;
@@ -677,34 +677,51 @@ var mopub = mopub || {};
      */
 
     var Campaign = StatsModel.extend({
-        defaults : {
+        defaults: {
+            app: null,
+            adunit: null,
+            include_daily: false,
+            include_adgroups: false,
+            include_creatives: false,
+            start_date: null,
+            date_range: 90,
             stats_endpoint: 'all'
         },
-        url: function() {
-            // window.location.search.substring(1) is used to preserve date ranges from the url
-            // this makes the fetching work with the datepicker.
-            var stats_endpoint = this.get('stats_endpoint');
-            return '/api/campaign/'
-                + this.id
-                + '?'
-                + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+        url: function () {
+            var url = '/api/campaign/' + this.id + '?';
+            var app = this.get('app');
+            if(app) {
+                url += '&app=' + app;
+            }
+            else {
+                var adunit = this.get('adunit');
+                if(adunit) {
+                    url += '&adunit=' + adunit;
+                }
+            }
+            url += '&daily=' + (this.get('include_daily') ? '1' : '0');
+            url += '&adgroups=' + (this.get('include_adgroups') ? '1' : '0');
+            url += '&creatives=' + (this.get('include_creatives') ? '1' : '0');
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=' + this.get('stats_endpoint');
+            return url;
         },
         parse: function(response) {
-            if (response) {
-                var campaign_data = response[0].sum;
-                campaign_data.daily_stats = response[0].daily_stats;
+            var campaign_data = response.sum;
+            campaign_data.daily_stats = response.daily_stats;
 
-                // REFACTOR attempts vs requests
-                if(campaign_data.req == null || campaign_data.req == undefined) {
-                    campaign_data.req = campaign_data.att;
-                } else if(campaign_data.att == null || campaign_data.att == undefined) {
-                    campaign_data.att = campaign_data.req;
-                }
-
-                return campaign_data;
+            // REFACTOR attempts vs requests
+            if(campaign_data.req == null || campaign_data.req == undefined) {
+                campaign_data.req = campaign_data.att;
+            } else if(campaign_data.att == null || campaign_data.att == undefined) {
+                campaign_data.att = campaign_data.req;
             }
+
+            return campaign_data;
         }
     });
 
@@ -791,7 +808,12 @@ var mopub = mopub || {};
                 + stats_endpoint;
         },
         parse: function(response) {
-            return response[0];
+            for(var i in response) {
+                if(response[i].id === this.id) {
+                    return response[i];
+                }
+            }
+            return null;
         }
     });
 
@@ -961,13 +983,78 @@ var mopub = mopub || {};
 
     _.extend(AppCollection.prototype, StatsMixin);
 
+
+    /*
+     *  Order
+     */
+    var Order = Backbone.Model.extend({
+        defaults: {
+            app: null,
+            adunit: null,
+            include_daily: false,
+            include_adgroups: false,
+            include_creatives: false,
+            start_date: null,
+            date_range: 90
+        },
+        url: function () {
+            var url = '/api/campaign/' + this.id + '?';
+            var app = this.get('app');
+            if(app) {
+                url += '&app=' + app;
+            }
+            else {
+                var adunit = this.get('adunit');
+                if(adunit) {
+                    url += '&adunit=' + adunit;
+                }
+            }
+            url += '&daily=' + (this.get('include_daily') ? '1' : '0');
+            url += '&adgroups=' + (this.get('include_adgroups') ? '1' : '0');
+            url += '&creatives=' + (this.get('include_creatives') ? '1' : '0');
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            return url;
+        },
+        parse: function(order) {
+            // TODO: this throws an error if req is undefined
+            if((order.req === null || order.req === undefined) &&
+               (order.att !== null && order.att !== undefined)) {
+                order.req = order.att;
+            } else if ((order.att == null || order.att == undefined) &&
+                       (order.rev !== null && order.rev !== undefined)) {
+                order.att = order.req;
+            }
+            return order;
+        }
+    });
+
+    _.extend(Order.prototype, StatsMixin);
+
+
+    var OrderCollection = Backbone.Collection.extend({
+        model: Order
+    });
+
+    _.extend(OrderCollection.prototype, StatsMixin);
+
+
     /*
      *  LineItem
      */
     var LineItem = Backbone.Model.extend({
         defaults: {
+            app: null,
+            adunit: null,
+            include_daily: false,
+            include_creatives: false,
             start_date: null,
             date_range: 90,
+            // TODO: Why do we need all these defaults?  It seems like it will
+            // hide legitimate errors if stats don't load.
             name: '',
             att: 0,
             clk: 0,
@@ -985,12 +1072,23 @@ var mopub = mopub || {};
         },
         url: function () {
             var url = '/api/adgroup/' + this.id + '?';
+            var app = this.get('app');
+            if(app) {
+                url += '&app=' + app;
+            }
+            else {
+                var adunit = this.get('adunit');
+                if(adunit) {
+                    url += '&adunit=' + adunit;
+                }
+            }
+            url += '&daily=' + (this.get('include_daily') ? '1' : '0');
+            url += '&creatives=' + (this.get('include_creatives') ? '1' : '0');
             var start_date = this.get('start_date');
             if(start_date) {
-                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+                url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
             }
             url += '&r=' + this.get('date_range');
-            url += '&endpoint=direct';
             return url;
         }
     });
@@ -1015,63 +1113,6 @@ var mopub = mopub || {};
     });
 
     _.extend(LineItemCollection.prototype, StatsMixin);
-
-
-    var Order = Backbone.Model.extend({
-        defaults: {
-            start_date: null,
-            date_range: 90,
-            name: '',
-            att: 0,
-            clk: 0,
-            ctr: 0,
-            cpm: 0,
-            conv: 0,
-            fill_rate: 0,
-            imp: 0,
-            req: 0,
-            rev: 0
-        },
-        url: function () {
-            var url = '/api/campaign/' + this.id + '?';
-            var start_date = this.get('start_date');
-            if(start_date) {
-                url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
-            }
-            url += '&r=' + this.get('date_range');
-            url += '&endpoint=direct';
-            return url;
-        },
-        parse: function(response) {
-
-            var order = response[0];
-
-            if((order.req === null || order.req === undefined) &&
-               (order.att !== null && order.att !== undefined)) {
-                order.req = order.att;
-            } else if ((order.att == null || order.att == undefined) &&
-                       (order.rev !== null && order.rev !== undefined)) {
-                order.att = order.req;
-            }
-
-            return order;
-        }
-    });
-
-    _.extend(Order.prototype, StatsMixin);
-
-
-    var OrderCollection = Backbone.Collection.extend({
-        model: Order,
-        stats_endpoint: 'direct',
-        url: function() {
-            return '/api/campaign/'
-                + "?r=90",
-                + '&endpoint=direct';
-        }
-    });
-
-    _.extend(OrderCollection.prototype, StatsMixin);
 
 
     /*

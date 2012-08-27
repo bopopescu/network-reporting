@@ -290,6 +290,6 @@ class TestBudgetEndToEnd(unittest.TestCase):
         Test that we don't let 'country=' get passed to ad_server
         because things break.
         """
-        self.ag.geo_predicates = ['country=']
+        self.ag.geo_predicates = ['country_name=']
         simple_adgroup = self.ag.simplify()
-        eq_(simple_adgroup.geo_predicates, ['country=*'])
+        eq_(simple_adgroup.geo_predicates, ['country_name=*'])

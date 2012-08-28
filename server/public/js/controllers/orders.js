@@ -1074,9 +1074,11 @@
 
             // Geography Targeting
             $('select[name="targeted_countries"]').chosen();
+            $('select[name="targeted_regions"]').chosen();
             _.each(bootstrapping_data.targeted_cities, function (targeted_city) {
-                var name = targeted_city.substring(targeted_city.indexOf(',', targeted_city.indexOf(',') + 1) + 2, targeted_city.length - 2);
-                $('select[name="targeted_cities"]').append('<option selected="selected" value="' + targeted_city + '">' + name +'</option>');
+                var parts = targeted_city.split(',\'');
+                var name = parts[1].substring(0, parts[1].length - 1) + ', ' + parts[2].substring(0, parts[2].length - 1);
+                $('select[name="targeted_cities"]').append('<option selected="selected" value="' + targeted_city + '">' + name + '</option>');
             });
             $('select[name="targeted_cities"]').ajaxChosen(
                 {
@@ -1089,47 +1091,46 @@
                     var terms = {};
                     for(var index in data.geonames) {
                         var geoname = data.geonames[index];
-                        var value = geoname.name + " " + geoname.adminCode1;
-                        var key = "(" + geoname.lat + "," + geoname.lng + ",'" + value + "')";
+                        var key = '(' + geoname.lat + ',' + geoname.lng + ',\'' + geoname.name + '\',\'' + geoname.adminCode1 + '\',\'' + geoname.countryCode + '\')';
+                        var value = geoname.name + ', ' + geoname.adminCode1;
                         terms[key] = value;
                     }
                     return terms;
                 }
             );
-            $('select[name="targeted_regions"]').chosen();
             $('input[name="region_targeting_type"]').change(function () {
                 var val = $(this).val();
                 if(val == 'all') {
-                    $('#id_targeted_cities_chzn').hide();
                     $('#id_targeted_regions_chzn').hide();
+                    $('#id_targeted_cities_chzn').hide();
                     $('#id_targeted_zip_codes').hide();
                 }
                 else if(val == 'city-region') {
-                    $('#id_targeted_cities_chzn').show();
                     $('#id_targeted_regions_chzn').show();
+                    $('#id_targeted_cities_chzn').show();
                     $('#id_targeted_zip_codes').hide();
                 }
                 else {
-                    $('#id_targeted_cities_chzn').hide();
                     $('#id_targeted_regions_chzn').hide();
+                    $('#id_targeted_cities_chzn').hide();
                     $('#id_targeted_zip_codes').show();
                 }
             });
             // update on document ready
             var val = $('input[name="region_targeting_type"]:checked').val();
             if(val == 'all') {
-                $('#id_targeted_cities_chzn').hide();
                 $('#id_targeted_regions_chzn').hide();
+                $('#id_targeted_cities_chzn').hide();
                 $('#id_targeted_zip_codes').hide();
             }
             else if(val == 'city-region') {
-                $('#id_targeted_cities_chzn').show();
                 $('#id_targeted_regions_chzn').show();
+                $('#id_targeted_cities_chzn').show();
                 $('#id_targeted_zip_codes').hide();
             }
             else {
-                $('#id_targeted_cities_chzn').hide();
                 $('#id_targeted_regions_chzn').hide();
+                $('#id_targeted_cities_chzn').hide();
                 $('#id_targeted_zip_codes').show();
             }
 

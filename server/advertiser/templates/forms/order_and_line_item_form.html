@@ -285,20 +285,20 @@
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_1">
                                     <input {% if line_item_form.region_targeting_type|field_value == 'city-region' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="city-region" name="region_targeting_type" />
-                                    Specific City, or Specific State / Metro Area (DMA) within Country (Wi-Fi Required)
+                                    Specific State / Metro Area (DMA) within Country (Wi-Fi Required) or Specific City
                                 </label>
                                 <div>
-                                    {{ line_item_form.targeted_cities }}
+                                    {{ line_item_form.targeted_regions }}
                                 </div>
                                 <div>
-                                    {{ line_item_form.targeted_regions }}
+                                    {{ line_item_form.targeted_cities }}
                                 </div>
                             </li>
                             <li>
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_2">
                                     <input {% if line_item_form.region_targeting_type|field_value == 'zip' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip" name="region_targeting_type" />
-                                    Specific Zipcodes within Country (Wi-Fi Required)
+                                    Specific ZIP Codes within Country (Wi-Fi Required)
                                 </label>
                                 <div>
                                     {{ line_item_form.targeted_zip_codes }}

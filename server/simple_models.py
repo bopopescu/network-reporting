@@ -340,8 +340,8 @@ class SimpleAdGroup(SimpleModel):
             target_other=None,
             accept_targeted_locations=None,
             targeted_countries=None,
-            targeted_cities=None,
             targeted_regions=None,
+            targeted_cities=None,
             targeted_zip_codes=None,
             targeted_carriers=None,
             included_apps=None,
@@ -385,8 +385,8 @@ class SimpleAdGroup(SimpleModel):
         self.target_other = target_other
         self.accept_targeted_locations = accept_targeted_locations
         self.targeted_countries = targeted_countries
-        self.targeted_cities = targeted_cities
         self.targeted_regions = targeted_regions
+        self.targeted_cities = targeted_cities
         self.targeted_zip_codes = targeted_zip_codes
         self.targeted_carriers = targeted_carriers
         self.included_apps = included_apps

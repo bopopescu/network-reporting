@@ -17,7 +17,7 @@ backends:
 
 - name: frontend-beta
   class: B2
-  instances: 2
+  instances: 10
   options: public
 
 - name: frontend-boom

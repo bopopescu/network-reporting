@@ -1,19 +1,17 @@
 import datetime
+import logging
+import re
 
 from google.appengine.api import images
-from google.appengine.ext import blobstore
-from google.appengine.ext import db
+from google.appengine.ext import blobstore, db
 from google.appengine.ext.db import polymodel
 
 from account.models import Account
-from common.constants import (COUNTRIES, MIN_IOS_VERSION,
-                              MAX_IOS_VERSION,
-                              MIN_ANDROID_VERSION,
-                              MAX_ANDROID_VERSION,
-                              ISO_COUNTRY_LOOKUP_TABLE,
+from common.constants import (MIN_IOS_VERSION, MAX_IOS_VERSION,
+                              MIN_ANDROID_VERSION, MAX_ANDROID_VERSION,
                               NETWORKS)
-from common.utils.helpers import to_uni
 from common.templatetags.filters import withsep
+from common.utils.helpers import to_uni
 from simple_models import (SimpleAdGroup,
                            SimpleCampaign,
                            SimpleCreative,
@@ -238,8 +236,8 @@ class AdGroup(db.Model):
     # Geography Targeting
     accept_targeted_locations = db.BooleanProperty(default=True)
     targeted_countries = db.ListProperty(basestring)
-    targeted_cities = db.ListProperty(basestring)
     targeted_regions = db.ListProperty(basestring)
+    targeted_cities = db.ListProperty(basestring)
     targeted_zip_codes = db.StringListProperty()
 
     # Connectivity Targeting
@@ -281,6 +279,18 @@ class AdGroup(db.Model):
     mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
     active_user = db.StringListProperty(default=['any'])
     active_app = db.StringListProperty(default=['any'])
+
+    @property
+    def targeted_cities_tuples(self):
+        targeted_cities_tuples = []
+        for city in self.targeted_cities:
+            match = re.match("^\((.*),(.*),'(.*)','(.*)','(.*)'\)$", city)
+            if match:
+                targeted_cities_tuples.append(match.groups())
+            else:
+                logging.error("Malformed targeted city %s for adgroup %s" % (
+                    city, self.key()))
+        return targeted_cities_tuples
 
     @property
     def included_apps_global_ids(self):
@@ -416,8 +426,8 @@ class AdGroup(db.Model):
             target_other=self.target_other,
             accept_targeted_locations=self.accept_targeted_locations,
             targeted_countries=self.targeted_countries,
-            targeted_cities=self.targeted_cities,
             targeted_regions=self.targeted_regions,
+            targeted_cities=self.targeted_cities_tuples,  # modified
             targeted_zip_codes=self.targeted_zip_codes,
             targeted_carriers=self.targeted_carriers,
             included_apps=self.included_apps_global_ids,  # modified
@@ -426,20 +436,6 @@ class AdGroup(db.Model):
             daily_frequency_cap=self.daily_frequency_cap,
             hourly_frequency_cap=self.hourly_frequency_cap,
         )
-
-    def _cleaned_geo_predicates(self):
-        """
-        This is a HACK to fix a frontend bug that sometimes sometimes
-        geo_predicates to ['country='] instead of ['country=*']
-        Jira: https://mopubinc.atlassian.net/browse/UI-90
-
-        This is going to be removed entirely very soon, so i'm
-        just going to implement this fix now.
-
-        """
-        if self.geo_predicates == ['country_name='] or self.geo_predicates == [u'country_name=']:
-            return [u'country_name=*']
-        return self.geo_predicates
 
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
@@ -572,10 +568,6 @@ class AdGroup(db.Model):
         else:
             return True
 
-    @property
-    def geographic_predicates(self):
-        return self.geo_predicates
-
     def get_owner(self):
         return self.campaign
 
@@ -699,24 +691,6 @@ class AdGroup(db.Model):
             return ", ".join(display)
 
     @property
-    def country_targeting_display(self):
-
-        display = []
-        for country in self.geo_predicates:
-            country_id = country.strip("country_name=")
-            if country_id.find("*") == -1:
-                try:
-                    country_name = ISO_COUNTRY_LOOKUP_TABLE[country_id]
-                    display.append(country_name)
-                except KeyError:
-                    pass
-
-        if not display:
-            return "All countries"
-        else:
-            return ", ".join(sorted(display))
-
-    @property
     def device_targeting_display(self):
 
         if self.device_targeting and not self.uses_default_device_targeting:
@@ -768,7 +742,7 @@ class AdGroup(db.Model):
             'start_datetime': self.start_datetime,
             'end_datetime': self.end_datetime,
             'device_targeting': self.device_targeting_display,
-            'country_targeting': self.country_targeting_display,
+            # 'country_targeting': self.country_targeting_display,
             'frequency_caps': self.frequency_cap_display,
             'allocation': self.allocation_percentage,
         }

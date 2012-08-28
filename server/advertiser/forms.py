@@ -10,8 +10,8 @@ from google.appengine.ext.db import Key
 
 from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
                                ImageCreative, HtmlCreative)
-from common.constants import (COUNTRIES, REGIONS, ZIP_CODES, CARRIERS,
-                              IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES)
+from common.constants import (COUNTRIES, REGIONS, CARRIERS, IOS_VERSION_CHOICES,
+                              ANDROID_VERSION_CHOICES)
 
 from common.utils import helpers
 from common.utils.timezones import Pacific_tzinfo
@@ -151,14 +151,14 @@ class LineItemForm(forms.ModelForm):
             attrs={'data-placeholder': ' '}))
     # non-db field
     region_targeting_type = forms.ChoiceField(
-        choices=(('all', ''),
-                 ('city-region', ''),
-                 ('zip', '')),
+        choices=(('all', 'All Regions'),
+                 ('city-region', 'Specific City, or Specific State / Metro Area (DMA) within Country (Wi-Fi Required)'),
+                 ('zip', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
         initial='all', label='Region:', widget=forms.RadioSelect)
-    targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': ' '}))
     targeted_regions = forms.MultipleChoiceField(
         choices=REGIONS, required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': ' '}))
+    targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
     targeted_zip_codes = forms.CharField(
         required=False, widget=forms.Textarea(
@@ -270,12 +270,6 @@ class LineItemForm(forms.ModelForm):
         if initial['budget'] != None and instance.bid_strategy == 'cpm':
             initial['budget'] = int(1000.0 * initial['budget'] / instance.bid)
 
-    def _calculate_budget(self, budget):
-        if self.data.get('bid_strategy', 'cpm') == 'cpm':
-            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
-        else:
-            return budget
-
     def clean_adgroup_type(self):
         adgroup_type = self.cleaned_data.get('adgroup_type', None)
         if not adgroup_type:
@@ -304,14 +298,21 @@ class LineItemForm(forms.ModelForm):
             end_datetime = pacific_to_utc(end_datetime)
         return end_datetime
 
+    def clean_site_keys(self):
+        return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
+
+    def clean_targeted_zip_codes(self):
+        targeted_zip_codes = self.cleaned_data.get('targeted_zip_codes', None)
+        if targeted_zip_codes:
+            targeted_zip_codes = targeted_zip_codes.split()
+            # TODO: validate
+        return targeted_zip_codes
+
     def clean_included_apps(self):
         return [Key(app_key) for app_key in self.cleaned_data.get('included_apps', [])]
 
     def clean_excluded_apps(self):
         return [Key(app_key) for app_key in self.cleaned_data.get('excluded_apps', [])]
-
-    def clean_site_keys(self):
-        return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
@@ -321,13 +322,23 @@ class LineItemForm(forms.ModelForm):
             keywords = "\n".join([keyword.strip() for keyword in keywords.split("\n") if keyword.strip()])
         return keywords
 
-    def _clean_start_and_end_datetime(self, data):
-        start = data.get('start_datetime', None) or datetime.now()
-        data['start_datetime'] = start
-        end = data.get('end_datetime')
-        if end and end <= start:
-            self._errors['end_datetime'] = ErrorList()
-            self._errors['end_datetime'].append('End datetime must be after start datetime')
+    def clean(self):
+        cleaned_data = super(LineItemForm, self).clean()
+
+        self._clean_start_and_end_datetime(cleaned_data)
+
+        if cleaned_data.get('adgroup_type', '') == 'gtee':
+            self._clean_gtee_adgroup_type(cleaned_data)
+            self._clean_gtee_budget(cleaned_data)
+
+        elif cleaned_data.get('adgroup_type', '') == 'promo':
+            self._clean_promo_adgroup_type(cleaned_data)
+            self._clean_promo_budget(cleaned_data)
+
+        self._clean_geographical_targeting(cleaned_data)
+        self._clean_connectivity_targeting(cleaned_data)
+
+        return cleaned_data
 
     def _clean_gtee_adgroup_type(self, data):
         priority = data.get('gtee_priority', None)
@@ -382,38 +393,32 @@ class LineItemForm(forms.ModelForm):
         data['budget_type'] = None
         data['budget_strategy'] = None
 
-    def clean_targeted_zip_codes(self):
-        targeted_zip_codes = self.cleaned_data.get('targeted_zip_codes', None)
-        if targeted_zip_codes:
-            targeted_zip_codes = targeted_zip_codes.split()
-            # TODO: validate
-        return targeted_zip_codes
+    def _calculate_budget(self, budget):
+        if self.data.get('bid_strategy', 'cpm') == 'cpm':
+            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
+        else:
+            return budget
 
-    def clean(self):
-        cleaned_data = super(LineItemForm, self).clean()
+    def _clean_start_and_end_datetime(self, data):
+        start = data.get('start_datetime', None) or datetime.now()
+        data['start_datetime'] = start
+        end = data.get('end_datetime')
+        if end and end <= start:
+            self._errors['end_datetime'] = ErrorList()
+            self._errors['end_datetime'].append('End datetime must be after start datetime')
 
-        self._clean_start_and_end_datetime(cleaned_data)
-
-        if cleaned_data.get('adgroup_type', '') == 'gtee':
-            self._clean_gtee_adgroup_type(cleaned_data)
-            self._clean_gtee_budget(cleaned_data)
-
-        elif cleaned_data.get('adgroup_type', '') == 'promo':
-            self._clean_promo_adgroup_type(cleaned_data)
-            self._clean_promo_budget(cleaned_data)
-
+    def _clean_geographical_targeting(self, cleaned_data):
         if cleaned_data['region_targeting_type'] != 'city-region':
             cleaned_data['targeted_cities'] = []
             cleaned_data['targeted_regions'] = []
         if cleaned_data['region_targeting_type'] != 'zip':
             cleaned_data['targeted_zip_codes'] = []
 
+    def _clean_connectivity_targeting(self, cleaned_data):
         if cleaned_data['connectivity_targeting_type'] == 'wi-fi':
             cleaned_data['targeted_carriers'] = ['Wi-Fi']
         elif cleaned_data['connectivity_targeting_type'] != 'carriers':
             cleaned_data['targeted_carriers'] = []
-
-        return cleaned_data
 
     def save(self, *args, **kwargs):
         if self.instance and self.instance.site_keys:

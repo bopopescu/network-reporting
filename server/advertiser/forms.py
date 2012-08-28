@@ -10,9 +10,8 @@ from google.appengine.ext.db import Key
 
 from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
                                ImageCreative, HtmlCreative)
-from common.constants import (ISO_COUNTRIES, US_STATES, CA_PROVINCES,
-                              IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
-                              CITY_GEO, REGION_GEO, COUNTRY_GEO)
+from common.constants import (COUNTRIES, CITIES, REGIONS, ZIP_CODES,
+                              IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES)
 
 from common.utils import helpers
 from common.utils.timezones import Pacific_tzinfo
@@ -20,9 +19,6 @@ from common.utils.date_magic import utc_to_pacific, pacific_to_utc
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 from advertiser.widgets import CustomizableSplitDateTimeWidget
-
-
-STATES_AND_PROVINCES = US_STATES + CA_PROVINCES
 
 
 class OrderForm(forms.ModelForm):
@@ -71,7 +67,7 @@ CARRIER_CHOICES = (
 
 
 class LineItemForm(forms.ModelForm):
-    # name
+    # name =
     adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
                                               ('promo', 'Promotional')),
                                      label='Line Item Type:')
@@ -89,8 +85,8 @@ class LineItemForm(forms.ModelForm):
     # non-db field
     budget = forms.FloatField(label='Budget:', required=False,
                               widget=forms.TextInput(attrs={'class': 'float'}))
-    # daily_budget
-    # full_budget
+    # daily_budget =
+    # full_budget =
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
@@ -99,7 +95,7 @@ class LineItemForm(forms.ModelForm):
                                         initial='allatonce',
                                         label='Delivery Speed:', required=False,
                                         widget=forms.RadioSelect)
-    # bid
+    # bid =
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'),
                                               ('cpc', 'CPC')), label='Rate:')
     start_datetime = forms.DateTimeField(
@@ -146,7 +142,7 @@ class LineItemForm(forms.ModelForm):
     # Geography Targeting
     accept_targeted_locations = forms.BooleanField()
     targeted_countries = forms.MultipleChoiceField(
-        choices=ISO_COUNTRIES, label='Country:', required=False,
+        choices=COUNTRIES, label='Country:', required=False,
         widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
     # non-db field
@@ -155,13 +151,14 @@ class LineItemForm(forms.ModelForm):
                  ('city-region', ''),
                  ('zip', '')),
         initial='all', label='Region:', widget=forms.RadioSelect)
-    targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
+    targeted_cities = forms.MultipleChoiceField(
+        choices=CITIES, required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
     targeted_regions = forms.MultipleChoiceField(
-        choices=STATES_AND_PROVINCES, required=False,
-        widget=forms.SelectMultiple(
+        choices=REGIONS, required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
-    targeted_zip = forms.Field(required=False, widget=forms.SelectMultiple(
+    targeted_zip_codes = forms.MultipleChoiceField(
+        choices=ZIP_CODES, required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
 
     # Connectivity Targeting
@@ -192,7 +189,7 @@ class LineItemForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'float'}))
 
     # Allocation
-    # allocation_percentage
+    # allocation_percentage =
 
     def __init__(self, *args, **kwargs):
         # initial

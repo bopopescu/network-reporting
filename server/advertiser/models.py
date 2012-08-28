@@ -159,6 +159,7 @@ class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name='adgroups')
 
     created = db.DateTimeProperty(auto_now_add=True)
+    modified = db.DateTimeProperty(auto_now=True)
 
     # state of this ad group
     active = db.BooleanProperty(default=True)
@@ -239,7 +240,7 @@ class AdGroup(db.Model):
     targeted_countries = db.StringListProperty()
     targeted_cities = db.StringListProperty()
     targeted_regions = db.StringListProperty()
-    targeted_zip = db.StringListProperty()
+    targeted_zip_codes = db.StringListProperty()
 
     # Connectivity Targeting
     targeted_carriers = db.StringListProperty()

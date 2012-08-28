@@ -5,20 +5,18 @@ import re
 from django import forms
 from django.forms.util import ErrorList
 from django.utils.safestring import SafeString
-from google.appengine.api import images, files
+from google.appengine.api import files, images
 from google.appengine.ext.db import Key
 
 from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
                                ImageCreative, HtmlCreative)
+from advertiser.widgets import CustomizableSplitDateTimeWidget
 from common.constants import (COUNTRIES, REGIONS, CARRIERS, IOS_VERSION_CHOICES,
                               ANDROID_VERSION_CHOICES)
-
 from common.utils import helpers
-from common.utils.timezones import Pacific_tzinfo
 from common.utils.date_magic import utc_to_pacific, pacific_to_utc
+from common.utils.timezones import Pacific_tzinfo
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-
-from advertiser.widgets import CustomizableSplitDateTimeWidget
 
 
 class OrderForm(forms.ModelForm):
@@ -57,13 +55,6 @@ class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
         fields = ('name', 'advertiser', 'description')
-
-
-CARRIER_CHOICES = (
-    ('verizon', 'Verizon'),
-    ('at&t', 'AT&T'),
-    ('sprint', 'Sprint'),
-)
 
 
 class LineItemForm(forms.ModelForm):
@@ -152,7 +143,7 @@ class LineItemForm(forms.ModelForm):
     # non-db field
     region_targeting_type = forms.ChoiceField(
         choices=(('all', 'All Regions'),
-                 ('city-region', 'Specific City, or Specific State / Metro Area (DMA) within Country (Wi-Fi Required)'),
+                 ('city-region', 'Specific State / Metro Area (DMA) within Country (Wi-Fi Required) or Specific City'),
                  ('zip', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
         initial='all', label='Region:', widget=forms.RadioSelect)
     targeted_regions = forms.MultipleChoiceField(
@@ -230,7 +221,7 @@ class LineItemForm(forms.ModelForm):
             elif instance.targeted_cities or instance.targeted_regions:
                 initial['region_targeting_type'] = 'city-region'
 
-            initial['targeted_zip_codes'] = ' '.join(instance.targeted_zip_codes)
+            initial['targeted_zip_codes'] = '\n'.join(instance.targeted_zip_codes)
 
             if instance.targeted_carriers == ['Wi-Fi']:
                 initial['connectivity_targeting_type'] = 'wi-fi'
@@ -305,7 +296,9 @@ class LineItemForm(forms.ModelForm):
         targeted_zip_codes = self.cleaned_data.get('targeted_zip_codes', None)
         if targeted_zip_codes:
             targeted_zip_codes = targeted_zip_codes.split()
-            # TODO: validate
+            for targeted_zip_code in targeted_zip_codes:
+                if not re.match('^\d{5}$', targeted_zip_code):
+                    raise forms.ValidationError('Malformed ZIP code %s.' % targeted_zip_code)
         return targeted_zip_codes
 
     def clean_included_apps(self):

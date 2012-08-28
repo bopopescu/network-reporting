@@ -5512,7 +5512,6 @@ div.close {
   padding: 5px; }
 
 div.pub-id-edit, span.pub_id.muted {
-  float: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

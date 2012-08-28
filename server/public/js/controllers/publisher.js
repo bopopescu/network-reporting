@@ -793,7 +793,6 @@ var mopub = mopub || {};
                     url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                 }
                 url += '&r=' + bootstrapping_data.date_range;
-                url += '&endpoint=mpx';
                 return url;
             };
             marketplace.parse = function (response) {
@@ -939,7 +938,6 @@ var mopub = mopub || {};
                     url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                 }
                 url += '&r=' + bootstrapping_data.date_range;
-                url += '&endpoint=mpx';
                 return url;
             };
             marketplace.parse = function (response) {

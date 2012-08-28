@@ -82,8 +82,8 @@ Make a table for ad networks that are active
                 <th class="dataTable-name"> </th>
                 {% if reporting %}
                 <th class="dataTable-data numeric"> Revenue </th>
-                {% endif %}
                 <th class="dataTable-data numeric"> CPM </th>
+                {% endif %}
                 <th class="dataTable-data numeric"> Attempts </th>
                 <th class="dataTable-data numeric"> Impressions </th>
                 <th class="dataTable-data numeric"> Fill Rate </th>
@@ -129,23 +129,10 @@ Make a table for ad networks that are active
                     <td class="dataTable-data numeric rev" style="color:orange;">
                         -
                     </td>
-                    {% endif %}
-                    <td class="dataTable-data numeric cpm">
-                        {% if network.reporting %}
-                        <div class="network-data">-</div>
-                        {% endif %}
-                        <div class="mopub-data">
-                            {# django needs elif #}
-                            {% if network.min_cpm == network.max_cpm %}
-                            {% if network.min_cpm %}
-                            {{ network.min_cpm|currency }}
-                            {% else %}
-                            {% endif %}
-                            {% else %}
-                            {{ network.min_cpm|currency }}-{{ network.max_cpm|currency }}
-                            {% endif %}
-                        </div>
+                    <td class="dataTable-data numeric cpm" style="color:orange;">
+                        -
                     </td>
+                    {% endif %}
                     <td class="dataTable-data numeric att">
                         {% if network.reporting %}
                         <div class="network-data">-</div>
@@ -182,28 +169,19 @@ Make a table for ad networks that are active
         <div class="appData-details hidden {{ network.key }}-apps-div" style="margin: 0 0 0 86px">
             <table class="dataTable">
                 <tbody>
-                    {% for app, app_bids in network.apps %}
+                    {% for app in network.apps %}
                     <tr class="app-row" id="app-{{ app.key }}">
                         <td class="dataTable-name">
                             <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }} ({{ app.type }})</a>
                         </td>
+                        {% if network.reporting %}
                         <td class="dataTable-data numeric rev" style="color:orange;">
-                            {% if network.reporting %} - {% endif %}
+                            -
                         </td>
-                        <td class="dataTable-data numeric cpm">
-                            {% if network.reporting %}
-                            <div class="network-data">-</div>
-                            {% endif %}
-                            {# django needs elif #}
-                            {% if app_bids.min_cpm == app_bids.max_cpm %}
-                            {% if app_bids.min_cpm %}
-                            <div>{{ app_bids.min_cpm|currency }}</div>
-                            {% else %}
-                            {% endif %}
-                            {% else %}
-                            <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
-                            {% endif %}
+                        <td class="dataTable-data numeric cpm" style="color:orange;">
+                            -
                         </td>
+                        {% endif %}
                         <td class="dataTable-data numeric att">
                             {% if network.reporting %}
                             <div class="network-data">-</div>

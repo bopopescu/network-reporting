@@ -410,7 +410,7 @@ class AdGroup(db.Model):
             android_version_min=self.android_version_min,
             target_other=self.target_other,
             cities=self.cities,
-            geo_predicates=self.geo_predicates,
+            geo_predicates=self._cleaned_geo_predicates(),
             allocation_percentage=self.allocation_percentage,
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,
@@ -437,8 +437,8 @@ class AdGroup(db.Model):
         just going to implement this fix now.
 
         """
-        if self.geo_predicates == ['country=']:
-            return ['country=*']
+        if self.geo_predicates == ['country_name='] or self.geo_predicates == [u'country_name=']:
+            return [u'country_name=*']
         return self.geo_predicates
 
     def default_creative(self, custom_html=None, key_name=None):

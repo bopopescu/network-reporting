@@ -585,7 +585,7 @@ var mopub = window.mopub || {};
                 var selector = ' .network-data';
 
                 $('.rev', row).text(this_view.model.get_formatted_stat('rev'));
-                $('.cpm' + selector, row).text(this_view.model.get_formatted_stat('cpm'));
+                $('.cpm', row).text(this_view.model.get_formatted_stat('cpm'));
             } else {
                 var selector = ' .mopub-data';
             }

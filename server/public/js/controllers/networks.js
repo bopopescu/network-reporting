@@ -117,8 +117,9 @@
             /*jslint maxlen: 200 */
             if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
                 $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
+                $('.cpm', app_row).text(this_view.model.get_formatted_stat('cpm'));
             }
-            var metrics = ['cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            var metrics = ['imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
             _.each(metrics, function (metric) {
                 if (this_view.model.get('stats_endpoint') != 'networks'
                         || this_view.options.network != 'mobfox' || (metric != 'att'
@@ -689,7 +690,11 @@
 
             var validator = $('form#campaign_and_adgroup').validate({
                 errorPlacement: function(error, element) {
-                    element.parents('div').not(':hidden').first().append(error);
+                    div = element.parents('div').not(':hidden').first()
+                    $(div).append(error);
+                    if(error.attr('for').indexOf('pub_id') > -1) {
+                        $(div).find('.pub-id-edit').click();
+                    }
                 },
                 submitHandler: function(form) {
                     // Submit only the fields that have changed using ajaxSubmit

@@ -68,13 +68,6 @@
 
         <ul class="form_fields">
             <li>
-                {{ line_item_form.name.label_tag }}
-                <div>
-                    {{ line_item_form.name }}
-                </div>
-            </li>
-
-            <li>
                 {{ line_item_form.adgroup_type.label_tag }}
                 <div>
                     {% if line_item_form.instance %}
@@ -118,18 +111,24 @@
                 </div>
             </li>
 
-            <li class="adgroup_type_dependent gtee">
-                {{ line_item_form.budget.label_tag }}
+            <li>
+                {{ line_item_form.name.label_tag }}
                 <div>
-                    {{ line_item_form.budget }}
-                    {{ line_item_form.budget_type }}
+                    {{ line_item_form.name }}
                 </div>
             </li>
 
-            <li class="adgroup_type_dependent gtee">
-                {{ line_item_form.budget_strategy.label_tag }}
-                <div id="budget_strategy">
-                    {{ line_item_form.budget_strategy }}
+            <li>
+                {{ line_item_form.start_datetime.label_tag }}
+                <div>
+                    {{ line_item_form.start_datetime }} PST
+                </div>
+            </li>
+
+            <li>
+                {{ line_item_form.end_datetime.label_tag }}
+                <div>
+                    {{ line_item_form.end_datetime}} PST
                 </div>
             </li>
 
@@ -145,17 +144,18 @@
                 </div>
             </li>
 
-            <li>
-                {{ line_item_form.start_datetime.label_tag }}
+            <li class="adgroup_type_dependent gtee">
+                {{ line_item_form.budget.label_tag }}
                 <div>
-                    {{ line_item_form.start_datetime }} PST
+                    {{ line_item_form.budget }}
+                    {{ line_item_form.budget_type }}
                 </div>
             </li>
 
-            <li>
-                {{ line_item_form.end_datetime.label_tag }}
-                <div>
-                    {{ line_item_form.end_datetime}} PST
+            <li class="adgroup_type_dependent gtee">
+                {{ line_item_form.budget_strategy.label_tag }}
+                <div id="budget_strategy">
+                    {{ line_item_form.budget_strategy }}
                 </div>
             </li>
         </ul>
@@ -277,14 +277,14 @@
                             <li>
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_0">
-                                    <input checked="checked" type="radio" id="id_region_targeting_type_0" value="all" name="region_targeting_type" />
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_0" value="all" name="region_targeting_type" />
                                     All Regions
                                 </label>
                             </li>
                             <li>
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_1">
-                                    <input type="radio" id="id_region_targeting_type_1" value="city-region" name="region_targeting_type" />
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'city-region' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="city-region" name="region_targeting_type" />
                                     Specific City, or Specific State / Metro Area (DMA) within Country (Wi-Fi Required)
                                 </label>
                                 <div>
@@ -297,7 +297,7 @@
                             <li>
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_2">
-                                    <input type="radio" id="id_region_targeting_type_2" value="zip" name="region_targeting_type" />
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'zip' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip" name="region_targeting_type" />
                                     Specific Zipcodes within Country (Wi-Fi Required)
                                 </label>
                                 <div>
@@ -414,8 +414,7 @@
 <script type="text/javascript">
     $(function() {
         OrdersController.initializeOrderAndLineItemForm({
-            priors: {{ line_item_form.geo_predicates|field_value|to_json|safe }},
-            city_priors: {{ line_item_form.cities|field_value|to_json|safe }}
+            targeted_cities: {{ line_item_form.targeted_cities|field_value|to_json|safe }}
         });
     });
 </script>

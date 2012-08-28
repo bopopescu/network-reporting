@@ -1074,25 +1074,45 @@
 
             // Geography Targeting
             $('select[name="targeted_countries"]').chosen();
-            $('select[name="targeted_cities"]').chosen();
+            _.each(bootstrapping_data.targeted_cities, function (targeted_city) {
+                var name = targeted_city.substring(targeted_city.indexOf(',', targeted_city.indexOf(',') + 1) + 2, targeted_city.length - 2);
+                $('select[name="targeted_cities"]').append('<option selected="selected" value="' + targeted_city + '">' + name +'</option>');
+            });
+            $('select[name="targeted_cities"]').ajaxChosen(
+                {
+                    dataType: 'json',
+                    jsonTermKey: 'name_startsWith',
+                    method: 'GET',
+                    minTermLength: 3,
+                    url: 'http://api.geonames.org/searchJSON?username=MoPub&featureClass=P&country=US&maxRows=10'
+                }, function (data) {
+                    var terms = {};
+                    for(var index in data.geonames) {
+                        var geoname = data.geonames[index];
+                        var value = geoname.name + " " + geoname.adminCode1;
+                        var key = "(" + geoname.lat + "," + geoname.lng + ",'" + value + "')";
+                        terms[key] = value;
+                    }
+                    return terms;
+                }
+            );
             $('select[name="targeted_regions"]').chosen();
-            $('select[name="targeted_zip"]').chosen();
             $('input[name="region_targeting_type"]').change(function () {
                 var val = $(this).val();
                 if(val == 'all') {
                     $('#id_targeted_cities_chzn').hide();
                     $('#id_targeted_regions_chzn').hide();
-                    $('#id_targeted_zip_chzn').hide();
+                    $('#id_targeted_zip_codes').hide();
                 }
                 else if(val == 'city-region') {
                     $('#id_targeted_cities_chzn').show();
                     $('#id_targeted_regions_chzn').show();
-                    $('#id_targeted_zip_chzn').hide();
+                    $('#id_targeted_zip_codes').hide();
                 }
                 else {
                     $('#id_targeted_cities_chzn').hide();
                     $('#id_targeted_regions_chzn').hide();
-                    $('#id_targeted_zip_chzn').show();
+                    $('#id_targeted_zip_codes').show();
                 }
             });
             // update on document ready
@@ -1100,17 +1120,17 @@
             if(val == 'all') {
                 $('#id_targeted_cities_chzn').hide();
                 $('#id_targeted_regions_chzn').hide();
-                $('#id_targeted_zip_chzn').hide();
+                $('#id_targeted_zip_codes').hide();
             }
             else if(val == 'city-region') {
                 $('#id_targeted_cities_chzn').show();
                 $('#id_targeted_regions_chzn').show();
-                $('#id_targeted_zip_chzn').hide();
+                $('#id_targeted_zip_codes').hide();
             }
             else {
                 $('#id_targeted_cities_chzn').hide();
                 $('#id_targeted_regions_chzn').hide();
-                $('#id_targeted_zip_chzn').show();
+                $('#id_targeted_zip_codes').show();
             }
 
             // Connectivity Targeting

@@ -6,7 +6,7 @@ from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
 
 from account.models import Account
-from common.constants import (MIN_IOS_VERSION,
+from common.constants import (COUNTRIES, MIN_IOS_VERSION,
                               MAX_IOS_VERSION,
                               MIN_ANDROID_VERSION,
                               MAX_ANDROID_VERSION,
@@ -237,13 +237,13 @@ class AdGroup(db.Model):
 
     # Geography Targeting
     accept_targeted_locations = db.BooleanProperty(default=True)
-    targeted_countries = db.StringListProperty()
-    targeted_cities = db.StringListProperty()
-    targeted_regions = db.StringListProperty()
+    targeted_countries = db.ListProperty(basestring)
+    targeted_cities = db.ListProperty(basestring)
+    targeted_regions = db.ListProperty(basestring)
     targeted_zip_codes = db.StringListProperty()
 
     # Connectivity Targeting
-    targeted_carriers = db.StringListProperty()
+    targeted_carriers = db.ListProperty(basestring)
 
     # User Targeting
     included_apps = db.ListProperty(db.Key)
@@ -262,7 +262,6 @@ class AdGroup(db.Model):
     allocation_percentage = db.FloatProperty(default=100.0)
 
     # Deprecated
-    cities = db.StringListProperty()
     t = db.DateTimeProperty(auto_now_add=True)
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     minute_frequency_cap = db.IntegerProperty(default=0)
@@ -274,6 +273,7 @@ class AdGroup(db.Model):
     devices = db.StringListProperty(default=['any'])
     min_os = db.StringListProperty(default=['any'])
     geo_predicates = db.StringListProperty(default=["country_name=*"])
+    cities = db.StringListProperty()
     country = db.StringProperty()
     region = db.StringProperty()
     state = db.StringProperty()
@@ -365,7 +365,7 @@ class AdGroup(db.Model):
         return ''
 
     def simplify(self):
-
+        # TODO: why are these necessary?
         if hasattr(self, 'full_budget'):
             full_budget = self.full_budget
         else:
@@ -382,49 +382,49 @@ class AdGroup(db.Model):
             budget_type = None
 
         return SimpleAdGroup(
-            key=str(self.key()),
-            campaign=self.campaign,
+            key=str(self.key()),  # modified
             account=self.account,
-            name=self.name,
-            bid=self.bid,
-            bid_strategy=self.bid_strategy,
+            campaign=self.campaign,
+            # created=self.created,
+            # modified=self.modified,
             active=self.active,
             deleted=self.deleted,
-            minute_frequency_cap=self.minute_frequency_cap,
-            hourly_frequency_cap=self.hourly_frequency_cap,
-            daily_frequency_cap=self.daily_frequency_cap,
-            weekly_frequency_cap=self.weekly_frequency_cap,
-            monthly_frequency_cap=self.monthly_frequency_cap,
-            lifetime_frequency_cap=self.lifetime_frequency_cap,
-            keywords=self.keywords,
-            site_keys=[str(key) for key in self.site_keys],
-            mktplace_price_floor=self.mktplace_price_floor,
-            device_targeting=self.device_targeting,
-            target_iphone=self.target_iphone,
-            target_ipad=self.target_ipad,
-            target_ipod=self.target_ipod,
-            ios_version_max=self.ios_version_max,
-            ios_version_min=self.ios_version_min,
-            target_android=self.target_android,
-            android_version_max=self.android_version_max,
-            android_version_min=self.android_version_min,
-            target_other=self.target_other,
-            cities=self.cities,
-            geo_predicates=self._cleaned_geo_predicates(),
-            allocation_percentage=self.allocation_percentage,
+            # archived=self.archived,
+            network_type=self.network_type,
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,
-            network_type=self.network_type,
-
-            # Added as part of orders feature
+            # name=self.name,
             adgroup_type=self.adgroup_type,
+            daily_budget=daily_budget,
+            full_budget=full_budget,
+            budget_type=budget_type,
+            # budget_strategy=self.budget_strategy,
+            bid=self.bid,
+            bid_strategy=self.bid_strategy,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
-            full_budget=full_budget,
-            daily_budget=daily_budget,
-            budget_type=budget_type,
-            included_apps=self.included_apps_global_ids,
-            excluded_apps=self.excluded_apps_global_ids,
+            site_keys=[str(key) for key in self.site_keys],  # modified
+            device_targeting=self.device_targeting,
+            target_iphone=self.target_iphone,
+            target_ipod=self.target_ipod,
+            target_ipad=self.target_ipad,
+            ios_version_min=self.ios_version_min,
+            ios_version_max=self.ios_version_max,
+            target_android=self.target_android,
+            android_version_min=self.android_version_min,
+            android_version_max=self.android_version_max,
+            target_other=self.target_other,
+            accept_targeted_locations=self.accept_targeted_locations,
+            targeted_countries=self.targeted_countries,
+            targeted_cities=self.targeted_cities,
+            targeted_regions=self.targeted_regions,
+            targeted_zip_codes=self.targeted_zip_codes,
+            targeted_carriers=self.targeted_carriers,
+            included_apps=self.included_apps_global_ids,  # modified
+            excluded_apps=self.excluded_apps_global_ids,  # modified
+            keywords=self.keywords,
+            daily_frequency_cap=self.daily_frequency_cap,
+            hourly_frequency_cap=self.hourly_frequency_cap,
         )
 
     def _cleaned_geo_predicates(self):

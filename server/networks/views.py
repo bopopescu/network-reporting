@@ -600,19 +600,21 @@ class EditNetworkHandler(RequestHandler):
         """
         if adgroup_form.cleaned_data['active'] and network_type in NETWORKS_WITH_PUB_IDS:
             adunit = AdUnitQueryManager.get(adunit_key)
-            network_config = adunit.network_config
+            adunit_network_config = adunit.network_config
+            app_network_config = adunit.app.network_config or NetworkConfig()
 
-            if not network_config:
-                network_config = NetworkConfig()
-                AdUnitQueryManager.update_config_and_put(adunit, network_config)
+            if not adunit_network_config:
+                adunit_network_config = NetworkConfig()
+                AdUnitQueryManager.update_config_and_put(adunit, adunit_network_config)
 
             pub_id_field = '%s_pub_id' % network_type
-            pub_id_query_dict = '%s-%s' % (network_config.key(), pub_id_field)
+            pub_id_query_dict = '%s-%s' % (adunit_network_config.key(), pub_id_field)
 
             query_dict = self.request.POST
-            if (pub_id_query_dict not in query_dict and not getattr(network_config, pub_id_field, False)) \
+            if (pub_id_query_dict not in query_dict and (not getattr(adunit_network_config, pub_id_field, None))
+                                                         and not getattr(app_network_config, pub_id_field, None)) \
                     or (pub_id_query_dict in query_dict and not query_dict[pub_id_query_dict]):
-                errors['%s-%s_pub_id' % (network_config.key(), network_type)] = "MoPub requires an" \
+                errors['%s-%s_pub_id' % (adunit_network_config.key(), network_type)] = "MoPub requires an" \
                         " ad network id for enabled adunits."
 
     def update_network_configs_and_create_mappers(self, pub_id_fields, network_type):

@@ -135,7 +135,7 @@ class LineItemForm(forms.ModelForm):
         choices=(('0', 'Not Located'),
                  ('1', 'Located')),
         coerce=lambda x: bool(int(x)), initial=True,
-        required=False, widget=forms.RadioSelect)
+        required=False, widget=forms.Select)
     targeted_countries = forms.MultipleChoiceField(
         choices=COUNTRIES, label='Country:', required=False,
         widget=forms.SelectMultiple(attrs={'data-placeholder': ' '}))

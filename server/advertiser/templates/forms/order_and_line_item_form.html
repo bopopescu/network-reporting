@@ -263,9 +263,9 @@
                 <div>
                     {# TODO: render using widget #}
                     Users who are
-                    <select id="accept_targeted_locations">
-                        <option value="1">Located</option>
-                        <option value="0">Not Located</option>
+                    <select name="accept_targeted_locations" id="id_accept_targeted_locations">
+                        <option {% if not line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="0">Not Located</option>
+                        <option {% if line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="1">Located</option>
                     </select>
                     in
                     <div>

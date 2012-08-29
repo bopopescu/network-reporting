@@ -1,15 +1,22 @@
+# Deployed Wednesday, August 29, 2012 at 12:51AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-193
+### Bugs Fixed: []
+### Included Commits: 
+ * 70b64de Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, August 28, 2012 at 02:50AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-192
 ### Bugs Fixed: []
-### Included Commits: 
- * c3c3a34 [#UI-93 state:fixed]
- * e5f64e7 fixed geo predicate hack
- * 96248fd also check unicode
- * 20902aa Merge branch 'master' of github.com:mopub/mopub
- * c31f086 added back in cleaned geo_predicates
- * 5d466c4 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* c3c3a34 [#UI-93 state:fixed]
+* e5f64e7 fixed geo predicate hack
+* 96248fd also check unicode
+* 20902aa Merge branch 'master' of github.com:mopub/mopub
+* c31f086 added back in cleaned geo_predicates
+* 5d466c4 Deployed without finding any bug fixes.
+
 # Deployed Monday, August 27, 2012 at 06:52PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-191

@@ -1301,14 +1301,23 @@
                 }
             );
 
-            $('input[name="connectivity_targeting_type"]').change(function () {
-                if($(this).val() == 'carriers') {
-                    $('#id_targeted_carriers').parent().show();
+            $('#id_connectivity_targeting_type_0, #id_connectivity_targeting_type_1').change(function () {
+                $('#id_targeted_carriers').parent().hide();
+                update_geographical_and_connectivity_targeting();
+            });
+            $connectivity_targeting_type_carriers.click(function () {
+                if($targeted_regions.val() || $targeted_zip_codes.val()) {
+                    event.preventDefault();
+                    $('#target_carriers_warning .continue').unbind().click(function () {
+                        $connectivity_targeting_type_carriers.attr('checked', 'checked');
+                        $('#id_targeted_carriers').parent().show();
+                        update_geographical_and_connectivity_targeting();
+                    })
+                    $('#target_carriers_warning').modal();
                 }
                 else {
-                    $('#id_targeted_carriers').parent().hide();
+                    update_geographical_and_connectivity_targeting();
                 }
-                update_geographical_and_connectivity_targeting();
             });
             // update on document ready
             if($('input[name="connectivity_targeting_type"]:checked').val() != 'carriers') {
@@ -1320,8 +1329,6 @@
             // TODO: confirmation modal
 
             // TODO: grey out countries
-
-            // TODO: help links
 
             // Initialize
             update_geographical_and_connectivity_targeting();

@@ -212,10 +212,10 @@ class LineItemForm(forms.ModelForm):
             # TODO: can't change the start date after a campaign has started.
             # TODO: not change the end date after a campaign has completed
 
-            if instance.targeted_zip_codes:
-                initial['region_targeting_type'] = 'zip_codes'
-            elif instance.targeted_regions and instance.targeted_cities:
+            if instance.targeted_regions or instance.targeted_cities:
                 initial['region_targeting_type'] = 'regions_and_cities'
+            elif instance.targeted_zip_codes:
+                initial['region_targeting_type'] = 'zip_codes'
 
             initial['targeted_zip_codes'] = '\n'.join(instance.targeted_zip_codes)
 
@@ -397,16 +397,16 @@ class LineItemForm(forms.ModelForm):
             self._errors['end_datetime'].append('End datetime must be after start datetime')
 
     def _clean_geographical_targeting(self, cleaned_data):
-        if cleaned_data['region_targeting_type'] != 'cities_and_regions':
-            cleaned_data['targeted_cities'] = []
+        if cleaned_data['region_targeting_type'] != 'regions_and_cities':
             cleaned_data['targeted_regions'] = []
+            cleaned_data['targeted_cities'] = []
         if cleaned_data['region_targeting_type'] != 'zip_codes':
             cleaned_data['targeted_zip_codes'] = []
 
     def _clean_connectivity_targeting(self, cleaned_data):
         if cleaned_data['connectivity_targeting_type'] == 'wi-fi':
             cleaned_data['targeted_carriers'] = ['Wi-Fi']
-        elif cleaned_data['connectivity_targeting_type'] != 'carriers':
+        if cleaned_data['connectivity_targeting_type'] != 'carriers':
             cleaned_data['targeted_carriers'] = []
 
     def save(self, *args, **kwargs):

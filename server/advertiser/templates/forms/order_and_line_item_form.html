@@ -262,12 +262,14 @@
                 {{ line_item_form.targeted_countries.label_tag }}
                 <div>
                     {# TODO: render using widget #}
-                    Users who are
-                    <select name="accept_targeted_locations" id="id_accept_targeted_locations">
-                        <option {% if not line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="0">Not Located</option>
-                        <option {% if line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="1">Located</option>
-                    </select>
-                    in
+                    <label>
+                        Users who are
+                        <select name="accept_targeted_locations" id="id_accept_targeted_locations">
+                            <option {% if not line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="0">Not Located</option>
+                            <option {% if line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="1">Located</option>
+                        </select>
+                        in
+                    </label>
                     <div>
                         {{ line_item_form.targeted_countries }}
                         <a data-toggle="modal" href="#targeted_countries_help">What's this?</a>
@@ -359,12 +361,14 @@
                 <label>User Targeting:</label>
                 <div>
                     {# TODO: render using widget #}
-                    Target users that
-                    <select id="user_targeting_type">
-                        <option value="excluded_apps">don't have</option>
-                        <option value="included_apps">have</option>
-                    </select>
-                    these apps
+                    <label>
+                        Target users that
+                        <select id="user_targeting_type">
+                            <option value="excluded_apps">don't have</option>
+                            <option value="included_apps">have</option>
+                        </select>
+                        these apps
+                    </label>
                     <div>
                         {{ line_item_form.included_apps }}
                         {{ line_item_form.excluded_apps }}
@@ -527,6 +531,19 @@
     </div>
     <div class="modal-footer">
         <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="target_carriers_warning">
+    <div class="modal-header">
+        <h3>Target Carriers Warning</h3>
+    </div>
+    <div class="modal-body">
+        <p>Untargeting Wi-Fi will removed all targeted regions and ZIP codes.  Are you sure you want to continue?</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn" data-dismiss="modal" href="#">Cancel</a>
+        <a class="btn btn-primary continue" data-dismiss="modal" href="#">Continue</a>
     </div>
 </div>
 

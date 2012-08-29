@@ -138,17 +138,17 @@ class LineItemForm(forms.ModelForm):
         required=False, widget=forms.Select)
     targeted_countries = forms.MultipleChoiceField(
         choices=COUNTRIES, label='Country:', required=False,
-        widget=forms.SelectMultiple(attrs={'data-placeholder': ' '}))
+        widget=forms.SelectMultiple(attrs={'data-placeholder': 'Select countries...'}))
     # non-db field
     region_targeting_type = forms.ChoiceField(
         choices=(('all', 'All Regions'),
-                 ('city-region', 'Specific State / Metro Area (DMA) within Country (Wi-Fi Required) or Specific City'),
-                 ('zip', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
+                 ('regions_and_cities', 'Specific State / Metro Area / DMA (Wi-Fi Required), or Specific City within Country'),
+                 ('zip_codes', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
         initial='all', label='Region:', widget=forms.RadioSelect)
     targeted_regions = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': ' '}))
+            attrs={'data-placeholder': 'Select states / metro areas...'}))
     targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': ' '}))
+            attrs={'data-placeholder': 'Select cities...'}))
     targeted_zip_codes = forms.Field(required=False, widget=forms.Textarea(
             attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
 
@@ -160,7 +160,7 @@ class LineItemForm(forms.ModelForm):
                  ('carriers', 'Selected Carriers')),
         initial='all', label='Connectivity:', widget=forms.RadioSelect)
     targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': ' '}))
+            attrs={'data-placeholder': 'Select carriers...'}))
 
     # User Targeting
     # included_apps defined in __init__
@@ -213,9 +213,9 @@ class LineItemForm(forms.ModelForm):
             # TODO: not change the end date after a campaign has completed
 
             if instance.targeted_zip_codes:
-                initial['region_targeting_type'] = 'zip'
-            elif instance.targeted_cities or instance.targeted_regions:
-                initial['region_targeting_type'] = 'city-region'
+                initial['region_targeting_type'] = 'zip_codes'
+            elif instance.targeted_regions and instance.targeted_cities:
+                initial['region_targeting_type'] = 'regions_and_cities'
 
             initial['targeted_zip_codes'] = '\n'.join(instance.targeted_zip_codes)
 
@@ -397,10 +397,10 @@ class LineItemForm(forms.ModelForm):
             self._errors['end_datetime'].append('End datetime must be after start datetime')
 
     def _clean_geographical_targeting(self, cleaned_data):
-        if cleaned_data['region_targeting_type'] != 'city-region':
+        if cleaned_data['region_targeting_type'] != 'cities_and_regions':
             cleaned_data['targeted_cities'] = []
             cleaned_data['targeted_regions'] = []
-        if cleaned_data['region_targeting_type'] != 'zip':
+        if cleaned_data['region_targeting_type'] != 'zip_codes':
             cleaned_data['targeted_zip_codes'] = []
 
     def _clean_connectivity_targeting(self, cleaned_data):

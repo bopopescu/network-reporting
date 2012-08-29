@@ -47,6 +47,7 @@ CA_PROVINCES = [("AB","Alberta"),("BC","British Columbia"),("MB","Manitoba"),("N
 STATES_AND_PROVINCES = [("", "-")] + US_STATES + CA_PROVINCES
 
 COUNTRIES = [
+    ('US', "United States"),
     ('AD', "Andorra"),
     ('AE', "United Arab Emirates"),
     ('AF', "Afghanistan"),
@@ -280,7 +281,6 @@ COUNTRIES = [
     ('UA', "Ukraine"),
     ('UG', "Uganda"),
     ('UM', "United States Minor Outlying Islands"),
-    ('US', "United States"),
     ('UY', "Uruguay"),
     ('UZ', "Uzbekistan"),
     ('VA', "Holy See (Vatican City State)"),

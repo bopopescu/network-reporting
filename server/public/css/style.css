@@ -3566,29 +3566,28 @@ form#order_and_line_item_form div#budget_strategy#device_targeting ul#device_tar
     form#order_and_line_item_form div#budget_strategy#device_targeting ul#device_targeting_details > li > :first-child li, form#order_and_line_item_form div#device_targeting#device_targeting ul#device_targeting_details > li > :first-child li, form#order_and_line_item_form div#region_targeting_type#device_targeting ul#device_targeting_details > li > :first-child li, form#order_and_line_item_form div#targeted_carriers#device_targeting ul#device_targeting_details > li > :first-child li, form#order_form div#budget_strategy#device_targeting ul#device_targeting_details > li > :first-child li, form#order_form div#device_targeting#device_targeting ul#device_targeting_details > li > :first-child li, form#order_form div#region_targeting_type#device_targeting ul#device_targeting_details > li > :first-child li, form#order_form div#targeted_carriers#device_targeting ul#device_targeting_details > li > :first-child li, form#new_creative_form div#budget_strategy#device_targeting ul#device_targeting_details > li > :first-child li, form#new_creative_form div#device_targeting#device_targeting ul#device_targeting_details > li > :first-child li, form#new_creative_form div#region_targeting_type#device_targeting ul#device_targeting_details > li > :first-child li, form#new_creative_form div#targeted_carriers#device_targeting ul#device_targeting_details > li > :first-child li, form.edit_creative_form div#budget_strategy#device_targeting ul#device_targeting_details > li > :first-child li, form.edit_creative_form div#device_targeting#device_targeting ul#device_targeting_details > li > :first-child li, form.edit_creative_form div#region_targeting_type#device_targeting ul#device_targeting_details > li > :first-child li, form.edit_creative_form div#targeted_carriers#device_targeting ul#device_targeting_details > li > :first-child li {
       display: inline-block; }
 form#order_and_line_item_form select[name="targeted_countries"],
-form#order_and_line_item_form select[name="targeted_cities"],
 form#order_and_line_item_form select[name="targeted_regions"],
+form#order_and_line_item_form select[name="targeted_cities"],
 form#order_and_line_item_form select[name="targeted_carriers"],
 form#order_and_line_item_form select[name="included_apps"],
-form#order_and_line_item_form select[name="excluded_apps"], form#order_form select[name="targeted_countries"], form#order_form select[name="targeted_cities"], form#order_form select[name="targeted_regions"], form#order_form select[name="targeted_carriers"], form#order_form select[name="included_apps"], form#order_form select[name="excluded_apps"], form#new_creative_form select[name="targeted_countries"], form#new_creative_form select[name="targeted_cities"], form#new_creative_form select[name="targeted_regions"], form#new_creative_form select[name="targeted_carriers"], form#new_creative_form select[name="included_apps"], form#new_creative_form select[name="excluded_apps"], form.edit_creative_form select[name="targeted_countries"], form.edit_creative_form select[name="targeted_cities"], form.edit_creative_form select[name="targeted_regions"], form.edit_creative_form select[name="targeted_carriers"], form.edit_creative_form select[name="included_apps"], form.edit_creative_form select[name="excluded_apps"] {
+form#order_and_line_item_form select[name="excluded_apps"], form#order_form select[name="targeted_countries"], form#order_form select[name="targeted_regions"], form#order_form select[name="targeted_cities"], form#order_form select[name="targeted_carriers"], form#order_form select[name="included_apps"], form#order_form select[name="excluded_apps"], form#new_creative_form select[name="targeted_countries"], form#new_creative_form select[name="targeted_regions"], form#new_creative_form select[name="targeted_cities"], form#new_creative_form select[name="targeted_carriers"], form#new_creative_form select[name="included_apps"], form#new_creative_form select[name="excluded_apps"], form.edit_creative_form select[name="targeted_countries"], form.edit_creative_form select[name="targeted_regions"], form.edit_creative_form select[name="targeted_cities"], form.edit_creative_form select[name="targeted_carriers"], form.edit_creative_form select[name="included_apps"], form.edit_creative_form select[name="excluded_apps"] {
   width: 300px; }
-form#order_and_line_item_form .chzn-container, form#order_form .chzn-container, form#new_creative_form .chzn-container, form.edit_creative_form .chzn-container {
-  display: inline-block;
-  margin: 5px 0; }
-  form#order_and_line_item_form .chzn-container .chzn-choices, form#order_form .chzn-container .chzn-choices, form#new_creative_form .chzn-container .chzn-choices, form.edit_creative_form .chzn-container .chzn-choices {
-    background: #fafafa;
-    border: 1px solid #eaeaea;
-    border-top-color: #b9b9b9;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px; }
-form#order_and_line_item_form .disabled-message, form#order_form .disabled-message, form#new_creative_form .disabled-message, form.edit_creative_form .disabled-message {
-  color: #999999;
-  display: none; }
-form#order_and_line_item_form div.disabled *, form#order_form div.disabled *, form#new_creative_form div.disabled *, form.edit_creative_form div.disabled * {
-  display: none; }
-form#order_and_line_item_form div.disabled .disabled-message, form#order_form div.disabled .disabled-message, form#new_creative_form div.disabled .disabled-message, form.edit_creative_form div.disabled .disabled-message {
-  display: inline; }
+form#order_and_line_item_form #id_targeted_regions_chzn,
+form#order_and_line_item_form #id_targeted_cities_chzn,
+form#order_and_line_item_form #id_targeted_zip_codes_chzn,
+form#order_and_line_item_form #id_targeted_carriers_chzn, form#order_form #id_targeted_regions_chzn, form#order_form #id_targeted_cities_chzn, form#order_form #id_targeted_zip_codes_chzn, form#order_form #id_targeted_carriers_chzn, form#new_creative_form #id_targeted_regions_chzn, form#new_creative_form #id_targeted_cities_chzn, form#new_creative_form #id_targeted_zip_codes_chzn, form#new_creative_form #id_targeted_carriers_chzn, form.edit_creative_form #id_targeted_regions_chzn, form.edit_creative_form #id_targeted_cities_chzn, form.edit_creative_form #id_targeted_zip_codes_chzn, form.edit_creative_form #id_targeted_carriers_chzn {
+  margin-left: 16px; }
+form#order_and_line_item_form .chzn-container .chzn-choices, form#order_form .chzn-container .chzn-choices, form#new_creative_form .chzn-container .chzn-choices, form.edit_creative_form .chzn-container .chzn-choices {
+  background: #fafafa;
+  border: 1px solid #eaeaea;
+  border-top-color: #b9b9b9;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  min-height: 51px; }
+form#order_and_line_item_form .chzn-container .chzn-results li em, form#order_form .chzn-container .chzn-results li em, form#new_creative_form .chzn-container .chzn-results li em, form.edit_creative_form .chzn-container .chzn-results li em {
+  background-color: inherit;
+  font-weight: bold; }
 
 .input-prepend, .input-append {
   margin-bottom: 5px;
@@ -3720,12 +3719,15 @@ form#order_and_line_item_form div.disabled .disabled-message, form#order_form di
 
 .modal-open .dropdown-menu {
   z-index: 2050; }
+
 .modal-open .dropdown.open {
   *z-index: 2050; }
+
 .modal-open .popover {
   z-index: 2060; }
+
 .modal-open .tooltip {
-  z-index: 2070; }
+  z-index: 2080; }
 
 .modal-backdrop {
   position: fixed;
@@ -3734,29 +3736,28 @@ form#order_and_line_item_form div.disabled .disabled-message, form#order_form di
   bottom: 0;
   left: 0;
   z-index: 1040;
-  background-color: black; }
-  .modal-backdrop.fade {
-    opacity: 0; }
+  background-color: #000000; }
 
-.modal-backdrop, .modal-backdrop.fade.in {
-  filter: alpha(opacity=0.8);
-  -khtml-opacity: 0.008;
-  -moz-opacity: 0.008;
-  opacity: 0.008; }
+.modal-backdrop.fade {
+  opacity: 0; }
+
+.modal-backdrop,
+.modal-backdrop.fade.in {
+  opacity: 0.8;
+  filter: alpha(opacity=80); }
 
 .modal {
   position: fixed;
   top: 50%;
   left: 50%;
   z-index: 1050;
-  overflow: auto;
   width: 560px;
   margin: -250px 0 0 -280px;
-  background-color: white;
+  overflow: auto;
+  background-color: #ffffff;
   border: 1px solid #999;
   border: 1px solid rgba(0, 0, 0, 0.3);
   *border: 1px solid #999;
-  /* IE6-7 */
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px;
@@ -3766,24 +3767,32 @@ form#order_and_line_item_form div.disabled .disabled-message, form#order_form di
   -webkit-background-clip: padding-box;
   -moz-background-clip: padding-box;
   background-clip: padding-box; }
-  .modal.fade {
-    -webkit-transition: opacity 0.3s linear, top 0.3s ease-out;
-    -moz-transition: opacity 0.3s linear, top 0.3s ease-out;
-    transition: opacity 0.3s linear, top 0.3s ease-out;
-    top: -25%; }
-  .modal.fade.in {
-    top: 50%; }
+
+.modal.fade {
+  top: -25%;
+  -webkit-transition: opacity 0.3s linear, top 0.3s ease-out;
+  -moz-transition: opacity 0.3s linear, top 0.3s ease-out;
+  -o-transition: opacity 0.3s linear, top 0.3s ease-out;
+  transition: opacity 0.3s linear, top 0.3s ease-out; }
+
+.modal.fade.in {
+  top: 50%; }
 
 .modal-header {
   padding: 9px 15px;
   border-bottom: 1px solid #eee; }
-  .modal-header .close {
-    margin-top: 2px; }
+
+.modal-header .close {
+  margin-top: 2px; }
+
+.modal-header h3 {
+  margin: 0;
+  line-height: 30px; }
 
 .modal-body {
-  overflow-y: auto;
   max-height: 400px;
-  padding: 15px; }
+  padding: 15px;
+  overflow-y: auto; }
 
 .modal-form {
   margin-bottom: 0; }
@@ -3797,22 +3806,26 @@ form#order_and_line_item_form div.disabled .disabled-message, form#order_form di
   -webkit-border-radius: 0 0 6px 6px;
   -moz-border-radius: 0 0 6px 6px;
   border-radius: 0 0 6px 6px;
-  -webkit-box-shadow: inset 0 1px 0 white;
-  -moz-box-shadow: inset 0 1px 0 white;
-  box-shadow: inset 0 1px 0 white;
-  zoom: 1; }
-  .modal-footer:before, .modal-footer:after {
-    content: "\0020";
-    display: block;
-    height: 0;
-    visibility: hidden; }
-  .modal-footer:after {
-    clear: both; }
-  .modal-footer .btn + .btn {
-    margin-left: 5px;
-    margin-bottom: 0; }
-  .modal-footer .btn-group .btn + .btn {
-    margin-left: -1px; }
+  *zoom: 1;
+  -webkit-box-shadow: inset 0 1px 0 #ffffff;
+  -moz-box-shadow: inset 0 1px 0 #ffffff;
+  box-shadow: inset 0 1px 0 #ffffff; }
+
+.modal-footer:before,
+.modal-footer:after {
+  display: table;
+  line-height: 0;
+  content: ""; }
+
+.modal-footer:after {
+  clear: both; }
+
+.modal-footer .btn + .btn {
+  margin-bottom: 0;
+  margin-left: 5px; }
+
+.modal-footer .btn-group .btn + .btn {
+  margin-left: -1px; }
 
 /*
  * Alerts

@@ -492,36 +492,32 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
     }
 
     select[name="targeted_countries"],
-    select[name="targeted_cities"],
     select[name="targeted_regions"],
+    select[name="targeted_cities"],
     select[name="targeted_carriers"],
     select[name="included_apps"],
     select[name="excluded_apps"] {
         width: 300px;
     }
 
+    #id_targeted_regions_chzn,
+    #id_targeted_cities_chzn,
+    #id_targeted_zip_codes_chzn,
+    #id_targeted_carriers_chzn {
+        margin-left: 16px;
+    }
+
     .chzn-container {
-        display: inline-block;
-        margin: 5px 0;
         .chzn-choices {
             background: #fafafa;
             border: 1px solid #eaeaea;
             border-top-color: #b9b9b9;
             @include border-radius(3px);
+            min-height: 51px;
         }
-    }
-
-    .disabled-message {
-        color: $gray;
-        display: none;
-    }
-
-    div.disabled {
-        * {
-            display: none;
-        }
-        .disabled-message {
-            display: inline;
+        .chzn-results li em {
+            background-color: inherit;
+            font-weight: bold;
         }
     }
 }

@@ -1139,7 +1139,7 @@
                     $targeted_regions.html('');
 
                     // disable
-                    $targeted_regions.parent().addClass('disabled');
+                    $targeted_regions.attr('disabled', true);
                 }
                 else {
                     if(us_is_targeted) {
@@ -1160,7 +1160,7 @@
                     }
 
                     // enable
-                    $targeted_regions.parent().removeClass('disabled');
+                    $targeted_regions.removeAttr('disabled');
                 }
                 $targeted_regions.trigger("liszt:updated");
             }
@@ -1171,11 +1171,11 @@
                     $targeted_cities.html('');
 
                     // disable
-                    $targeted_cities.parent().addClass('disabled');
+                    $targeted_cities.attr('disabled', true);
                 }
                 else {
                     // enable
-                    $targeted_cities.parent().removeClass('disabled');
+                    $targeted_cities.removeAttr('disabled');
                 }
                 $targeted_cities.trigger("liszt:updated");
             }
@@ -1320,6 +1320,8 @@
             // TODO: confirmation modal
 
             // TODO: grey out countries
+
+            // TODO: help links
 
             // Initialize
             update_geographical_and_connectivity_targeting();

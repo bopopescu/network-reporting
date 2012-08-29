@@ -270,6 +270,7 @@
                     in
                     <div>
                         {{ line_item_form.targeted_countries }}
+                        <a data-toggle="modal" href="#targeted_countries_help">What's this?</a>
                     </div>
 
                     <div id="region_targeting_type">
@@ -284,23 +285,23 @@
                             <li>
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_1">
-                                    <input {% if line_item_form.region_targeting_type|field_value == 'city-region' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="city-region" name="region_targeting_type" />
-                                    Specific State / Metro Area (DMA) within Country (Wi-Fi Required) or Specific City
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'regions_and_cities' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="regions_and_cities" name="region_targeting_type" />
+                                    Specific State / Metro Area / DMA (Wi-Fi Required), or Specific City within Country
+                                    <a data-toggle="modal" href="#targeted_regions_and_cities_help">What's this?</a>
                                 </label>
                                 <div>
                                     {{ line_item_form.targeted_regions }}
-                                    <span class="disabled-message">Target the United States and/or Canada and target Wi-Fi to enable state / metro area (DMA) targeting.</span>
                                 </div>
                                 <div>
                                     {{ line_item_form.targeted_cities }}
-                                    <span class="disabled-message"> Target the United States to enable city targeting.</span>
                                 </div>
                             </li>
                             <li>
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_2">
-                                    <input {% if line_item_form.region_targeting_type|field_value == 'zip' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip" name="region_targeting_type" />
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'zip_codes' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip_codes" name="region_targeting_type" />
                                     Specific ZIP Codes within Country (Wi-Fi Required)
+                                    <a data-toggle="modal" href="#targeted_zip_codes_help">What's this?</a>
                                 </label>
                                 <div>
                                     {{ line_item_form.targeted_zip_codes }}
@@ -314,7 +315,31 @@
                 {{ line_item_form.connectivity_targeting_type.label_tag }}
                 <div>
                     <div id="targeted_carriers">
-                        {{ line_item_form.connectivity_targeting_type }}
+                        <ul>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_connectivity_targeting_type_0">
+                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_0" value="all" name="connectivity_targeting_type">
+                                    All Carriers and Wi-Fi
+                                </label>
+                            </li>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_connectivity_targeting_type_1">
+                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'wi-fi' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_1" value="wi-fi" name="connectivity_targeting_type">
+                                    Wi-Fi Only
+                                    <a data-toggle="modal" href="#targeted_wifi_help">What's this?</a>
+                                </label>
+                            </li>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_connectivity_targeting_type_2">
+                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'carriers' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_2" value="carriers" name="connectivity_targeting_type">
+                                    Selected Carriers
+                                    <a data-toggle="modal" href="#targeted_carriers_help">What's this?</a>
+                                </label>
+                            </li>
+                        </ul>
                     </div>
                     <div>
                         {{ line_item_form.targeted_carriers }}
@@ -410,6 +435,101 @@
 {% endblock %}
 
 {% block extraScripts %}
+<div class="hidden modal" id="targeted_countries_help">
+    <div class="modal-header">
+        <h3>Country Targeting</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to deliver ads only to a specific set of countries.  By default (when the list is empty), your line item will be targeting all countries.</p>
+        <p>If you do specify a country, additional regions within that country may be available for more granular targeting.  A country can be removed by selecting the 'X' to the right of the country name.</p>
+        <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_regions_and_cities_help">
+    <div class="modal-header">
+        <h3>Region Targeting</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to deliver ads to specific regions for the countries you selected in the Country targeting field.</p>
+        <p>The type ahead field will surface Cities, States, and Metro (DMA) regions for the countries you selected.  Note that removing a country selected in Country Targeting will remove the regions contained within it.</p>
+        <p>
+            Additionally note that:
+            <ul>
+                <li>Targeting by states is available for US and Canada only; metro area (DMA) targeting is available for US only.</li>
+                <li>State and metro area (DMA) are available only for campaigns targeted to WI-FI-only traffic. These option will not be available if selected carriers are chosen.</li>
+            </ul>
+        </p>
+        <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_zip_codes_help">
+    <div class="modal-header">
+        <h3>ZIP Code Targeting</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to deliver ads to a set of specific zip codes if you have selected United States in the Country targeting field.</p>
+        <p>Provide a list of zip codes in the provided field, each zip code should be on its own line.  Note that removing the United States as a country selected in Country Targeting will remove the zip codes you provide here.</p>
+        <p>
+            Additionally note that:
+            <ul>
+                <li>Targeting by is available for US only.</li>
+                <li>Zip code targeting is only available only campaigns targeted to WI-FI-only traffic. These option will not be available if selected carriers are chosen.</li>
+            </ul>
+        </p>
+        <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_wifi_help">
+    <div class="modal-header">
+        <h3>Wi-Fi Only</h3>
+    </div>
+    <div class="modal-body">
+        <p>Targeting by WIFI will allow your line item to deliver ads only to traffic coming over a WIFI connection.</p>
+        <p>
+            Additionally note that:
+            <ul>
+                <li>Some Region targeting options such as State, Metro Area (DMA), and Zip code targeting require you to select the Target WIFI-only option.</li>
+            </ul>
+        </p>
+        <p>Questions? Get more info on Targeting by Connectivity in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_carriers_help">
+    <div class="modal-header">
+        <h3>Selected Carriers</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to deliver ads to specific carriers for the countries you selected in the Country targeting field.</p>
+        <p>Use the typeahead field to input carrier names.  Note that removing a country selected in Country Targeting will remove the carriers contained within it.</p>
+        <p>
+            Additionally note that:
+            <ul>
+                <li>Carrier targeting is only available for the US, Canada, and UK.</li>
+            </ul>
+        </p>
+        <p>Questions? Get more info on Targeting by Connectivity in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
 {% include_script "controllers/orders" %}

@@ -13,6 +13,7 @@ Whenever you see "Campaign", think "Order", and wherever you see
 
 import datetime
 import simplejson
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -32,6 +33,8 @@ from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager)
+from common.constants import (US_STATES, CA_PROVINCES, US_METROS, US_CARRIERS,
+                              GB_CARRIERS, CA_CARRIERS)
 from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
                                       AdUnitQueryManager)
 from reporting.query_managers import StatsModelQueryManager
@@ -366,6 +369,12 @@ class OrderAndLineItemFormHandler(RequestHandler):
             'line_item': line_item,
             'line_item_form': line_item_form,
             'apps_without_global_id': apps_without_global_id,
+            'US_STATES': US_STATES,
+            'CA_PROVINCES': CA_PROVINCES,
+            'US_METROS': US_METROS,
+            'US_CARRIERS': US_CARRIERS,
+            'GB_CARRIERS': GB_CARRIERS,
+            'CA_CARRIERS': CA_CARRIERS,
         }
 
     def post(self, order_key=None, line_item_key=None):

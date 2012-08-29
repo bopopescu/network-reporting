@@ -3582,6 +3582,13 @@ form#order_and_line_item_form .chzn-container, form#order_form .chzn-container, 
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px; }
+form#order_and_line_item_form .disabled-message, form#order_form .disabled-message, form#new_creative_form .disabled-message, form.edit_creative_form .disabled-message {
+  color: #999999;
+  display: none; }
+form#order_and_line_item_form div.disabled *, form#order_form div.disabled *, form#new_creative_form div.disabled *, form.edit_creative_form div.disabled * {
+  display: none; }
+form#order_and_line_item_form div.disabled .disabled-message, form#order_form div.disabled .disabled-message, form#new_creative_form div.disabled .disabled-message, form.edit_creative_form div.disabled .disabled-message {
+  display: inline; }
 
 .input-prepend, .input-append {
   margin-bottom: 5px;

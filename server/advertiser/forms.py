@@ -11,7 +11,7 @@ from google.appengine.ext.db import Key
 from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
                                ImageCreative, HtmlCreative)
 from advertiser.widgets import CustomizableSplitDateTimeWidget
-from common.constants import (COUNTRIES, REGIONS, CARRIERS, IOS_VERSION_CHOICES,
+from common.constants import (COUNTRIES, IOS_VERSION_CHOICES,
                               ANDROID_VERSION_CHOICES)
 from common.utils import helpers
 from common.utils.date_magic import utc_to_pacific, pacific_to_utc
@@ -138,21 +138,18 @@ class LineItemForm(forms.ModelForm):
         required=False, widget=forms.RadioSelect)
     targeted_countries = forms.MultipleChoiceField(
         choices=COUNTRIES, label='Country:', required=False,
-        widget=forms.SelectMultiple(
-            attrs={'data-placeholder': ' '}))
+        widget=forms.SelectMultiple(attrs={'data-placeholder': ' '}))
     # non-db field
     region_targeting_type = forms.ChoiceField(
         choices=(('all', 'All Regions'),
                  ('city-region', 'Specific State / Metro Area (DMA) within Country (Wi-Fi Required) or Specific City'),
                  ('zip', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
         initial='all', label='Region:', widget=forms.RadioSelect)
-    targeted_regions = forms.MultipleChoiceField(
-        choices=REGIONS, required=False, widget=forms.SelectMultiple(
+    targeted_regions = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
     targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
-    targeted_zip_codes = forms.CharField(
-        required=False, widget=forms.Textarea(
+    targeted_zip_codes = forms.Field(required=False, widget=forms.Textarea(
             attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
 
     # Connectivity Targeting
@@ -160,10 +157,9 @@ class LineItemForm(forms.ModelForm):
     connectivity_targeting_type = forms.ChoiceField(
         choices=(('all', 'All Carriers and Wi-Fi'),
                  ('wi-fi', 'Wi-Fi Only'),
-                 ('carriers', 'Selected Carriers')), initial='all',
-        label='Connectivity:', widget=forms.RadioSelect(attrs={'id': 'connectivity_targeting_type'}))
-    targeted_carriers = forms.MultipleChoiceField(
-        choices=CARRIERS, required=False, widget=forms.SelectMultiple(
+                 ('carriers', 'Selected Carriers')),
+        initial='all', label='Connectivity:', widget=forms.RadioSelect)
+    targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': ' '}))
 
     # User Targeting

@@ -1,5 +1,10 @@
 backends:
 
+- name: admin-prep
+  class: B8
+  instances: 1
+  options: public
+
 - name: frontend-0
   class: B2
   instances: 20
@@ -8,11 +13,6 @@ backends:
 - name: frontend-1
   class: B2
   instances: 20
-  options: public
-
-- name: frontend-staging
-  class: B2
-  instances: 10
   options: public
 
 - name: frontend-beta
@@ -30,9 +30,9 @@ backends:
   instances: 2
   options: public
 
-- name: admin-prep
-  class: B8
-  instances: 1
+- name: frontend-staging
+  class: B2
+  instances: 2
   options: public
 
 - name: gae-context-fetch

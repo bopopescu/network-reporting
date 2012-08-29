@@ -289,9 +289,11 @@
                                 </label>
                                 <div>
                                     {{ line_item_form.targeted_regions }}
+                                    <span class="disabled-message">Target the United States and/or Canada and target Wi-Fi to enable state / metro area (DMA) targeting.</span>
                                 </div>
                                 <div>
                                     {{ line_item_form.targeted_cities }}
+                                    <span class="disabled-message"> Target the United States to enable city targeting.</span>
                                 </div>
                             </li>
                             <li>
@@ -414,7 +416,15 @@
 <script type="text/javascript">
     $(function() {
         OrdersController.initializeOrderAndLineItemForm({
-            targeted_cities: {{ line_item_form.targeted_cities|field_value|to_json|safe }}
+            US_STATES: {{ US_STATES|to_json|safe }},
+            CA_PROVINCES: {{ CA_PROVINCES|to_json|safe }},
+            US_METROS: {{ US_METROS|to_json|safe }},
+            US_CARRIERS: {{ US_CARRIERS|to_json|safe }},
+            GB_CARRIERS: {{ GB_CARRIERS|to_json|safe }},
+            CA_CARRIERS: {{ CA_CARRIERS|to_json|safe }},
+            targeted_regions: {{ line_item_form.targeted_regions|field_value|to_json|safe }},
+            targeted_cities: {{ line_item_form.targeted_cities|field_value|to_json|safe }},
+            targeted_carriers: {{ line_item_form.targeted_carriers|field_value|to_json|safe }}
         });
     });
 </script>

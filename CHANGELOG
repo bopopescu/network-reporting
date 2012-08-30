@@ -1,11 +1,19 @@
+# Deployed Thursday, August 30, 2012 at 07:18AM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-195
+### Bugs Fixed: []
+### Included Commits: 
+ * 1932f55 no longer throw a validation error if the network_id is set not set on the adunits networkconfig but is on the app UI-129
+ * 9249135 Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, August 29, 2012 at 02:18AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-194
 ### Bugs Fixed: []
-### Included Commits: 
- * bf24d94 cleaned up urls
- * b608bdd Deployed without finding any bug fixes.
- 
+### Included Commits:
+* bf24d94 cleaned up urls
+* b608bdd Deployed without finding any bug fixes.
+
 # Deployed Wednesday, August 29, 2012 at 12:51AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-193

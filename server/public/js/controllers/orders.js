@@ -1311,7 +1311,7 @@
                     for(var index in data.geonames) {
                         var geoname = data.geonames[index];
                         var key = '(' + geoname.lat + ',' + geoname.lng + ',\'' + geoname.name + '\',\'' + geoname.adminCode1 + '\',\'' + geoname.countryCode + '\')';
-                        var value = geoname.name + ', ' + geoname.adminCode1;
+                        var value = geoname.name + ', ' + geoname.adminCode1 + ', ' + geoname.countryCode;
                         terms[key] = value;
                     }
                     return terms;
@@ -1333,6 +1333,7 @@
                     $('#target_carriers_warning').modal();
                 }
                 else {
+                    $('#id_targeted_carriers').parent().show();
                     update_geographical_and_connectivity_targeting();
                 }
             });
@@ -1357,7 +1358,7 @@
 
             _.each(bootstrapping_data.targeted_cities, function (targeted_city) {
                 var parts = targeted_city.split(',\'');
-                var name = parts[1].substring(0, parts[1].length - 1) + ', ' + parts[2].substring(0, parts[2].length - 1);
+                var name = parts[1].substring(0, parts[1].length - 1) + ', ' + parts[2].substring(0, parts[2].length - 1) + ', ' + parts[3].substring(0, parts[3].length - 2);
                 $targeted_cities.append($('<option />', {
                     html: name,
                     selected: 'selected',

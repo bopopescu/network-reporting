@@ -1102,18 +1102,20 @@
 
             /* Helpers */
             function update_geographical_and_connectivity_targeting() {
-                var us_is_targeted = country_is_targeted('US');
-                var ca_is_targeted = country_is_targeted('CA');
-                var gb_is_targeted = country_is_targeted('GB');
+                var targeted_countries = $targeted_countries.val();
+
+                var us_is_targeted = _.include(targeted_countries, 'US');
+                var ca_is_targeted = _.include(targeted_countries, 'CA');
+                var gb_is_targeted = _.include(targeted_countries, 'GB');
                 var wifi_is_targeted = $('input[name="connectivity_targeting_type"]:checked').val() != 'carriers';
 
-                update_regions_and_cities(us_is_targeted, ca_is_targeted, wifi_is_targeted);
+                update_regions_and_cities(targeted_countries, us_is_targeted, ca_is_targeted, wifi_is_targeted);
                 update_zip_codes(us_is_targeted, wifi_is_targeted);
                 update_carriers(us_is_targeted, ca_is_targeted, gb_is_targeted);
             }
 
-            function update_regions_and_cities(us_is_targeted, ca_is_targeted, wifi_is_targeted) {
-                if(!us_is_targeted && !(ca_is_targeted && wifi_is_targeted)) {
+            function update_regions_and_cities(targeted_countries, us_is_targeted, ca_is_targeted, wifi_is_targeted) {
+                if(!targeted_countries && ((!us_is_targeted && !ca_is_targeted) || !wifi_is_targeted)) {
                     // remove selection
                     if($region_targeting_type_regions_and_cities.is(':checked')) {
                         $region_targeting_type_all.click();
@@ -1129,11 +1131,10 @@
                     $region_targeting_type_regions_and_cities.parent().removeClass('muted');
 
                     targeted_cities_ajax_data.country = $targeted_countries.val();
-                    console.log(targeted_cities_ajax_data);
                 }
 
                 update_regions(us_is_targeted, ca_is_targeted, wifi_is_targeted);
-                update_cities(us_is_targeted);
+                update_cities(targeted_countries);
             }
 
             function update_regions(us_is_targeted, ca_is_targeted, wifi_is_targeted) {
@@ -1168,8 +1169,8 @@
                 $targeted_regions.trigger("liszt:updated");
             }
 
-            function update_cities(us_is_targeted) {
-                if(!us_is_targeted) {
+            function update_cities(targeted_countries) {
+                if(!targeted_countries) {
                     // clear
                     $targeted_cities.html('');
 
@@ -1177,6 +1178,16 @@
                     $targeted_cities.attr('disabled', true);
                 }
                 else {
+                    $('option:selected', $targeted_cities).each(function (index, option) {
+                        var $option = $(option);
+                        var name = $option.html();
+                        var country = name.substring(name.length - 2, name.length);
+                        console.log(country);
+                        if(!_.include(targeted_countries, country)) {
+                            $option.remove();
+                        }
+                    })
+
                     // enable
                     $targeted_cities.removeAttr('disabled');
                 }
@@ -1247,14 +1258,6 @@
                 $targeted_carriers.trigger("liszt:updated");
             }
 
-            function country_is_targeted(country) {
-                return _.include($targeted_countries.val(), country);
-            }
-
-            function carrier_is_targeted(carrier) {
-                return _.include($targeted_carriers.val(), carrier);
-            }
-
             function add_options($element, options) {
                 for(var index in options) {
                     var value = options[index][0];
@@ -1276,13 +1279,6 @@
 
             /* Event Handlers */
             $targeted_countries.chosen().change(update_geographical_and_connectivity_targeting);
-            $('#id_targeted_countries_chzn_c_0');
-            $('#id_targeted_countries_chzn_c_39');
-            $('#id_targeted_countries_chzn_c_79');
-
-            $('option[value="US"]', $targeted_countries).change(function () {
-                console.log('changed');
-            });
 
             $('input[name="region_targeting_type"]').click(function () {
                 $('input[name="region_targeting_type"]').parent().siblings('div').hide();

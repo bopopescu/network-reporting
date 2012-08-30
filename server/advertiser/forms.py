@@ -138,7 +138,7 @@ class LineItemForm(forms.ModelForm):
         required=False, widget=forms.Select)
     targeted_countries = forms.MultipleChoiceField(
         choices=COUNTRIES, label='Country:', required=False,
-        widget=forms.SelectMultiple(attrs={'data-placeholder': 'Select countries...'}))
+        widget=forms.SelectMultiple(attrs={'data-placeholder': 'Ex: United States, ...'}))
     # non-db field
     region_targeting_type = forms.ChoiceField(
         choices=(('all', 'All Regions'),
@@ -146,9 +146,9 @@ class LineItemForm(forms.ModelForm):
                  ('zip_codes', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
         initial='all', label='Region:', widget=forms.RadioSelect)
     targeted_regions = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': 'Select states / metro areas...'}))
+            attrs={'data-placeholder': 'Ex: Ohio, San Francisco-Oakland-San Jose CA, ...'}))
     targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': 'Select cities...'}))
+            attrs={'data-placeholder': 'Ex: New York, NY, US, ...'}))
     targeted_zip_codes = forms.Field(required=False, widget=forms.Textarea(
             attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
 
@@ -160,7 +160,7 @@ class LineItemForm(forms.ModelForm):
                  ('carriers', 'Selected Carriers')),
         initial='all', label='Connectivity:', widget=forms.RadioSelect)
     targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': 'Select carriers...'}))
+            attrs={'data-placeholder': 'Ex: Verizon, ...'}))
 
     # User Targeting
     # included_apps defined in __init__

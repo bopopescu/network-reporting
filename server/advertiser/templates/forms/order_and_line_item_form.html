@@ -261,7 +261,7 @@
                         </select>
                         in
                     </label>
-                    <div>
+                    <div style="margin-top: 10px;">
                         {{ line_item_form.targeted_countries }}
                         <a data-toggle="modal" href="#targeted_countries_help">What's this?</a>
                     </div>
@@ -282,7 +282,7 @@
                                     Specific Regions within Country
                                     <a data-toggle="modal" href="#targeted_regions_and_cities_help">What's this?</a>
                                 </label>
-                                <div style="margin-left: 16px;">
+                                <div style="margin-top: 10px; margin-left: 16px;">
                                     <label>States and Metro Areas (DMA) - Wi-Fi Required</label><br />
                                     {{ line_item_form.targeted_regions }}
                                 </div>
@@ -457,7 +457,7 @@
             Additionally note that:
             <ul>
                 <li>Targeting by states is available for US and Canada only; metro area (DMA) targeting is available for US only.</li>
-                <li>State and metro area (DMA) are available only for campaigns targeted to WI-FI-only traffic. These option will not be available if selected carriers are chosen.</li>
+                <li>State and metro area (DMA) are available only for campaigns targeted to Wi-Fi-only traffic. These option will not be available if selected carriers are chosen.</li>
             </ul>
         </p>
         <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
@@ -472,13 +472,13 @@
         <h3>ZIP Code Targeting</h3>
     </div>
     <div class="modal-body">
-        <p>Target your line item to deliver ads to a set of specific zip codes if you have selected United States in the Country targeting field.</p>
-        <p>Provide a list of zip codes in the provided field, each zip code should be on its own line.  Note that removing the United States as a country selected in Country Targeting will remove the zip codes you provide here.</p>
+        <p>Target your line item to deliver ads to a set of specific ZIP codes if you have selected United States in the Country targeting field.</p>
+        <p>Provide a list of ZIP codes in the provided field, each ZIP code should be on its own line.  Note that removing the United States as a country selected in Country Targeting will remove the ZIP codes you provide here.</p>
         <p>
             Additionally note that:
             <ul>
                 <li>Targeting by is available for US only.</li>
-                <li>Zip code targeting is only available only campaigns targeted to WI-FI-only traffic. These option will not be available if selected carriers are chosen.</li>
+                <li>ZIP code targeting is only available only campaigns targeted to Wi-Fi-only traffic. These option will not be available if selected carriers are chosen.</li>
             </ul>
         </p>
         <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
@@ -493,11 +493,11 @@
         <h3>Wi-Fi Only</h3>
     </div>
     <div class="modal-body">
-        <p>Targeting by WIFI will allow your line item to deliver ads only to traffic coming over a WIFI connection.</p>
+        <p>Targeting by Wi-Fi will allow your line item to deliver ads only to traffic coming over a Wi-Fi connection.</p>
         <p>
             Additionally note that:
             <ul>
-                <li>Some Region targeting options such as State, Metro Area (DMA), and Zip code targeting require you to select the Target WIFI-only option.</li>
+                <li>Some Region targeting options such as State, Metro Area (DMA), and ZIP code targeting require you to select the Target Wi-Fi-only option.</li>
             </ul>
         </p>
         <p>Questions? Get more info on Targeting by Connectivity in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
@@ -532,7 +532,7 @@
         <h3>Target Carriers Warning</h3>
     </div>
     <div class="modal-body">
-        <p>Untargeting Wi-Fi will removed all targeted regions and ZIP codes.  Are you sure you want to continue?</p>
+        <p>Untargeting Wi-Fi will remove targeted States, Metro Areas, and ZIP Codes. Are you sure you want to continue?</p>
     </div>
     <div class="modal-footer">
         <a class="btn" data-dismiss="modal" href="#">Cancel</a>

@@ -200,7 +200,7 @@
 
     <fieldset>
         <legend>
-            <h2>Device Targeting</h2>
+            <h2>Device, Geography, and Connectivity Targeting</h2>
         </legend>
 
         <ul class="form_fields">
@@ -249,15 +249,6 @@
                     </ul>
                 </div>
             </li>
-        </ul>
-    </fieldset>
-
-    <fieldset>
-        <legend>
-            <h2>Geography and Connectivity</h2>
-        </legend>
-
-        <ul class="form_fields">
             <li>
                 {{ line_item_form.targeted_countries.label_tag }}
                 <div>
@@ -288,13 +279,15 @@
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_1">
                                     <input {% if line_item_form.region_targeting_type|field_value == 'regions_and_cities' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="regions_and_cities" name="region_targeting_type" />
-                                    Specific State / Metro Area / DMA (Wi-Fi Required), or Specific City within Country
+                                    Specific Regions within Country
                                     <a data-toggle="modal" href="#targeted_regions_and_cities_help">What's this?</a>
                                 </label>
-                                <div>
+                                <div style="margin-left: 16px;">
+                                    <label>States and Metro Areas (DMA) - Wi-Fi Required</label><br />
                                     {{ line_item_form.targeted_regions }}
                                 </div>
-                                <div>
+                                <div style="margin-left: 16px;">
+                                    <label>Cities</label><br />
                                     {{ line_item_form.targeted_cities }}
                                 </div>
                             </li>
@@ -302,10 +295,10 @@
                                 {# TODO: render using widget #}
                                 <label for="id_region_targeting_type_2">
                                     <input {% if line_item_form.region_targeting_type|field_value == 'zip_codes' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip_codes" name="region_targeting_type" />
-                                    Specific ZIP Codes within Country (Wi-Fi Required)
+                                    Specific ZIP Codes (US only) - Wi-Fi Required
                                     <a data-toggle="modal" href="#targeted_zip_codes_help">What's this?</a>
                                 </label>
-                                <div>
+                                <div style="margin-left: 16px;">
                                     {{ line_item_form.targeted_zip_codes }}
                                 </div>
                             </li>
@@ -343,7 +336,7 @@
                             </li>
                         </ul>
                     </div>
-                    <div>
+                    <div style="margin-left: 16px;">
                         {{ line_item_form.targeted_carriers }}
                     </div>
                 </div>

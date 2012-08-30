@@ -3572,11 +3572,6 @@ form#order_and_line_item_form select[name="targeted_carriers"],
 form#order_and_line_item_form select[name="included_apps"],
 form#order_and_line_item_form select[name="excluded_apps"], form#order_form select[name="targeted_countries"], form#order_form select[name="targeted_regions"], form#order_form select[name="targeted_cities"], form#order_form select[name="targeted_carriers"], form#order_form select[name="included_apps"], form#order_form select[name="excluded_apps"], form#new_creative_form select[name="targeted_countries"], form#new_creative_form select[name="targeted_regions"], form#new_creative_form select[name="targeted_cities"], form#new_creative_form select[name="targeted_carriers"], form#new_creative_form select[name="included_apps"], form#new_creative_form select[name="excluded_apps"], form.edit_creative_form select[name="targeted_countries"], form.edit_creative_form select[name="targeted_regions"], form.edit_creative_form select[name="targeted_cities"], form.edit_creative_form select[name="targeted_carriers"], form.edit_creative_form select[name="included_apps"], form.edit_creative_form select[name="excluded_apps"] {
   width: 300px; }
-form#order_and_line_item_form #id_targeted_regions_chzn,
-form#order_and_line_item_form #id_targeted_cities_chzn,
-form#order_and_line_item_form #id_targeted_zip_codes_chzn,
-form#order_and_line_item_form #id_targeted_carriers_chzn, form#order_form #id_targeted_regions_chzn, form#order_form #id_targeted_cities_chzn, form#order_form #id_targeted_zip_codes_chzn, form#order_form #id_targeted_carriers_chzn, form#new_creative_form #id_targeted_regions_chzn, form#new_creative_form #id_targeted_cities_chzn, form#new_creative_form #id_targeted_zip_codes_chzn, form#new_creative_form #id_targeted_carriers_chzn, form.edit_creative_form #id_targeted_regions_chzn, form.edit_creative_form #id_targeted_cities_chzn, form.edit_creative_form #id_targeted_zip_codes_chzn, form.edit_creative_form #id_targeted_carriers_chzn {
-  margin-left: 16px; }
 form#order_and_line_item_form .chzn-container .chzn-choices, form#order_form .chzn-container .chzn-choices, form#new_creative_form .chzn-container .chzn-choices, form.edit_creative_form .chzn-container .chzn-choices {
   background: #fafafa;
   border: 1px solid #eaeaea;

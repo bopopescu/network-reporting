@@ -1127,6 +1127,9 @@
                     // enable
                     $region_targeting_type_regions_and_cities.removeAttr('disabled');
                     $region_targeting_type_regions_and_cities.parent().removeClass('muted');
+
+                    targeted_cities_ajax_data.country = $targeted_countries.val();
+                    console.log(targeted_cities_ajax_data);
                 }
 
                 update_regions(us_is_targeted, ca_is_targeted, wifi_is_targeted);
@@ -1273,6 +1276,13 @@
 
             /* Event Handlers */
             $targeted_countries.chosen().change(update_geographical_and_connectivity_targeting);
+            $('#id_targeted_countries_chzn_c_0');
+            $('#id_targeted_countries_chzn_c_39');
+            $('#id_targeted_countries_chzn_c_79');
+
+            $('option[value="US"]', $targeted_countries).change(function () {
+                console.log('changed');
+            });
 
             $('input[name="region_targeting_type"]').click(function () {
                 $('input[name="region_targeting_type"]').parent().siblings('div').hide();
@@ -1282,13 +1292,20 @@
 
             $targeted_regions.chosen();
 
+            var targeted_cities_ajax_data = {
+                featureClass: 'P',
+                maxRows: 10,
+                username: 'MoPub'
+            };
             $targeted_cities.ajaxChosen(
                 {
+                    data: targeted_cities_ajax_data,
                     dataType: 'json',
                     jsonTermKey: 'name_startsWith',
                     method: 'GET',
                     minTermLength: 3,
-                    url: 'http://api.geonames.org/searchJSON?country=US&featureClass=P&maxRows=10&username=MoPub&'
+                    traditional: true,
+                    url: 'http://api.geonames.org/searchJSON'
                 }, function (data) {
                     var terms = {};
                     for(var index in data.geonames) {

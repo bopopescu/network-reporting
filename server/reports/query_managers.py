@@ -177,37 +177,47 @@ class ReportQueryManager(CachedQueryManager):
         if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report)
 
+        logging.info('Creating new scheduled report')
+
         dt = datetime.timedelta(days=report.days)
         one_day = datetime.timedelta(days=1)
+
         if now is None:
             now = datetime.datetime.now().date()
 
-        # Find start and end based on interval things
-        if report.interval:
-            if report.interval == 'yesterday':
-                now = now - one_day
-            elif report.interval == 'lmonth':
-                start, end = date_magic.last_month(now)
-                if isinstance(end, datetime.datetime):
-                    end = end.date()
-                if isinstance(start, datetime.datetime):
-                    start = start.date()
-                now = end
-                dt = end - start
+        # Get report start and end
+        if report.interval == 'yesterday':
+            report_end = now - one_day
+        elif report.interval == 'lmonth':
+            start, end = date_magic.last_month(now)
+
+            if isinstance(end, datetime.datetime):
+                end = end.date()
+            if isinstance(start, datetime.datetime):
+                start = start.date()
+
+            report_end = end
+            dt = end - start
+        else:
+            report_end = now
 
         account = report.account.key()
-        start = now - dt
-        end = now
-        acct_key = str(account)
+
         # Create new report
-        new_report = Report(start = now - dt,
-                            end = now,
-                            account = account,
-                            schedule = report,
-                            )
+        new_report = Report(
+            start=report_end - dt,
+            end=report_end,
+            account=account,
+            schedule=report)
 
         # Set up sched to run at a later time
+        logging.info('Curr next sched date is ' + str(report.next_sched_date))
+        logging.info('Now is ' + str(now))
+        logging.info('Curr interval is ' + report.sched_interval)
+
         report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
+
+        logging.info('Updating report with next scheduled date of ' + str(report.next_sched_date))
 
         # Save the reports
         self.put_report(report)
@@ -215,8 +225,6 @@ class ReportQueryManager(CachedQueryManager):
 
         # Update most recent
         self.update_most_recent(report, new_report)
-        report_key = str(new_report.key())
-        sched_key = str(report.key())
 
         report.last_run = datetime.datetime.now()
         report.put()

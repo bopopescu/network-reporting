@@ -195,6 +195,17 @@ indexes:
   - name: account
   - name: sched_interval
 
+- kind: ScheduledReport
+  properties:
+  - name: deleted
+  - name: next_sched_date
+
+- kind: ScheduledReport
+  properties:
+  - name: deleted
+  - name: saved
+  - name: next_sched_date
+
 - kind: SiteStats
   properties:
   - name: owner

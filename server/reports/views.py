@@ -85,8 +85,15 @@ class EditReportHandler(RequestHandler):
 
             scheduled_report = report_form.save(commit=False)
             scheduled_report.account = self.account
+
+            # Explicitly set next date to none if this is not a scheduled report
+            if scheduled_report.sched_interval == 'none':
+                scheduled_report.next_sched_date = None
+
             # TODO: refactor query managers to handle put
             scheduled_report.put()
+
+            logging.info("Next date is " + str(scheduled_report.next_sched_date))
 
             manager = ReportQueryManager(self.account)
             manager.add_report(scheduled_report)
@@ -192,10 +199,15 @@ class ScheduledRunner(RequestHandler):
         if now is None:
             now = datetime.now().date()
         else:
-            now = datetime.strptime(now, '%y%m%d')
-        scheds = ScheduledReport.all().filter('next_sched_date =', now)
+            now = datetime.strptime(now, '%y%m%d').date()
+
+        scheds = ScheduledReport.all().filter('next_sched_date <=', now)
+        scheds.filter('deleted =', False)
+        scheds.filter('saved =', True)
+
         for sched in scheds:
-            man.new_report(sched)
+            if sched.sched_interval != 'none':
+                man.new_report(sched, now=now)
         return HttpResponse("Scheduled reports have been created")
 
 def sched_runner(request, *args, **kwargs):

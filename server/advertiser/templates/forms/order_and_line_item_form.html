@@ -362,7 +362,7 @@
                         </select>
                         these apps
                     </label>
-                    <div>
+                    <div style="margin-top: 10px;">
                         {{ line_item_form.included_apps }}
                         {{ line_item_form.excluded_apps }}
                         <a href="#" id="campaignForm-apps-helpLink">What's this?</a>
@@ -473,7 +473,7 @@
     </div>
     <div class="modal-body">
         <p>Target your line item to deliver ads to a set of specific ZIP codes if you have selected United States in the Country targeting field.</p>
-        <p>Provide a list of ZIP codes in the provided field, each ZIP code should be on its own line.  Note that removing the United States as a country selected in Country Targeting will remove the ZIP codes you provide here.</p>
+        <p>Provide a list of ZIP codes in the provided field, each ZIP code should be separated by whitespace.  Note that removing the United States as a country selected in Country Targeting will remove the ZIP codes you provide here.</p>
         <p>
             Additionally note that:
             <ul>

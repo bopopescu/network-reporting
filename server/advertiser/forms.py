@@ -150,7 +150,7 @@ class LineItemForm(forms.ModelForm):
     targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': 'Ex: New York, NY, US, ...'}))
     targeted_zip_codes = forms.Field(required=False, widget=forms.Textarea(
-            attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
+            attrs={'class': 'input-text', 'placeholder': 'Ex: 94117 27705', 'rows': 3, 'cols': 50}))
 
     # Connectivity Targeting
     # non-db field

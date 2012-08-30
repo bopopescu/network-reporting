@@ -1115,8 +1115,8 @@
             }
 
             function update_regions_and_cities(targeted_countries, us_is_targeted, ca_is_targeted, wifi_is_targeted) {
-                if(!targeted_countries && ((!us_is_targeted && !ca_is_targeted) || !wifi_is_targeted)) {
-                    // remove selection
+                if(!targeted_countries) {
+                    // change region targeting type
                     if($region_targeting_type_regions_and_cities.is(':checked')) {
                         $region_targeting_type_all.click();
                     }
@@ -1130,7 +1130,8 @@
                     $region_targeting_type_regions_and_cities.removeAttr('disabled');
                     $region_targeting_type_regions_and_cities.parent().removeClass('muted');
 
-                    targeted_cities_ajax_data.country = $targeted_countries.val();
+                    // update type-ahead AJAX call with selected countries
+                    targeted_cities_ajax_data.country = targeted_countries;
                 }
 
                 update_regions(us_is_targeted, ca_is_targeted, wifi_is_targeted);
@@ -1144,6 +1145,7 @@
 
                     // disable
                     $targeted_regions.attr('disabled', true);
+                    $targeted_regions.siblings('label').addClass('muted');
                 }
                 else {
                     if(us_is_targeted) {
@@ -1156,7 +1158,6 @@
                     }
 
                     if(ca_is_targeted) {
-                        console.log('adding ca provinces');
                         add_options($targeted_regions, bootstrapping_data.CA_PROVINCES);
                     }
                     else {
@@ -1165,31 +1166,25 @@
 
                     // enable
                     $targeted_regions.removeAttr('disabled');
+                    $targeted_regions.siblings('label').removeClass('muted');
                 }
                 $targeted_regions.trigger("liszt:updated");
             }
 
             function update_cities(targeted_countries) {
                 if(!targeted_countries) {
-                    // clear
-                    $targeted_cities.html('');
-
-                    // disable
-                    $targeted_cities.attr('disabled', true);
+                    // whenever this is true, this input is hidden.
                 }
                 else {
                     $('option:selected', $targeted_cities).each(function (index, option) {
                         var $option = $(option);
                         var name = $option.html();
+                        // TODO: this is a hack, should use a regex to parse the value
                         var country = name.substring(name.length - 2, name.length);
-                        console.log(country);
                         if(!_.include(targeted_countries, country)) {
                             $option.remove();
                         }
                     })
-
-                    // enable
-                    $targeted_cities.removeAttr('disabled');
                 }
                 $targeted_cities.trigger("liszt:updated");
             }
@@ -1340,9 +1335,7 @@
 
             $targeted_carriers.chosen();
 
-            // TODO: confirmation modal
-
-            // TODO: grey out countries
+            // TODO: grey out countries when a region or city of theirs is selected
 
             // Initialize
             update_geographical_and_connectivity_targeting();
@@ -1354,6 +1347,7 @@
 
             _.each(bootstrapping_data.targeted_cities, function (targeted_city) {
                 var parts = targeted_city.split(',\'');
+                // TODO: this is a hack, use regex to parse value
                 var name = parts[1].substring(0, parts[1].length - 1) + ', ' + parts[2].substring(0, parts[2].length - 1) + ', ' + parts[3].substring(0, parts[3].length - 2);
                 $targeted_cities.append($('<option />', {
                     html: name,

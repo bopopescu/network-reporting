@@ -146,7 +146,7 @@ class LineItemForm(forms.ModelForm):
                  ('zip_codes', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
         initial='all', label='Region:', widget=forms.RadioSelect)
     targeted_regions = forms.Field(required=False, widget=forms.SelectMultiple(
-            attrs={'data-placeholder': 'Ex: Ohio, San Francisco-Oakland-San Jose CA, ...'}))
+            attrs={'data-placeholder': 'Ex: Ohio, Miami-Ft. Lauderdale FL, ...'}))
     targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': 'Ex: New York, NY, US, ...'}))
     targeted_zip_codes = forms.Field(required=False, widget=forms.Textarea(

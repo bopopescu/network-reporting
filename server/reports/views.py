@@ -207,9 +207,12 @@ class ScheduledRunner(RequestHandler):
 
         for sched in scheds:
             if sched.sched_interval != 'none':
-                if sched.account.company == 'Benjamin Yolken Enterprises':
-                    if sched.saved and not sched.deleted:
-                        man.new_report(sched, now=now)
+                try:
+                    if sched.account.company == 'Benjamin Yolken Enterprises':
+                        if sched.saved and not sched.deleted:
+                            man.new_report(sched, now=now)
+                except Exception:
+                    continue
         return HttpResponse("Scheduled reports have been created")
 
 def sched_runner(request, *args, **kwargs):

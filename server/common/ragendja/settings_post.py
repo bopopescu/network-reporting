@@ -11,9 +11,9 @@ TEMPLATE_DEBUG = DEBUG
 MANAGERS = ADMINS
 
 # Change report server address if in debug mode
-if DEBUG:
-    REPORT_SERVER_HOST = 'localhost'
-    REPORT_SERVER_PORT = 8888
+#if DEBUG:
+#    REPORT_SERVER_HOST = 'localhost'
+#    REPORT_SERVER_PORT = 8888
 
 # You can override Django's or some apps' locales with these folders:
 if os.path.exists(os.path.join(COMMON_DIR, 'locale_overrides_common')):

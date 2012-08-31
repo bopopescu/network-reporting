@@ -199,20 +199,29 @@ class ScheduledRunner(RequestHandler):
         else:
             now = datetime.strptime(now, '%y%m%d').date()
 
-        scheds = ScheduledReport.all().filter('next_sched_date <=', now)
+        for interval in ['daily', 'weekly', 'monthly', 'quarterly']:
+            logging.info('Running scheduled reports for %s' % interval)
+            logging.info('Now is %s' % now)
 
-        # Don't run deleted or unsaved reports
-        #scheds.filter('deleted =', False)
-        #scheds.filter('saved =', True)
+            scheds = ScheduledReport.all().filter('next_sched_date <=', now)
+            scheds.filter('sched_interval =', interval)
 
-        for sched in scheds:
-            if sched.sched_interval != 'none':
+            # Don't run deleted or unsaved reports
+            scheds.filter('deleted =', False)
+            scheds.filter('saved =', True)
+
+            num_scheduled = 0
+
+            for sched in scheds:
                 try:
                     if sched.account.company == 'Benjamin Yolken Enterprises':
-                        if sched.saved and not sched.deleted:
-                            man.new_report(sched, now=now)
+                        man.new_report(sched, now=now)
+                        num_scheduled += 1
                 except Exception:
                     continue
+
+            logging.info('Scheduled %d reports' % num_scheduled)
+
         return HttpResponse("Scheduled reports have been created")
 
 def sched_runner(request, *args, **kwargs):

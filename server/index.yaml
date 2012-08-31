@@ -206,6 +206,13 @@ indexes:
   - name: saved
   - name: next_sched_date
 
+- kind: ScheduledReport
+  properties:
+  - name: deleted
+  - name: saved
+  - name: sched_interval
+  - name: next_sched_date
+
 - kind: SiteStats
   properties:
   - name: owner

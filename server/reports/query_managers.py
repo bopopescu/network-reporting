@@ -177,8 +177,6 @@ class ReportQueryManager(CachedQueryManager):
         if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report)
 
-        logging.info('Creating new scheduled report')
-
         dt = datetime.timedelta(days=report.days)
         one_day = datetime.timedelta(days=1)
 
@@ -211,13 +209,13 @@ class ReportQueryManager(CachedQueryManager):
             schedule=report)
 
         # Set up sched to run at a later time
-        logging.info('Curr next sched date is ' + str(report.next_sched_date))
-        logging.info('Now is ' + str(now))
-        logging.info('Curr interval is ' + report.sched_interval)
+        logging.info(
+            'Now is %s, next_sched_date is %s, sched_interval is %s' %
+            (now, report.next_sched_date, report.sched_interval))
 
         report.next_sched_date = date_magic.get_next_day(report.sched_interval, now)
 
-        logging.info('Updating report with next scheduled date of ' + str(report.next_sched_date))
+        logging.info('New next_sched_date is %s' % report.next_sched_date)
 
         # Save the reports
         self.put_report(report)

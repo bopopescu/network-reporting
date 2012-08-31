@@ -93,8 +93,6 @@ class EditReportHandler(RequestHandler):
             # TODO: refactor query managers to handle put
             scheduled_report.put()
 
-            logging.info("Next date is " + str(scheduled_report.next_sched_date))
-
             manager = ReportQueryManager(self.account)
             manager.add_report(scheduled_report)
 
@@ -202,6 +200,8 @@ class ScheduledRunner(RequestHandler):
             now = datetime.strptime(now, '%y%m%d').date()
 
         scheds = ScheduledReport.all().filter('next_sched_date <=', now)
+
+        # Don't run deleted or unsaved reports
         scheds.filter('deleted =', False)
         scheds.filter('saved =', True)
 

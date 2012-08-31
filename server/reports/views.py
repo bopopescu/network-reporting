@@ -207,7 +207,8 @@ class ScheduledRunner(RequestHandler):
 
         for sched in scheds:
             if sched.sched_interval != 'none':
-                man.new_report(sched, now=now)
+                if sched.acct.company == 'Benjamin Yolken Enterprises':
+                    man.new_report(sched, now=now)
         return HttpResponse("Scheduled reports have been created")
 
 def sched_runner(request, *args, **kwargs):

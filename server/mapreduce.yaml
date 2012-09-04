@@ -83,13 +83,13 @@ mapreduce:
     - name: shard_count
       default: 20
 
-- name: OrdersLineItemsMigrater
+- name: GeoTargetingMigrater
   mapper:
     input_reader: mapreduce.input_readers.DatastoreInputReader
-    handler: migrater.migrate_orders_line_items
+    handler: migrater.migrate_geo_targeting
     params:
     - name: entity_kind
-      default: advertiser.models.Campaign
+      default: advertiser.models.AdGroup
     - name: processing_rate
       default: 200
     - name: shard_count

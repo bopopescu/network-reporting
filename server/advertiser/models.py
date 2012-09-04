@@ -259,6 +259,9 @@ class AdGroup(db.Model):
     # Allocation
     allocation_percentage = db.FloatProperty(default=100.0)
 
+    # Deprecated?
+    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
+
     # Deprecated
     t = db.DateTimeProperty(auto_now_add=True)
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
@@ -276,7 +279,6 @@ class AdGroup(db.Model):
     region = db.StringProperty()
     state = db.StringProperty()
     city = db.StringProperty()
-    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
     active_user = db.StringListProperty(default=['any'])
     active_app = db.StringListProperty(default=['any'])
 
@@ -449,6 +451,7 @@ class AdGroup(db.Model):
             keywords=self.keywords,
             daily_frequency_cap=self.daily_frequency_cap,
             hourly_frequency_cap=self.hourly_frequency_cap,
+            mktplace_price_floor=self.mktplace_price_floor,  # deprecated?
         )
 
     def default_creative(self, custom_html=None, key_name=None):

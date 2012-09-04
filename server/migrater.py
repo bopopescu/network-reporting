@@ -143,7 +143,7 @@ def migrate_geo_targeting(adgroup):
             adgroup.targeted_zip_codes = []
             adgroup.targeted_carriers = []
 
-            #yield op.db.Put(adgroup)
+            yield op.db.Put(adgroup)
 
     except Exception:
         logging.error("AdGroup %s: %s" % (adgroup.key().id_or_name(),

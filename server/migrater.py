@@ -107,31 +107,43 @@ def network_configer(obj):
 
 def migrate_geo_targeting(adgroup):
     try:
-        countries = set([geo_predicate[13:] for geo_predicate in adgroup.geo_predicates])
-        for country in countries:
-            if country not in ['BD', 'BE', 'BF', 'BG', 'BA', 'BB', 'WF', 'BL', 'BM', 'BN', 'BO', 'BH', 'BI', 'BJ', 'BT', 'JM', 'BV', 'BW', 'WS', 'BQ', 'BR', 'BS', 'JE', 'BY', 'BZ', 'RU', 'RW', 'RS', 'TL', 'RE', 'TM', 'TJ', 'RO', 'TK', 'GW', 'GU', 'GT', 'GS', 'GR', 'GQ', 'GP', 'JP', 'GY', 'GG', 'GF', 'GE', 'GD', 'GB', 'GA', 'SV', 'GN', 'GM', 'GL', 'GI', 'GH', 'OM', 'TN', 'JO', 'HR', 'HT', 'HU', 'HK', 'HN', 'HM', 'VE', 'PR', 'PS', 'PW', 'PT', 'SJ', 'PY', 'IQ', 'PA', 'PF', 'PG', 'PE', 'PK', 'PH', 'PN', 'PL', 'PM', 'ZM', 'EH', 'EE', 'EG', 'ZA', 'EC', 'IT', 'VN', 'SB', 'EU', 'ET', 'SO', 'ZW', 'SA', 'ES', 'ER', 'ME', 'MD', 'MG', 'MF', 'MA', 'MC', 'UZ', 'MM', 'ML', 'MO', 'MN', 'MH', 'US', 'MU', 'MT', 'MW', 'MV', 'MQ', 'MP', 'MS', 'MR', 'IM', 'UG', 'TZ', 'MY', 'MX', 'IL', 'FR', 'IO', 'SH', 'FI', 'FJ', 'FK', 'FM', 'FO', 'NI', 'NL', 'NO', 'NA', 'VU', 'NC', 'NE', 'NF', 'NG', 'NZ', 'NP', 'NR', 'NU', 'CK', 'CI', 'CH', 'CO', 'CN', 'CM', 'CL', 'CC', 'CA', 'CG', 'CF', 'CD', 'CZ', 'CY', 'CX', 'CR', 'CW', 'CV', 'CU', 'SZ', 'SY', 'SX', 'KG', 'KE', 'SR', 'KI', 'KH', 'KN', 'KM', 'ST', 'SK', 'KR', 'SI', 'KP', 'KW', 'SN', 'SM', 'SL', 'SC', 'KZ', 'KY', 'SG', 'SE', 'SD', 'DO', 'DM', 'DJ', 'DK', 'VG', 'DE', 'YE', 'DZ', 'MK', 'UY', 'YT', 'UM', 'LB', 'LC', 'LA', 'TV', 'TW', 'TT', 'TR', 'LK', 'LI', 'LV', 'TO', 'LT', 'LU', 'LR', 'LS', 'TH', 'TF', 'TG', 'TD', 'TC', 'LY', 'VA', 'VC', 'AE', 'AD', 'AG', 'AF', 'AI', 'VI', 'IS', 'IR', 'AM', 'AL', 'AO', 'AQ', 'AP', 'AS', 'AR', 'AU', 'AT', 'AW', 'IN', 'AX', 'AZ', 'IE', 'ID', 'UA', 'QA', 'MZ']:
-                countries.remove(country)
-                logging.error('Invalid country %s' % country)
+        if not adgroup.deleted:
+            countries = set([geo_predicate[13:] for geo_predicate in adgroup.geo_predicates])
 
-        cities = []
-        if adgroup.cities:
-            if len(countries) == 1:
-                country = list(countries)[0]
-                for city in adgroup.cities:
-                    city_split = city.split(':')
-                    lat, lng = city_split[0].split(',')
-                    cities.append("(%s,%s,'%s','%s','%s')" % (lat, lng, city_split[2], city_split[3], country))
-            else:
-                logging.error('Cities targeted but not exactly one country for %s' % adgroup.key())
+            if '' in countries:
+                countries.remove('')
 
-        adgroup.accept_targeted_locations = True
-        adgroup.targeted_countries = list(countries)
-        adgroup.targeted_regions = []
-        adgroup.targeted_cities = cities
-        adgroup.targeted_zip_codes = []
-        adgroup.targeted_carriers = []
+            if '*' in countries:
+                countries.remove('*')
 
-        #yield op.db.Put(adgroup)
+            if 'UK' in countries:
+                countries.remove('UK')
+                countries.add('GB')
+
+            for country in list(countries):
+                if country not in ['BD', 'BE', 'BF', 'BG', 'BA', 'BB', 'WF', 'BL', 'BM', 'BN', 'BO', 'BH', 'BI', 'BJ', 'BT', 'JM', 'BV', 'BW', 'WS', 'BQ', 'BR', 'BS', 'JE', 'BY', 'BZ', 'RU', 'RW', 'RS', 'TL', 'RE', 'TM', 'TJ', 'RO', 'TK', 'GW', 'GU', 'GT', 'GS', 'GR', 'GQ', 'GP', 'JP', 'GY', 'GG', 'GF', 'GE', 'GD', 'GB', 'GA', 'SV', 'GN', 'GM', 'GL', 'GI', 'GH', 'OM', 'TN', 'JO', 'HR', 'HT', 'HU', 'HK', 'HN', 'HM', 'VE', 'PR', 'PS', 'PW', 'PT', 'SJ', 'PY', 'IQ', 'PA', 'PF', 'PG', 'PE', 'PK', 'PH', 'PN', 'PL', 'PM', 'ZM', 'EH', 'EE', 'EG', 'ZA', 'EC', 'IT', 'VN', 'SB', 'EU', 'ET', 'SO', 'ZW', 'SA', 'ES', 'ER', 'ME', 'MD', 'MG', 'MF', 'MA', 'MC', 'UZ', 'MM', 'ML', 'MO', 'MN', 'MH', 'US', 'MU', 'MT', 'MW', 'MV', 'MQ', 'MP', 'MS', 'MR', 'IM', 'UG', 'TZ', 'MY', 'MX', 'IL', 'FR', 'IO', 'SH', 'FI', 'FJ', 'FK', 'FM', 'FO', 'NI', 'NL', 'NO', 'NA', 'VU', 'NC', 'NE', 'NF', 'NG', 'NZ', 'NP', 'NR', 'NU', 'CK', 'CI', 'CH', 'CO', 'CN', 'CM', 'CL', 'CC', 'CA', 'CG', 'CF', 'CD', 'CZ', 'CY', 'CX', 'CR', 'CW', 'CV', 'CU', 'SZ', 'SY', 'SX', 'KG', 'KE', 'SR', 'KI', 'KH', 'KN', 'KM', 'ST', 'SK', 'KR', 'SI', 'KP', 'KW', 'SN', 'SM', 'SL', 'SC', 'KZ', 'KY', 'SG', 'SE', 'SD', 'DO', 'DM', 'DJ', 'DK', 'VG', 'DE', 'YE', 'DZ', 'MK', 'UY', 'YT', 'UM', 'LB', 'LC', 'LA', 'TV', 'TW', 'TT', 'TR', 'LK', 'LI', 'LV', 'TO', 'LT', 'LU', 'LR', 'LS', 'TH', 'TF', 'TG', 'TD', 'TC', 'LY', 'VA', 'VC', 'AE', 'AD', 'AG', 'AF', 'AI', 'VI', 'IS', 'IR', 'AM', 'AL', 'AO', 'AQ', 'AP', 'AS', 'AR', 'AU', 'AT', 'AW', 'IN', 'AX', 'AZ', 'IE', 'ID', 'UA', 'QA', 'MZ']:
+                    countries.remove(country)
+                    logging.error('Invalid country %s for AdGroup %s' % (country, adgroup.key()))
+
+            cities = []
+            if adgroup.cities:
+                if len(countries) == 1:
+                    country = list(countries)[0]
+                    for city in adgroup.cities:
+                        city_split = city.split(':')
+                        lat, lng = city_split[0].split(',')
+                        cities.append("(%s,%s,'%s','%s','%s')" % (lat, lng, city_split[2], city_split[3], country))
+                else:
+                    logging.error('Cities targeted but not exactly one country for AdGroup %s' % adgroup.key())
+
+            adgroup.accept_targeted_locations = True
+            adgroup.targeted_countries = list(countries)
+            adgroup.targeted_regions = []
+            adgroup.targeted_cities = cities
+            adgroup.targeted_zip_codes = []
+            adgroup.targeted_carriers = []
+
+            #yield op.db.Put(adgroup)
 
     except Exception:
         logging.error("AdGroup %s: %s" % (adgroup.key().id_or_name(),

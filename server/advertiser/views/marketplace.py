@@ -14,6 +14,7 @@ from publisher.query_managers import PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import tablib
+from common.utils.string_utils import sanitize
 
 
 class MarketplaceIndexHandler(RequestHandler):
@@ -43,8 +44,8 @@ class MarketplaceIndexHandler(RequestHandler):
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = [str(domain) for domain in network_config.blocklist \
-                         if not str(domain) in ("", "#")]
+            blocklist = [str(sanitize(domain)) for domain in network_config.blocklist \
+                         if not str(sanitize(domain)) in ("", "#")]
 
         try:
             blind = self.account.network_config.blind

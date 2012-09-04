@@ -203,7 +203,7 @@ class ScheduledRunner(RequestHandler):
             logging.info('Running scheduled reports for %s' % interval)
             logging.info('Now is %s' % now)
 
-            scheds = ScheduledReport.all().filter('next_sched_date <=', now)
+            scheds = ScheduledReport.all().filter('next_sched_date =', now)
             scheds.filter('sched_interval =', interval)
 
             # Don't run deleted or unsaved reports

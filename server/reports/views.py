@@ -214,9 +214,8 @@ class ScheduledRunner(RequestHandler):
 
             for sched in scheds:
                 try:
-                    if sched.account.company == 'Benjamin Yolken Enterprises':
-                        man.new_report(sched, now=now)
-                        num_scheduled += 1
+                    man.new_report(sched, now=now)
+                    num_scheduled += 1
                 except Exception:
                     continue
 

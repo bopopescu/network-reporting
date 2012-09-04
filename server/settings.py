@@ -36,8 +36,6 @@ DATABASE_PASSWORD = ''         # Not used with sqlite3.
 DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
-DEBUG = True
-
 # Host and port for reporting server
 REPORT_SERVER_HOST = 'reporting.mopub.com'
 REPORT_SERVER_PORT = 80

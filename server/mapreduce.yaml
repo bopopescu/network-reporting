@@ -82,3 +82,16 @@ mapreduce:
       default: 20
     - name: shard_count
       default: 20
+
+- name: OrdersLineItemsMigrater
+  mapper:
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: migrater.migrate_orders_line_items
+    params:
+    - name: entity_kind
+      default: advertiser.models.Campaign
+    - name: processing_rate
+      default: 200
+    - name: shard_count
+      default: 100
+

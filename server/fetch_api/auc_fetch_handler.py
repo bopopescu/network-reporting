@@ -9,14 +9,16 @@ from google.appengine.api import urlfetch, taskqueue
 
 from publisher.query_managers import AdUnitContextQueryManager
 
-from adserver_constants import ADSERVER_ADMIN_HOSTNAME, USER_PUSH_URL
+from adserver_constants import USER_PUSH_URL
+
+ADSERVER_ADMIN_HOSTNAME = 'ec2-184-72-163-140.compute-1.amazonaws.com'
 
 EMPTY = 'EMPTY'
 TO_ERR = 'TIMEOUT_ERROR'
 BAD_KEY_ERR = 'BAD_KEY_ERROR'
 
 def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
-    
+
     # This is a service to the AWS/Tornado adserver.
     # We are not following the RequestHandler pattern here (simple
     # function instead), because we do not want to require login.
@@ -25,16 +27,16 @@ def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
         # If the complex context is indicating an error of some kind
         # then don't try to simplify it
         return complex_context
-        
+
     now = int(time.mktime(datetime.utcnow().timetuple()))
     context_created_at = getattr(complex_context, 'created_at', now)
     if created_at == context_created_at and created_at != 0:
         return EMPTY
-        
+
     simple_context = complex_context.simplify()
     basic_context = simple_context.to_basic_dict()
     pickled_context = pickle.dumps(basic_context)
-    
+
     return pickled_context
 
 class AUCFetchHandler(webapp.RequestHandler):
@@ -42,10 +44,10 @@ class AUCFetchHandler(webapp.RequestHandler):
     def get(self, adunit_key=None):
 
         # 'agltb3B1Yi1pbmNyDQsSBFNpdGUY1O76Cgw' is the default ID for warmup
-        adunit_key = adunit_key or 'agltb3B1Yi1pbmNyDQsSBFNpdGUY1O76Cgw'  
+        adunit_key = adunit_key or 'agltb3B1Yi1pbmNyDQsSBFNpdGUY1O76Cgw'
 
         created_at = self.request.get('created_at', 0)
-        
+
         # This is a service to the AWS/Tornado adserver.
         # We are not following the RequestHandler pattern here (simple
         # function instead), because we do not want to require login.

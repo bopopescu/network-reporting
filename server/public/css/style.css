@@ -3421,6 +3421,7 @@ form#new_creative_form {
  * TODO: consolidate all the form styles
  */
 form#order_and_line_item_form fieldset, form#order_form fieldset, form#new_creative_form fieldset, form.edit_creative_form fieldset {
+  margin-bottom: 1em;
   padding: 25px; }
   form#order_and_line_item_form fieldset#order_fieldset, form#order_form fieldset#order_fieldset, form#new_creative_form fieldset#order_fieldset, form.edit_creative_form fieldset#order_fieldset {
     background-color: #f7f7f7;

@@ -76,7 +76,7 @@
                     {% else %}
                         {{ line_item_form.adgroup_type }}
                     {% endif %}
-                    <a href="#" id="adgroup_type-helpLink">What's this?</a>
+                    <a href="#" id="adgroup_type-helpLink"><img src="/images/what.png" /></a>
                     <div class="hidden" id="adgroup_type-helpContent">
                         <h3>Line Item Type</h3>
                         <h4>Guaranteed</h4>
@@ -91,7 +91,7 @@
                 {{ line_item_form.gtee_priority.label_tag }}
                 <div>
                     {{ line_item_form.gtee_priority }}
-                    <a href="#" id="gtee_priority-helpLink">What's this?</a>
+                    <a href="#" id="gtee_priority-helpLink"><img src="/images/what.png" /></a>
                     <div id="gtee_priority-helpContent" class="hidden">
                         <h3>Priority</h3>
                         <p>Line items are set to run before other line items at lower priorities. Line Items within the same priority level are run in order of CPM.</p>
@@ -103,7 +103,7 @@
                 {{ line_item_form.promo_priority.label_tag }}
                 <div>
                     {{ line_item_form.promo_priority }}
-                    <a href="#" id="promo_priority-helpLink">What's this?</a>
+                    <a href="#" id="promo_priority-helpLink"><img src="/images/what.png" /></a>
                     <div id="promo_priority-helpContent" class="hidden">
                         <h3>Priority</h3>
                         <p>You may pick whether line items are prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
@@ -136,7 +136,7 @@
                 {{ line_item_form.bid_strategy.label_tag }}
                 <div>
                     {{ line_item_form.bid_strategy }} @ {{ line_item_form.bid }} USD
-                    <a class="adgroup_type_dependent promo whatsthis" id="bid-helpLink" href="#">What's this?</a>
+                    <a class="adgroup_type_dependent promo whatsthis" id="bid-helpLink" href="#"><img src="/images/what.png" /></a>
                     <div id="bid-helpContent" class="hidden">
                         <h3>Promotional CPM</h3>
                         <p>MoPub uses CPM to prioritize which promotional line item will be displayed.  Increase the CPM of a line item to run it before other line items within the same priority.</p>
@@ -200,10 +200,102 @@
 
     <fieldset>
         <legend>
-            <h2>Device, Geography, and Connectivity Targeting</h2>
+            <h2>Geo, Connectivity, and Device Targeting</h2>
         </legend>
 
         <ul class="form_fields">
+            <li>
+                {{ line_item_form.targeted_countries.label_tag }}
+                <div>
+                    {# TODO: render using widget #}
+                    <label>
+                        Users who are
+                        <select name="accept_targeted_locations" id="id_accept_targeted_locations">
+                            <option {% if not line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="0">Not Located</option>
+                            <option {% if line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="1">Located</option>
+                        </select>
+                        in
+                    </label>
+                    <div style="margin-top: 10px;">
+                        {{ line_item_form.targeted_countries }}
+                        <a data-toggle="modal" href="#targeted_countries_help"><img src="/images/what.png" /></a>
+                    </div>
+
+                    <div id="region_targeting_type">
+                        <ul>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_region_targeting_type_0">
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_0" value="all" name="region_targeting_type" />
+                                    All Regions
+                                </label>
+                            </li>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_region_targeting_type_1">
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'regions_and_cities' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="regions_and_cities" name="region_targeting_type" />
+                                    Specific Regions within Country
+                                    <a data-toggle="modal" href="#targeted_regions_and_cities_help"><img src="/images/what.png" /></a>
+                                </label>
+                                <div style="margin-top: 10px; margin-left: 16px;">
+                                    <label>States and Metro Areas (DMA) - Wi-Fi Only Required</label><br />
+                                    {{ line_item_form.targeted_regions }}
+                                </div>
+                                <div style="margin-left: 16px;">
+                                    <label>Cities</label><br />
+                                    {{ line_item_form.targeted_cities }}
+                                </div>
+                            </li>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_region_targeting_type_2">
+                                    <input {% if line_item_form.region_targeting_type|field_value == 'zip_codes' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip_codes" name="region_targeting_type" />
+                                    Specific ZIP Codes (US only) - Wi-Fi Only Required
+                                    <a data-toggle="modal" href="#targeted_zip_codes_help"><img src="/images/what.png" /></a>
+                                </label>
+                                <div style="margin-left: 16px;">
+                                    {{ line_item_form.targeted_zip_codes }}
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+            <li>
+                {{ line_item_form.connectivity_targeting_type.label_tag }}
+                <div>
+                    <div id="targeted_carriers">
+                        <ul>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_connectivity_targeting_type_0">
+                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_0" value="all" name="connectivity_targeting_type">
+                                    All Carriers and Wi-Fi
+                                </label>
+                            </li>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_connectivity_targeting_type_1">
+                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'wi-fi' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_1" value="wi-fi" name="connectivity_targeting_type">
+                                    Wi-Fi Only
+                                    <a data-toggle="modal" href="#targeted_wifi_help"><img src="/images/what.png" /></a>
+                                </label>
+                            </li>
+                            <li>
+                                {# TODO: render using widget #}
+                                <label for="id_connectivity_targeting_type_2">
+                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'carriers' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_2" value="carriers" name="connectivity_targeting_type">
+                                    Selected Carriers
+                                    <a data-toggle="modal" href="#targeted_carriers_help"><img src="/images/what.png" /></a>
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                    <div style="margin-left: 16px;">
+                        {{ line_item_form.targeted_carriers }}
+                    </div>
+                </div>
+            </li>
             <li>
                 {{ line_item_form.device_targeting.label_tag }}
                 <div id="device_targeting">
@@ -249,98 +341,6 @@
                     </ul>
                 </div>
             </li>
-            <li>
-                {{ line_item_form.targeted_countries.label_tag }}
-                <div>
-                    {# TODO: render using widget #}
-                    <label>
-                        Users who are
-                        <select name="accept_targeted_locations" id="id_accept_targeted_locations">
-                            <option {% if not line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="0">Not Located</option>
-                            <option {% if line_item_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="1">Located</option>
-                        </select>
-                        in
-                    </label>
-                    <div style="margin-top: 10px;">
-                        {{ line_item_form.targeted_countries }}
-                        <a data-toggle="modal" href="#targeted_countries_help">What's this?</a>
-                    </div>
-
-                    <div id="region_targeting_type">
-                        <ul>
-                            <li>
-                                {# TODO: render using widget #}
-                                <label for="id_region_targeting_type_0">
-                                    <input {% if line_item_form.region_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_0" value="all" name="region_targeting_type" />
-                                    All Regions
-                                </label>
-                            </li>
-                            <li>
-                                {# TODO: render using widget #}
-                                <label for="id_region_targeting_type_1">
-                                    <input {% if line_item_form.region_targeting_type|field_value == 'regions_and_cities' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="regions_and_cities" name="region_targeting_type" />
-                                    Specific Regions within Country
-                                    <a data-toggle="modal" href="#targeted_regions_and_cities_help">What's this?</a>
-                                </label>
-                                <div style="margin-top: 10px; margin-left: 16px;">
-                                    <label>States and Metro Areas (DMA) - Wi-Fi Required</label><br />
-                                    {{ line_item_form.targeted_regions }}
-                                </div>
-                                <div style="margin-left: 16px;">
-                                    <label>Cities</label><br />
-                                    {{ line_item_form.targeted_cities }}
-                                </div>
-                            </li>
-                            <li>
-                                {# TODO: render using widget #}
-                                <label for="id_region_targeting_type_2">
-                                    <input {% if line_item_form.region_targeting_type|field_value == 'zip_codes' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip_codes" name="region_targeting_type" />
-                                    Specific ZIP Codes (US only) - Wi-Fi Required
-                                    <a data-toggle="modal" href="#targeted_zip_codes_help">What's this?</a>
-                                </label>
-                                <div style="margin-left: 16px;">
-                                    {{ line_item_form.targeted_zip_codes }}
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </li>
-            <li>
-                {{ line_item_form.connectivity_targeting_type.label_tag }}
-                <div>
-                    <div id="targeted_carriers">
-                        <ul>
-                            <li>
-                                {# TODO: render using widget #}
-                                <label for="id_connectivity_targeting_type_0">
-                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_0" value="all" name="connectivity_targeting_type">
-                                    All Carriers and Wi-Fi
-                                </label>
-                            </li>
-                            <li>
-                                {# TODO: render using widget #}
-                                <label for="id_connectivity_targeting_type_1">
-                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'wi-fi' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_1" value="wi-fi" name="connectivity_targeting_type">
-                                    Wi-Fi Only
-                                    <a data-toggle="modal" href="#targeted_wifi_help">What's this?</a>
-                                </label>
-                            </li>
-                            <li>
-                                {# TODO: render using widget #}
-                                <label for="id_connectivity_targeting_type_2">
-                                    <input {% if line_item_form.connectivity_targeting_type|field_value == 'carriers' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_2" value="carriers" name="connectivity_targeting_type">
-                                    Selected Carriers
-                                    <a data-toggle="modal" href="#targeted_carriers_help">What's this?</a>
-                                </label>
-                            </li>
-                        </ul>
-                    </div>
-                    <div style="margin-left: 16px;">
-                        {{ line_item_form.targeted_carriers }}
-                    </div>
-                </div>
-            </li>
         </ul>
     </fieldset>
 
@@ -365,7 +365,7 @@
                     <div style="margin-top: 10px;">
                         {{ line_item_form.included_apps }}
                         {{ line_item_form.excluded_apps }}
-                        <a href="#" id="campaignForm-apps-helpLink">What's this?</a>
+                        <a href="#" id="campaignForm-apps-helpLink"><img src="/images/what.png" /></a>
                         <div id="campaignForm-apps-helpContent" class="hidden">
                             <h3>User targeting</h3>
                             <p>User targeting enables you to specify certain groups of users for each ad campaign that will or will not be shown an ad. This feature is especially useful for cross-promotional install campaigns where you may want to exclude users that already have certain apps installed.</p>
@@ -394,7 +394,7 @@
                 {{ line_item_form.keywords.label_tag }}
                 <div>
                     {{ line_item_form.keywords }}
-                    <a href="#" id="keywords-helpLink">What's this?</a>
+                    <a href="#" id="keywords-helpLink"><img src="/images/what.png" /></a>
                     <div id="keywords-helpContent" class="hidden">
                         <h3>Keywords</h3>
                         <p>
@@ -437,8 +437,17 @@
         <h3>Country Targeting</h3>
     </div>
     <div class="modal-body">
-        <p>Target your line item to deliver ads only to a specific set of countries.  By default (when the list is empty), your line item will be targeting all countries.</p>
-        <p>If you do specify a country, additional regions within that country may be available for more granular targeting.  A country can be removed by selecting the 'X' to the right of the country name.</p>
+        <p>Target your line item to a specific set of countries.  By default, when the list is empty, your line item will be targeting all countries.</p>
+        <p>
+            The type ahead field allows you to quickly add countries that you want to target.  Countries can be removed by selecting the 'X' to the right of the country name.  By selecting certain countries, additional region targeting may become available:
+            <ul>
+                <li>States / Provinces - available for US and Canada (Wi-Fi required)</li>
+                <li>Metro Areas / DMAs - available for US-only (Wi-Fi required)</li>
+                <li>ZIP codes - available for US-only (Wi-Fi required)</li>
+                <li>Cities - available for most countries</li>
+            </ul>
+            Note that you can target a geographical selection by expressing what countries and regions you want to exclude (“Users who are Not Located in”).
+        </p>
         <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
     </div>
     <div class="modal-footer">
@@ -451,13 +460,14 @@
         <h3>Region Targeting</h3>
     </div>
     <div class="modal-body">
-        <p>Target your line item to deliver ads to specific regions for the countries you selected in the Country targeting field.</p>
-        <p>The type ahead field will surface Cities, States, and Metro (DMA) regions for the countries you selected.  Note that removing a country selected in Country Targeting will remove the regions contained within it.</p>
+        <p>Target your line item to specific regions within the countries you selected in the Country targeting field.</p>
+        <p>The type ahead field will surface City, State, and Metro Area / DMA regions for the countries you have selected.  Note that removing a country selected in Country Targeting will remove the regions contained within it.</p>
         <p>
             Additionally note that:
             <ul>
-                <li>Targeting by states is available for US and Canada only; metro area (DMA) targeting is available for US only.</li>
-                <li>State and metro area (DMA) are available only for campaigns targeted to Wi-Fi-only traffic. These option will not be available if selected carriers are chosen.</li>
+                <li>Targeting by states is available for the US and Canada (Wi-Fi required).</li>
+                <li>Targeting by metro area / DMA is available for US only (Wi-Fi required).</li>
+                <li>These options will be unavailable if Carrier targeting is chosen.</li>
             </ul>
         </p>
         <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
@@ -472,12 +482,12 @@
         <h3>ZIP Code Targeting</h3>
     </div>
     <div class="modal-body">
-        <p>Target your line item to deliver ads to a set of specific ZIP codes if you have selected United States in the Country targeting field.</p>
-        <p>Provide a list of ZIP codes in the provided field, each ZIP code should be separated by whitespace.  Note that removing the United States as a country selected in Country Targeting will remove the ZIP codes you provide here.</p>
+        <p>Target your line item to a set of specific ZIP codes if you have selected US in the Country targeting field.</p>
+        <p>Provide a list of ZIP codes in the provided field, each ZIP code should be on its own line or separated by a whitespace.  Note that removing the US in the Country targeting field will remove the ZIP codes you provide here.</p>
         <p>
             Additionally note that:
             <ul>
-                <li>Targeting by is available for US only.</li>
+                <li>Targeting by ZIP code is available for US only.</li>
                 <li>ZIP code targeting is only available only campaigns targeted to Wi-Fi-only traffic. These option will not be available if selected carriers are chosen.</li>
             </ul>
         </p>
@@ -494,13 +504,7 @@
     </div>
     <div class="modal-body">
         <p>Targeting by Wi-Fi will allow your line item to deliver ads only to traffic coming over a Wi-Fi connection.</p>
-        <p>
-            Additionally note that:
-            <ul>
-                <li>Some Region targeting options such as State, Metro Area (DMA), and ZIP code targeting require you to select the Target Wi-Fi-only option.</li>
-            </ul>
-        </p>
-        <p>Questions? Get more info on Targeting by Connectivity in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+        <p>Questions? Get more info on Connectivity targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
     </div>
     <div class="modal-footer">
         <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
@@ -515,12 +519,13 @@
         <p>Target your line item to deliver ads to specific carriers for the countries you selected in the Country targeting field.</p>
         <p>Use the typeahead field to input carrier names.  Note that removing a country selected in Country Targeting will remove the carriers contained within it.</p>
         <p>
-            Additionally note that:
+            Note that:
             <ul>
-                <li>Carrier targeting is only available for the US, Canada, and UK.</li>
+                <li>Carrier targeting is available for the US, Canada, and UK.</li>
+                <li>Some geo-targeting options such as State, Metro Area / DMA, and ZIP code require Wi-Fi and will not be available if you select carrier targeting.</li>
             </ul>
         </p>
-        <p>Questions? Get more info on Targeting by Connectivity in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+        <p>Questions? Get more info on Carrier targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
     </div>
     <div class="modal-footer">
         <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
@@ -529,10 +534,11 @@
 
 <div class="hidden modal" id="target_carriers_warning">
     <div class="modal-header">
-        <h3>Target Carriers Warning</h3>
+        <h3>Untargeting Wi-Fi Only</h3>
     </div>
     <div class="modal-body">
-        <p>Untargeting Wi-Fi will remove targeted States, Metro Areas, and ZIP Codes. Are you sure you want to continue?</p>
+        <p>Untargeting Wi-Fi Only will remove all of your State, Metro Area / DMA, or ZIP code targeting.</p>
+        <p>Are you sure you want to continue?</p>
     </div>
     <div class="modal-footer">
         <a class="btn" data-dismiss="modal" href="#">Cancel</a>

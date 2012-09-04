@@ -107,30 +107,7 @@ class LineItemForm(forms.ModelForm):
     # Targeting
     # site_keys defined in __init__
 
-    # Device Targting
-    device_targeting = forms.TypedChoiceField(
-        choices=(('0', 'All'),
-                 ('1', 'Filter by device and OS')),
-        coerce=lambda x: bool(int(x)), initial=False,
-        label='Device Targeting:', required=False, widget=forms.RadioSelect)
-    target_iphone = forms.BooleanField(initial=True, label='iPhone',
-                                       required=False)
-    target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
-    target_ipad = forms.BooleanField(initial=True, label='iPad', required=False)
-    ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
-                                        label='Min', required=False)
-    ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
-                                        label='Max', required=False)
-    target_android = forms.BooleanField(initial=True, label='Android',
-                                        required=False)
-    android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
-                                            label='Min', required=False)
-    android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
-                                            label='Max', required=False)
-    target_other = forms.BooleanField(initial=True, label='Other',
-                                      required=False)
-
-    # Geography Targeting
+    # Geo Targeting
     accept_targeted_locations = forms.TypedChoiceField(
         choices=(('0', 'Not Located'),
                  ('1', 'Located')),
@@ -161,6 +138,29 @@ class LineItemForm(forms.ModelForm):
         initial='all', label='Connectivity:', widget=forms.RadioSelect)
     targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': 'Ex: Verizon, ...'}))
+
+    # Device Targting
+    device_targeting = forms.TypedChoiceField(
+        choices=(('0', 'All'),
+                 ('1', 'Filter by device and OS')),
+        coerce=lambda x: bool(int(x)), initial=False,
+        label='Device:', required=False, widget=forms.RadioSelect)
+    target_iphone = forms.BooleanField(initial=True, label='iPhone',
+                                       required=False)
+    target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
+    target_ipad = forms.BooleanField(initial=True, label='iPad', required=False)
+    ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
+                                        label='Min', required=False)
+    ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
+                                        label='Max', required=False)
+    target_android = forms.BooleanField(initial=True, label='Android',
+                                        required=False)
+    android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
+                                            label='Min', required=False)
+    android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
+                                            label='Max', required=False)
+    target_other = forms.BooleanField(initial=True, label='Other',
+                                      required=False)
 
     # User Targeting
     # included_apps defined in __init__
@@ -397,6 +397,9 @@ class LineItemForm(forms.ModelForm):
             self._errors['end_datetime'].append('End datetime must be after start datetime')
 
     def _clean_geographical_targeting(self, cleaned_data):
+        if not cleaned_data['accept_targeted_locations'] and not cleaned_data['targeted_countries']:
+            self._errors['accept_targeted_locations'] = ErrorList()
+            self._errors['accept_targeted_locations'].append('You must select some geography to target against.')
         if cleaned_data['region_targeting_type'] != 'regions_and_cities':
             cleaned_data['targeted_regions'] = []
             cleaned_data['targeted_cities'] = []
@@ -406,7 +409,7 @@ class LineItemForm(forms.ModelForm):
     def _clean_connectivity_targeting(self, cleaned_data):
         if cleaned_data['connectivity_targeting_type'] == 'wi-fi':
             cleaned_data['targeted_carriers'] = ['Wi-Fi']
-        if cleaned_data['connectivity_targeting_type'] != 'carriers':
+        elif cleaned_data['connectivity_targeting_type'] != 'carriers':
             cleaned_data['targeted_carriers'] = []
 
     def save(self, *args, **kwargs):

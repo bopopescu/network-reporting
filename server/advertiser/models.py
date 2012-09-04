@@ -221,7 +221,7 @@ class AdGroup(db.Model):
     # list of keys corresponding to Site objects.
     site_keys = db.ListProperty(db.Key)
 
-    # Device Targeting
+    # Device
     device_targeting = db.BooleanProperty(default=False)
     target_iphone = db.BooleanProperty(default=True)
     target_ipod = db.BooleanProperty(default=True)
@@ -281,15 +281,29 @@ class AdGroup(db.Model):
     active_app = db.StringListProperty(default=['any'])
 
     @property
+    def targeted_regions_tuples(self):
+        targeted_region_tuples = []
+        if self.targeted_regions:
+            for region in self.targeted_regions:
+                match = re.match("^\('(.*)','(.*)'\)$", region)
+                if match:
+                    targeted_region_tuples.append(match.groups())
+                else:
+                    logging.error("Malformed targeted region %s for adgroup %s" % (
+                        region, self.key()))
+        return targeted_region_tuples
+
+    @property
     def targeted_cities_tuples(self):
         targeted_cities_tuples = []
-        for city in self.targeted_cities:
-            match = re.match("^\((.*),(.*),'(.*)','(.*)','(.*)'\)$", city)
-            if match:
-                targeted_cities_tuples.append(match.groups())
-            else:
-                logging.error("Malformed targeted city %s for adgroup %s" % (
-                    city, self.key()))
+        if self.targeted_cities:
+            for city in self.targeted_cities:
+                match = re.match("^\((.*),(.*),'(.*)','(.*)','(.*)'\)$", city)
+                if match:
+                    targeted_cities_tuples.append(match.groups())
+                else:
+                    logging.error("Malformed targeted city %s for adgroup %s" % (
+                        city, self.key()))
         return targeted_cities_tuples
 
     @property
@@ -426,7 +440,7 @@ class AdGroup(db.Model):
             target_other=self.target_other,
             accept_targeted_locations=self.accept_targeted_locations,
             targeted_countries=self.targeted_countries,
-            targeted_regions=self.targeted_regions,
+            targeted_regions=self.targeted_regions_tuples,  # modified
             targeted_cities=self.targeted_cities_tuples,  # modified
             targeted_zip_codes=self.targeted_zip_codes,
             targeted_carriers=self.targeted_carriers,

@@ -1020,6 +1020,7 @@
                    !$('input[name="end_datetime_1"]').val()) {
                     if($('select[name="budget_type"]').val() == 'full_campaign') {
                         $('input[name="budget_strategy"][value="evenly"]').attr('disabled', 'disabled');
+                        $('input[name="budget_strategy"][value="evenly"]').parent().addClass('muted');
                         return;
                     }
                     if($('input[name="budget_strategy"][value="evenly"]').prop('checked')) {
@@ -1027,7 +1028,7 @@
                         return;
                     }
                 }
-
+                $('input[name="budget_strategy"][value="evenly"]').parent().removeClass('muted');
                 $('select[name="budget_type"] option[value="full_campaign"]').removeAttr('disabled');
                 $('input[name="budget_strategy"][value="evenly"]').removeAttr('disabled');
             }).change();
@@ -1107,7 +1108,7 @@
                 var us_is_targeted = _.include(targeted_countries, 'US');
                 var ca_is_targeted = _.include(targeted_countries, 'CA');
                 var gb_is_targeted = _.include(targeted_countries, 'GB');
-                var wifi_is_targeted = $('input[name="connectivity_targeting_type"]:checked').val() != 'carriers';
+                var wifi_is_targeted = $('input[name="connectivity_targeting_type"]:checked').val() == 'wi-fi';
 
                 update_regions_and_cities(targeted_countries, us_is_targeted, ca_is_targeted, wifi_is_targeted);
                 update_zip_codes(us_is_targeted, wifi_is_targeted);
@@ -1171,6 +1172,7 @@
                 $targeted_regions.trigger("liszt:updated");
             }
 
+            var city_name_regex = /^(.*), (.*), (.*)$/;
             function update_cities(targeted_countries) {
                 if(!targeted_countries) {
                     // whenever this is true, this input is hidden.
@@ -1179,8 +1181,9 @@
                     $('option:selected', $targeted_cities).each(function (index, option) {
                         var $option = $(option);
                         var name = $option.html();
+                        var match = city_name_regex.exec(name);
                         // TODO: this is a hack, should use a regex to parse the value
-                        var country = name.substring(name.length - 2, name.length);
+                        var country = match[3];
                         if(!_.include(targeted_countries, country)) {
                             $option.remove();
                         }
@@ -1309,9 +1312,24 @@
                 }
             );
 
-            $('#id_connectivity_targeting_type_0, #id_connectivity_targeting_type_1').change(function () {
+            $('#id_connectivity_targeting_type_1').change(function () {
                 $('#id_targeted_carriers').parent().hide();
                 update_geographical_and_connectivity_targeting();
+            });
+            $connectivity_targeting_type_all.click(function () {
+                console.log('shit');
+                if($targeted_regions.val() || $targeted_zip_codes.val()) {
+                    event.preventDefault();
+                    $('#target_carriers_warning .continue').unbind().click(function () {
+                        $connectivity_targeting_type_all.attr('checked', 'checked');
+                        $('#id_targeted_carriers').parent().hide();
+                        update_geographical_and_connectivity_targeting();
+                    })
+                    $('#target_carriers_warning').modal();
+                }
+                else {
+                    update_geographical_and_connectivity_targeting();
+                }
             });
             $connectivity_targeting_type_carriers.click(function () {
                 if($targeted_regions.val() || $targeted_zip_codes.val()) {
@@ -1345,10 +1363,10 @@
             })
             $targeted_regions.trigger("liszt:updated");
 
+            var city_tuple_regex = /^\((.*),(.*),'(.*)','(.*)','(.*)'\)$/;
             _.each(bootstrapping_data.targeted_cities, function (targeted_city) {
-                var parts = targeted_city.split(',\'');
-                // TODO: this is a hack, use regex to parse value
-                var name = parts[1].substring(0, parts[1].length - 1) + ', ' + parts[2].substring(0, parts[2].length - 1) + ', ' + parts[3].substring(0, parts[3].length - 2);
+                var match = city_tuple_regex.exec(targeted_city);
+                var name = match[3] + ', ' + match[4] + ', ' + match[5];
                 $targeted_cities.append($('<option />', {
                     html: name,
                     selected: 'selected',

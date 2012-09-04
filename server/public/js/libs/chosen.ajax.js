@@ -18,13 +18,14 @@
     this.chosen();
     return this.each(function() {
       return $(this).next('.chzn-container').find(".search-field > input, .chzn-search > input").bind('keyup', function() {
-        var field, msg, success, val;
-        val = $.trim($(this).attr('value'));
+        var field, msg, success, val, original_val;
+        original_val = $(this).attr('value');
+        val = $.trim(original_val);
         msg = val.length < options.minTermLength ? "Keep typing..." : "Looking for '" + val + "'";
         select.next('.chzn-container').find('.no-results').text(msg);
-        if (val === $(this).data('prevVal')) {
-          return false;
-        }
+        // if (val === $(this).data('prevVal')) {
+        //   return false;
+        // }
         $(this).data('prevVal', val);
         if (this.timer) {
           clearTimeout(this.timer);
@@ -64,7 +65,7 @@
           if (success != null) {
             success(data);
           }
-          field.attr('value', val);
+          field.attr('value', original_val);
           return field.css('width', 'auto');
         };
         return this.timer = setTimeout(function() {

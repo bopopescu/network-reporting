@@ -173,7 +173,7 @@ class ReportQueryManager(CachedQueryManager):
             report_q.filter('sched_interval !=', not_sched_interval)
         return list(report_q.run(batch_size=300, limit=limit))
 
-    def get_reports_to_schedule(now, interval):
+    def get_reports_to_schedule(self, now, interval):
         """Get all scheduled reports that are to be run now."""
         scheds = ScheduledReport.all().filter('next_sched_date =', now)
 

@@ -199,22 +199,21 @@ class ScheduledRunner(RequestHandler):
         else:
             now = datetime.strptime(now, '%y%m%d').date()
 
+        # Loop through all of the scheduled report intervals; done to make app engine
+        # querying behave better
         for interval in ['daily', 'weekly', 'monthly', 'quarterly']:
             logging.info('Running scheduled reports for %s' % interval)
             logging.info('Now is %s' % now)
 
-            scheds = ScheduledReport.all().filter('next_sched_date =', now)
-            scheds.filter('sched_interval =', interval)
-
-            # Don't run deleted or unsaved reports
-            scheds.filter('deleted =', False)
-            scheds.filter('saved =', True)
-
             num_scheduled = 0
 
-            for sched in scheds:
+            # Fetch all of the reports to schedule
+            scheduled_reports = man.get_reports_to_schedule(now, interval)
+
+            for scheduled_report in scheduled_reports:
                 try:
-                    man.new_report(sched, now=now)
+                    # Run the report and schedule the next run
+                    man.new_report(scheduled_report, now=now)
                     num_scheduled += 1
                 except Exception:
                     continue
@@ -222,6 +221,7 @@ class ScheduledRunner(RequestHandler):
             logging.info('Scheduled %d reports' % num_scheduled)
 
         return HttpResponse("Scheduled reports have been created")
+
 
 def sched_runner(request, *args, **kwargs):
     return ScheduledRunner(login=False)(request, *args, **kwargs)

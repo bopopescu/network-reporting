@@ -173,6 +173,19 @@ class ReportQueryManager(CachedQueryManager):
             report_q.filter('sched_interval !=', not_sched_interval)
         return list(report_q.run(batch_size=300, limit=limit))
 
+    def get_reports_to_schedule(now, interval):
+        """Get all scheduled reports that are to be run now."""
+        scheds = ScheduledReport.all().filter('next_sched_date =', now)
+
+        # Only run reports scheduled for the argument interval
+        scheds.filter('sched_interval =', interval)
+
+        # Don't run deleted or unsaved reports
+        scheds.filter('deleted =', False)
+        scheds.filter('saved =', True)
+
+        return scheds
+
     def new_report(self, report, now=None, testing=False):
         if not isinstance(report, db.Model) or isinstance(report, str) or isinstance(report, unicode):
             report = self.get_report_by_key(report)

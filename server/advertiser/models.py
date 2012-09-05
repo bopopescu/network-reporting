@@ -188,7 +188,7 @@ class AdGroup(db.Model):
     optimizable = db.BooleanProperty(default=False)
     default_cpm = db.FloatProperty()  # TODO: default
 
-    name = db.StringProperty(default='Line Item Name', required=True)
+    name = db.StringProperty(default='Line Item Name')
 
     adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
                                               'network', 'promo',

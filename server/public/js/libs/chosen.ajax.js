@@ -66,7 +66,9 @@
           var rem = field.attr('value');
           select.trigger("liszt:updated");
           field.attr('value', rem);
-          field.closest('.chzn-container').find('.active-result').first().addClass('highlighted');
+          var $first_active = field.closest('.chzn-container').find('.active-result').first();
+          $first_active.mouseover();
+          // select.result_do_highlight($first_active);
           return field.css('width', 'auto');
         };
         return this.timer = setTimeout(function() {

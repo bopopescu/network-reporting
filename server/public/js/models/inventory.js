@@ -174,6 +174,7 @@ var mopub = mopub || {};
             return format_stat(stat, this.get_stat(stat));
         },
 
+        
         /*
          * `get_formatted_stat_sum`
          * Returns the summed (or averaged, for some derivative stats)
@@ -181,26 +182,70 @@ var mopub = mopub || {};
          *
          * e.g. get_formatted_stat_sum('rev')  // "$1,402.53"
          *
-         * Works for both models and collections.
+         * Works for collections.
          */
         get_formatted_stat_sum: function(stat) {
             var these_models = this.models;
-            var sum = these_models.reduce(function(memo, model){
-                return memo + model.get_stat(stat);
-            }, 0);
 
-            // Note: this is treating derivative stats as an average.
-            // it should be a weighted average.
-            if (stat === 'ctr' ||
-                stat === 'fill_rate' ||
-                stat === 'conv_rate' ||
-                stat === 'cpm') {
-                sum = sum / these_models.length;
-            }
+            if (stat === 'ctr') {
 
-            return format_stat(stat, sum);
+                var imp_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('imp');
+                }, 0);                
+                var clk_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('clk');
+                }, 0);
+                var total_ctr = calculate_ctr(imp_sum, clk_sum);
+                
+                return format_stat('ctr', total_ctr);
+                
+            } else if (stat === 'fill_rate') {
+
+                var req_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('req');
+                }, 0);                
+                var imp_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('imp');
+                }, 0);
+                var total_fill_rate = calculate_fill_rate(req_sum, imp_sum);
+                
+                return format_stat('fill_rate', total_fill_rate);                
+                
+            } else if (stat === 'conv_rate') {
+
+                var conv_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('conv');
+                }, 0);                
+                var clk_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('clk');
+                }, 0);
+                var total_conv_rate = calculate_conv_rate(conv_sum, clk_sum);
+            
+                return format_stat('conv_rate', total_conv_rate);
+                
+            } else if (stat === 'cpm') {
+                
+                var imp_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('imp');
+                }, 0);                
+                var rev_sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat('rev');
+                }, 0);
+                var total_cpm = calculate_cpm(imp_sum, rev_sum);
+            
+                return format_stat('cpm', total_cpm);
+                
+            } else {
+                var sum = these_models.reduce(function(memo, model){
+                    return memo + model.get_stat(stat);
+                }, 0);
+                
+                return format_stat(stat, sum);
+            }            
         },
 
+        
+        
         /*
          * `get_formatted_daily_stats`
          * Returns an object with formatted stats for each day

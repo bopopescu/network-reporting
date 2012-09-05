@@ -69,6 +69,7 @@ def submit_report_request(report):
         response = _report_server_http_call(submission_url)
     except Exception, e:
         logging.warn("Couldn't contact report service: " + str(e))
+        raise
     else:
         logging.info('Reponse from report server:' + response)
 

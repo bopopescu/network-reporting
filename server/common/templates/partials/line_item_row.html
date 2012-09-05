@@ -78,3 +78,77 @@
     </a>
   </td>
 </tr>
+
+<div class="hidden" id="{{ line_item.key }}-popover-content">
+  <h6>Allocation</h6> 
+  {{ line_item.allocation_percentage }}%
+  <br /><br />
+  
+  <h6> Frequency Caps </h6> 
+  {{ line_item.frequency_cap_display }}
+  <br /><br />
+  
+  <h6> Geo Targeting </h6>
+  
+  Countries: {{ line_item.targeted_countries|joinby:", "|default:"All countries" }}
+  <br />
+  Regions:
+  {% if line_item.targeted_regions_tuples %}
+    {% for region in line_item.targeted_regions_tuples %}
+      {{ region.0 }} ({{ region.1 }}){% if not forloop.last %}, {% endif %}
+    {% endfor %}
+  {% else %}
+    All regions
+  {% endif %}
+  <br />
+  
+  Cities:
+  {% if line_item.targeted_cities_tuples %}
+    {% for city in line_item.targeted_cities_tuples %}
+      {#<a href="#" class="targeted_city" rel="tooltip" title="{{city.0}}, {{city.1}}">#}
+        {{ city.2 }} ({{city.3}}, {{city.4}})
+        {#</a>#}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+  {% else %}
+    All cities
+  {% endif %}
+  <br />
+  
+  {% if line_item.targeted_regions or line_item.targeted_cities %}
+    Zip Codes: {{ line_item.targeted_zip_codes|joinby:", "|default:"All zip codes within targeted cities/regions" }}
+  {% else %}
+    Zip Codes: {{ line_item.targeted_zip_codes|joinby:", "|default:"All zip codes" }}
+  {% endif %}
+  <br /><br />
+  
+  <h6> Device Targeting </h6>
+  {{ line_item.device_targeting_display|joinby:"<br/>"|safe }}
+  <br /><br />
+
+  {% comment %}
+    Commenting this out for now because it's really expensive with
+    GAE's datastore to pull all of the app names. We can do this
+    much more easily when we're on SQL. Leaving this commented until then.
+    
+  <h6> App Targeting </h6>
+  {% if line_item.included_apps %}
+    {{ line_item.included_apps|joinby:", " }}
+  {% endif %}
+  {% if line_item.excluded_apps %}
+    {{ line_item.excluded_apps|joinby:", " }}
+  {% endif %}
+  {% if not line_item.excluded_apps and not line_item.included_apps%}
+    Targeting users with all apps
+  {% endif %}
+  <br /><br />
+  {% endcomment %}
+
+  <h6> Keyword Targeting </h6>
+  {% if line_item.keywords %}
+    {{ line_item.keywords|joinby:", " }}
+  {% else %}
+    No keywords targeted
+  {% endif %}
+  <br /><br />
+  
+</div>

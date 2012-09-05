@@ -295,6 +295,9 @@ class AdGroup(db.Model):
                         region, self.key()))
         return targeted_region_tuples
 
+    def targeted_regions_display(self):
+        pass
+
     @property
     def targeted_cities_tuples(self):
         targeted_cities_tuples = []
@@ -724,9 +727,11 @@ class AdGroup(db.Model):
                 ios_display.append("iPod")
 
             if ios_display:
+                
                 ios_display_all = ", ".join(ios_display) + \
                                   " (iOS version " + self.ios_version_min + \
                                   " to " + self.ios_version_max + ")"
+                ios_display_all = ios_display_all.replace("to 999", "and up")
                 display.append(ios_display_all)
 
             # Android Targeting
@@ -734,6 +739,7 @@ class AdGroup(db.Model):
                 android_display_all = "Android Devices (version " + \
                                       self.android_version_min + " to " + \
                                       self.android_version_max + ")"
+                android_display_all = android_display_all.replace("to 999", "and up")
                 display.append(android_display_all)
 
             if self.target_other:

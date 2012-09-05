@@ -82,6 +82,9 @@
                 <th class="dataTable-name">Name</th>
                 <th class="dataTable-name">Details</th>
                 <th class="dataTable-date">Last Run</th>
+                {% if user.is_staff %}
+                  <th class="dataTable-date">Next Run</th>
+                {% endif %}
                 <th class="dataTable-data" style='width:100px;'>Scheduled</th>
                 <th class="dataTable-data">Status</th>
               </tr>
@@ -110,6 +113,11 @@
                   <td class="dataTable-date">
                     {{ report.last_run|date:"N j, Y \<\b\r /\> f a"|safe }}
                   </td>
+                  {% if user.is_staff %}
+                    <td class="dataTable-date">
+                      {{ report.next_sched_date }}
+                    </td>
+                  {% endif %}
                   <td class="dataTable-data">
                     {% if report.sched_interval and report.sched_interval != "none" %}
                       {{ report.sched_interval|capfirst }}

@@ -32,10 +32,10 @@
             $('#id_new-sched_interval').change(function(e) {
                 if($(this).val() == 'none') {
                     // Show run button
-                    $('#new-reportEditForm-runSpan').show();
+                    $('#new-reportEditForm-run').show();
                 } else {
                     // Hide run button
-                    $('#new-reportEditForm-runSpan').hide();
+                    $('#new-reportEditForm-run').hide();
                 }
             }).change();
             

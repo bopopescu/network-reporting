@@ -1,30 +1,75 @@
+# Deployed Wednesday, September 05, 2012 at 09:48PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-199
+### Bugs Fixed: []
+### Included Commits: 
+ * 0d31322 merged
+ * 7b04b43 Deployed without finding any bug fixes.
+ * a7a531b Merge branch 'master' into geo-targeting-freeze
+ * 9bff30a merged
+ * 9310906 Merge branch 'master' of github.com:mopub/mopub into geo-targeting-freeze
+ * a335dcb freeze geo targeting for line items and networks
+ * b3892f2 fixes
+ * 1f71fc9 fixed some formatting
+ * ba0076a Merge branch 'targeting-improvements' of github.com:mopub/mopub into targeting-improvements
+ * 0de4c56 Merge branch 'targeting-improvements' of github.com:mopub/mopub into targeting-improvements
+ * 552fb47 added the new targeting information to the line item popover
+ * d38c4a9 fixed bug
+ * 76e3efd fixed type ahead bug for real
+ * 6389378 fixed type ahead bug
+ * eeeef70 fixes
+ * ccdfed9 merged
+ * 632428f returned mktplace_price_floor because it looks like it is used
+ * 9217f4e fixed networks targeting
+ * 65ba889 fixed mapreduce
+ * 6f207d8 last fixes
+ * fe4eda9 merge
+ * bc7e4cc more different fixes
+ * d2574e4 placeholder fix
+ * 2f2c213 fixes
+ * 1c63e22 fixes
+ * a7af710 cities for all countries
+ * 8290653 warning and fixes
+ * 5ef9f52 added help text, updated styles
+ * 24c2911 fixed accept_targeted_locations
+ * 02f5a86 updated geography and connectivity targeting dependencies
+ * 8577bc7 merged
+ * 8c40fb4 zip validation
+ * 5661088 updates
+ * 2af1906 added chosen ajax
+ * 928ab3f did some more shit
+ * d414ecf merged
+ * 39b3024 commit to merge
+ * 5d4b66a Merge branch 'master' into targeting-improvements
+ * feff317 merged in new master to stashed changes
+ 
 # Deployed Wednesday, September 05, 2012 at 06:15PM PST
 ### Deployed by John Pena
 ### Tagged deploy-196
 ### Bugs Fixed: []
-### Included Commits: 
- * bdd10c3 Merge branch 'yolken-dev-emails2'
- * bebeab7 Fix small bug in get_reports_to_schedule function
- * 0a584bb Changes in response to code review
- * 0a9673e Remove debug, filtering for just yolken account
- * 0a764ed Change scheduled report filters to use equality on next_sched_date
- * a62b3b0 merged in ui-102
- * 174e6fa fixed versions merge conflict
- * e88d3c0 Make scheduled reports query more efficient
- * 931130f Raise exception when report server not accessible
- * 3cc0e21 Point staging at prod reporting system
- * b058aa1 Check scheduled report account inside try/except; turn on debug mode
- * 25a8cac Fix bug in scheduled report account reference
- * 6d0590e Do filtering on scheduled reports saved and deleted fields in code
- * 5386a5c Filter scheduled reports to only cover Benjamin Yolken
- * 301c4e9 Change account num back to its original, non-test value
- * c9834e3 Misc cleanups to logging statements
- * e853046 Misc. cleanup of scheduled reports processing:
- * 50a7335 Deployed without finding any bug fixes.
- * 58db503 added string_utils module
- * 2af13fd unicode to str conversion
- * 7490e9a sanitizing unicode strings that appear in the blocklist
- 
+### Included Commits:
+* bdd10c3 Merge branch 'yolken-dev-emails2'
+* bebeab7 Fix small bug in get_reports_to_schedule function
+* 0a584bb Changes in response to code review
+* 0a9673e Remove debug, filtering for just yolken account
+* 0a764ed Change scheduled report filters to use equality on next_sched_date
+* a62b3b0 merged in ui-102
+* 174e6fa fixed versions merge conflict
+* e88d3c0 Make scheduled reports query more efficient
+* 931130f Raise exception when report server not accessible
+* 3cc0e21 Point staging at prod reporting system
+* b058aa1 Check scheduled report account inside try/except; turn on debug mode
+* 25a8cac Fix bug in scheduled report account reference
+* 6d0590e Do filtering on scheduled reports saved and deleted fields in code
+* 5386a5c Filter scheduled reports to only cover Benjamin Yolken
+* 301c4e9 Change account num back to its original, non-test value
+* c9834e3 Misc cleanups to logging statements
+* e853046 Misc. cleanup of scheduled reports processing:
+* 50a7335 Deployed without finding any bug fixes.
+* 58db503 added string_utils module
+* 2af13fd unicode to str conversion
+* 7490e9a sanitizing unicode strings that appear in the blocklist
+
 # Deployed Thursday, August 30, 2012 at 07:18AM PST
 ### Deployed by Nafis Jamal
 ### Tagged deploy-195

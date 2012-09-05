@@ -726,8 +726,7 @@ class AdGroup(db.Model):
             if self.target_ipod:
                 ios_display.append("iPod")
 
-            if ios_display:
-                
+            if ios_display:                
                 ios_display_all = ", ".join(ios_display) + \
                                   " (iOS version " + self.ios_version_min + \
                                   " to " + self.ios_version_max + ")"

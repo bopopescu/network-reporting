@@ -128,11 +128,13 @@ def migrate_geo_targeting(adgroup):
             cities = []
             if adgroup.cities:
                 if len(countries) == 1:
-                    country = list(countries)[0]
                     for city in adgroup.cities:
-                        city_split = city.split(':')
-                        lat, lng = city_split[0].split(',')
-                        cities.append("(%s,%s,'%s','%s','%s')" % (lat, lng, city_split[2], city_split[3], country))
+                        latlng, state, name, country = city.split(':')
+                        if country == list(countries)[0]:
+                            lat, lng = latlng.split(',')
+                            cities.append("(%s,%s,'%s','%s','%s')" % (lat, lng, name, state, country))
+                        else:
+                            logging.error('City %s targeted its country not targeted for AdGroup %s' % (city, adgroup.key()))
                 else:
                     logging.error('Cities targeted but not exactly one country for AdGroup %s' % adgroup.key())
 

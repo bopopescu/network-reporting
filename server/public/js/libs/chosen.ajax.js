@@ -18,14 +18,13 @@
     this.chosen();
     return this.each(function() {
       return $(this).next('.chzn-container').find(".search-field > input, .chzn-search > input").bind('keyup', function() {
-        var field, msg, success, val, original_val;
-        original_val = $(this).attr('value');
-        val = $.trim(original_val);
+        var field, msg, success, val;
+        val = $.trim($(this).attr('value'));
         msg = val.length < options.minTermLength ? "Keep typing..." : "Looking for '" + val + "'";
         select.next('.chzn-container').find('.no-results').text(msg);
-        // if (val === $(this).data('prevVal')) {
-        //   return false;
-        // }
+        if (val === $(this).data('prevVal')) {
+          return false;
+        }
         $(this).data('prevVal', val);
         if (this.timer) {
           clearTimeout(this.timer);
@@ -61,11 +60,15 @@
               return $("<option />").attr('value', value).html(text).appendTo(select);
             }
           });
-          select.trigger("liszt:updated");
           if (success != null) {
             success(data);
           }
-          field.attr('value', original_val);
+          var rem = field.attr('value');
+          select.trigger("liszt:updated");
+          field.attr('value', rem);
+          var $first_active = field.closest('.chzn-container').find('.active-result').first();
+          $first_active.mouseover();
+          // select.result_do_highlight($first_active);
           return field.css('width', 'auto');
         };
         return this.timer = setTimeout(function() {

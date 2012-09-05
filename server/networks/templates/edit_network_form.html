@@ -47,7 +47,7 @@
                     Revenue reporting for {{ network.pretty_name }} is turned on.
                     {% else %}
                     MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
-                    {% endif %}    
+                    {% endif %}
                 </div>
 
                 {% if network.name != "mobfox" %}
@@ -84,7 +84,7 @@
 
                 <div class="form-submit login-credentials-submit" style="clear: both">
                     <a class="submit btn">
-                        {% if network.name == "mobfox" %} 
+                        {% if network.name == "mobfox" %}
                         Turn on Reporting
                         {% else %}
                         Check and Save Credentials
@@ -160,76 +160,147 @@
             </dd>
 
             <dt>
-            {{ adgroup_form.device_targeting.label_tag }}
+                {{ adgroup_form.targeted_countries.label_tag }}
             </dt>
             <dd>
-                <div class="device-targeting" style="display: inline-block;">
-                    {% comment %}
-                    This field should be rendered using a Django widget, but
-                    there is no good option in 1.2 for a Boolean RadioSelect.
-                    {% endcomment %}
-                    <span class="radios">
-                        {{ adgroup_form.device_targeting }}
-                    </span>
-                    <ul id="device_targeting" class="{% if not adgroup_form.device_targeting|display_value %}hidden{% endif %}">
-                        <li class="inline">
-                            <ul class="devices inline">
-                                <li class="inline">
-                                    <label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label>
-                                </li>
-                                <li class="inline">
-                                    <label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label>
-                                </li>
-                                <li class="inline">
-                                    <label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label>
-                                </li>
-                            </ul>
-                            <div class="inline">
-                                {{ adgroup_form.ios_version_min.label_tag }}
-                                {{ adgroup_form.ios_version_min }}
-                                {{ adgroup_form.ios_version_max.label_tag }}
-                                {{ adgroup_form.ios_version_max }}
+                {# TODO: render using widget #}
+                <label>
+                    Users who are
+                    <select name="accept_targeted_locations" id="id_accept_targeted_locations">
+                        <option {% if not adgroup_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="0">Not Located</option>
+                        <option {% if adgroup_form.accept_targeted_locations|display_value %}selected="selected"{% endif %} value="1">Located</option>
+                    </select>
+                    in
+                </label>
+                <div style="margin-top: 10px;">
+                    {{ adgroup_form.targeted_countries }}
+                    <a data-toggle="modal" href="#targeted_countries_help"><img src="/images/what.png" /></a>
+                </div>
+
+                <div id="region_targeting_type">
+                    <ul>
+                        <li>
+                            {# TODO: render using widget #}
+                            <label for="id_region_targeting_type_0">
+                                <input {% if adgroup_form.region_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_0" value="all" name="region_targeting_type" />
+                                All Regions
+                            </label>
+                        </li>
+                        <li>
+                            {# TODO: render using widget #}
+                            <label for="id_region_targeting_type_1">
+                                <input {% if adgroup_form.region_targeting_type|field_value == 'regions_and_cities' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_1" value="regions_and_cities" name="region_targeting_type" />
+                                Specific Regions within Country
+                            </label>
+                            <a data-toggle="modal" href="#targeted_regions_and_cities_help"><img src="/images/what.png" /></a>
+                            <div style="margin-top: 10px; margin-left: 16px;">
+                                <label>States and Metro Areas (DMA) - Wi-Fi Only Required</label><br />
+                                {{ adgroup_form.targeted_regions }}
+                            </div>
+                            <div style="margin-left: 16px;">
+                                <label>Cities</label><br />
+                                {{ adgroup_form.targeted_cities }}
                             </div>
                         </li>
                         <li>
-                            <div class="devices inline">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</div>
+                            {# TODO: render using widget #}
+                            <label for="id_region_targeting_type_2">
+                                <input {% if adgroup_form.region_targeting_type|field_value == 'zip_codes' %}checked="checked"{% endif %} type="radio" id="id_region_targeting_type_2" value="zip_codes" name="region_targeting_type" />
+                                Specific ZIP Codes (US only) - Wi-Fi Only Required
+                            </label>
+                            <a data-toggle="modal" href="#targeted_zip_codes_help"><img src="/images/what.png" /></a>
+                            <div style="margin-left: 16px;">
+                                {{ adgroup_form.targeted_zip_codes }}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </dd>
+
+            <dt>
+                {{ adgroup_form.connectivity_targeting_type.label_tag }}
+            </dt>
+            <dd>
+                <div id="targeted_carriers">
+                    <ul>
+                        <li>
+                            {# TODO: render using widget #}
+                            <label for="id_connectivity_targeting_type_0">
+                                <input {% if adgroup_form.connectivity_targeting_type|field_value == 'all' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_0" value="all" name="connectivity_targeting_type">
+                                All Carriers and Wi-Fi
+                            </label>
+                        </li>
+                        <li>
+                            {# TODO: render using widget #}
+                            <label for="id_connectivity_targeting_type_1">
+                                <input {% if adgroup_form.connectivity_targeting_type|field_value == 'wi-fi' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_1" value="wi-fi" name="connectivity_targeting_type">
+                                Wi-Fi Only
+                            </label>
+                            <a data-toggle="modal" href="#targeted_wifi_help"><img src="/images/what.png" /></a>
+                        </li>
+                        <li>
+                            {# TODO: render using widget #}
+                            <label for="id_connectivity_targeting_type_2">
+                                <input {% if adgroup_form.connectivity_targeting_type|field_value == 'carriers' %}checked="checked"{% endif %} type="radio" id="id_connectivity_targeting_type_2" value="carriers" name="connectivity_targeting_type">
+                                Selected Carriers
+                            </label>
+                            <a data-toggle="modal" href="#targeted_carriers_help"><img src="/images/what.png" /></a>
+                        </li>
+                    </ul>
+                </div>
+                <div style="margin-left: 16px;">
+                    {{ adgroup_form.targeted_carriers }}
+                </div>
+            </dd>
+
+            <dt>
+                {{ adgroup_form.device_targeting.label_tag }}
+            </dt>
+            <dd>
+                <div id="device_targeting">
+                    <ul>
+                        <li>
+                            {# TODO: render using widget #}
+                            <label for="id_device_targeting_0">
+                                <input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}>
+                                All
+                            </label>
+                        </li>
+                        <li>
+                            {# TODO: render using widget #}
+                            <label for="id_device_targeting_1">
+                                <input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}>
+                                Filter by device and OS
+                            </label>
+                        </li>
+                    </ul>
+                    <ul id="device_targeting_details">
+                        <li>
+                            <ul>
+                                <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>
+                                <li><label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label></li>
+                                <li><label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label></li>
+                            </ul>
+                            {{ adgroup_form.ios_version_min.label_tag }}
+                            {{ adgroup_form.ios_version_min }}
+                            {{ adgroup_form.ios_version_max.label_tag }}
+                            {{ adgroup_form.ios_version_max }}
+                        </li>
+                        <li>
+                            <label>{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</label>
                             {{ adgroup_form.android_version_min.label_tag }}
                             {{ adgroup_form.android_version_min }}
                             {{ adgroup_form.android_version_max.label_tag }}
                             {{ adgroup_form.android_version_max }}
                         </li>
                         <li>
-                            <div class="devices inline">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</div>
+                            <label>{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</label>
                             <span class="muted">(All versions)</span>
                         </li>
                     </ul>
                 </div>
             </dd>
-            <dt>
-                <label>Country Targeting:</label>
-            </dt>
-            <dd>
-                <div id="geo_pred_ta" name="geo_predicates"></div>
-            </dd>
-            <div class="countryNumDependent 0 1" style="display: none;">
-                <dt>
-                    {{ adgroup_form.region_targeting.label_tag }}
-                </dt>
-                <dd>
-                    <span class="radios">
-                        {{ adgroup_form.region_targeting }}
-                    </span>
-                </dd>
-            </div>
-            <div class="locationDependent city" style="display: none;"> 
-                <dt>
-                    <label>City Targeting:</label>
-                </dt>
-                <dd>
-                    <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
-                    <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
-                </dd>
-            </div>
+
             <dt>
             {{ adgroup_form.keywords.label_tag }}
             </dt>
@@ -271,7 +342,7 @@
                 Revenue reporting for {{ network.pretty_name }} is turned on.
                 {% else %}
                 MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
-                {% endif %}    
+                {% endif %}
             </div>
 
             {% if network.name != "mobfox" %}
@@ -308,7 +379,7 @@
 
             <div class="form-submit login-credentials-submit" style="clear:both;">
                 <a class="submit btn">
-                    {% if network.name == "mobfox" %} 
+                    {% if network.name == "mobfox" %}
                     Turn on Reporting
                     {% else %}
                     Check and Save Credentials
@@ -402,7 +473,7 @@
                         </div>
                         <div class="global-custom_method-close editable">
                             Set global custom method
-                        </div>    
+                        </div>
                     </td>
                     {% endif %}
                     {% if network.name == "custom" %}
@@ -412,7 +483,7 @@
                         </div>
                         <div class="global-custom_html-close editable">
                             Set global custom html
-                        </div>    
+                        </div>
                     </td>
                     {% endif %}
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
@@ -425,7 +496,7 @@
                         </div>
                         <div class="global-cpm-close editable">
                             Set global CPM
-                        </div>    
+                        </div>
                     </td>
                     {% if reporting %}
                     <td>
@@ -436,7 +507,7 @@
                     <td class="text advanced-options">
                         <div id="global-options-edit" class="editable">
                             None
-                        </div>    
+                        </div>
                     </td>
                 </tr>
             </tbody>
@@ -456,7 +527,7 @@
                         </div>
                         <div class="app-custom_method-close editable">
                             Set app custom method
-                        </div>    
+                        </div>
                     </td>
                     {% endif %}
                     {% if network.name == "custom" %}
@@ -466,7 +537,7 @@
                         </div>
                         <div class="app-custom_html-close editable">
                             Set app custom html
-                        </div>    
+                        </div>
                     </td>
                     {% endif %}
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
@@ -482,7 +553,7 @@
                         </div>
                         <div class="app-cpm-close editable">
                             Set app CPM
-                        </div>    
+                        </div>
                     </td>
                     {% if reporting %}
                     <td class="stat">
@@ -501,7 +572,7 @@
                     <td class="text">
                         <div id="{{ app.key }}-options-edit" class="editable">
                             None
-                        </div>    
+                        </div>
                     </td>
                 </tr>
                 {% for adunit in app.adunits %}
@@ -533,7 +604,7 @@
                             <span class="custom_html-value">
                                 Set adunit custom html
                             </span>
-                        </div>           
+                        </div>
                     </td>
                     {% endif %}
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
@@ -546,7 +617,7 @@
                             </div>
                             <div class="pub-id-edit editable">
                                 {{ adunit.pub_id }}
-                            </div>                            
+                            </div>
                         </div>
                         {% endif %}
                     </td>
@@ -559,7 +630,7 @@
                             <span class="cpm-value">
                                 Set adunit custom cpm
                             </span>
-                        </div>           
+                        </div>
                     </td>
                     {% if reporting %}
                     <td class="stat">
@@ -570,10 +641,10 @@
                     <td class="text advanced-options">
                         <div id="{{ adunit.key }}-options-edit" class="editable">
                             None
-                        </div>    
+                        </div>
                     </td>
                 </tr>
-                {% endfor %}                
+                {% endfor %}
             </tbody>
         {% endfor %}
         </table>
@@ -704,11 +775,124 @@
 {% endblock content %}
 
 {% block extraScripts %}
-{% include_style "bootstrap" %}
-{% include_script "libs/bootstrap.min.js" %}
+<div class="hidden modal" id="targeted_countries_help">
+    <div class="modal-header">
+        <h3>Country Targeting</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to a specific set of countries.  By default, when the list is empty, your line item will be targeting all countries.</p>
+        <p>
+            The type ahead field allows you to quickly add countries that you want to target.  Countries can be removed by selecting the 'X' to the right of the country name.  By selecting certain countries, additional region targeting may become available:
+            <ul>
+                <li>States / Provinces - available for US and Canada (Wi-Fi required)</li>
+                <li>Metro Areas / DMAs - available for US-only (Wi-Fi required)</li>
+                <li>ZIP codes - available for US-only (Wi-Fi required)</li>
+                <li>Cities - available for most countries</li>
+            </ul>
+            Note that you can target a geographical selection by expressing what countries and regions you want to exclude (“Users who are Not Located in”).
+        </p>
+        <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_regions_and_cities_help">
+    <div class="modal-header">
+        <h3>Region Targeting</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to specific regions within the countries you selected in the Country targeting field.</p>
+        <p>The type ahead field will surface City, State, and Metro Area / DMA regions for the countries you have selected.  Note that removing a country selected in Country Targeting will remove the regions contained within it.</p>
+        <p>
+            Additionally note that:
+            <ul>
+                <li>Targeting by states is available for the US and Canada (Wi-Fi required).</li>
+                <li>Targeting by metro area / DMA is available for US only (Wi-Fi required).</li>
+                <li>These options will be unavailable if Carrier targeting is chosen.</li>
+            </ul>
+        </p>
+        <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_zip_codes_help">
+    <div class="modal-header">
+        <h3>ZIP Code Targeting</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to a set of specific ZIP codes if you have selected US in the Country targeting field.</p>
+        <p>Provide a list of ZIP codes in the provided field, each ZIP code should be on its own line or separated by a whitespace.  Note that removing the US in the Country targeting field will remove the ZIP codes you provide here.</p>
+        <p>
+            Additionally note that:
+            <ul>
+                <li>Targeting by ZIP code is available for US only.</li>
+                <li>ZIP code targeting is only available only campaigns targeted to Wi-Fi-only traffic. These option will not be available if selected carriers are chosen.</li>
+            </ul>
+        </p>
+        <p>Questions? Get more info on Targeting by Geography in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_wifi_help">
+    <div class="modal-header">
+        <h3>Wi-Fi Only</h3>
+    </div>
+    <div class="modal-body">
+        <p>Targeting by Wi-Fi will allow your line item to deliver ads only to traffic coming over a Wi-Fi connection.</p>
+        <p>Questions? Get more info on Connectivity targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="targeted_carriers_help">
+    <div class="modal-header">
+        <h3>Selected Carriers</h3>
+    </div>
+    <div class="modal-body">
+        <p>Target your line item to deliver ads to specific carriers for the countries you selected in the Country targeting field.</p>
+        <p>Use the typeahead field to input carrier names.  Note that removing a country selected in Country Targeting will remove the carriers contained within it.</p>
+        <p>
+            Note that:
+            <ul>
+                <li>Carrier targeting is available for the US, Canada, and UK.</li>
+                <li>Some geo-targeting options such as State, Metro Area / DMA, and ZIP code require Wi-Fi and will not be available if you select carrier targeting.</li>
+            </ul>
+        </p>
+        <p>Questions? Get more info on Carrier targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">Help Center</a>.</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" data-dismiss="modal" href="#">Close</a>
+    </div>
+</div>
+
+<div class="hidden modal" id="target_carriers_warning">
+    <div class="modal-header">
+        <h3>Untargeting Wi-Fi Only</h3>
+    </div>
+    <div class="modal-body">
+        <p>Untargeting Wi-Fi Only will remove all of your State, Metro Area / DMA, or ZIP code targeting.</p>
+        <p>Are you sure you want to continue?</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn" data-dismiss="modal" href="#">Cancel</a>
+        <a class="btn btn-primary continue" data-dismiss="modal" href="#">Continue</a>
+    </div>
+</div>
+
 {% include_script "models/inventory" %}
-  {% include_script "views/inventory" %}
+{% include_script "views/inventory" %}
 {% include_script "controllers/networks" %}
+
 {% include_script "utilities/webkit_pushstack_fix" %}
 <script type="text/javascript">
     $(function () {
@@ -727,10 +911,17 @@
                 {% endfor %}
                 {% endfor %}},
                 account_key: '{{ account.key }}',
-                priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
-                city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},
+                US_STATES: {{ US_STATES|to_json|safe }},
+                CA_PROVINCES: {{ CA_PROVINCES|to_json|safe }},
+                US_METROS: {{ US_METROS|to_json|safe }},
+                US_CARRIERS: {{ US_CARRIERS|to_json|safe }},
+                GB_CARRIERS: {{ GB_CARRIERS|to_json|safe }},
+                CA_CARRIERS: {{ CA_CARRIERS|to_json|safe }},
+                targeted_regions: {{ adgroup_form.targeted_regions|field_value|to_json|safe }},
+                targeted_cities: {{ adgroup_form.targeted_cities|field_value|to_json|safe }},
+                targeted_carriers: {{ adgroup_form.targeted_carriers|field_value|to_json|safe }},
                 login_state: {{ network.login_state }},
-                LoginStates: {{ LoginStates|safe }},
+                LoginStates: {{ LoginStates|safe }}
             });
     });
 </script>

@@ -1066,24 +1066,6 @@
 
 
             /*
-             * Device Targeting
-             */
-
-            $('input[name="device_targeting"]').change(function () {
-                if($(this).val() == '0') {
-                    $('#device_targeting_details').slideUp();
-                }
-                else {
-                    $('#device_targeting_details').slideDown();
-                }
-            });
-            // update on document ready
-            if($('input[name="device_targeting"]:checked').val() == '0') {
-                $('#device_targeting_details').hide();
-            }
-
-
-            /*
              * Geographical and Connectivity Targeting
              */
 
@@ -1317,7 +1299,6 @@
                 update_geographical_and_connectivity_targeting();
             });
             $connectivity_targeting_type_all.click(function () {
-                console.log('shit');
                 if($targeted_regions.val() || $targeted_zip_codes.val()) {
                     event.preventDefault();
                     $('#target_carriers_warning .continue').unbind().click(function () {
@@ -1379,6 +1360,24 @@
                 $('option[value="' + targeted_carrier + '"]', $targeted_carriers).prop('selected', 'selected');
             })
             $targeted_carriers.trigger("liszt:updated");
+
+
+            /*
+             * Device Targeting
+             */
+
+            $('input[name="device_targeting"]').change(function () {
+                if($(this).val() == '0') {
+                    $('#device_targeting_details').slideUp();
+                }
+                else {
+                    $('#device_targeting_details').slideDown();
+                }
+            });
+            // update on document ready
+            if($('input[name="device_targeting"]:checked').val() == '0') {
+                $('#device_targeting_details').hide();
+            }
 
 
             /*

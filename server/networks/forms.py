@@ -1,7 +1,10 @@
+import re
+
 from django import forms
+from django.forms.util import ErrorList
 from advertiser.models import Campaign, AdGroup
 
-from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
+from common.constants import (COUNTRIES, IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
@@ -20,6 +23,7 @@ class NetworkCampaignForm(forms.ModelForm):
         model = Campaign
         fields = ('name',
                   'description')
+
 
 class NetworkAdGroupForm(forms.ModelForm):
     device_targeting = forms.TypedChoiceField(choices=(('0', 'All'),
@@ -45,14 +49,41 @@ class NetworkAdGroupForm(forms.ModelForm):
                                             label='Max:', required=False)
     target_other = forms.BooleanField(initial=True, label='Other',
                                       required=False)
-    geo_predicates = forms.Field(required=False, widget=forms.SelectMultiple)
-    region_targeting = forms.ChoiceField(choices=(('all', 'Everywhere'),
-                                                  ('city', 'City')),
-                                         initial='all',
-                                         label='Region Targeting:',
-                                         required=False,
-                                         widget=forms.RadioSelect)
-    cities = forms.Field(required=False, widget=forms.SelectMultiple)
+
+    # Geo Targeting
+    accept_targeted_locations = forms.TypedChoiceField(
+        choices=(('0', 'Not Located'),
+                 ('1', 'Located')),
+        coerce=lambda x: bool(int(x)), initial=True,
+        required=False, widget=forms.Select)
+    targeted_countries = forms.MultipleChoiceField(
+        choices=COUNTRIES, label='Country:', required=False,
+        widget=forms.SelectMultiple(attrs={'data-placeholder': 'Ex: United States, ...'}))
+    # non-db field
+    region_targeting_type = forms.ChoiceField(
+        choices=(('all', 'All Regions'),
+                 ('regions_and_cities', 'Specific State / Metro Area / DMA (Wi-Fi Required), or Specific City within Country'),
+                 ('zip_codes', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
+        initial='all', label='Region:', required=False,
+        widget=forms.RadioSelect)
+    targeted_regions = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': 'Ex: Ohio, Miami-Ft. Lauderdale FL, ...'}))
+    targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': 'Ex: New York, NY, US, ...'}))
+    targeted_zip_codes = forms.Field(required=False, widget=forms.Textarea(
+            attrs={'class': 'input-text', 'placeholder': 'Ex: 94117 27705', 'rows': 3, 'cols': 50}))
+
+    # Connectivity Targeting
+    # non-db field
+    connectivity_targeting_type = forms.ChoiceField(
+        choices=(('all', 'All Carriers and Wi-Fi'),
+                 ('wi-fi', 'Wi-Fi Only'),
+                 ('carriers', 'Selected Carriers')),
+        initial='all', label='Connectivity:', required=False,
+        widget=forms.RadioSelect)
+    targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': 'Ex: Verizon, ...'}))
+
     keywords = forms.CharField(required=False,
                                label='Keywords:',
                                widget=forms.Textarea(attrs={'cols': 50,
@@ -72,31 +103,30 @@ class NetworkAdGroupForm(forms.ModelForm):
                     instance.creatives.get():
                 initial.update(custom_method=instance.creatives.get().html_data)
 
-            geo_predicates = []
-            for geo_predicate in instance.geo_predicates:
-                preds = geo_predicate.split(',')
-                geo_predicates.append(','.join([str(pred.split('=')[1]) for pred in preds]))
-            initial.update(geo_predicates=geo_predicates)
+            if instance.targeted_regions or instance.targeted_cities:
+                initial['region_targeting_type'] = 'regions_and_cities'
+            elif instance.targeted_zip_codes:
+                initial['region_targeting_type'] = 'zip_codes'
 
-            if len(geo_predicates) == 1 and len(instance.cities):
-                initial['region_targeting'] = 'city'
-                initial.update(cities=instance.cities)
+            initial['targeted_zip_codes'] = '\n'.join(instance.targeted_zip_codes)
+
+            if instance.targeted_carriers == ['Wi-Fi']:
+                initial['connectivity_targeting_type'] = 'wi-fi'
+            elif instance.targeted_carriers:
+                initial['connectivity_targeting_type'] = 'carriers'
 
             kwargs.update(initial=initial)
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
-    def clean_geo_predicates(self):
-        cleaned_geo_predicates = self.cleaned_data.get('geo_predicates', [])
-        if isinstance(cleaned_geo_predicates, basestring):
-            cleaned_geo_predicates = [cleaned_geo_predicates]
-
-        geo_predicates = []
-        for geo_predicate in cleaned_geo_predicates:
-            geo_predicate = tuple(geo_predicate.split(','))
-            #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
-            geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
-        return geo_predicates
+    def clean_targeted_zip_codes(self):
+        targeted_zip_codes = self.cleaned_data.get('targeted_zip_codes', None)
+        if targeted_zip_codes:
+            targeted_zip_codes = targeted_zip_codes.split()
+            for targeted_zip_code in targeted_zip_codes:
+                if not re.match('^\d{5}$', targeted_zip_code):
+                    raise forms.ValidationError('Malformed ZIP code %s.' % targeted_zip_code)
+        return targeted_zip_codes
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
@@ -116,11 +146,26 @@ class NetworkAdGroupForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(NetworkAdGroupForm, self).clean()
 
-        # don't store targeted cities unless region targeting for cities is selected
-        if cleaned_data.get('region_targeting', None) != 'city':
-            cleaned_data['cities'] = []
+        self._clean_geographical_targeting(cleaned_data)
+        self._clean_connectivity_targeting(cleaned_data)
 
         return cleaned_data
+
+    def _clean_geographical_targeting(self, cleaned_data):
+        if 'accept_targeted_locations' in cleaned_data and 'targeted_countries' in cleaned_data and not cleaned_data['accept_targeted_locations'] and not cleaned_data['targeted_countries']:
+            self._errors['accept_targeted_locations'] = ErrorList()
+            self._errors['accept_targeted_locations'].append('You must select some geography to target against.')
+        if 'region_targeting_type' in cleaned_data and cleaned_data['region_targeting_type'] != 'regions_and_cities':
+            cleaned_data['targeted_regions'] = []
+            cleaned_data['targeted_cities'] = []
+        if 'region_targeting_type' in cleaned_data and cleaned_data['region_targeting_type'] != 'zip_codes':
+            cleaned_data['targeted_zip_codes'] = []
+
+    def _clean_connectivity_targeting(self, cleaned_data):
+        if 'connectivity_targeting_type' in cleaned_data and cleaned_data['connectivity_targeting_type'] == 'wi-fi':
+            cleaned_data['targeted_carriers'] = ['Wi-Fi']
+        elif 'connectivity_targeting_type' in cleaned_data and cleaned_data['connectivity_targeting_type'] != 'carriers':
+            cleaned_data['targeted_carriers'] = []
 
     class Meta:
         model = AdGroup
@@ -134,9 +179,16 @@ class NetworkAdGroupForm(forms.ModelForm):
                   'android_version_min',
                   'android_version_max',
                   'target_other',
-                  'geo_predicates',
-                  'cities',
+                  'accept_targeted_locations',
+                  'targeted_countries',
+                  'region_targeting_type',
+                  'targeted_cities',
+                  'targeted_regions',
+                  'targeted_zip_codes',
+                  'connectivity_targeting_type',
+                  'targeted_carriers',
                   'keywords')
+
 
 class AdUnitAdGroupForm(forms.ModelForm):
     bid = forms.FloatField(initial=0.05,

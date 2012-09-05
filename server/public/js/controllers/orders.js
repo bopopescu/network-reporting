@@ -1202,7 +1202,7 @@
 
                     // remove selection
                     if($connectivity_targeting_type_carriers.is(':checked')) {
-                        $connectivity_targeting_type_all.click();
+                        $connectivity_targeting_type_all.attr('checked', true);
                     }
 
                     // disable

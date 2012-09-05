@@ -469,12 +469,15 @@ def include_template(template_name):
     template_tag = '<script type="text/html" id="%s-template">%s</script>'
 
     return template_tag % (template_name, template_contents)
+
     
+@register.filter
+def joinby(value, arg):
+    return arg.join([str(v) for v in value])
 
-
+    
 @register.filter
 def js_date(date):
-
     return "new Date(%s, %s, %s)" % (date.year, date.month - 1, date.day)
 
 

@@ -129,7 +129,7 @@ class CampaignQueryManager(QueryManager):
         return campaigns
 
     @classmethod
-    def get_network_campaigns(cls, account, network_type=False, is_new=False):
+    def get_network_campaigns(cls, account, network_type=False, is_new=None):
         """
         is_new refers to models with the network_type attribute set,
         which means it's a new type of campaign (used by the networks django
@@ -144,8 +144,10 @@ class CampaignQueryManager(QueryManager):
                     return campaign.network_type == network_type
                 elif is_new:
                     return campaign.network_state != NetworkStates.STANDARD_CAMPAIGN
-                else:
+                elif is_new is False:
                     return campaign.network_state == NetworkStates.STANDARD_CAMPAIGN
+                else:
+                    return True
 
         return filter(network_campaign_filter, campaigns.values())
 
@@ -505,7 +507,7 @@ class AdGroupQueryManager(QueryManager):
 
     @classmethod
     def get_network_adgroups_for_adunit(cls, adunit):
-        network_campaigns = CampaignQueryManager.get_network_campaigns(adunit.account, is_new=True)
+        network_campaigns = CampaignQueryManager.get_network_campaigns(adunit.account)
         network_adgroups = []
         for network_campaign in network_campaigns:
             network_adgroup = cls.get_network_adgroup(network_campaign, adunit.key(), adunit.account.key(), get_from_db=True)

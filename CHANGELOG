@@ -1,48 +1,64 @@
+# Deployed Thursday, September 06, 2012 at 08:47PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-200
+### Bugs Fixed: []
+### Included Commits: 
+ * 151276b Merge branch 'master' of github.com:mopub/mopub
+ * dffea82 updated tests for updated geo targeting
+ * b576c5f Merge branch 'master' of github.com:mopub/mopub
+ * 5e3a44f fixed UI-180 by setting chzn-select field width manually
+ * 616c1b7 updated help content links
+ * 6792891 fixed publisher=creative issue in order exporter
+ * 3197e2a more fixes for UI-166
+ * 975d5e1 merges fixed
+ * b99500a fixed exporting issues caused by bad filenames, syntax errors, and logic errors. fixed UI-132, UI-135, and UI-138.
+ * 2fc61c1 Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, September 05, 2012 at 09:48PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-199
 ### Bugs Fixed: []
-### Included Commits: 
- * 0d31322 merged
- * 7b04b43 Deployed without finding any bug fixes.
- * a7a531b Merge branch 'master' into geo-targeting-freeze
- * 9bff30a merged
- * 9310906 Merge branch 'master' of github.com:mopub/mopub into geo-targeting-freeze
- * a335dcb freeze geo targeting for line items and networks
- * b3892f2 fixes
- * 1f71fc9 fixed some formatting
- * ba0076a Merge branch 'targeting-improvements' of github.com:mopub/mopub into targeting-improvements
- * 0de4c56 Merge branch 'targeting-improvements' of github.com:mopub/mopub into targeting-improvements
- * 552fb47 added the new targeting information to the line item popover
- * d38c4a9 fixed bug
- * 76e3efd fixed type ahead bug for real
- * 6389378 fixed type ahead bug
- * eeeef70 fixes
- * ccdfed9 merged
- * 632428f returned mktplace_price_floor because it looks like it is used
- * 9217f4e fixed networks targeting
- * 65ba889 fixed mapreduce
- * 6f207d8 last fixes
- * fe4eda9 merge
- * bc7e4cc more different fixes
- * d2574e4 placeholder fix
- * 2f2c213 fixes
- * 1c63e22 fixes
- * a7af710 cities for all countries
- * 8290653 warning and fixes
- * 5ef9f52 added help text, updated styles
- * 24c2911 fixed accept_targeted_locations
- * 02f5a86 updated geography and connectivity targeting dependencies
- * 8577bc7 merged
- * 8c40fb4 zip validation
- * 5661088 updates
- * 2af1906 added chosen ajax
- * 928ab3f did some more shit
- * d414ecf merged
- * 39b3024 commit to merge
- * 5d4b66a Merge branch 'master' into targeting-improvements
- * feff317 merged in new master to stashed changes
- 
+### Included Commits:
+* 0d31322 merged
+* 7b04b43 Deployed without finding any bug fixes.
+* a7a531b Merge branch 'master' into geo-targeting-freeze
+* 9bff30a merged
+* 9310906 Merge branch 'master' of github.com:mopub/mopub into geo-targeting-freeze
+* a335dcb freeze geo targeting for line items and networks
+* b3892f2 fixes
+* 1f71fc9 fixed some formatting
+* ba0076a Merge branch 'targeting-improvements' of github.com:mopub/mopub into targeting-improvements
+* 0de4c56 Merge branch 'targeting-improvements' of github.com:mopub/mopub into targeting-improvements
+* 552fb47 added the new targeting information to the line item popover
+* d38c4a9 fixed bug
+* 76e3efd fixed type ahead bug for real
+* 6389378 fixed type ahead bug
+* eeeef70 fixes
+* ccdfed9 merged
+* 632428f returned mktplace_price_floor because it looks like it is used
+* 9217f4e fixed networks targeting
+* 65ba889 fixed mapreduce
+* 6f207d8 last fixes
+* fe4eda9 merge
+* bc7e4cc more different fixes
+* d2574e4 placeholder fix
+* 2f2c213 fixes
+* 1c63e22 fixes
+* a7af710 cities for all countries
+* 8290653 warning and fixes
+* 5ef9f52 added help text, updated styles
+* 24c2911 fixed accept_targeted_locations
+* 02f5a86 updated geography and connectivity targeting dependencies
+* 8577bc7 merged
+* 8c40fb4 zip validation
+* 5661088 updates
+* 2af1906 added chosen ajax
+* 928ab3f did some more shit
+* d414ecf merged
+* 39b3024 commit to merge
+* 5d4b66a Merge branch 'master' into targeting-improvements
+* feff317 merged in new master to stashed changes
+
 # Deployed Wednesday, September 05, 2012 at 06:15PM PST
 ### Deployed by John Pena
 ### Tagged deploy-196

@@ -1,6 +1,5 @@
 import logging
-from datetime import timedelta, \
-        datetime
+from datetime import timedelta, datetime
 
 from django import forms
 from reports.models import ScheduledReport
@@ -28,51 +27,98 @@ DIMENSIONS = [
 class ReportForm(forms.ModelForm):
 
     TEMPLATE = 'reports/forms/report_form.html'
-    name = forms.CharField(label='Name:',
-                           widget=forms.TextInput(attrs={'class': 'required',
-                                                         'placeholder': 'Report Name'}))
-    d1 = forms.ChoiceField(choices=DIMENSIONS,
-                           label='Report Breakdown:',
-                           widget=forms.Select(attrs={'class': 'chzn-select'}))
-    d2 = forms.ChoiceField(choices=DIMENSIONS,
-                           required=False,
-                           label='>',
-                           widget=forms.Select(attrs={'class': 'chzn-select'}))
-    d3 = forms.ChoiceField(choices=DIMENSIONS,
-                           required=False,
-                           label='>',
-                           widget=forms.Select(attrs={'class': 'chzn-select'}))
-    interval = forms.ChoiceField(choices=(('yesterday', 'Yesterday'),
-                                          ('7days', 'Last 7 days'),
-                                          ('lmonth', 'Last month'),
-                                          ('custom', 'Custom')),
-                                 label='Dates:',
-                                 widget=forms.Select(attrs={'class': 'chzn-select'}))
-    start = forms.DateField(input_formats=('%m/%d/%Y',),
-                            widget=forms.DateInput(attrs={'class': 'date',
-                                                          'placeholder': 'MM/DD/YYYY'},
-                                                   format='%m/%d/%Y',))
-    end = forms.DateField(input_formats=('%m/%d/%Y',),
-                          widget=forms.DateInput(attrs={'class': 'date',
-                                                        'placeholder': 'MM/DD/YYYY'},
-                                                 format='%m/%d/%Y',))
+    name = forms.CharField(
+        label='Name:',
+        widget=forms.TextInput(attrs={
+            'class': 'required',
+            'placeholder': 'Report Name'
+        })
+    )
+    d1 = forms.ChoiceField(
+        choices=DIMENSIONS,
+        label='Report Breakdown:',
+        widget=forms.Select(attrs={
+            'class': 'chzn-select',
+            'style': 'width:120px'
+        })
+    )
+    d2 = forms.ChoiceField(
+        choices=DIMENSIONS,
+        required=False,
+        label='>',
+        widget=forms.Select(attrs={
+            'class': 'chzn-select',
+            'style': 'width:120px'
+        })
+    )
+    d3 = forms.ChoiceField(
+        choices=DIMENSIONS,
+        required=False,
+        label='>',
+        widget=forms.Select(attrs={
+            'class': 'chzn-select',
+            'style': 'width:120px'
+        })
+    )
+    interval = forms.ChoiceField(
+        choices=(
+            ('yesterday', 'Yesterday'),
+            ('7days', 'Last 7 days'),
+            ('lmonth', 'Last month'),
+            ('custom', 'Custom')
+        ),
+        label='Dates:',
+        widget=forms.Select(attrs={
+            'class': 'chzn-select',
+            'style': 'width:100px'
+        })
+    )
+    start = forms.DateField(
+        input_formats=('%m/%d/%Y',),
+        widget=forms.DateInput(attrs={
+            'class': 'date',
+            'placeholder': 'MM/DD/YYYY'
+        },format='%m/%d/%Y',)
+    )
+    end = forms.DateField(
+        input_formats=('%m/%d/%Y',),
+        widget=forms.DateInput(attrs={
+            'class': 'date',
+            'placeholder': 'MM/DD/YYYY'
+        },format='%m/%d/%Y',)
+    )
+    
     # NOTE: days doesn't get rendered
     days = forms.IntegerField(required=False)
-    recipients = forms.CharField(label='Recipients:',
-                                 widget=forms.Textarea(attrs={'cols': 50,
-                                                              'rows': 3,
-                                                              'placeholder': 'E-mail addresses to receive report'}))
-    sched_interval = forms.ChoiceField(choices=(('none', "Don't schedule"),
-                                                ('daily', 'Daily'),
-                                                ('weekly', 'Weekly'),
-                                                ('monthly', 'Monthly'),
-                                                ('quarterly', 'Quarterly')),
-                                       label='Schedule:',
-                                       widget=forms.Select(attrs={'class': 'chzn-select'}))
+    recipients = forms.CharField(
+        label='Recipients:',
+        widget=forms.Textarea(attrs={
+            'cols': 50,
+            'rows': 3,
+            'placeholder': 'E-mail addresses to receive report'
+        })
+    )
+    sched_interval = forms.ChoiceField(
+        choices=(
+            ('none', "Don't schedule"),
+            ('daily', 'Daily'),
+            ('weekly', 'Weekly'),
+            ('monthly', 'Monthly'),
+            ('quarterly', 'Quarterly')
+        ),
+        label='Schedule:',
+        widget=forms.Select(attrs={
+            'class': 'chzn-select',
+            'style': 'width:200px'
+        })
+    )
     # NOTE: saved is a hidden field set by the js on form submission
-    saved = forms.BooleanField(required=False,
-                               widget=forms.CheckboxInput(attrs={'class':
-                                   'hidden'}))
+    saved = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class':'hidden'
+        })
+    )
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)

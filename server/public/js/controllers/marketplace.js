@@ -586,13 +586,14 @@ var mopub = mopub || {};
              * ## Content filtering
              */
 
-            function post_categories(filter_level, categories) {
+            function post_categories(filter_level, categories, attributes) {
                 var loading_img = $("#filter-spinner").show();
                 var saving = $("#filter-save-status .saving").show();
 
                 var result = $.post("/advertise/marketplace/settings/content_filter/", {
                     filter_level: filter_level,
                     categories: categories,
+                    attributes: attributes,
                 });
 
 
@@ -612,13 +613,18 @@ var mopub = mopub || {};
 
             $("input.content_level").click(function(){
                 var filter_level = $(this).val();
+                categories = [];
+                attributes = [];
+
                 if(filter_level === 'custom') {
                     $('#categories_div').show();
+                    categories = $("#categories").val();
+                    attributes = $("#attributes").val();
                 } else {
                     $('#categories_div').hide();
-
-                    post_categories(filter_level, []);
                 }
+
+                post_categories(filter_level, categories, attributes);
             });
 
             // initialize chosen multiple select for IAB categories
@@ -627,7 +633,16 @@ var mopub = mopub || {};
                 .change(function() {
                     var categories = $(this).val();
 
-                    post_categories('custom', categories);
+                    post_categories('custom', categories, $("#attributes").val());
+                });
+
+            // initialize chosen multiple select for IAB categories
+            $("#attributes")
+                .chosen({no_results_text: "No results matched"})
+                .change(function() {
+                    var attributes = $(this).val();
+
+                    post_categories('custom', $("#categories").val(), attributes);
                 });
         }
     };

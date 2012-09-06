@@ -1,4 +1,3 @@
-@charset "UTF-8";
 /*
  * Nullify all of the preset styles
  */
@@ -5583,6 +5582,13 @@ div.editable {
 
 .ui-dialog {
   overflow: visible; }
+
+span.blocklist-label {
+  width: 200px;
+  float: left; }
+
+ul.no-bullet {
+  list-style-type: none; }
 
 /*
  * Plugins

@@ -607,3 +607,20 @@ IAB_CATEGORIES = (('IAB1', 'Arts & Entertainment', (
         ('IAB26-2', 'Warez'),
         ('IAB26-3', 'Spyware/Malware'),
         ('IAB26-4', 'Copyright Infringement'),)))
+
+CREATIVE_ATTRIBUTES = ((1, 'Audio Ad (Auto Play)'),
+                       (2, 'Audio Ad (User Initiated)'),
+                       (3, 'Expandable (Automatic)'),
+                       (4, 'Expandable (User Initiated - Click)'),
+                       (5, 'Expandable (User Initiated - Rollover)'),
+                       (6, 'In-Banner Video Ad (Auto Play)'),
+                       (7, 'In-Banner Video Ad (User Initiated)'),
+                       (8, 'Pop (e.g., Over, Under, or upon Exit)'),
+                       (9, 'Provocative or Suggestive Imagery'),
+                       (10, 'Shaky, Flashing, Flickering, Extreme Animation, Smileys'),
+                       (11, 'Surveys'),
+                       (12, 'Text Only'),
+                       (13, 'User Interactive (e.g., Embedded Games)'),
+                       (14, 'Windows Dialog or Alert Style'),
+                       (15, 'Has audio on/off button'),
+                       (16, 'Ad can be skipped (e.g., skip button on preroll video)'))

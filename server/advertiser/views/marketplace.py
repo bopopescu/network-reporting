@@ -5,7 +5,7 @@ from django.utils import simplejson
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 
-from account.models import NetworkConfig
+from account.models import NetworkConfig, MODERATE_CATEGORIES, MODERATE_ATTRIBUTES
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from common.ragendja.template import render_to_response, JSONResponse
@@ -14,7 +14,7 @@ from publisher.query_managers import PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import tablib
-from common.constants import IAB_CATEGORIES
+from common.constants import IAB_CATEGORIES, CREATIVE_ATTRIBUTES
 
 
 
@@ -44,11 +44,13 @@ class MarketplaceIndexHandler(RequestHandler):
         # Set up the blocklist
         blocklist = []
         category_blocklist = set()
+        attribute_blocklist = set()
         network_config = self.account.network_config
         if network_config:
             blocklist = [str(domain) for domain in network_config.blocklist \
                          if not str(domain) in ("", "#")]
             category_blocklist = set(network_config.category_blocklist)
+            attribute_blocklist = set(network_config.attribute_blocklist)
 
         try:
             blind = self.account.network_config.blind
@@ -66,6 +68,8 @@ class MarketplaceIndexHandler(RequestHandler):
             'network_config': network_config,
             'category_blocklist': category_blocklist,
             'IAB_CATEGORIES': IAB_CATEGORIES,
+            'attribute_blocklist': attribute_blocklist,
+            'CREATIVE_ATTRIBUTES': CREATIVE_ATTRIBUTES,
         }
 
 
@@ -144,9 +148,7 @@ class ContentFilterHandler(RequestHandler):
         # If the account doesn't have a network config, make one
         if not network_config:
             network_config = NetworkConfig(account=self.account)
-            network_config.put()
-            self.account.network_config = network_config
-            self.account.put()
+            AccountQueryManager.update_config_and_put(self.account, network_config)
 
         # Set the filter level if it was passed
         if filter_level:
@@ -159,10 +161,36 @@ class ContentFilterHandler(RequestHandler):
             elif filter_level == "strict":
                 network_config.set_strict_filter()
             elif filter_level == "custom":
-                categories = self.request.POST.getlist('categories[]')
+                all_categories = set()
+                for category in IAB_CATEGORIES:
+                    all_categories.add(category[0])
+                    for sub_category in category[2]:
+                        all_categories.add(sub_category[0])
 
-                network_config.attribute_blocklist = [] 
-                network_config.category_blocklist = categories 
+                categories = self.request.POST.getlist('categories[]')
+                for category in categories:
+                    if category not in all_categories:
+                        return JSONResponse({'error': 'Invalid category selected'})
+
+                all_attributes = set([attribute[0] for attribute in CREATIVE_ATTRIBUTES])
+                attributes = [int(attribute) for attribute in self.request.POST.getlist('attributes[]')]
+                for attribute in attributes:
+                    if attribute not in all_attributes:
+                        return JSONResponse({'error': 'Invalid creative attribute selected'})
+
+                if not categories:
+                    # Set categories to a sentinel value of [''] since it can't
+                    # be set to [] because it has a default value. MPX will
+                    # ignore the empty string because it's not a valid category
+                    categories = ['']
+                network_config.category_blocklist = categories
+
+                if not attributes:
+                    # Set attributes to a sentinel value of [0] since it can't
+                    # be set to [] because it has a default value. MPX will
+                    # ignore the value 0 because it's not a valid attribute
+                    attributes = [0]
+                network_config.attribute_blocklist = attributes
 
                 AccountQueryManager.update_config_and_put(self.account, network_config)
             else:

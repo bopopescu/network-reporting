@@ -855,8 +855,14 @@ class SingleOrderExporter(RequestHandler):
 
         for line_item in order.adgroups:
             for creative in line_item.creatives:
-                stats_per_day = stats_q.get_stats_for_days(publisher=creative,
-                                                       num_days=self.date_range)
+                active_dates = date_magic.gen_days(
+                    line_item.start_datetime,
+                    line_item.end_datetime
+                )
+                stats_per_day = stats_q.get_stats_for_days(
+                    advertiser=creative,
+                    days=active_dates
+                )
 
                 for day in stats_per_day:
                     row = (

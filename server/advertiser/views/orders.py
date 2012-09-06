@@ -793,10 +793,14 @@ class MultipleLineItemExporter(RequestHandler):
         for order in orders:
             line_items = AdGroupQueryManager.get_line_items(order=order)
             for line_item in line_items:
-                stats = stats_q.get_adgroup_stats(line_item,
-                                                  self.start_date,
-                                                  self.end_date,
-                                                  daily=False)['sum']
+                stats = stats_q.get_adgroup_stats(
+                    line_item,
+                    self.start_date,
+                    self.end_date,
+                    daily=False
+                )
+                stats = stats['sum']
+                
                 order_data = (
                     order.name,
                     line_item.name,
@@ -814,7 +818,7 @@ class MultipleLineItemExporter(RequestHandler):
                     stats['conv_rate'],
                     str(line_item.allocation_percentage),
                     str(line_item.frequency_cap_display),
-                    str(line_item.country_targeting_display),
+                    str([c for c in line_item.targeted_countries]),
                     str(line_item.device_targeting_display),
                     str(line_item.keywords),
                 )
@@ -851,8 +855,14 @@ class SingleOrderExporter(RequestHandler):
 
         for line_item in order.adgroups:
             for creative in line_item.creatives:
-                stats_per_day = stats_q.get_stats_for_days(publisher=creative,
-                                                       num_days=self.date_range)
+                active_dates = date_magic.gen_days(
+                    line_item.start_datetime,
+                    line_item.end_datetime
+                )
+                stats_per_day = stats_q.get_stats_for_days(
+                    advertiser=creative,
+                    days=active_dates
+                )
 
                 for day in stats_per_day:
                     row = (
@@ -875,7 +885,7 @@ class SingleOrderExporter(RequestHandler):
                         day.ctr,
                         day.conv_rate,
                         str(line_item.frequency_cap_display),
-                        str(line_item.country_targeting_display),
+                        str([c for c in line_item.targeted_countries]),
                         str(line_item.device_targeting_display),
                         str(line_item.keywords)
                     )
@@ -971,7 +981,7 @@ class SingleLineItemExporter(RequestHandler):
                     day.ctr,
                     day.conv_rate,
                     str(line_item.frequency_cap_display),
-                    str(line_item.country_targeting_display),
+                    str([c for c in line_item.targeted_countries]),
                     str(line_item.device_targeting_display),
                     str(line_item.keywords)
                 )

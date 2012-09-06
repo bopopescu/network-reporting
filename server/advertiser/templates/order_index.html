@@ -191,8 +191,9 @@
         <ul class="dropdown-menu">
           <li> <a href="{% url advertiser_export_multiple_line_items %}?type=xls"
                   data-toggle="running"> Excel XLS </a> </li>
+          {% comment %}
           <li> <a href="{% url advertiser_export_multiple_line_items %}?type=xlsx"
-                  data-toggle="running"> Excel XLSX </a> </li>
+                  data-toggle="running"> Excel XLSX </a> </li> {% endcomment %}
           <li> <a href="{% url advertiser_export_multiple_line_items %}?type=ods"
                   data-toggle="running"> OpenOffice Spreadsheet </a> </li>
           <li> <a href="{% url advertiser_export_multiple_line_items %}?type=csv"

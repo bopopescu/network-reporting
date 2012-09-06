@@ -478,9 +478,6 @@ class LineItemCleanMethodsTestCase(unittest.TestCase):
     def mptest_clean_site_keys(self):
         pass
 
-    def mptest_clean_geo_predicates(self):
-        pass
-
     def mptest_clean_keywords(self):
         # 501 character long string
         long_keywords = base64.urlsafe_b64encode(os.urandom(501))
@@ -489,13 +486,6 @@ class LineItemCleanMethodsTestCase(unittest.TestCase):
         form = LineItemForm(self.data)
         form.is_valid()
         eq_(form['keywords'].errors, ['Maximum 500 characters for keywords'])
-
-    def mptest_clean_targeted_cities(self):
-        self.data['region_targeting'] = 'all'
-
-        form = LineItemForm(self.data)
-        form.is_valid()
-        eq_(form.cleaned_data['cities'], [])
 
 
 SHARED_CREATIVE_DATA = {

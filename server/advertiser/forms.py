@@ -121,7 +121,8 @@ class LineItemForm(forms.ModelForm):
         choices=(('all', 'All Regions'),
                  ('regions_and_cities', 'Specific State / Metro Area / DMA (Wi-Fi Required), or Specific City within Country'),
                  ('zip_codes', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
-        initial='all', label='Region:', widget=forms.RadioSelect)
+        initial='all', label='Region:', required=False,
+        widget=forms.RadioSelect)
     targeted_regions = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': 'Ex: Ohio, Miami-Ft. Lauderdale FL, ...'}))
     targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
@@ -135,7 +136,8 @@ class LineItemForm(forms.ModelForm):
         choices=(('all', 'All Carriers and Wi-Fi'),
                  ('wi-fi', 'Wi-Fi Only'),
                  ('carriers', 'Selected Carriers')),
-        initial='all', label='Connectivity:', widget=forms.RadioSelect)
+        initial='all', label='Connectivity:', required=False,
+        widget=forms.RadioSelect)
     targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
             attrs={'data-placeholder': 'Ex: Verizon, ...'}))
 
@@ -397,19 +399,26 @@ class LineItemForm(forms.ModelForm):
             self._errors['end_datetime'].append('End datetime must be after start datetime')
 
     def _clean_geographical_targeting(self, cleaned_data):
-        if not cleaned_data['accept_targeted_locations'] and not cleaned_data['targeted_countries']:
+        if ('accept_targeted_locations' in cleaned_data and
+                'targeted_countries' in cleaned_data and
+                cleaned_data['accept_targeted_locations'] is False and
+                not cleaned_data['targeted_countries']):
             self._errors['accept_targeted_locations'] = ErrorList()
             self._errors['accept_targeted_locations'].append('You must select some geography to target against.')
-        if cleaned_data['region_targeting_type'] != 'regions_and_cities':
+        if ('region_targeting_type' in cleaned_data and
+                cleaned_data['region_targeting_type'] != 'regions_and_cities'):
             cleaned_data['targeted_regions'] = []
             cleaned_data['targeted_cities'] = []
-        if cleaned_data['region_targeting_type'] != 'zip_codes':
+        if ('region_targeting_type' in cleaned_data and
+                cleaned_data['region_targeting_type'] != 'zip_codes'):
             cleaned_data['targeted_zip_codes'] = []
 
     def _clean_connectivity_targeting(self, cleaned_data):
-        if cleaned_data['connectivity_targeting_type'] == 'wi-fi':
+        if ('connectivity_targeting_type' in cleaned_data and
+                cleaned_data['connectivity_targeting_type'] == 'wi-fi'):
             cleaned_data['targeted_carriers'] = ['Wi-Fi']
-        elif cleaned_data['connectivity_targeting_type'] != 'carriers':
+        elif ('connectivity_targeting_type' in cleaned_data and
+                cleaned_data['connectivity_targeting_type'] != 'carriers'):
             cleaned_data['targeted_carriers'] = []
 
     def save(self, *args, **kwargs):

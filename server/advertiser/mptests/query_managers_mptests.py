@@ -51,8 +51,8 @@ class CampaignQueryManagerTestCase(BaseViewTestCase):
 
         marketplace_campaign = CampaignQueryManager.get_marketplace(
             self.account)
-        model_eq(marketplace_campaign, self.marketplace_campaign, ['created'],
-                 False)
+        model_eq(marketplace_campaign, self.marketplace_campaign,
+                 ['created'], False)
 
     @confirm_db()
     def mptest_get_marketplace_campaign_from_db(self):

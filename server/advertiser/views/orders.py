@@ -20,20 +20,27 @@ from django.http import HttpResponse, Http404
 from google.appengine.ext import db
 
 from common.ragendja.template import render_to_response, JSONResponse
-from common.utils import helpers, tablib, stats_helpers
+from common.utils import helpers, tablib, stats_helpers, date_magic
 from common.utils.request_handler import RequestHandler
+from common.utils.string_utils import sanitize_string_for_export
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import utc
 
 from account.query_managers import AccountQueryManager
-from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
-                              ImageCreativeForm, TextAndTileCreativeForm,
-                              HtmlCreativeForm)
-from advertiser.query_managers import (CampaignQueryManager,
-                                       AdGroupQueryManager,
-                                       CreativeQueryManager)
-from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
-                                      AdUnitQueryManager)
+from advertiser.forms import (
+    OrderForm, LineItemForm, NewCreativeForm,
+    ImageCreativeForm, TextAndTileCreativeForm,
+    HtmlCreativeForm
+)
+from advertiser.query_managers import (
+    CampaignQueryManager,
+    AdGroupQueryManager,
+    CreativeQueryManager
+)
+from publisher.query_managers import (
+    PublisherQueryManager, AppQueryManager,
+    AdUnitQueryManager
+)
 from reporting.query_managers import StatsModelQueryManager
 from budget.query_managers import BudgetQueryManager
 import logging
@@ -85,9 +92,11 @@ class OrderArchiveHandler(RequestHandler):
     def get(self):
 
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        line_items = AdGroupQueryManager.get_line_items(account=self.account,
-                                                        orders=orders,
-                                                        archived=True)
+        line_items = AdGroupQueryManager.get_line_items(
+            account=self.account,
+            orders=orders,
+            archived=True
+        )
 
         archived_orders = [order for order in orders if order.archived]
         archived_line_items = [line_item for line_item in line_items \
@@ -117,12 +126,16 @@ class OrderDetailHandler(RequestHandler):
         # Grab the campaign info
         order = CampaignQueryManager.get(order_key)
 
-        line_items = AdGroupQueryManager.get_line_items(account=self.account,
-                                                        order=order,
-                                                        archived=False)
-        archived_line_items = AdGroupQueryManager.get_line_items(account=self.account,
-                                                        order=order,
-                                                        archived=True)
+        line_items = AdGroupQueryManager.get_line_items(
+            account=self.account,
+            order=order,
+            archived=False
+        )
+        archived_line_items = AdGroupQueryManager.get_line_items(
+            account=self.account,
+            order=order,
+            archived=True
+        )
         line_items.extend(archived_line_items)
 
         if line_items:
@@ -718,8 +731,9 @@ class MultipleOrderExporter(RequestHandler):
 
         response = HttpResponse(getattr(data_to_export, export_type),
                                 mimetype="application/octet-stream")
-        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
-                   ("MoPub orders", export_type)
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (
+            "MoPubOrders", export_type
+        )
 
         return response
 
@@ -792,12 +806,15 @@ class MultipleLineItemExporter(RequestHandler):
                     str(line_item.device_targeting_display),
                     str(line_item.keywords),
                 )
-            data_to_export.extend([order_data])
+                data_to_export.extend([order_data])
 
-        response = HttpResponse(getattr(data_to_export, export_type),
-                                mimetype="application/octet-stream")
-        response['Content-Disposition'] = 'attachment; filename=%s.%s' %\
-                   ("MoPub line items", export_type)
+        response = HttpResponse(
+            getattr(data_to_export, export_type),
+            mimetype="application/octet-stream"
+        )
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (
+            "MoPubLineItems", export_type
+        )
 
         return response
 
@@ -880,9 +897,13 @@ class SingleOrderExporter(RequestHandler):
         data_to_export = tablib.Dataset(headers=headers)
         data_to_export.extend(export_rows)
 
-        response = HttpResponse(getattr(data_to_export, export_type),
-                                mimetype="application/octet-stream")
-        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (order.name, export_type)
+        response = HttpResponse(
+            getattr(data_to_export, export_type),
+            mimetype="application/octet-stream"
+        )
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (
+            sanitize_string_for_export(order.name), export_type
+        )
 
         return response
 
@@ -893,7 +914,7 @@ def export_single_order(request, *args, **kwargs):
     return handler(request, *args, **kwargs)
 
 
-class SingularLineItemExporter(RequestHandler):
+class SingleLineItemExporter(RequestHandler):
 
     def get(self, line_item_key):
 
@@ -908,8 +929,14 @@ class SingularLineItemExporter(RequestHandler):
         export_rows = []
 
         for creative in line_item.creatives:
-            stats_per_day = stats_q.get_stats_for_days(publisher=creative,
-                                                       num_days=self.date_range)
+            active_dates = date_magic.gen_days(
+                line_item.start_datetime,
+                line_item.end_datetime
+            )
+            stats_per_day = stats_q.get_stats_for_days(
+                advertiser=creative,
+                days=active_dates
+            )
 
             for day in stats_per_day:
                 row = (
@@ -968,12 +995,14 @@ class SingularLineItemExporter(RequestHandler):
 
         response = HttpResponse(getattr(data_to_export, export_type),
                                 mimetype="application/octet-stream")
-        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (line_item.name, export_type)
+        response['Content-Disposition'] = 'attachment; filename=%s.%s' % (
+            sanitize_string_for_export(line_item.name), export_type
+        )
         return response
 
 @login_required
 def export_single_line_item(request, *args, **kwargs):
-    handler = SingularLineItemExporter()
+    handler = SingleLineItemExporter()
     return handler(request, *args, **kwargs)
 
 

@@ -532,6 +532,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         AdGroupQueryManager.put(adgroups)
 
         # Prepare a request that changes a few advanced targeting settings.
+        self.post_data['region_targeting_type'] = 'regions_and_cities'
         self.post_data['targeted_cities'] = [u'-23.5475,-46.63611111:27:Sao Paolo:BR']
 
         for adgroup in self.existing_campaign.adgroups:

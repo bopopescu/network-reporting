@@ -20,24 +20,32 @@ from common.ragendja.template import (
 )
 
 ## Models
-from advertiser.models import (Campaign,
-                               AdGroup,
-                               HtmlCreative)
+from advertiser.models import (
+    Campaign,
+    AdGroup,
+    HtmlCreative
+)
 
 from publisher.forms import AppForm, AdUnitForm
 from account.models import NetworkConfig
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
-from ad_network_reports.query_managers import (AdNetworkMapperManager,
-                                               AdNetworkLoginManager)
-from advertiser.query_managers import (AdvertiserQueryManager,
-                                       CampaignQueryManager,
-                                       AdGroupQueryManager,
-                                       CreativeQueryManager)
-from publisher.query_managers import (PublisherQueryManager,
-                                      AppQueryManager,
-                                      AdUnitQueryManager)
+from ad_network_reports.query_managers import (
+    AdNetworkMapperManager,
+    AdNetworkLoginManager
+)
+from advertiser.query_managers import (
+    AdvertiserQueryManager,
+    CampaignQueryManager,
+    AdGroupQueryManager,
+    CreativeQueryManager
+)
+from publisher.query_managers import (
+    PublisherQueryManager,
+    AppQueryManager,
+    AdUnitQueryManager
+)
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils.request_handler import RequestHandler

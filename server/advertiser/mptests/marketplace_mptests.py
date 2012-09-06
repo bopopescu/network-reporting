@@ -172,8 +172,7 @@ class BlocklistViewTestCase(BaseViewTestCase):
 
 class ContentFilterViewTestCase(BaseViewTestCase):
     """
-    Author: Ignatius, Peter
-            Tiago (9/5/2012)
+    Author: Tiago (9/5/2012)
     """
 
     def setUp(self):
@@ -189,8 +188,8 @@ class ContentFilterViewTestCase(BaseViewTestCase):
         self.marketplace_adgroup.put()
 
         self.post_data = {'filter_level': 'moderate',
-                          'categories': [],
-                          'attributes': [],}
+                          'categories[]': [],
+                          'attributes[]': [],}
 
     def mptest_none(self):
         """
@@ -247,6 +246,110 @@ class ContentFilterViewTestCase(BaseViewTestCase):
 
         edited = {self.account._network_config: {'attribute_blocklist': STRICT_ATTRIBUTES,
                                                  'category_blocklist': STRICT_CATEGORIES}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
+
+    def mptest_custom_none(self):
+        """
+        Set the marketplace filtering level to custom, clear the attribute and category blocklists
+        and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data['filter_level'] = 'custom'
+
+        edited = {self.account._network_config: {'attribute_blocklist': [0],
+                                                 'category_blocklist': ['']}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
+
+    def mptest_custom_attributes(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an arbitrary value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'attributes[]': ['1', '2']})
+
+        edited = {self.account._network_config: {'attribute_blocklist': [1, 2],
+                                                 'category_blocklist': ['']}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
+
+    def mptest_custom_attributes_error(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an arbitrary value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'attributes[]': ['0']})
+
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},)
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error
+        eq_(response_json['error'], 'Invalid creative attribute selected')
+
+    def mptest_custom_categories(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an incorrect value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'categories[]': ['IAB7-39', 'IAB8-5']})
+
+        edited = {self.account._network_config: {'attribute_blocklist': [0],
+                                                 'category_blocklist': ['IAB7-39', 'IAB8-5']}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
+
+    def mptest_custom_categories_error(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an incorrect value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'categories[]': ['']})
+
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},)
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error
+        eq_(response_json['error'], 'Invalid category selected')
+
+    def mptest_custom_both(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an arbitrary value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'attributes[]': ['1', '2'],
+                               'categories[]': ['IAB7-39', 'IAB8-5']})
+
+        edited = {self.account._network_config: {'attribute_blocklist': [1, 2],
+                                                 'category_blocklist': ['IAB7-39', 'IAB8-5']}}
         confirm_all_models(self.client.post,
                            args=[self.url, self.post_data],
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},

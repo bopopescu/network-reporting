@@ -124,6 +124,9 @@ class NetworkTestCase(BaseViewTestCase):
             elif not isinstance(obj.data_type, db.PropertiedClass) and field \
                     not in ('active', 'network_type'):
                 post_data[field] = ''
+        # Set geo default geo targeting values
+        post_data['accept_targeted_locations'] = '1'
+        post_data['targeted_countries'] = []
 
         # Add publisher IDs, bids, f-cap, etc.
         for app in apps:

@@ -27,7 +27,7 @@
 
   <li>
     {{ creative_form.ad_type.label_tag }}
-    <div>
+    <div id="ad_type">
       {# TODO: something that sucks less #}
       {% if creative_form.instance %}
         {% if creative_form.instance.ad_type == 'image' %}
@@ -41,7 +41,7 @@
         {% endif %}
         <input name="{{ creative_form.ad_type.name }}" type="hidden" value="{{ creative_form.instance.ad_type }}" />
       {% else %}
-        <span class="radios">{{ creative_form.ad_type }}</span>
+        {{ creative_form.ad_type }}
       {% endif %}
     </div>
   </li>

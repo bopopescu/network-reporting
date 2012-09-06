@@ -1,19 +1,17 @@
 import datetime
+import logging
+import re
 
 from google.appengine.api import images
-from google.appengine.ext import blobstore
-from google.appengine.ext import db
+from google.appengine.ext import blobstore, db
 from google.appengine.ext.db import polymodel
 
 from account.models import Account
-from common.constants import (MIN_IOS_VERSION,
-                              MAX_IOS_VERSION,
-                              MIN_ANDROID_VERSION,
-                              MAX_ANDROID_VERSION,
-                              ISO_COUNTRY_LOOKUP_TABLE,
+from common.constants import (MIN_IOS_VERSION, MAX_IOS_VERSION,
+                              MIN_ANDROID_VERSION, MAX_ANDROID_VERSION,
                               NETWORKS)
-from common.utils.helpers import to_uni
 from common.templatetags.filters import withsep
+from common.utils.helpers import to_uni
 from simple_models import (SimpleAdGroup,
                            SimpleCampaign,
                            SimpleCreative,
@@ -154,186 +152,164 @@ Order = Campaign
 
 
 class AdGroup(db.Model):
+    account = db.ReferenceProperty(Account)
 
-    campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
-    # net_creative is not set for new network campaigns due to circular
-    # reference redundancy, use the creatives collection instead
-    net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
-    name = db.StringProperty(verbose_name='Name',
-                             default='Line Item Name')
+    campaign = db.ReferenceProperty(Campaign, collection_name='adgroups')
 
     created = db.DateTimeProperty(auto_now_add=True)
-
-    # the priority level at which this ad group should be auctioned
-    network_type = db.StringProperty(choices=["dummy",  # ?
-                                              "adsense",
-                                              "iAd",
-                                              "admob",  # deprecated, but may still be used by some accounts
-                                              "millennial",  # deprecated, but may still be used by some accounts
-                                              "ejam",
-                                              "chartboost",  # deprecated
-                                              "appnexus",  # deprecated
-                                              "inmobi",
-                                              "mobfox",
-                                              "jumptap",
-                                              "brightroll",
-                                              "greystripe",  # deprecated, but may still be used by some accounts
-                                              "custom",
-                                              "custom_native",
-                                              "admob_native",
-                                              "millennial_native"])
-
-    # Note that bid has different meaning depending on the bidding strategy.
-    # if CPC: bid = cost per 1 click
-    # if CPM: bid = cost per 1000 impressions
-    # if CPA: bid = cost per 1000 conversions
-    bid = db.FloatProperty(default=0.05, required=False)
-    bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
-
-    ########################
-    # Budgeting attributes #
-    ########################
-
-    # budget per day
-    daily_budget = db.FloatProperty()
-    full_budget = db.FloatProperty()
-    # Determines whether we redistribute if we underdeliver during a day
-    budget_type = db.StringProperty(choices=['daily', 'full_campaign'],
-                                    default="daily")
-    # Determines whether we smooth during a day
-    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'],
-                                        default="allatonce")
-
-    # New start and end date properties
-    start_datetime = db.DateTimeProperty()
-    end_datetime = db.DateTimeProperty()
-
-    adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
-                                              'network', 'promo',
-                                              'backfill_promo', 'marketplace',
-                                              'backfill_marketplace'])
-
-    ##################
-    # /end budgeting #
-    ##################
+    modified = db.DateTimeProperty(auto_now=True)
 
     # state of this ad group
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
     archived = db.BooleanProperty(default=False)
 
-    # percent of users to be targetted
-    percent_users = db.FloatProperty(default=100.0)
-    allocation_percentage = db.FloatProperty(verbose_name='Allocation',
-                                             default=100.0)
-    allocation_type = db.StringProperty(choices=["users", "requests"])
+    # TODO: this should be moved to Campaign
+    network_type = db.StringProperty(choices=[
+        'dummy',  # ?
+        'adsense',
+        'iAd',
+        'admob',  # deprecated, but may still be used by some accounts
+        'millennial',  # deprecated, but may still be used by some accounts
+        'ejam',
+        'chartboost',  # deprecated
+        'appnexus',  # deprecated
+        'inmobi',
+        'mobfox',
+        'jumptap',
+        'brightroll',
+        'greystripe',  # deprecated, but may still be used by some accounts
+        'custom',
+        'custom_native',
+        'admob_native',
+        'millennial_native'])
 
-    # frequency caps
-    minute_frequency_cap = db.IntegerProperty(default=0)
-    hourly_frequency_cap = db.IntegerProperty(default=0)
+    # TODO: document
+    optimizable = db.BooleanProperty(default=False)
+    default_cpm = db.FloatProperty()  # TODO: default
+
+    name = db.StringProperty(default='Line Item Name')
+
+    adgroup_type = db.StringProperty(choices=['gtee_high', 'gtee', 'gtee_low',
+                                              'network', 'promo',
+                                              'backfill_promo', 'marketplace',
+                                              'backfill_marketplace'])
+
+    # TODO: one of these three fields is always unused, do something different.
+    # budget per day
+    daily_budget = db.FloatProperty()
+    full_budget = db.FloatProperty()
+    # Determines whether we redistribute if we underdeliver during a day
+    budget_type = db.StringProperty(choices=['daily', 'full_campaign'],
+                                    default='daily')
+    # Determines whether we smooth during a day
+    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'],
+                                        default='allatonce')
+
+    # Note that bid has different meaning depending on the bidding strategy.
+    # if CPC: bid = cost per 1 click
+    # if CPM: bid = cost per 1000 impressions
+    # if CPA: bid = cost per 1000 conversions
+    bid = db.FloatProperty(default=0.05, required=False)
+    bid_strategy = db.StringProperty(choices=['cpc', 'cpm', 'cpa'], default='cpm')
+
+    # New start and end date properties
+    start_datetime = db.DateTimeProperty()
+    end_datetime = db.DateTimeProperty()
+
+    # Targeting: all placements that are considered for this ad group. This is a
+    # list of keys corresponding to Site objects.
+    site_keys = db.ListProperty(db.Key)
+
+    # Device
+    device_targeting = db.BooleanProperty(default=False)
+    target_iphone = db.BooleanProperty(default=True)
+    target_ipod = db.BooleanProperty(default=True)
+    target_ipad = db.BooleanProperty(default=True)
+    ios_version_min = db.StringProperty(default=MIN_IOS_VERSION)
+    ios_version_max = db.StringProperty(default=MAX_IOS_VERSION)
+    target_android = db.BooleanProperty(default=True)
+    android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
+    android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
+    target_other = db.BooleanProperty(default=True)
+
+    # Geography Targeting
+    accept_targeted_locations = db.BooleanProperty(default=True)
+    targeted_countries = db.ListProperty(basestring)
+    targeted_regions = db.ListProperty(basestring)
+    targeted_cities = db.ListProperty(basestring)
+    targeted_zip_codes = db.StringListProperty()
+
+    # Connectivity Targeting
+    targeted_carriers = db.ListProperty(basestring)
+
+    # User Targeting
+    included_apps = db.ListProperty(db.Key)
+    excluded_apps = db.ListProperty(db.Key)
+
+    # Keywords: all keyword and category bids are tracked here. Categories use
+    # the category:games convention. If any of the input keywords match the
+    # n-grams here then we trigger a match.
+    keywords = db.StringListProperty()
+
+    # Frequency Caps
     daily_frequency_cap = db.IntegerProperty(default=0)
+    hourly_frequency_cap = db.IntegerProperty(default=0)
+
+    # Allocation
+    allocation_percentage = db.FloatProperty(default=100.0)
+
+    # Deprecated?
+    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
+
+    # Deprecated
+    t = db.DateTimeProperty(auto_now_add=True)
+    net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
+    minute_frequency_cap = db.IntegerProperty(default=0)
     weekly_frequency_cap = db.IntegerProperty(default=0)
     monthly_frequency_cap = db.IntegerProperty(default=0)
     lifetime_frequency_cap = db.IntegerProperty(default=0)
-
-    # all keyword and category bids are tracked here
-    # categories use the category:games convention
-    # if any of the input keywords match the n-grams here then we
-    # trigger a match
-    keywords = db.StringListProperty()
-
-    # all placements that are considered for this ad group
-    # this is a list of keys corresponding to Site objects
-    site_keys = db.ListProperty(db.Key)
-
-    account = db.ReferenceProperty(Account)
-    t = db.DateTimeProperty(auto_now_add=True)
-
-    # marketplace price floor
-    mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
-
-    DEVICE_CHOICES = (
-        ('any', 'Any'),
-        ('iphone', 'iPhone'),
-        ('ipod', 'iPod Touch'),
-        ('ipad', 'iPad'),
-        ('android', 'Android'),
-        ('blackberry', 'Blackberry'),
-        ('windows7', 'Windows Phone 7'),
-    )
+    allocation_type = db.StringProperty(choices=["users", "requests"])
+    percent_users = db.FloatProperty(default=100.0)
     devices = db.StringListProperty(default=['any'])
-
-    MIN_OS_CHOICES = (
-        ('any', 'Any'),
-        ('iphone__2_0', '2.0+'),
-        ('iphone__2_1', '2.1+'),
-        ('iphone__3_0', '3.0+'),
-        ('iphone__3_1', '3.1+'),
-        ('iphone__3_2', '3.2+'),
-        ('iphone__4_0', '4.0+'),
-        ('iphone__4_1', '4.1+'),
-    )
     min_os = db.StringListProperty(default=['any'])
-
-    # Device Targeting
-    device_targeting = db.BooleanProperty(default=False)
-
-    target_iphone = db.BooleanProperty(verbose_name='iPhone', default=True)
-    target_ipod = db.BooleanProperty(verbose_name='iPod', default=True)
-    target_ipad = db.BooleanProperty(verbose_name='iPad', default=True)
-    ios_version_min = db.StringProperty(verbose_name='Min:',
-                                        default=MIN_IOS_VERSION)
-    ios_version_max = db.StringProperty(verbose_name='Max:',
-                                        default=MAX_IOS_VERSION)
-
-    target_android = db.BooleanProperty(verbose_name='Android', default=True)
-    android_version_min = db.StringProperty(verbose_name='Min:',
-                                            default=MIN_ANDROID_VERSION)
-    android_version_max = db.StringProperty(verbose_name='Max:',
-                                            default=MAX_ANDROID_VERSION)
-
-    # MobileWeb on blackberry etc.
-    target_other = db.BooleanProperty(verbose_name='Other:', default=True)
-
-    optimizable = db.BooleanProperty(default=False)
-    default_cpm = db.FloatProperty()
-
-    USER_TYPES = (
-        ('any', 'Any'),
-        ('active_7', '7 day active user'),
-        ('active_15', '15 day active user'),
-        ('active_30', '30 day active user'),
-        ('inactive_7', '7 day active user'),
-        ('inactive_15', '15 day active user'),
-        ('inactive_30', '30 day inactive user'),
-    )
-
-    active_user = db.StringListProperty(default=['any'])
-    active_app = db.StringListProperty(default=['any'])
-    cities = db.StringListProperty(default=[])
-
+    geo_predicates = db.StringListProperty(default=["country_name=*"])
+    cities = db.StringListProperty()
     country = db.StringProperty()
     region = db.StringProperty()
     state = db.StringProperty()
     city = db.StringProperty()
+    active_user = db.StringListProperty(default=['any'])
+    active_app = db.StringListProperty(default=['any'])
 
-    # Geographic preferences are expressed as string tuples that can match
-    # the city, region or country that is resolved via reverse geocode at
-    # request time.    If the list is blank, any value will match. If the list
-    # is not empty, the value must match one of the elements of the list.
-    #
-    # Valid predicates are:
-    # city_name=X,region_name=X,country_name=X
-    # region_name=X,country_name=X
-    # country_name=X
-    # zipcode=X
-    #
-    # Each incoming request will be matched against all of these combinations
-    geo_predicates = db.StringListProperty(default=["country_name=*"])
+    @property
+    def targeted_regions_tuples(self):
+        targeted_region_tuples = []
+        if self.targeted_regions:
+            for region in self.targeted_regions:
+                match = re.match("^\('(.*)','(.*)'\)$", region)
+                if match:
+                    targeted_region_tuples.append(match.groups())
+                else:
+                    logging.error("Malformed targeted region %s for adgroup %s" % (
+                        region, self.key()))
+        return targeted_region_tuples
 
-    # negative user targeting
-    included_apps = db.ListProperty(db.Key)
-    excluded_apps = db.ListProperty(db.Key)
+    def targeted_regions_display(self):
+        pass
+
+    @property
+    def targeted_cities_tuples(self):
+        targeted_cities_tuples = []
+        if self.targeted_cities:
+            for city in self.targeted_cities:
+                match = re.match("^\((.*),(.*),'(.*)','(.*)','(.*)'\)$", city)
+                if match:
+                    targeted_cities_tuples.append(match.groups())
+                else:
+                    logging.error("Malformed targeted city %s for adgroup %s" % (
+                        city, self.key()))
+        return targeted_cities_tuples
 
     @property
     def included_apps_global_ids(self):
@@ -418,7 +394,7 @@ class AdGroup(db.Model):
         return ''
 
     def simplify(self):
-
+        # TODO: why are these necessary?
         if hasattr(self, 'full_budget'):
             full_budget = self.full_budget
         else:
@@ -435,64 +411,51 @@ class AdGroup(db.Model):
             budget_type = None
 
         return SimpleAdGroup(
-            key=str(self.key()),
-            campaign=self.campaign,
+            key=str(self.key()),  # modified
             account=self.account,
-            name=self.name,
-            bid=self.bid,
-            bid_strategy=self.bid_strategy,
+            campaign=self.campaign,
+            # created=self.created,
+            # modified=self.modified,
             active=self.active,
             deleted=self.deleted,
-            minute_frequency_cap=self.minute_frequency_cap,
-            hourly_frequency_cap=self.hourly_frequency_cap,
-            daily_frequency_cap=self.daily_frequency_cap,
-            weekly_frequency_cap=self.weekly_frequency_cap,
-            monthly_frequency_cap=self.monthly_frequency_cap,
-            lifetime_frequency_cap=self.lifetime_frequency_cap,
-            keywords=self.keywords,
-            site_keys=[str(key) for key in self.site_keys],
-            mktplace_price_floor=self.mktplace_price_floor,
-            device_targeting=self.device_targeting,
-            target_iphone=self.target_iphone,
-            target_ipad=self.target_ipad,
-            target_ipod=self.target_ipod,
-            ios_version_max=self.ios_version_max,
-            ios_version_min=self.ios_version_min,
-            target_android=self.target_android,
-            android_version_max=self.android_version_max,
-            android_version_min=self.android_version_min,
-            target_other=self.target_other,
-            cities=self.cities,
-            geo_predicates=self._cleaned_geo_predicates(),
-            allocation_percentage=self.allocation_percentage,
+            # archived=self.archived,
+            network_type=self.network_type,
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,
-            network_type=self.network_type,
-
-            # Added as part of orders feature
+            # name=self.name,
             adgroup_type=self.adgroup_type,
+            daily_budget=daily_budget,
+            full_budget=full_budget,
+            budget_type=budget_type,
+            # budget_strategy=self.budget_strategy,
+            bid=self.bid,
+            bid_strategy=self.bid_strategy,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
-            full_budget=full_budget,
-            daily_budget=daily_budget,
-            budget_type=budget_type,
-            included_apps=self.included_apps_global_ids,
-            excluded_apps=self.excluded_apps_global_ids,
+            site_keys=[str(key) for key in self.site_keys],  # modified
+            device_targeting=self.device_targeting,
+            target_iphone=self.target_iphone,
+            target_ipod=self.target_ipod,
+            target_ipad=self.target_ipad,
+            ios_version_min=self.ios_version_min,
+            ios_version_max=self.ios_version_max,
+            target_android=self.target_android,
+            android_version_min=self.android_version_min,
+            android_version_max=self.android_version_max,
+            target_other=self.target_other,
+            accept_targeted_locations=self.accept_targeted_locations,
+            targeted_countries=self.targeted_countries,
+            targeted_regions=self.targeted_regions_tuples,  # modified
+            targeted_cities=self.targeted_cities_tuples,  # modified
+            targeted_zip_codes=self.targeted_zip_codes,
+            targeted_carriers=self.targeted_carriers,
+            included_apps=self.included_apps_global_ids,  # modified
+            excluded_apps=self.excluded_apps_global_ids,  # modified
+            keywords=self.keywords,
+            daily_frequency_cap=self.daily_frequency_cap,
+            hourly_frequency_cap=self.hourly_frequency_cap,
+            mktplace_price_floor=self.mktplace_price_floor,  # deprecated?
         )
-
-    def _cleaned_geo_predicates(self):
-        """
-        This is a HACK to fix a frontend bug that sometimes sometimes
-        geo_predicates to ['country='] instead of ['country=*']
-        Jira: https://mopubinc.atlassian.net/browse/UI-90
-
-        This is going to be removed entirely very soon, so i'm
-        just going to implement this fix now.
-
-        """
-        if self.geo_predicates == ['country_name='] or self.geo_predicates == [u'country_name=']:
-            return [u'country_name=*']
-        return self.geo_predicates
 
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
@@ -625,10 +588,6 @@ class AdGroup(db.Model):
         else:
             return True
 
-    @property
-    def geographic_predicates(self):
-        return self.geo_predicates
-
     def get_owner(self):
         return self.campaign
 
@@ -752,24 +711,6 @@ class AdGroup(db.Model):
             return ", ".join(display)
 
     @property
-    def country_targeting_display(self):
-
-        display = []
-        for country in self.geo_predicates:
-            country_id = country.strip("country_name=")
-            if country_id.find("*") == -1:
-                try:
-                    country_name = ISO_COUNTRY_LOOKUP_TABLE[country_id]
-                    display.append(country_name)
-                except KeyError:
-                    pass
-
-        if not display:
-            return "All countries"
-        else:
-            return ", ".join(sorted(display))
-
-    @property
     def device_targeting_display(self):
 
         if self.device_targeting and not self.uses_default_device_targeting:
@@ -785,10 +726,11 @@ class AdGroup(db.Model):
             if self.target_ipod:
                 ios_display.append("iPod")
 
-            if ios_display:
+            if ios_display:                
                 ios_display_all = ", ".join(ios_display) + \
                                   " (iOS version " + self.ios_version_min + \
                                   " to " + self.ios_version_max + ")"
+                ios_display_all = ios_display_all.replace("to 999", "and up")
                 display.append(ios_display_all)
 
             # Android Targeting
@@ -796,6 +738,7 @@ class AdGroup(db.Model):
                 android_display_all = "Android Devices (version " + \
                                       self.android_version_min + " to " + \
                                       self.android_version_max + ")"
+                android_display_all = android_display_all.replace("to 999", "and up")
                 display.append(android_display_all)
 
             if self.target_other:
@@ -821,7 +764,7 @@ class AdGroup(db.Model):
             'start_datetime': self.start_datetime,
             'end_datetime': self.end_datetime,
             'device_targeting': self.device_targeting_display,
-            'country_targeting': self.country_targeting_display,
+            # 'country_targeting': self.country_targeting_display,
             'frequency_caps': self.frequency_cap_display,
             'allocation': self.allocation_percentage,
         }

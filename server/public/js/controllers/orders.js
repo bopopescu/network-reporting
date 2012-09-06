@@ -1020,6 +1020,7 @@
                    !$('input[name="end_datetime_1"]').val()) {
                     if($('select[name="budget_type"]').val() == 'full_campaign') {
                         $('input[name="budget_strategy"][value="evenly"]').attr('disabled', 'disabled');
+                        $('input[name="budget_strategy"][value="evenly"]').parent().addClass('muted');
                         return;
                     }
                     if($('input[name="budget_strategy"][value="evenly"]').prop('checked')) {
@@ -1027,29 +1028,10 @@
                         return;
                     }
                 }
-
+                $('input[name="budget_strategy"][value="evenly"]').parent().removeClass('muted');
                 $('select[name="budget_type"] option[value="full_campaign"]').removeAttr('disabled');
                 $('input[name="budget_strategy"][value="evenly"]').removeAttr('disabled');
             }).change();
-
-            $('#all-adunits').change(function() {
-                // select or deselect all adunits
-                $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
-            });
-
-            // device targeting
-            $('input[name="device_targeting"]').change(function() {
-                if($(this).val() == '0') {
-                    $('#device_targeting').slideUp();
-                }
-                else {
-                    $('#device_targeting').slideDown();
-                }
-            });
-            // update on document ready
-            if($('input[name="device_targeting"]:checked').val() == '0') {
-                $('#device_targeting').hide();
-            }
 
             // change form based on bid_strategy
             $('select[name="bid_strategy"]').change(function() {
@@ -1072,97 +1054,336 @@
                 });
             }).change(); // update on document ready
 
-            // Toggling for advanced options
-            $('#toggle_advanced')
-                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
-                .click(function(e) {
-                    e.preventDefault();
-                    var buttonTextElem = $('.ui-button-text', this);
-                    if ($('fieldset#advanced').is(':hidden')) {
-                        $('fieldset#advanced').slideDown('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                        $(this).text('Hide Advanced Targeting');
-                    } else {
-                        $('fieldset#advanced').slideUp('fast');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                        $(this).text('Show Advanced Targeting');
+
+            /*
+             * Targeting
+             */
+
+            $('#all-adunits').change(function() {
+                // select or deselect all adunits
+                $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
+            });
+
+
+            /*
+             * Geographical and Connectivity Targeting
+             */
+
+            /* Elements */
+            var $targeted_countries = $('#id_targeted_countries');
+            var $targeted_regions = $('#id_targeted_regions');
+            var $targeted_cities = $('#id_targeted_cities');
+            var $targeted_zip_codes = $('#id_targeted_zip_codes');
+            var $targeted_carriers = $('#id_targeted_carriers');
+
+            var $region_targeting_type_all = $('#id_region_targeting_type_0');
+            var $region_targeting_type_regions_and_cities = $('#id_region_targeting_type_1');
+            var $region_targeting_type_zip_codes = $('#id_region_targeting_type_2');
+
+            var $connectivity_targeting_type_all = $('#id_connectivity_targeting_type_0');
+            var $connectivity_targeting_type_carriers = $('#id_connectivity_targeting_type_2');
+
+            /* Helpers */
+            function update_geographical_and_connectivity_targeting() {
+                var targeted_countries = $targeted_countries.val();
+
+                var us_is_targeted = _.include(targeted_countries, 'US');
+                var ca_is_targeted = _.include(targeted_countries, 'CA');
+                var gb_is_targeted = _.include(targeted_countries, 'GB');
+                var wifi_is_targeted = $('input[name="connectivity_targeting_type"]:checked').val() == 'wi-fi';
+
+                update_regions_and_cities(targeted_countries, us_is_targeted, ca_is_targeted, wifi_is_targeted);
+                update_zip_codes(us_is_targeted, wifi_is_targeted);
+                update_carriers(us_is_targeted, ca_is_targeted, gb_is_targeted);
+            }
+
+            function update_regions_and_cities(targeted_countries, us_is_targeted, ca_is_targeted, wifi_is_targeted) {
+                if(!targeted_countries) {
+                    // change region targeting type
+                    if($region_targeting_type_regions_and_cities.is(':checked')) {
+                        $region_targeting_type_all.click();
                     }
-                }); // TODO: need to update on document ready
 
-            /* GEO TARGETING */
-            var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
-            var pre = {type: 'country', data: []};
-            var city_pre = {type: 'city', data: []};
-            //Not being used right now
-            //var state_pre = {type: 'state', data: []};
-
-            for(var index in countries) {
-                var dat = countries[index];
-                if($.inArray(dat.code, bootstrapping_data.priors) != -1) {
-                    pre.data.push(dat);
+                    // disable
+                    $region_targeting_type_regions_and_cities.attr('disabled', true);
+                    $region_targeting_type_regions_and_cities.parent().addClass('muted');
                 }
-                if(pre.length == bootstrapping_data.priors.length)
-                    break;
+                else {
+                    // enable
+                    $region_targeting_type_regions_and_cities.removeAttr('disabled');
+                    $region_targeting_type_regions_and_cities.parent().removeClass('muted');
+
+                    // update type-ahead AJAX call with selected countries
+                    targeted_cities_ajax_data.country = targeted_countries;
+                }
+
+                update_regions(us_is_targeted, ca_is_targeted, wifi_is_targeted);
+                update_cities(targeted_countries);
             }
 
-            //city is ll:ste:name:ccode;
-            for(var i in bootstrapping_data.city_priors) {
-                if(bootstrapping_data.city_priors.hasOwnProperty(i)) {
-                    var datas = bootstrapping_data.city_priors[i].split(':');
-                    var ll = datas[0].split(',');
-                    var ste = datas[1];
-                    var name = datas[2];
-                    var ccode = datas[3];
-                    city_pre.data.push(
-                        { lat: ll[0],
-                          lng: ll[1],
-                          countryCode: ccode,
-                          adminCode1: ste,
-                          name: name
-                        });
+            function update_regions(us_is_targeted, ca_is_targeted, wifi_is_targeted) {
+                if((!us_is_targeted && !ca_is_targeted) || !wifi_is_targeted) {
+                    // clear
+                    $targeted_regions.html('');
+
+                    // disable
+                    $targeted_regions.attr('disabled', true);
+                    $targeted_regions.siblings('label').addClass('muted');
+                }
+                else {
+                    if(us_is_targeted) {
+                        add_options($targeted_regions, bootstrapping_data.US_STATES);
+                        add_options($targeted_regions, bootstrapping_data.US_METROS);
+                    }
+                    else {
+                        remove_options($targeted_regions, bootstrapping_data.US_STATES);
+                        remove_options($targeted_regions, bootstrapping_data.US_METROS);
+                    }
+
+                    if(ca_is_targeted) {
+                        add_options($targeted_regions, bootstrapping_data.CA_PROVINCES);
+                    }
+                    else {
+                        remove_options($targeted_regions, bootstrapping_data.CA_PROVINCES);
+                    }
+
+                    // enable
+                    $targeted_regions.removeAttr('disabled');
+                    $targeted_regions.siblings('label').removeClass('muted');
+                }
+                $targeted_regions.trigger("liszt:updated");
+            }
+
+            var city_name_regex = /^(.*), (.*), (.*)$/;
+            function update_cities(targeted_countries) {
+                if(!targeted_countries) {
+                    // whenever this is true, this input is hidden.
+                }
+                else {
+                    $('option:selected', $targeted_cities).each(function (index, option) {
+                        var $option = $(option);
+                        var name = $option.html();
+                        var match = city_name_regex.exec(name);
+                        // TODO: this is a hack, should use a regex to parse the value
+                        var country = match[3];
+                        if(!_.include(targeted_countries, country)) {
+                            $option.remove();
+                        }
+                    })
+                }
+                $targeted_cities.trigger("liszt:updated");
+            }
+
+            function update_zip_codes(us_is_targeted, wifi_is_targeted) {
+                if(!us_is_targeted || !wifi_is_targeted) {
+                    // clear
+                    $targeted_zip_codes.val('');
+
+                    // remove selection
+                    if($region_targeting_type_zip_codes.is(':checked')) {
+                        $region_targeting_type_all.click();
+                    }
+
+                    // disable
+                    $region_targeting_type_zip_codes.attr('disabled', true);
+                    $region_targeting_type_zip_codes.parent().addClass('muted');
+                }
+                else {
+                    // enable
+                    $region_targeting_type_zip_codes.removeAttr('disabled');
+                    $region_targeting_type_zip_codes.parent().removeClass('muted');
                 }
             }
 
-            //Need to create data object that is array of dictionary [ {name, id} ]
-            $('#geo_pred_ta').tokenInput(null, {
-                    data: countries,
-                hintText: 'Type in a country name',
-                formatResult: function( row ) {
-                    return row.name;
-                },
-                formatMatch: function( row, i, max ){
-                    return [row.name, row.code];
-                },
-                prePopulate: pre
+            function update_carriers(us_is_targeted, ca_is_targeted, gb_is_targeted) {
+                if(!us_is_targeted && !ca_is_targeted && !gb_is_targeted) {
+                    // clear
+                    $targeted_carriers.html('');
+
+                    // remove selection
+                    if($connectivity_targeting_type_carriers.is(':checked')) {
+                        $connectivity_targeting_type_all.attr('checked', true);
+                    }
+
+                    // disable
+                    $connectivity_targeting_type_carriers.attr('disabled', true);
+                    $connectivity_targeting_type_carriers.parent().addClass('muted');
+                }
+                else {
+                    if(us_is_targeted) {
+                        add_options($targeted_carriers, bootstrapping_data.US_CARRIERS);
+                    }
+                    else {
+                        remove_options($targeted_carriers, bootstrapping_data.US_CARRIERS);
+                    }
+
+                    if(ca_is_targeted) {
+                        add_options($targeted_carriers, bootstrapping_data.CA_CARRIERS);
+                    }
+                    else {
+                        remove_options($targeted_carriers, bootstrapping_data.CA_CARRIERS);
+                    }
+
+                    if(gb_is_targeted) {
+                        add_options($targeted_carriers, bootstrapping_data.GB_CARRIERS);
+                    }
+                    else {
+                        remove_options($targeted_carriers, bootstrapping_data.GB_CARRIERS);
+                    }
+
+                    // enable
+                    $connectivity_targeting_type_carriers.removeAttr('disabled');
+                    $connectivity_targeting_type_carriers.parent().removeClass('muted');
+                }
+                $targeted_carriers.trigger("liszt:updated");
+            }
+
+            function add_options($element, options) {
+                for(var index in options) {
+                    var value = options[index][0];
+                    if(!$('option[value="' + value + '"]', $element).length) {
+                        $element.append($('<option />', {
+                            value: value,
+                            html: options[index][1]
+                        }));
+                    }
+                }
+            }
+
+            function remove_options($element, options) {
+                for(var index in options) {
+                    var value = options[index][0];
+                    $('option[value="' + value + '"]', $element).remove();
+                }
+            }
+
+            /* Event Handlers */
+            $targeted_countries.chosen().change(update_geographical_and_connectivity_targeting);
+
+            $('input[name="region_targeting_type"]').click(function () {
+                $('input[name="region_targeting_type"]').parent().siblings('div').hide();
+                $(this).parent().siblings('div').show();
             });
+            $('input[name="region_targeting_type"]:checked').click();
 
-            $('#city_ta').tokenInput(geo_s, {
-                country: 'US',
-                doImmediate: false,
-                hintText: 'Type in a city name',
-                queryParam: 'name_startsWith',
+            $targeted_regions.chosen();
+
+            var targeted_cities_ajax_data = {
                 featureClass: 'P',
-                prePopulate: city_pre,
-                contentType: 'json',
-                type: 'city',
-                minChars: 3,
-                method: 'get'
-            });
-
-
-            // Show location-dependent fields when location targeting is turned on
-            $('input[name="region_targeting"]').click(function(e) {
-                var loc_targ = $(this).val();
-                $('.locationDependent').hide();
-                $('.' + loc_targ + '.locationDependent').show();
-                if ($(this).val() == 'all') {
-                    $('li.token-input-city span.token-input-delete-token').each(function() {
-                        $(this).click();
-                    });
+                maxRows: 10,
+                username: 'MoPub'
+            };
+            $targeted_cities.ajaxChosen(
+                {
+                    data: targeted_cities_ajax_data,
+                    dataType: 'json',
+                    jsonTermKey: 'name_startsWith',
+                    method: 'GET',
+                    minTermLength: 3,
+                    traditional: true,
+                    url: 'http://api.geonames.org/searchJSON'
+                }, function (data) {
+                    var terms = {};
+                    for(var index in data.geonames) {
+                        var geoname = data.geonames[index];
+                        var key = '(' + geoname.lat + ',' + geoname.lng + ',\'' + geoname.name + '\',\'' + geoname.adminCode1 + '\',\'' + geoname.countryCode + '\')';
+                        var value = geoname.name + ', ' + geoname.adminCode1 + ', ' + geoname.countryCode;
+                        terms[key] = value;
+                    }
+                    return terms;
                 }
-            }).filter(':checked').click();
+            );
 
-            // Negative User Targeting
+            $('#id_connectivity_targeting_type_1').change(function () {
+                $('#id_targeted_carriers').parent().hide();
+                update_geographical_and_connectivity_targeting();
+            });
+            $connectivity_targeting_type_all.click(function () {
+                if($targeted_regions.val() || $targeted_zip_codes.val()) {
+                    event.preventDefault();
+                    $('#target_carriers_warning .continue').unbind().click(function () {
+                        $connectivity_targeting_type_all.attr('checked', 'checked');
+                        $('#id_targeted_carriers').parent().hide();
+                        update_geographical_and_connectivity_targeting();
+                    })
+                    $('#target_carriers_warning').modal();
+                }
+                else {
+                    update_geographical_and_connectivity_targeting();
+                }
+            });
+            $connectivity_targeting_type_carriers.click(function () {
+                if($targeted_regions.val() || $targeted_zip_codes.val()) {
+                    event.preventDefault();
+                    $('#target_carriers_warning .continue').unbind().click(function () {
+                        $connectivity_targeting_type_carriers.attr('checked', 'checked');
+                        $('#id_targeted_carriers').parent().show();
+                        update_geographical_and_connectivity_targeting();
+                    })
+                    $('#target_carriers_warning').modal();
+                }
+                else {
+                    $('#id_targeted_carriers').parent().show();
+                    update_geographical_and_connectivity_targeting();
+                }
+            });
+            // update on document ready
+            if($('input[name="connectivity_targeting_type"]:checked').val() != 'carriers') {
+                $('#id_targeted_carriers').parent().hide();
+            }
+
+            $targeted_carriers.chosen();
+
+            // TODO: grey out countries when a region or city of theirs is selected
+
+            // Initialize
+            update_geographical_and_connectivity_targeting();
+
+            _.each(bootstrapping_data.targeted_regions, function (targeted_region) {
+                $('option[value="' + targeted_region + '"]', $targeted_regions).prop('selected', 'selected');
+            })
+            $targeted_regions.trigger("liszt:updated");
+
+            var city_tuple_regex = /^\((.*),(.*),'(.*)','(.*)','(.*)'\)$/;
+            _.each(bootstrapping_data.targeted_cities, function (targeted_city) {
+                var match = city_tuple_regex.exec(targeted_city);
+                var name = match[3] + ', ' + match[4] + ', ' + match[5];
+                $targeted_cities.append($('<option />', {
+                    html: name,
+                    selected: 'selected',
+                    value: targeted_city
+                }));
+            });
+            $targeted_cities.trigger("liszt:updated");
+
+            _.each(bootstrapping_data.targeted_carriers, function (targeted_carrier) {
+                $('option[value="' + targeted_carrier + '"]', $targeted_carriers).prop('selected', 'selected');
+            })
+            $targeted_carriers.trigger("liszt:updated");
+
+
+            /*
+             * Device Targeting
+             */
+
+            $('input[name="device_targeting"]').change(function () {
+                if($(this).val() == '0') {
+                    $('#device_targeting_details').slideUp();
+                }
+                else {
+                    $('#device_targeting_details').slideDown();
+                }
+            });
+            // update on document ready
+            if($('input[name="device_targeting"]:checked').val() == '0') {
+                $('#device_targeting_details').hide();
+            }
+
+
+            /*
+             * Advanced Targeting
+             */
+
             $('[name="included_apps"]').chosen();
             $('[name="excluded_apps"]').chosen();
 
@@ -1188,6 +1409,7 @@
                     $('#id_excluded_apps_chzn').show();
                 }
             }).change();
+
         }
     };
 

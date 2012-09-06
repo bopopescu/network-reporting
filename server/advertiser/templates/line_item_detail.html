@@ -252,36 +252,36 @@
 </div>
 
 {% if user.is_staff %}
-<div class="modal hidden" id="budget-admin-modal">
-
-  <div class="modal-header">
-    <a href="#" class="close" data-dismiss="modal">×</a>
-    <h3> Admin Budget Controls </h3>
-  </div>
-
-  <div class="modal-body" style='overflow: visible;'>
-
-    <div class="alert-message block-message info">
-      Manually force an update of the budget for this line item.  If
-      'use staging' is checked, the budget will be pushed to the
-      staging adserver instead.
+  <div class="modal hidden" id="budget-admin-modal">
+    
+    <div class="modal-header">
+      <a href="#" class="close" data-dismiss="modal">×</a>
+      <h3> Admin Budget Controls </h3>
     </div>
     
-    Use staging?
-    <input id="use_staging" type="checkbox"></input>
+    <div class="modal-body" style='overflow: visible;'>
+      
+      <div class="alert-message block-message info">
+        Manually force an update of the budget for this line item.  If
+        'use staging' is checked, the budget will be pushed to the
+        staging adserver instead.
+      </div>
+      
+      Use staging?
+      <input id="use_staging" type="checkbox"></input>
+    </div>
+    
+    <div class="modal-footer">
+      <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
+      <a href="#" class="btn" data-dismiss="modal">
+        Close
+      </a>
+      <a id="update-budget" href="#" class="btn btn-primary">
+        Update Budget
+      </a>
+    </div>
+    
   </div>
-
-  <div class="modal-footer">
-    <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
-    <a href="#" class="btn" data-dismiss="modal">
-      Close
-    </a>
-    <a id="update-budget" href="#" class="btn btn-primary">
-      Update Budget
-    </a>
-  </div>
-
-</div>
 {% endif %}
 
 {% endblock content %}

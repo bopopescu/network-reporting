@@ -312,27 +312,21 @@ form#new_creative_form {
     vertical-align: top;
 }
 
-form#order_and_line_item_form {
-    #order_fieldset {
-        legend {
-            position: relative;
-            top: 20px;
-            h2 {
-                margin: 0;
+form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edit_creative_form, form#campaign_and_adgroup fieldset.advanced {
+    fieldset {
+        margin-bottom: 1em;
+        padding: 25px;
+        &#order_fieldset {
+            background-color: #f7f7f7;
+            @include border-radius(5px);
+            legend {
+                position: relative;
+                top: 20px;
+                h2 {
+                    margin: 0;
+                }
             }
         }
-    }
-}
-
-form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edit_creative_form {
-    fieldset {
-        padding: 25px 25px 25px 25px;
-    }
-    fieldset#order_fieldset {
-        background-color: #f7f7f7;
-        -webkit-border-radius: 5px;
-        -moz-border-radius: 5px;
-        border-radius: 5px;
     }
 
     input[type="text"], input[type="password"], textarea {
@@ -350,12 +344,12 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
         height: 12px;
     }
     input[type="text"].date {
-        width: 85px;
+        width: 92px;
     }
     input[type="text"].time {
-        width: 60px;
+        width: 65px;
     }
-    input[type="text"].number, input[type="text"].float {
+    input[type="text"].float, input[type="text"].integer, input[type="text"].number {
         width: 70px;
     }
     input[type="text"].app-pub-id {
@@ -373,21 +367,7 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
         border-top-color: #d98d8d;
         color: #222;
     }
-    span.radios ul {
-        display: inline-block;
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-        > li {
-            display: inline-block;
-            margin: 0;
-            padding: 0;
-            > label {
-                // font-size: 14px;
-                margin: 0 15px 0 0;
-            }
-        }
-    }
+
     ul.form_fields {
         list-style-type: none;
         margin: 0;
@@ -473,57 +453,65 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
         }
     }
 
-    ul#device_targeting {
-        list-style-type: none;
-        margin: 5px 0 0 50px;
-        padding: 0;
-        li {
-            margin: 0;
-            padding: 0;
-        }
-    }
-
-    .device_type {
-        display: inline-block;
-        width: 150px;
-    }
-
-    ul.device_type {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-        li {
-            display: inline-block;
-            margin: 0;
-            padding: 0;
-        }
-    }
-
     #toggle_advanced {
         margin: 25px;
     }
 
-    input.token-input-field {
-        border: 0;
-        width: 100px;
-    }
-    input.token-input-field.focused {
-        background-color: white;
+    div#ad_type, div#budget_strategy, div#device_targeting, div#region_targeting_type, div#targeted_carriers {
+        > ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            > li {
+                margin: 0 0 5px 0;
+                padding: 0;
+            }
+        }
+        &#ad_type > ul > li, &#budget_strategy > ul > li {
+            display: inline-block;
+            margin: 0 15px 0 0;
+        }
+        &#device_targeting ul#device_targeting_details > li {
+            margin: 0;
+            ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+                li {
+                    margin: 0;
+                    padding: 0;
+                }
+            }
+            > :first-child {
+                display: inline-block;
+                width: 150px;
+                li {
+                    display: inline-block;
+                }
+            }
+        }
     }
 
-    select[name="included_apps"], select[name="excluded_apps"] {
+    select[name="targeted_countries"],
+    select[name="targeted_regions"],
+    select[name="targeted_cities"],
+    select[name="targeted_carriers"],
+    select[name="included_apps"],
+    select[name="excluded_apps"] {
         width: 300px;
     }
 
-    #id_included_apps_chzn, #id_excluded_apps_chzn {
-        margin-top: 5px;
-        ul.chzn-choices {
+    .chzn-container {
+        .chzn-choices {
+            background: #fafafa;
             border: 1px solid #eaeaea;
             border-top-color: #b9b9b9;
-            background: #fafafa;
             @include border-radius(3px);
-            padding: 1px 2px 2px 3px;
-            width: 290px;
+            min-height: 51px;
+        }
+        .chzn-results li em {
+            background-color: inherit;
+            font-weight: bold;
         }
     }
 }
@@ -594,33 +582,3 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
   }
 }
 
-.chzn-select {
-    width: 120px;
-    z-index: 5;
-}
-
-form#campaign_and_adgroup {
-    fieldset.advanced {
-        ul {
-            list-style-type: none;
-            padding: 0 0 0 0;
-        }
-        .devices {
-            width: 150px;
-        }
-        .device-targeting {
-            li {
-                height: 17px;
-            }
-        }
-        .inline {
-            display: inline-block;
-        }
-        .radios li {
-            display: inline-block;
-        }
-    }
-    div.modal {
-        width: 700px;
-    }
-}

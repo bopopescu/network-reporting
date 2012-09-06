@@ -5,20 +5,18 @@ import re
 from django import forms
 from django.forms.util import ErrorList
 from django.utils.safestring import SafeString
-from google.appengine.api import images, files
+from google.appengine.api import files, images
 from google.appengine.ext.db import Key
 
 from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
                                ImageCreative, HtmlCreative)
-from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
-                              CITY_GEO, REGION_GEO, COUNTRY_GEO)
-
-from common.utils import helpers
-from common.utils.timezones import Pacific_tzinfo
-from common.utils.date_magic import utc_to_pacific, pacific_to_utc
-from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-
 from advertiser.widgets import CustomizableSplitDateTimeWidget
+from common.constants import (COUNTRIES, IOS_VERSION_CHOICES,
+                              ANDROID_VERSION_CHOICES)
+from common.utils import helpers
+from common.utils.date_magic import utc_to_pacific, pacific_to_utc
+from common.utils.timezones import Pacific_tzinfo
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
 
 class OrderForm(forms.ModelForm):
@@ -60,101 +58,129 @@ class OrderForm(forms.ModelForm):
 
 
 class LineItemForm(forms.ModelForm):
-    # TODO: include campaign and confirm campaign.is_order
-    adgroup_type   = forms.ChoiceField(label='Line Item Type:',
-                                       choices=(('gtee', 'Guaranteed'),
-                                                ('promo', 'Promotional')))
-
-    gtee_priority  = forms.ChoiceField(label='Priority:', initial='normal',
-                                       choices=(('high', 'High'),
-                                                ('normal', 'Normal'),
-                                                ('low', 'Low')),
-                                       required=False)
-
-
-    promo_priority = forms.ChoiceField(label='Priority:', initial='normal',
-                                       choices=(('normal', 'Normal'),
+    adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
+                                              ('promo', 'Promotional')),
+                                     label='Line Item Type:')
+    # non-db field
+    gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
+                                               ('normal', 'Normal'),
+                                               ('low', 'Low')),
+                                      initial='normal', label='Priority:',
+                                      required=False)
+    # non-db field
+    promo_priority = forms.ChoiceField(choices=(('normal', 'Normal'),
                                                 ('backfill', 'Backfill')),
+                                       initial='normal', label='Priority:',
                                        required=False)
-
-    start_datetime = forms.DateTimeField(label='Start Time:', required=False,
-                                         input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
-                                         widget=CustomizableSplitDateTimeWidget(date_attrs={
-                                                                                             'class': 'date',
-                                                                                             'placeholder': 'MM/DD/YYYY'
-                                                                                            },
-                                                                                time_attrs={
-                                                                                             'class': 'time',
-                                                                                             'placeholder': 'HH:MM'
-                                                                                            },
-                                                                                date_format='%m/%d/%Y',
-                                                                                time_format='%I:%M %p'))
-    end_datetime  = forms.DateTimeField(label='Stop Time:', required=False,
-                                        input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
-                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
-                                                                                           'placeholder': 'MM/DD/YYYY'},
-                                                                              time_attrs={'class': 'time',
-                                                                                          'placeholder': 'HH:MM'},
-                                                                              date_format='%m/%d/%Y',
-                                                                              time_format='%I:%M %p'))
-
-
-    bid_strategy    = forms.ChoiceField(label='Rate:',
-                                        choices=(('cpm', 'CPM'),
-                                                 ('cpc', 'CPC')))
-
-    budget          = forms.FloatField(label='Budget:', required=False,
-                                       widget=forms.TextInput(attrs={'class': 'float'}))
-
-    budget_type     = forms.ChoiceField(initial='daily',
-                                        choices=(('daily', 'USD/day'),
-                                                 ('full_campaign', 'total USD')),
-                                        required=False)
-
-    budget_strategy = forms.ChoiceField(label='Delivery Speed:', initial='allatonce',
-                                        choices=(('evenly', 'Spread Evenly'),
+    # name =
+    start_datetime = forms.DateTimeField(
+        input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
+        label='Start Time:', required=False,
+        widget=CustomizableSplitDateTimeWidget(
+            date_attrs={'class': 'date', 'placeholder': 'MM/DD/YYYY'},
+            time_attrs={'class': 'time', 'placeholder': 'HH:MM'},
+            date_format='%m/%d/%Y', time_format='%I:%M %p'))
+    end_datetime = forms.DateTimeField(
+        input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
+        label='Stop Time:', required=False,
+        widget=CustomizableSplitDateTimeWidget(
+            date_attrs={'class': 'date', 'placeholder': 'MM/DD/YYYY'},
+            time_attrs={'class': 'time', 'placeholder': 'HH:MM'},
+            date_format='%m/%d/%Y', time_format='%I:%M %p'))
+    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'),
+                                              ('cpc', 'CPC')), label='Rate:')
+    # bid =
+    # non-db field
+    budget = forms.FloatField(label='Budget:', required=False,
+                              widget=forms.TextInput(attrs={'class': 'float'}))
+    # daily_budget =
+    # full_budget =
+    budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
+                                             ('full_campaign', 'total USD')),
+                                    initial='daily', required=False)
+    budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
-                                        required=False,
+                                        initial='allatonce',
+                                        label='Delivery Speed:', required=False,
                                         widget=forms.RadioSelect)
 
+    # Targeting
     # site_keys defined in __init__
 
-    daily_frequency_cap   = forms.IntegerField(label='Frequency Caps:', initial=0,
-                                               required=False,
-                                               widget=forms.TextInput(attrs={'class': 'float'}))
-    hourly_frequency_cap  = forms.IntegerField(initial=0, required=False,
-                                               widget=forms.TextInput(attrs={'class': 'float'}))
+    # Geo Targeting
+    accept_targeted_locations = forms.TypedChoiceField(
+        choices=(('0', 'Not Located'),
+                 ('1', 'Located')),
+        coerce=lambda x: bool(int(x)), initial=True,
+        required=False, widget=forms.Select)
+    targeted_countries = forms.MultipleChoiceField(
+        choices=COUNTRIES, label='Country:', required=False,
+        widget=forms.SelectMultiple(attrs={'data-placeholder': 'Ex: United States, ...'}))
+    # non-db field
+    region_targeting_type = forms.ChoiceField(
+        choices=(('all', 'All Regions'),
+                 ('regions_and_cities', 'Specific State / Metro Area / DMA (Wi-Fi Required), or Specific City within Country'),
+                 ('zip_codes', 'Specific ZIP Codes within Country (Wi-Fi Required)')),
+        initial='all', label='Region:', widget=forms.RadioSelect)
+    targeted_regions = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': 'Ex: Ohio, Miami-Ft. Lauderdale FL, ...'}))
+    targeted_cities = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': 'Ex: New York, NY, US, ...'}))
+    targeted_zip_codes = forms.Field(required=False, widget=forms.Textarea(
+            attrs={'class': 'input-text', 'placeholder': 'Ex: 94117 27705', 'rows': 3, 'cols': 50}))
 
-    device_targeting = forms.TypedChoiceField(label='Device Targeting:', initial=False,
-                                              choices=(('0', 'All'),
-                                                       ('1', 'Filter by device and OS')),
-                                              coerce=lambda x: bool(int(x)),
-                                              required=False,
-                                              widget=forms.RadioSelect)
+    # Connectivity Targeting
+    # non-db field
+    connectivity_targeting_type = forms.ChoiceField(
+        choices=(('all', 'All Carriers and Wi-Fi'),
+                 ('wi-fi', 'Wi-Fi Only'),
+                 ('carriers', 'Selected Carriers')),
+        initial='all', label='Connectivity:', widget=forms.RadioSelect)
+    targeted_carriers = forms.Field(required=False, widget=forms.SelectMultiple(
+            attrs={'data-placeholder': 'Ex: Verizon, ...'}))
 
-    ios_version_min = forms.ChoiceField(label='Min', choices=IOS_VERSION_CHOICES[1:],
+    # Device Targting
+    device_targeting = forms.TypedChoiceField(
+        choices=(('0', 'All'),
+                 ('1', 'Filter by device and OS')),
+        coerce=lambda x: bool(int(x)), initial=False,
+        label='Device:', required=False, widget=forms.RadioSelect)
+    target_iphone = forms.BooleanField(initial=True, label='iPhone',
+                                       required=False)
+    target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
+    target_ipad = forms.BooleanField(initial=True, label='iPad', required=False)
+    ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
+                                        label='Min', required=False)
+    ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
+                                        label='Max', required=False)
+    target_android = forms.BooleanField(initial=True, label='Android',
                                         required=False)
-    ios_version_max = forms.ChoiceField(label='Max', choices=IOS_VERSION_CHOICES,
-                                        required=False)
+    android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
+                                            label='Min', required=False)
+    android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
+                                            label='Max', required=False)
+    target_other = forms.BooleanField(initial=True, label='Other',
+                                      required=False)
 
-    android_version_min = forms.ChoiceField(label='Min', choices=ANDROID_VERSION_CHOICES[1:],
-                                            required=False)
-    android_version_max = forms.ChoiceField(label='Max', choices=ANDROID_VERSION_CHOICES,
-                                            required=False)
+    # User Targeting
+    # included_apps defined in __init__
+    # excluded_apps defined in __init__
 
-    geo_predicates   = forms.Field(required=False, widget=forms.SelectMultiple)
-
-    region_targeting = forms.ChoiceField(label='Region Targeting:', initial='all',
-                                         choices=(('all', 'Everywhere'),
-                                                  ('city', 'City')),
-                                         required=False,
-                                         widget=forms.RadioSelect)
-
-    cities = forms.Field(required=False, widget=forms.SelectMultiple)
-
+    # Keywords
     keywords = forms.CharField(
         label='Keywords:', required=False, widget=forms.Textarea(
             attrs={'class': 'input-text', 'rows': 3, 'cols': 50}))
+
+    # Frequency Caps
+    daily_frequency_cap = forms.IntegerField(
+        initial=0, label='Frequency Caps:', required=False,
+        widget=forms.TextInput(attrs={'class': 'float'}))
+    hourly_frequency_cap = forms.IntegerField(
+        initial=0, required=False,
+        widget=forms.TextInput(attrs={'class': 'float'}))
+
+    # Allocation
+    # allocation_percentage =
 
     def __init__(self, *args, **kwargs):
         # initial
@@ -186,15 +212,17 @@ class LineItemForm(forms.ModelForm):
             # TODO: can't change the start date after a campaign has started.
             # TODO: not change the end date after a campaign has completed
 
-            geo_predicates = []
-            for geo_predicate in instance.geo_predicates:
-                preds = geo_predicate.split(',')
-                geo_predicates.append(','.join([str(pred.split('=')[1]) for pred in preds]))
-            initial['geo_predicates'] = geo_predicates
+            if instance.targeted_regions or instance.targeted_cities:
+                initial['region_targeting_type'] = 'regions_and_cities'
+            elif instance.targeted_zip_codes:
+                initial['region_targeting_type'] = 'zip_codes'
 
-            if len(geo_predicates) == 1 and len(instance.cities):
-                initial['region_targeting'] = 'city'
-                initial.update(cities=instance.cities)
+            initial['targeted_zip_codes'] = '\n'.join(instance.targeted_zip_codes)
+
+            if instance.targeted_carriers == ['Wi-Fi']:
+                initial['connectivity_targeting_type'] = 'wi-fi'
+            elif instance.targeted_carriers:
+                initial['connectivity_targeting_type'] = 'carriers'
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
@@ -204,7 +232,8 @@ class LineItemForm(forms.ModelForm):
 
         # set choices based on the users adunits
         # TODO: can we do this a nicer way so we can declare this field with the other fields?
-        self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
+        self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys,
+                                                             required=False)
 
         self.fields['included_apps'] = forms.MultipleChoiceField(
             choices=apps_choices, required=False, widget=forms.SelectMultiple(
@@ -227,12 +256,6 @@ class LineItemForm(forms.ModelForm):
 
         if initial['budget'] != None and instance.bid_strategy == 'cpm':
             initial['budget'] = int(1000.0 * initial['budget'] / instance.bid)
-
-    def _calculate_budget(self, budget):
-        if self.data.get('bid_strategy', 'cpm') == 'cpm':
-            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
-        else:
-            return budget
 
     def clean_adgroup_type(self):
         adgroup_type = self.cleaned_data.get('adgroup_type', None)
@@ -262,23 +285,23 @@ class LineItemForm(forms.ModelForm):
             end_datetime = pacific_to_utc(end_datetime)
         return end_datetime
 
+    def clean_site_keys(self):
+        return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
+
+    def clean_targeted_zip_codes(self):
+        targeted_zip_codes = self.cleaned_data.get('targeted_zip_codes', None)
+        if targeted_zip_codes:
+            targeted_zip_codes = targeted_zip_codes.split()
+            for targeted_zip_code in targeted_zip_codes:
+                if not re.match('^\d{5}$', targeted_zip_code):
+                    raise forms.ValidationError('Malformed ZIP code %s.' % targeted_zip_code)
+        return targeted_zip_codes
+
     def clean_included_apps(self):
         return [Key(app_key) for app_key in self.cleaned_data.get('included_apps', [])]
 
     def clean_excluded_apps(self):
         return [Key(app_key) for app_key in self.cleaned_data.get('excluded_apps', [])]
-
-    def clean_site_keys(self):
-        return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
-
-    def clean_geo_predicates(self):
-        geo_predicates = []
-        for geo_predicate in self.cleaned_data.get('geo_predicates', []) or []:
-            geo_predicate = tuple(geo_predicate.split(','))
-            # the number of predicates indicates the granularity of targting
-            granularity = (COUNTRY_GEO, REGION_GEO, CITY_GEO)[len(geo_predicate) - 1]
-            geo_predicates.append(granularity % geo_predicate)
-        return geo_predicates
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
@@ -288,13 +311,23 @@ class LineItemForm(forms.ModelForm):
             keywords = "\n".join([keyword.strip() for keyword in keywords.split("\n") if keyword.strip()])
         return keywords
 
-    def _clean_start_and_end_datetime(self, data):
-        start = data.get('start_datetime', None) or datetime.now()
-        data['start_datetime'] = start
-        end = data.get('end_datetime')
-        if end and end <= start:
-            self._errors['end_datetime'] = ErrorList()
-            self._errors['end_datetime'].append('End datetime must be after start datetime')
+    def clean(self):
+        cleaned_data = super(LineItemForm, self).clean()
+
+        self._clean_start_and_end_datetime(cleaned_data)
+
+        if cleaned_data.get('adgroup_type', '') == 'gtee':
+            self._clean_gtee_adgroup_type(cleaned_data)
+            self._clean_gtee_budget(cleaned_data)
+
+        elif cleaned_data.get('adgroup_type', '') == 'promo':
+            self._clean_promo_adgroup_type(cleaned_data)
+            self._clean_promo_budget(cleaned_data)
+
+        self._clean_geographical_targeting(cleaned_data)
+        self._clean_connectivity_targeting(cleaned_data)
+
+        return cleaned_data
 
     def _clean_gtee_adgroup_type(self, data):
         priority = data.get('gtee_priority', None)
@@ -349,26 +382,35 @@ class LineItemForm(forms.ModelForm):
         data['budget_type'] = None
         data['budget_strategy'] = None
 
-    def _clean_targeted_cities(self, data):
-        if data.get('region_targeting', None) != 'city':
-            data['cities'] = []
+    def _calculate_budget(self, budget):
+        if self.data.get('bid_strategy', 'cpm') == 'cpm':
+            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
+        else:
+            return budget
 
-    def clean(self):
-        cleaned_data = super(LineItemForm, self).clean()
+    def _clean_start_and_end_datetime(self, data):
+        start = data.get('start_datetime', None) or datetime.now()
+        data['start_datetime'] = start
+        end = data.get('end_datetime')
+        if end and end <= start:
+            self._errors['end_datetime'] = ErrorList()
+            self._errors['end_datetime'].append('End datetime must be after start datetime')
 
-        self._clean_start_and_end_datetime(cleaned_data)
+    def _clean_geographical_targeting(self, cleaned_data):
+        if not cleaned_data['accept_targeted_locations'] and not cleaned_data['targeted_countries']:
+            self._errors['accept_targeted_locations'] = ErrorList()
+            self._errors['accept_targeted_locations'].append('You must select some geography to target against.')
+        if cleaned_data['region_targeting_type'] != 'regions_and_cities':
+            cleaned_data['targeted_regions'] = []
+            cleaned_data['targeted_cities'] = []
+        if cleaned_data['region_targeting_type'] != 'zip_codes':
+            cleaned_data['targeted_zip_codes'] = []
 
-        if cleaned_data.get('adgroup_type', '') == 'gtee':
-            self._clean_gtee_adgroup_type(cleaned_data)
-            self._clean_gtee_budget(cleaned_data)
-
-        elif cleaned_data.get('adgroup_type', '') == 'promo':
-            self._clean_promo_adgroup_type(cleaned_data)
-            self._clean_promo_budget(cleaned_data)
-
-        self._clean_targeted_cities(cleaned_data)
-
-        return cleaned_data
+    def _clean_connectivity_targeting(self, cleaned_data):
+        if cleaned_data['connectivity_targeting_type'] == 'wi-fi':
+            cleaned_data['targeted_carriers'] = ['Wi-Fi']
+        elif cleaned_data['connectivity_targeting_type'] != 'carriers':
+            cleaned_data['targeted_carriers'] = []
 
     def save(self, *args, **kwargs):
         if self.instance and self.instance.site_keys:
@@ -385,39 +427,46 @@ class LineItemForm(forms.ModelForm):
 
     class Meta:
         model = LineItem
-        fields = ('adgroup_type',
-                  'gtee_priority',
-                  'promo_priority',
-                  'name',
-                  'start_datetime',
-                  'end_datetime',
-                  'bid_strategy',
-                  'bid',
-                  'daily_budget',
-                  'full_budget',
-                  'budget',
-                  'budget_type',
-                  'budget_strategy',
-                  'site_keys',
-                  'allocation_percentage',
-                  'daily_frequency_cap',
-                  'hourly_frequency_cap',
-                  'device_targeting',
-                  'target_iphone',
-                  'target_ipod',
-                  'target_ipad',
-                  'ios_version_min',
-                  'ios_version_max',
-                  'target_android',
-                  'android_version_min',
-                  'android_version_max',
-                  'target_other',
-                  'included_apps',
-                  'excluded_apps',
-                  'geo_predicates',
-                  'region_targeting',
-                  'cities',
-                  'keywords')
+        fields = (
+            'adgroup_type',
+            'gtee_priority',
+            'promo_priority',
+            'name',
+            'start_datetime',
+            'end_datetime',
+            'bid_strategy',
+            'bid',
+            'budget',
+            'daily_budget',
+            'full_budget',
+            'budget_type',
+            'budget_strategy',
+            'site_keys',
+            'device_targeting',
+            'target_iphone',
+            'target_ipod',
+            'target_ipad',
+            'ios_version_min',
+            'ios_version_max',
+            'target_android',
+            'android_version_min',
+            'android_version_max',
+            'target_other',
+            'accept_targeted_locations',
+            'targeted_countries',
+            'region_targeting_type',
+            'targeted_cities',
+            'targeted_regions',
+            'targeted_zip_codes',
+            'connectivity_targeting_type',
+            'targeted_carriers',
+            'included_apps',
+            'excluded_apps',
+            'keywords',
+            'daily_frequency_cap',
+            'hourly_frequency_cap',
+            'allocation_percentage',
+        )
 
 
 class AbstractCreativeForm(forms.ModelForm):

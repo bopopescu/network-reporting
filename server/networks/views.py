@@ -21,10 +21,12 @@ from ad_network_reports.query_managers import ADMOB, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkManagementStatsManager
-from common.constants import NETWORKS, \
-        REPORTING_NETWORKS, \
-        NETWORKS_WITHOUT_REPORTING, \
-        NETWORK_ADGROUP_TRANSLATION
+from common.constants import (
+        NETWORKS,
+        REPORTING_NETWORKS,
+        NETWORKS_WITHOUT_REPORTING,
+        NETWORK_ADGROUP_TRANSLATION,
+        US_STATES, CA_PROVINCES, US_METROS, US_CARRIERS, GB_CARRIERS, CA_CARRIERS)
 
 from common.utils.date_magic import gen_last_days
 from common.utils.decorators import staff_login_required
@@ -76,6 +78,17 @@ NETWORKS_WITH_PUB_IDS = set(['admob', 'brightroll', 'ejam', 'jumptap', \
         'millennial', 'mobfox', 'inmobi'])
 
 DEFAULT_BID = 0.05
+
+DEVICE_CHOICES = (
+    ('any', 'Any'),
+    ('iphone', 'iPhone'),
+    ('ipod', 'iPod Touch'),
+    ('ipad', 'iPad'),
+    ('android', 'Android'),
+    ('blackberry', 'Blackberry'),
+    ('windows7', 'Windows Phone 7'),
+)
+
 
 class NetworksHandler(RequestHandler):
     def get(self):
@@ -336,6 +349,12 @@ class EditNetworkHandler(RequestHandler):
                                           LoginStates.__dict__),
                                       'NETWORKS_WITH_PUB_IDS': \
                                               NETWORKS_WITH_PUB_IDS,
+                                      'US_STATES': US_STATES,
+                                      'CA_PROVINCES': CA_PROVINCES,
+                                      'US_METROS': US_METROS,
+                                      'US_CARRIERS': US_CARRIERS,
+                                      'GB_CARRIERS': GB_CARRIERS,
+                                      'CA_CARRIERS': CA_CARRIERS,
                                   })
 
     def post(self, network='', campaign_key=''):
@@ -397,7 +416,8 @@ class EditNetworkHandler(RequestHandler):
                 key = key_field[0]
                 field = key_field[1]
 
-            if len(value) == 1:
+            if len(value) == 1 and field not in ['targeted_countries', 'targeted_cities', 'targeted_regions', 'targeted_carriers']:
+                logging.error(field)
                 value = value[0]
 
             if field in NetworkCampaignForm.base_fields:
@@ -408,6 +428,8 @@ class EditNetworkHandler(RequestHandler):
                 adunit_adgroup_fields[key][field] = value
             elif 'pub_id' in field:
                 pub_id_fields[key][field] = value
+
+        logging.error(network_adgroup_fields)
 
         errors = {}
 
@@ -1011,7 +1033,7 @@ class NetworkDetailsHandler(RequestHandler):
                         'max_cpm': bid_range[1],}
 
         if campaign_adgroups and campaign_adgroups[0].device_targeting:
-            for device, pretty_name in campaign_adgroups[0].DEVICE_CHOICES:
+            for device, pretty_name in DEVICE_CHOICES:
                 if getattr(campaign_adgroups[0], 'target_' + device, False):
                     network_data['targeting'].append(pretty_name)
             if campaign_adgroups[0].target_other:

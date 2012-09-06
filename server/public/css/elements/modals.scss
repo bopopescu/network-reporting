@@ -1,90 +1,129 @@
-// MODALS
-// ------
-
-// Recalculate z-index where appropriate
-.modal-open {
-  .dropdown-menu {  z-index: $zindexDropdown + $zindexModal; }
-  .dropdown.open { *z-index: $zindexDropdown + $zindexModal; }
-  .popover       {  z-index: $zindexPopover  + $zindexModal; }
-  .tooltip       {  z-index: $zindexTooltip  + $zindexModal; }
+.modal-open .dropdown-menu {
+  z-index: 2050;
 }
 
-// Background
+.modal-open .dropdown.open {
+  *z-index: 2050;
+}
+
+.modal-open .popover {
+  z-index: 2060;
+}
+
+.modal-open .tooltip {
+  z-index: 2080;
+}
+
 .modal-backdrop {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: $zindexModalBackdrop;
-  background-color: $black;
-  // Fade for backdrop
-  &.fade { opacity: 0; }
+  z-index: 1040;
+  background-color: #000000;
 }
 
-.modal-backdrop, .modal-backdrop.fade.in {
-  @include opacity(0.8);
+.modal-backdrop.fade {
+  opacity: 0;
 }
 
-// Base modal
+.modal-backdrop,
+.modal-backdrop.fade.in {
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+}
+
 .modal {
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: $zindexModal;
-  overflow: auto;
+  z-index: 1050;
   width: 560px;
   margin: -250px 0 0 -280px;
-  background-color: $white;
+  overflow: auto;
+  background-color: #ffffff;
   border: 1px solid #999;
-  border: 1px solid rgba(0,0,0,.3);
-  *border: 1px solid #999; /* IE6-7 */
-  @include border-radius(6px);
-  @include box-shadow(0 3px 7px rgba(0,0,0,0.3));
-  @include background-clip(padding-box);
-  &.fade {
-    $transition: opacity .3s linear, top .3s ease-out;
-    @include transition($transition);
-    top: -25%;
-  }
-  &.fade.in { top: 50%; }
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  *border: 1px solid #999;
+  -webkit-border-radius: 6px;
+     -moz-border-radius: 6px;
+          border-radius: 6px;
+  -webkit-box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+     -moz-box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+  -webkit-background-clip: padding-box;
+     -moz-background-clip: padding-box;
+          background-clip: padding-box;
 }
+
+.modal.fade {
+  top: -25%;
+  -webkit-transition: opacity 0.3s linear, top 0.3s ease-out;
+     -moz-transition: opacity 0.3s linear, top 0.3s ease-out;
+       -o-transition: opacity 0.3s linear, top 0.3s ease-out;
+          transition: opacity 0.3s linear, top 0.3s ease-out;
+}
+
+.modal.fade.in {
+  top: 50%;
+}
+
 .modal-header {
   padding: 9px 15px;
   border-bottom: 1px solid #eee;
-  // Close icon
-  .close { margin-top: 2px; }
 }
 
-// Body (where all modal content resides)
+.modal-header .close {
+  margin-top: 2px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  line-height: 30px;
+}
+
 .modal-body {
-  overflow-y: auto;
   max-height: 400px;
   padding: 15px;
+  overflow-y: auto;
 }
-// Remove bottom margin if need be
+
 .modal-form {
   margin-bottom: 0;
 }
 
-// Footer (for actions)
 .modal-footer {
   padding: 14px 15px 15px;
   margin-bottom: 0;
-  text-align: right; // right align buttons
+  text-align: right;
   background-color: #f5f5f5;
   border-top: 1px solid #ddd;
-  @include border-radius(0 0 6px 6px);
-  @include box-shadow(inset 0 1px 0 $white);
-  @include clearfix(); // clear it in case folks use .pull-* classes on buttons
+  -webkit-border-radius: 0 0 6px 6px;
+     -moz-border-radius: 0 0 6px 6px;
+          border-radius: 0 0 6px 6px;
+  *zoom: 1;
+  -webkit-box-shadow: inset 0 1px 0 #ffffff;
+     -moz-box-shadow: inset 0 1px 0 #ffffff;
+          box-shadow: inset 0 1px 0 #ffffff;
+}
 
-  // Properly space out buttons
-  .btn + .btn {
-    margin-left: 5px;
-    margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
-  }
-  // but override that for button groups
-  .btn-group .btn + .btn {
-    margin-left: -1px;
-  }
+.modal-footer:before,
+.modal-footer:after {
+  display: table;
+  line-height: 0;
+  content: "";
+}
+
+.modal-footer:after {
+  clear: both;
+}
+
+.modal-footer .btn + .btn {
+  margin-bottom: 0;
+  margin-left: 5px;
+}
+
+.modal-footer .btn-group .btn + .btn {
+  margin-left: -1px;
 }

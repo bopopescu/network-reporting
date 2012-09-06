@@ -302,101 +302,109 @@ class SimpleCampaign(SimpleModel):
         else:
             return None
 
+
 class SimpleAdGroup(SimpleModel):
-    def __init__(self,
-                 key=None,
-                 campaign=None,
-                 name=None,
-                 adgroup_type=None,
-                 bid=None,
-                 bid_strategy=None,
-                 full_budget=None,
-                 daily_budget=None,
-                 budget_type=None,
-                 start_datetime=None,
-                 end_datetime=None,
-                 active=None,
-                 deleted=None,
-                 minute_frequency_cap=None,
-                 hourly_frequency_cap=None,
-                 daily_frequency_cap=None,
-                 weekly_frequency_cap=None,
-                 monthly_frequency_cap=None,
-                 lifetime_frequency_cap=None,
-                 keywords=None,
-                 site_keys=None,
-                 account=None,
-                 mktplace_price_floor=None,
-                 device_targeting=None,
-                 target_ipod=None,
-                 target_iphone=None,
-                 target_ipad=None,
-                 ios_version_min=None,
-                 ios_version_max=None,
-                 target_android=None,
-                 android_version_max=None,
-                 android_version_min=None,
-                 target_other=None,
-                 cities=None,
-                 geo_predicates=None,
-                 allocation_percentage=None,
-                 optimizable=None,
-                 default_cpm=None,
-                 network_type=None,
-                 included_apps=None,
-                 excluded_apps=None,
-                 *args,
-                 **kwargs
-                 ):
+    def __init__(
+            self,
+            key=None,
+            account=None,
+            campaign=None,
+
+
+            active=None,
+            deleted=None,
+
+            network_type=None,
+            optimizable=None,
+            default_cpm=None,
+
+            adgroup_type=None,
+            daily_budget=None,
+            full_budget=None,
+            budget_type=None,
+
+            bid=None,
+            bid_strategy=None,
+            start_datetime=None,
+            end_datetime=None,
+            site_keys=None,
+            device_targeting=None,
+            target_ipod=None,
+            target_iphone=None,
+            target_ipad=None,
+            ios_version_min=None,
+            ios_version_max=None,
+            target_android=None,
+            android_version_min=None,
+            android_version_max=None,
+            target_other=None,
+            accept_targeted_locations=None,
+            targeted_countries=None,
+            targeted_regions=None,
+            targeted_cities=None,
+            targeted_zip_codes=None,
+            targeted_carriers=None,
+            included_apps=None,
+            excluded_apps=None,
+            keywords=None,
+            daily_frequency_cap=None,
+            hourly_frequency_cap=None,
+            mktplace_price_floor=None,
+            *args,
+            **kwargs):
         self._key = key
-        self.campaign = campaign.simplify()
-        self.account = account.simplify()
-        self.name = name
-        self.adgroup_type = adgroup_type
-        self.bid = bid
-        self.bid_strategy = bid_strategy
-        self.full_budget = full_budget
-        self.daily_budget = daily_budget
-        self.budget_type = budget_type
-        self.start_datetime = start_datetime
-        self.end_datetime = end_datetime
+        self.account = account.simplify()  # simplify
+        self.campaign = campaign.simplify()  # simplify
+        # self.created = created
+        # self.modified = modified
         self.active = active
         self.deleted = deleted
-        self.minute_frequency_cap = minute_frequency_cap
-        self.hourly_frequency_cap = hourly_frequency_cap
-        self.daily_frequency_cap = daily_frequency_cap
-        self.weekly_frequency_cap = weekly_frequency_cap
-        self.monthly_frequency_cap = monthly_frequency_cap
-        self.lifetime_frequency_cap = lifetime_frequency_cap
-        self.keywords = keywords
+        # self.archived = archived
+        self.network_type = network_type
+        self.optimizable = optimizable
+        self.default_cpm = default_cpm
+        # self.name = name
+        self.adgroup_type = adgroup_type
+        self.daily_budget = daily_budget
+        self.full_budget = full_budget
+        self.budget_type = budget_type
+        # self.budget_strategy = budget_strategy
+        self.bid = bid
+        self.bid_strategy = bid_strategy
+        self.start_datetime = start_datetime
+        self.end_datetime = end_datetime
         self.site_keys = site_keys
-        self.mktplace_price_floor = mktplace_price_floor
         self.device_targeting = device_targeting
+        self.target_iphone = target_iphone
         self.target_ipod = target_ipod
         self.target_ipad = target_ipad
-        self.target_iphone = target_iphone
-        self.ios_version_max = ios_version_max
         self.ios_version_min = ios_version_min
+        self.ios_version_max = ios_version_max
         self.target_android = target_android
         self.android_version_min = android_version_min
         self.android_version_max = android_version_max
         self.target_other = target_other
-        self.cities = cities
-        self.geo_predicates = geo_predicates
-        self.allocation_percentage = allocation_percentage
-        self.optimizable = optimizable
-        self.default_cpm = default_cpm
-        self.network_type = network_type
+        self.accept_targeted_locations = accept_targeted_locations
+        self.targeted_countries = targeted_countries
+        self.targeted_regions = targeted_regions
+        self.targeted_cities = targeted_cities
+        self.targeted_zip_codes = targeted_zip_codes
+        self.targeted_carriers = targeted_carriers
         self.included_apps = included_apps
         self.excluded_apps = excluded_apps
+        self.keywords = keywords
+        self.daily_frequency_cap = daily_frequency_cap
+        self.hourly_frequency_cap = hourly_frequency_cap
+        self.mktplace_price_floor = mktplace_price_floor,  # deprecated?
 
     def __str__(self):
         return self.__repr__()
 
     def __repr__(self):
-        return 'SimpleAdGroup: %s' % dict(key = self._key,
-                                          campaign = self.campaign,
-                                          account = self.account)
+        return 'SimpleAdGroup: %s' % dict(key=self._key,
+                                          campaign=self.campaign,
+                                          account=self.account)
+
     def key(self):
         return self._key
 
@@ -415,6 +423,7 @@ class SimpleAdGroup(SimpleModel):
         if self.bid_strategy == 'cpc':
             return self.bid
         return None
+
 
 class SimpleCreative(SimpleModel):
     def __init__(self, key=None, name=None, custom_width=None, custom_height=None, landscape=None, ad_group=None,

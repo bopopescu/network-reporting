@@ -817,8 +817,7 @@ var mopub = window.mopub || {};
                 $pace.show();
             }
 
-            var popover_template = _.template($("#popover-template").html());
-            var popover_content = popover_template(current_model.toJSON());
+            var popover_content = $("#" + current_model_key + "-popover-content").html();            
             $("#" + current_model_key + "-popover").popover({
                 placement: 'left',
                 title: current_model.get('name'),
@@ -829,6 +828,7 @@ var mopub = window.mopub || {};
                 $("#" + current_model_key + "-popover")
                     .popover('toggle')
                     .toggleClass('active');
+
                 event.stopPropagation();
                 event.preventDefault();
             });

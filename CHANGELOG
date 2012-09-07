@@ -1,19 +1,28 @@
+# Deployed Friday, September 07, 2012 at 09:45PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-202
+### Bugs Fixed: []
+### Included Commits: 
+ * 2246a13 Merge branch 'master' of github.com:mopub/mopub
+ * f4000ea fixed network adgroup bug
+ * 51d492a Deployed without finding any bug fixes.
+ 
 # Deployed Friday, September 07, 2012 at 09:11PM PST
 ### Deployed by John Pena
 ### Tagged deploy-201
 ### Bugs Fixed: []
-### Included Commits: 
- * b3910e5 fixed versions
- * c739019 updated logic
- * da95d21 added a comment explaining changes
- * 8aa7e35 removed console.log
- * f24f942 unscheduled reports for today cant be run, unscheduled reports for yesterday cant be run when the time is before noon PST
- * 49692ae Merge branch 'master' of github.com:mopub/mopub
- * fd81744 fixed networks create_mptests
- * 4773ce7 added old style networks to app and adunit pages
- * 04e62cd fixed networks tests to work with new targeting
- * 7b2b085 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* b3910e5 fixed versions
+* c739019 updated logic
+* da95d21 added a comment explaining changes
+* 8aa7e35 removed console.log
+* f24f942 unscheduled reports for today cant be run, unscheduled reports for yesterday cant be run when the time is before noon PST
+* 49692ae Merge branch 'master' of github.com:mopub/mopub
+* fd81744 fixed networks create_mptests
+* 4773ce7 added old style networks to app and adunit pages
+* 04e62cd fixed networks tests to work with new targeting
+* 7b2b085 Deployed without finding any bug fixes.
+
 # Deployed Thursday, September 06, 2012 at 08:47PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-200

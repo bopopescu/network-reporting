@@ -226,7 +226,7 @@ class AppDetailHandler(RequestHandler):
 
         marketplace_campaign = CampaignQueryManager.get_marketplace(app._account, from_db=True)
 
-        network_campaigns = CampaignQueryManager.get_network_campaigns(app.account)
+        network_campaigns = CampaignQueryManager.get_network_campaigns(app.account, is_new=True)
         for campaign in network_campaigns:
             if campaign.active:
                 active = False

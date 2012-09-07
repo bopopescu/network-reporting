@@ -507,7 +507,7 @@ class AdGroupQueryManager(QueryManager):
 
     @classmethod
     def get_network_adgroups_for_adunit(cls, adunit):
-        network_campaigns = CampaignQueryManager.get_network_campaigns(adunit.account)
+        network_campaigns = CampaignQueryManager.get_network_campaigns(adunit.account, is_new=True)
         network_adgroups = []
         for network_campaign in network_campaigns:
             network_adgroup = cls.get_network_adgroup(network_campaign, adunit.key(), adunit.account.key(), get_from_db=True)

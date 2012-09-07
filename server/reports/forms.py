@@ -1,8 +1,9 @@
 import logging
-from datetime import timedelta, datetime
-
+from datetime import timedelta, datetime, date
+from common.utils.timezones import Pacific_tzinfo
 from django import forms
 from reports.models import ScheduledReport
+
 
 DIMENSIONS = [
     ('','------------'),
@@ -25,7 +26,22 @@ DIMENSIONS = [
 
 
 class ReportForm(forms.ModelForm):
+    class Meta:
+        model = ScheduledReport
+        fields = ('name',
+                  'd1',
+                  'd2',
+                  'd3',
+                  'start',
+                  'end',
+                  'days',
+                  'name',
+                  'interval',
+                  'sched_interval',
+                  'recipients',
+                  'saved')
 
+    
     TEMPLATE = 'reports/forms/report_form.html'
     name = forms.CharField(
         label='Name:',
@@ -145,12 +161,31 @@ class ReportForm(forms.ModelForm):
         """
         start = self.cleaned_data.get('start', None)
         end = self.cleaned_data.get('end', None)
+        scheduled = self.cleaned_data.get('sched_interval')
+        
+        today = datetime.now(Pacific_tzinfo()).date()
+        yesterday = today - timedelta(1)
+        current_hour = datetime.now(Pacific_tzinfo()).hour
+                
         if start and end:
             days = (end - start).days
             if days > 92:
-                raise forms.ValidationError('Please limit reports to three months.')
+                raise forms.ValidationError('Reports are limited to three months.')
         else:
             raise forms.ValidationError('Start and end dates are required.')
+
+        if scheduled == 'none':
+            
+            # Unscheduled reports for today can't run because we don't
+            # have the data yet.
+            if start == today and end == today:
+                message = 'Report data for today has not yet been generated.'
+                raise forms.ValidationError(message)
+            
+            if (start == yesterday) and (end == yesterday) and current_hour <= 12:
+                message = 'Report data for yesterday has not yet been generated.'
+                raise forms.ValidationError(message)
+            
         return start
 
     def clean_days(self):
@@ -173,18 +208,4 @@ class ReportForm(forms.ModelForm):
         logging.info(recipients)
         return recipients
 
-    class Meta:
-        model = ScheduledReport
-        fields = ('name',
-                  'd1',
-                  'd2',
-                  'd3',
-                  'start',
-                  'end',
-                  'days',
-                  'name',
-                  'interval',
-                  'sched_interval',
-                  'recipients',
-                  'saved')
 

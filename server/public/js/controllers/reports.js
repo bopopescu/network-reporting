@@ -194,6 +194,8 @@
         // Validate report forms
         var validator = $('#' + prefix + '-reportEditForm').validate({
             errorPlacement: function(error, element) {
+                console.log(error);
+                console.log(element);
                 element.parents('dd').not(':hidden').first().append(error);
             },
             submitHandler: function(form) {

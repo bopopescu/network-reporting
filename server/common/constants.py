@@ -4,9 +4,6 @@
 IS_PROD = True
 
 # OS Versions
-
-
-
 IOS_VERSION_CHOICES = (
     ('999','No Max'),
     ('2.0','2.0'),
@@ -77,24 +74,25 @@ CPM_STAT = 'cpm_STAT' #CPM
 CPC_STAT = 'cpc_STAT' #CPC
 
 
-ALL_STATS =   ( SIT_STAT,
-                OWN_STAT,
-                DTE_STAT,
-
-                REQ_STAT,
-                IMP_STAT,
-                CLK_STAT,
-                UU_STAT,
-                REV_STAT,
-                CNV_STAT,
-
-                FLR_STAT,
-                CPA_STAT,
-                CTR_STAT,
-                CNV_RATE_STAT,
-                CPM_STAT,
-                CPC_STAT,
-                )
+ALL_STATS = (
+    SIT_STAT,
+    OWN_STAT,
+    DTE_STAT,
+    
+    REQ_STAT,
+    IMP_STAT,
+    CLK_STAT,
+    UU_STAT,
+    REV_STAT,
+    CNV_STAT,
+    
+    FLR_STAT,
+    CPA_STAT,
+    CTR_STAT,
+    CNV_RATE_STAT,
+    CPM_STAT,
+    CPC_STAT,
+)
 
 APP = 'app'
 AU = 'adunit'
@@ -170,34 +168,42 @@ MPX_DSP_IDS = [
     # '4e45baaddadbc70de9000001', # TapAd
 ]
 
-REPORTING_NETWORKS = {'admob': 'AdMob',
-                    'jumptap': 'JumpTap',
-                    'iad': 'iAd',
-                    'inmobi': 'InMobi',
-                    'mobfox': 'MobFox'}
+# Network Configuration
+REPORTING_NETWORKS = {
+    'admob': 'AdMob',
+    'jumptap': 'JumpTap',
+    'iad': 'iAd',
+    'inmobi': 'InMobi',
+    'mobfox': 'MobFox'
+}
 
-NETWORKS_WITHOUT_REPORTING = {'millennial': 'Millennial',
-                              'adsense': 'AdSense',
-                              'ejam': 'TapIt',
-                              'brightroll': 'BrightRoll',
-                              'custom': 'Custom Network',
-                              'custom_native': 'Custom Native Network'}
+NETWORKS_WITHOUT_REPORTING = {
+    'millennial': 'Millennial',
+    'adsense': 'AdSense',
+    'ejam': 'TapIt',
+    'brightroll': 'BrightRoll',
+    'custom': 'Custom Network',
+    'custom_native': 'Custom Native Network'
+}
 
 NETWORKS = dict(NETWORKS_WITHOUT_REPORTING.items() +
         REPORTING_NETWORKS.items())
 
-NETWORK_ADGROUP_TRANSLATION = {'iad': 'iAd',
-                               'admob': 'admob_native',
-                               'millennial': 'millennial_native'}
+NETWORK_ADGROUP_TRANSLATION = {
+    'iad': 'iAd',
+    'admob': 'admob_native',
+    'millennial': 'millennial_native'
+}
 
-IAB_CATEGORIES = (('IAB1', 'Arts & Entertainment', (
-    ('IAB1-1', 'Books & Literature'),
-    ('IAB1-2', 'Celebrity Fan/Gossip'),
-    ('IAB1-3', 'Fine Art'),
-    ('IAB1-4', 'Humor'),
-    ('IAB1-5', 'Movies'),
-    ('IAB1-6', 'Music'),
-    ('IAB1-7', 'Television'),
+IAB_CATEGORIES = (
+    ('IAB1', 'Arts & Entertainment', (
+        ('IAB1-1', 'Books & Literature'),
+        ('IAB1-2', 'Celebrity Fan/Gossip'),
+        ('IAB1-3', 'Fine Art'),
+        ('IAB1-4', 'Humor'),
+        ('IAB1-5', 'Movies'),
+        ('IAB1-6', 'Music'),
+        ('IAB1-7', 'Television'),
     )),
     ('IAB2', 'Automotive', (
         ('IAB2-1', 'Auto Parts'),
@@ -606,21 +612,33 @@ IAB_CATEGORIES = (('IAB1', 'Arts & Entertainment', (
         ('IAB26-1', 'Illegal Content'),
         ('IAB26-2', 'Warez'),
         ('IAB26-3', 'Spyware/Malware'),
-        ('IAB26-4', 'Copyright Infringement'),)))
+        ('IAB26-4', 'Copyright Infringement'),
+    ))
+)
 
-CREATIVE_ATTRIBUTES = ((1, 'Audio Ad (Auto Play)'),
-                       (2, 'Audio Ad (User Initiated)'),
-                       (3, 'Expandable (Automatic)'),
-                       (4, 'Expandable (User Initiated - Click)'),
-                       (5, 'Expandable (User Initiated - Rollover)'),
-                       (6, 'In-Banner Video Ad (Auto Play)'),
-                       (7, 'In-Banner Video Ad (User Initiated)'),
-                       (8, 'Pop (e.g., Over, Under, or upon Exit)'),
-                       (9, 'Provocative or Suggestive Imagery'),
-                       (10, 'Shaky, Flashing, Flickering, Extreme Animation, Smileys'),
-                       (11, 'Surveys'),
-                       (12, 'Text Only'),
-                       (13, 'User Interactive (e.g., Embedded Games)'),
-                       (14, 'Windows Dialog or Alert Style'),
-                       (15, 'Has audio on/off button'),
-                       (16, 'Ad can be skipped (e.g., skip button on preroll video)'))
+CREATIVE_ATTRIBUTES = (
+    (1, 'Audio Ad (Auto Play)'),
+    (2, 'Audio Ad (User Initiated)'),
+    (3, 'Expandable (Automatic)'),
+    (4, 'Expandable (User Initiated - Click)'),
+    (5, 'Expandable (User Initiated - Rollover)'),
+    (6, 'In-Banner Video Ad (Auto Play)'),
+    (7, 'In-Banner Video Ad (User Initiated)'),
+    (8, 'Pop (e.g., Over, Under, or upon Exit)'),
+    (9, 'Provocative or Suggestive Imagery'),
+    (10, 'Shaky, Flashing, Flickering, Extreme Animation, Smileys'),
+    (11, 'Surveys'),
+    (12, 'Text Only'),
+    (13, 'User Interactive (e.g., Embedded Games)'),
+    (14, 'Windows Dialog or Alert Style'),
+    (15, 'Has audio on/off button'),
+    (16, 'Ad can be skipped (e.g., skip button on preroll video)')
+)
+
+IAB_CATEGORIES_AND_SUBCATEGORIES = set()
+for category in IAB_CATEGORIES:
+    IAB_CATEGORIES_AND_SUBCATEGORIES.add(category[0])
+    for sub_category in category[2]:
+        IAB_CATEGORIES_AND_SUBCATEGORIES.add(sub_category[0])
+
+IAB_ATTRIBUTES = set([attribute[0] for attribute in CREATIVE_ATTRIBUTES])

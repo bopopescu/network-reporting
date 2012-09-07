@@ -177,6 +177,23 @@ class NetworkConfig(db.Model):
         self.category_blocklist = DEFAULT_CATEGORIES
         self.put()
 
+    def set_custom_filter(self, categories, attributes):
+        if not categories:
+            # Appengine stores an empty list as NULL, and will fall back to the
+            # default values, so we have to put a sentinel value if this is empty.
+            # MPX ignores non-valid categories so this is fine. 
+            categories = ['']
+            
+        self.category_blocklist = categories
+            
+        if not attributes:
+            # Same deal as with categories.
+            attributes = [0]
+            
+        self.attribute_blocklist = attributes
+            
+        self.put()
+
 
 class MarketPlaceConfig(db.Model):
     """ All marketplace related configurations """

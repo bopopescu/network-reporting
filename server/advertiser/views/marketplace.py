@@ -5,7 +5,7 @@ from django.utils import simplejson
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 
-from account.models import NetworkConfig, MODERATE_CATEGORIES, MODERATE_ATTRIBUTES
+from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from common.ragendja.template import render_to_response, JSONResponse
@@ -14,8 +14,11 @@ from publisher.query_managers import PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import tablib
-from common.constants import IAB_CATEGORIES, CREATIVE_ATTRIBUTES
-
+from common.constants import (
+    IAB_CATEGORIES, CREATIVE_ATTRIBUTES,
+    IAB_CATEGORIES_AND_SUBCATEGORIES,
+    IAB_ATTRIBUTES
+)
 
 
 class MarketplaceIndexHandler(RequestHandler):
@@ -161,38 +164,24 @@ class ContentFilterHandler(RequestHandler):
             elif filter_level == "strict":
                 network_config.set_strict_filter()
             elif filter_level == "custom":
-                all_categories = set()
-                for category in IAB_CATEGORIES:
-                    all_categories.add(category[0])
-                    for sub_category in category[2]:
-                        all_categories.add(sub_category[0])
-
                 categories = self.request.POST.getlist('categories[]')
+                attributes = self.request.POST.getlist('attributes[]')
+                attributes = [int(attribute) for attribute in attributes]
+
                 for category in categories:
-                    if category not in all_categories:
-                        return JSONResponse({'error': 'Invalid category selected'})
-
-                all_attributes = set([attribute[0] for attribute in CREATIVE_ATTRIBUTES])
-                attributes = [int(attribute) for attribute in self.request.POST.getlist('attributes[]')]
+                    if category not in IAB_CATEGORIES_AND_SUBCATEGORIES:
+                        return JSONResponse({
+                            'error': 'Invalid category selected'
+                        })
+                                
                 for attribute in attributes:
-                    if attribute not in all_attributes:
-                        return JSONResponse({'error': 'Invalid creative attribute selected'})
+                    if attribute not in IAB_ATTRIBUTES:
+                        return JSONResponse({
+                            'error': 'Invalid creative attribute selected'
+                        })
 
-                if not categories:
-                    # Set categories to a sentinel value of [''] since it can't
-                    # be set to [] because it has a default value. MPX will
-                    # ignore the empty string because it's not a valid category
-                    categories = ['']
-                network_config.category_blocklist = categories
-
-                if not attributes:
-                    # Set attributes to a sentinel value of [0] since it can't
-                    # be set to [] because it has a default value. MPX will
-                    # ignore the value 0 because it's not a valid attribute
-                    attributes = [0]
-                network_config.attribute_blocklist = attributes
-
-                AccountQueryManager.update_config_and_put(self.account, network_config)
+                network_config.set_custom_filter(categories, attributes)
+                
             else:
                 return JSONResponse({'error': 'Invalid filter level'})
         else:

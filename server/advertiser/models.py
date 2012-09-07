@@ -440,6 +440,7 @@ class AdGroup(db.Model):
             target_android=self.target_android,
             android_version_min=self.android_version_min,
             android_version_max=self.android_version_max,
+            allocation_percentage=self.allocation_percentage,
             target_other=self.target_other,
             accept_targeted_locations=self.accept_targeted_locations,
             targeted_countries=self.targeted_countries,

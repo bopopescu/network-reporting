@@ -9,7 +9,7 @@ from google.appengine.ext.db import polymodel
 from account.models import Account
 from common.constants import (MIN_IOS_VERSION, MAX_IOS_VERSION,
                               MIN_ANDROID_VERSION, MAX_ANDROID_VERSION,
-                              NETWORKS)
+                              NETWORKS, NETWORK_ADGROUP_TRANSLATION)
 from common.templatetags.filters import withsep
 from common.utils.helpers import to_uni
 from simple_models import (SimpleAdGroup,
@@ -163,25 +163,10 @@ class AdGroup(db.Model):
     deleted = db.BooleanProperty(default=False)
     archived = db.BooleanProperty(default=False)
 
+    NETWORK_TYPE_CHOICES = [NETWORK_ADGROUP_TRANSLATION.get(network_type,
+        network_type) for network_type in NETWORKS]
     # TODO: this should be moved to Campaign
-    network_type = db.StringProperty(choices=[
-        'dummy',  # ?
-        'adsense',
-        'iAd',
-        'admob',  # deprecated, but may still be used by some accounts
-        'millennial',  # deprecated, but may still be used by some accounts
-        'ejam',
-        'chartboost',  # deprecated
-        'appnexus',  # deprecated
-        'inmobi',
-        'mobfox',
-        'jumptap',
-        'brightroll',
-        'greystripe',  # deprecated, but may still be used by some accounts
-        'custom',
-        'custom_native',
-        'admob_native',
-        'millennial_native'])
+    network_type = db.StringProperty(choices=NETWORK_TYPE_CHOICES)
 
     # TODO: document
     optimizable = db.BooleanProperty(default=False)
@@ -409,6 +394,22 @@ class AdGroup(db.Model):
         else:
             budget_type = None
 
+        # NOTE: When we originally designed the networks page refactor we
+        # didn't anticipate a need for s2s, server to server campaigns.
+        # However, after launching the networks page refactor we realized it
+        # was a requirement which conflicted with the new naming conventions we
+        # put in place. ie. [campaign.network_type: admob] ->
+        # [adgroup.network_type: admob_native] (same for millennial) which is
+        # weird because the adgroup.network_type must be just admob or just
+        # millennial for s2s. Hence this hack to make the adserver work and
+        # maintain decent naming conventions for the FE models.
+        #
+        # Author: Tiago Bandeira (9/6/2012)
+        NETWORK_TYPE_TRANSLATION = {'admob_s2s': 'admob',
+                                    'millennial_s2s': 'millennial'}
+        network_type = NETWORK_TYPE_TRANSLATION.get(self.network_type,
+                self.network_type)
+
         return SimpleAdGroup(
             key=str(self.key()),  # modified
             account=self.account,
@@ -417,7 +418,7 @@ class AdGroup(db.Model):
             active=self.active,
             deleted=self.deleted,
             # archived=self.archived,
-            network_type=self.network_type,
+            network_type=network_type,
             optimizable=self.optimizable,
             default_cpm=self.default_cpm,
             # name=self.name,
@@ -470,9 +471,9 @@ class AdGroup(db.Model):
                             ad_type="iAd",
                             format="320x50",
                             format_predicates=["format=320x50"])
-        elif self.network_type == 'admob':
+        elif self.network_type == 'admob_s2s':
             c = AdMobCreative(key_name=key_name,
-                              name="admob dummy",
+                              name="admob s2s dummy",
                               ad_type="admob",
                               format="320x50",
                               format_predicates=["format=320x50"])
@@ -500,9 +501,9 @@ class AdGroup(db.Model):
                                 ad_type="html",
                                 format="320x50",
                                 format_predicates=["format=320x50"])
-        elif self.network_type == 'millennial':
+        elif self.network_type == 'millennial_s2s':
             c = MillennialCreative(key_name=key_name,
-                                   name="millennial dummy",
+                                   name="millennial s2s dummy",
                                    ad_type="html",
                                    format="320x50",
                                    format_predicates=["format=320x50"])  # TODO: make sure formats are right

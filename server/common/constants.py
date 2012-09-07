@@ -744,7 +744,9 @@ REPORTING_NETWORKS = {'admob': 'AdMob',
                     'inmobi': 'InMobi',
                     'mobfox': 'MobFox'}
 
-NETWORKS_WITHOUT_REPORTING = {'millennial': 'Millennial',
+NETWORKS_WITHOUT_REPORTING = {'admob_s2s': 'AdMob S2S',
+                              'millennial': 'Millennial',
+                              'millennial_s2s': 'Millennial S2S',
                               'adsense': 'AdSense',
                               'ejam': 'TapIt',
                               'brightroll': 'BrightRoll',

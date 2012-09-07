@@ -596,9 +596,16 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            response_code=404)
 
+
+class EditAdMobS2SDetailsTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'admob_s2s'
+
+
 class EditJumptapNetworkTestCase(EditNetworkPostTestCase):
     def network_type_to_test(self):
         return 'jumptap'
+
 
 class EditIAdNetworkTestCase(EditNetworkPostTestCase):
     def network_type_to_test(self):
@@ -618,6 +625,11 @@ class EditMobfoxNetworkTestCase(EditNetworkPostTestCase):
 class EditMillennialNetworkTestCase(EditNetworkPostTestCase):
     def network_type_to_test(self):
         return 'millennial'
+
+
+class EditMillennialS2SNetworkTestCase(EditNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'millennial_s2s'
 
 
 class EditAdsenseNetworkTestCase(EditNetworkPostTestCase):

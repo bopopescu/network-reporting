@@ -787,6 +787,11 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         return expected_edits
 
 
+class CreateAdMobS2SDetailsTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'admob_s2s'
+
+
 class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'jumptap'
@@ -834,6 +839,11 @@ class CreateMobfoxNetworkTestCase(CreateNetworkPostTestCase):
 class CreateMillennialNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'millennial'
+
+
+class CreateMillennialS2SNetworkTestCase(CreateNetworkPostTestCase):
+    def network_type_to_test(self):
+        return 'millennial_s2s'
 
 
 class CreateAdsenseNetworkTestCase(CreateNetworkPostTestCase):

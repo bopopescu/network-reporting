@@ -1,12 +1,20 @@
+# Deployed Friday, September 07, 2012 at 11:12PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-203
+### Bugs Fixed: []
+### Included Commits: 
+ * b22b68c fixed allocation_percentage in AUCs
+ * 6d5ace3 Deployed without finding any bug fixes.
+ 
 # Deployed Friday, September 07, 2012 at 09:45PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-202
 ### Bugs Fixed: []
-### Included Commits: 
- * 2246a13 Merge branch 'master' of github.com:mopub/mopub
- * f4000ea fixed network adgroup bug
- * 51d492a Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 2246a13 Merge branch 'master' of github.com:mopub/mopub
+* f4000ea fixed network adgroup bug
+* 51d492a Deployed without finding any bug fixes.
+
 # Deployed Friday, September 07, 2012 at 09:11PM PST
 ### Deployed by John Pena
 ### Tagged deploy-201

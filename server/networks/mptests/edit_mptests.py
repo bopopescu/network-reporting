@@ -597,11 +597,6 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            response_code=404)
 
 
-class EditAdMobS2SDetailsTestCase(EditNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'admob_s2s'
-
-
 class EditJumptapNetworkTestCase(EditNetworkPostTestCase):
     def network_type_to_test(self):
         return 'jumptap'

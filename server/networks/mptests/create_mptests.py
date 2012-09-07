@@ -787,11 +787,6 @@ class CreateNetworkPostTestCase(NetworkTestCase):
         return expected_edits
 
 
-class CreateAdMobS2SDetailsTestCase(CreateNetworkPostTestCase):
-    def network_type_to_test(self):
-        return 'admob_s2s'
-
-
 class CreateJumptapNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'jumptap'

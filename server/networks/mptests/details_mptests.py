@@ -67,11 +67,6 @@ class NetworkDetailsTestCase(NetworkTestCase):
         eq_(len(context['apps']), len(self.existing_apps))
 
 
-class AdMobS2SDetailsTestCase(NetworkDetailsTestCase):
-    def network_type_to_test(self):
-        return 'admob_s2s'
-
-
 class JumpTapDetailsTestCase(NetworkDetailsTestCase):
     def network_type_to_test(self):
         return 'jumptap'

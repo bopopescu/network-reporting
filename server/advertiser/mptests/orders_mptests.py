@@ -478,7 +478,8 @@ class OrderAndLineItemCreatePostTestCase(OrderViewTestCase):
         time_almost_eq(line_item.t, datetime.utcnow())
         time_almost_eq(line_item.created, datetime.utcnow())
 
-        model_eq(line_item, self.mock_line_item, exclude=['campaign', 'created', 't'],
+        model_eq(line_item, self.mock_line_item,
+                 exclude=['campaign', 'created', 't'],
                  check_primary_key=False)
 
         order = line_item.campaign
@@ -757,9 +758,9 @@ class NewOrEditLineItemPostTestCase(OrderViewTestCase):
 
         time_almost_eq(self.mock_line_item.t, line_item.t)
 
-        model_eq(self.mock_line_item, line_item, exclude=['name', 'campaign',
-                                                          'created', 't'],
-                                                 check_primary_key=False)
+        model_eq(self.mock_line_item, line_item,
+                 exclude=['name', 'campaign', 'created', 't'],
+                 check_primary_key=False)
 
     @confirm_db(adgroup=EDITED_1)
     def mptest_puts_changed_valid_line_item(self):

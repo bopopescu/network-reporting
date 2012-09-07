@@ -402,12 +402,12 @@ class EditNetworkPostTestCase(NetworkTestCase):
         # Prepare a request that changes a few advanced targeting settings.
         self.post_data['device_targeting'] = '1'
         self.post_data['ios_version_max'] = '4.0'
-        self.post_data['geo_predicates'] = 'UG'
+        self.post_data['targeted_countries'] = 'UG'
 
         for adgroup in self.existing_campaign.adgroups:
             self.edited[adgroup.key()]['device_targeting'] = True
             self.edited[adgroup.key()]['ios_version_max'] = '4.0'
-            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=UG']
+            self.edited[adgroup.key()]['targeted_countries'] = ['UG']
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -415,16 +415,16 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
-    def mptest_multiple_geo_predicates(self):
+    def mptest_multiple_targeted_countries(self):
         """Set up multiple geo predicates
 
         Author: Tiago Bandeira (7/17/2012)
         """
         # Prepare a request that changes a few advanced targeting settings.
-        self.post_data['geo_predicates'] = [u'AD', u'US']
+        self.post_data['targeted_countries'] = [u'AD', u'US']
 
         for adgroup in self.existing_campaign.adgroups:
-            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
+            self.edited[adgroup.key()]['targeted_countries'] = [u'AD', u'US']
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -432,17 +432,17 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
-    def mptest_updates_keywords_and_geo_predicates(self):
+    def mptest_updates_keywords_and_targeted_countries(self):
         """Set up keywords and multiple geo predicates
 
         Author: Tiago Bandeira (7/17/2012)
         """
         # Prepare a request that changes a few advanced targeting settings.
-        self.post_data['geo_predicates'] = [u'AD', u'US']
+        self.post_data['targeted_countries'] = [u'AD', u'US']
         self.post_data['keywords'] = 'abc de, fm\n g'
 
         for adgroup in self.existing_campaign.adgroups:
-            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
+            self.edited[adgroup.key()]['targeted_countries'] = [u'AD', u'US']
             self.edited[adgroup.key()]['keywords'] = ['abc de', 'fm', 'g']
 
         # Send the request.
@@ -451,18 +451,18 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
-    def mptest_updates_geo_predicates_with_region_targeting(self):
-        """Set up geo predicates with a mallicios post to try and set cities when region_targeting is set to all
+    def mptest_updates_targeted_countries_with_region_targeting_type(self):
+        """Set up geo predicates with a mallicios post to try and set targeted_cities when region_targeting_type is set to all
 
         Author: Tiago Bandeira (8/7/2012)
         """
         # Prepare a request that changes a few advanced targeting settings.
-        self.post_data['geo_predicates'] = [u'AD', u'US']
-        self.post_data['region_targeting'] = 'all'
-        self.post_data['cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        self.post_data['targeted_countries'] = [u'AD', u'US']
+        self.post_data['region_targeting_type'] = 'all'
+        self.post_data['targeted_cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
 
         for adgroup in self.existing_campaign.adgroups:
-            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
+            self.edited[adgroup.key()]['targeted_countries'] = [u'AD', u'US']
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -470,23 +470,23 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
-    def mptest_updates_cities_with_region_targeting(self):
-        """Set up cities when geo predicates is already set
+    def mptest_updates_targeted_cities_with_region_targeting_type(self):
+        """Set up targeted_cities when geo predicates is already set
 
         Author: Tiago Bandeira (8/7/2012)
         """
         # adgroups are already targeting brazil
         adgroups = list(self.existing_campaign.adgroups)
         for adgroup in adgroups:
-            adgroup.geo_predicates = [u'country_name=BR']
+            adgroup.targeted_countries = [u'BR']
         AdGroupQueryManager.put(adgroups)
 
         # Prepare a request that changes a few advanced targeting settings.
-        self.post_data['region_targeting'] = 'city'
-        self.post_data['cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        self.post_data['region_targeting_type'] = 'regions_and_cities'
+        self.post_data['targeted_cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
 
         for adgroup in self.existing_campaign.adgroups:
-            self.edited[adgroup.key()]['cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+            self.edited[adgroup.key()]['targeted_cities'] = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -494,24 +494,24 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
-    def mptest_clear_cities(self):
-        """Set up cities when geo predicates is already set
+    def mptest_clear_targeted_cities(self):
+        """Set up targeted_cities when geo predicates is already set
 
         Author: Tiago Bandeira (8/7/2012)
         """
         # adgroups are already targeting brazil
         adgroups = list(self.existing_campaign.adgroups)
         for adgroup in adgroups:
-            adgroup.geo_predicates = [u'country_name=BR']
-            adgroup.cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+            adgroup.targeted_countries = [u'BR']
+            adgroup.targeted_cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
         AdGroupQueryManager.put(adgroups)
 
         # Prepare a request that changes a few advanced targeting settings.
-        self.post_data['geo_predicates'] = [u'AD', u'US']
+        self.post_data['targeted_countries'] = [u'AD', u'US']
 
         for adgroup in self.existing_campaign.adgroups:
-            self.edited[adgroup.key()]['geo_predicates'] = [u'country_name=AD', u'country_name=US']
-            self.edited[adgroup.key()]['cities'] = []
+            self.edited[adgroup.key()]['targeted_countries'] = [u'AD', u'US']
+            self.edited[adgroup.key()]['targeted_cities'] = []
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -519,23 +519,24 @@ class EditNetworkPostTestCase(NetworkTestCase):
                            kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
                            edited=self.edited)
 
-    def mptest_modify_cities(self):
-        """Modify the list of cities
+    def mptest_modify_targeted_cities(self):
+        """Modify the list of targeted_cities
 
         Author: Tiago Bandeira (8/7/2012)
         """
         # adgroups are already targeting brazil
         adgroups = list(self.existing_campaign.adgroups)
         for adgroup in adgroups:
-            adgroup.geo_predicates = [u'country_name=BR']
-            adgroup.cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+            adgroup.targeted_countries = [u'BR']
+            adgroup.targeted_cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
         AdGroupQueryManager.put(adgroups)
 
         # Prepare a request that changes a few advanced targeting settings.
-        self.post_data['cities'] = [u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        self.post_data['region_targeting_type'] = 'regions_and_cities'
+        self.post_data['targeted_cities'] = [u'-23.5475,-46.63611111:27:Sao Paolo:BR']
 
         for adgroup in self.existing_campaign.adgroups:
-            self.edited[adgroup.key()]['cities'] = [u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+            self.edited[adgroup.key()]['targeted_cities'] = [u'-23.5475,-46.63611111:27:Sao Paolo:BR']
 
         # Send the request.
         confirm_all_models(self.client.post,

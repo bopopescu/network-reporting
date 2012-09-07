@@ -152,19 +152,26 @@ class NetworkAdGroupForm(forms.ModelForm):
         return cleaned_data
 
     def _clean_geographical_targeting(self, cleaned_data):
-        if 'accept_targeted_locations' in cleaned_data and 'targeted_countries' in cleaned_data and not cleaned_data['accept_targeted_locations'] and not cleaned_data['targeted_countries']:
+        if ('accept_targeted_locations' in cleaned_data and
+                'targeted_countries' in cleaned_data and
+                cleaned_data['accept_targeted_locations'] is False and
+                not cleaned_data['targeted_countries']):
             self._errors['accept_targeted_locations'] = ErrorList()
             self._errors['accept_targeted_locations'].append('You must select some geography to target against.')
-        if 'region_targeting_type' in cleaned_data and cleaned_data['region_targeting_type'] != 'regions_and_cities':
+        if ('region_targeting_type' in cleaned_data and
+                cleaned_data['region_targeting_type'] != 'regions_and_cities'):
             cleaned_data['targeted_regions'] = []
             cleaned_data['targeted_cities'] = []
-        if 'region_targeting_type' in cleaned_data and cleaned_data['region_targeting_type'] != 'zip_codes':
+        if ('region_targeting_type' in cleaned_data and
+                cleaned_data['region_targeting_type'] != 'zip_codes'):
             cleaned_data['targeted_zip_codes'] = []
 
     def _clean_connectivity_targeting(self, cleaned_data):
-        if 'connectivity_targeting_type' in cleaned_data and cleaned_data['connectivity_targeting_type'] == 'wi-fi':
+        if ('connectivity_targeting_type' in cleaned_data and
+                cleaned_data['connectivity_targeting_type'] == 'wi-fi'):
             cleaned_data['targeted_carriers'] = ['Wi-Fi']
-        elif 'connectivity_targeting_type' in cleaned_data and cleaned_data['connectivity_targeting_type'] != 'carriers':
+        elif ('connectivity_targeting_type' in cleaned_data and
+                cleaned_data['connectivity_targeting_type'] != 'carriers'):
             cleaned_data['targeted_carriers'] = []
 
     class Meta:

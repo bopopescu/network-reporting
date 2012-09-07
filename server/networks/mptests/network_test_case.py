@@ -119,16 +119,16 @@ class NetworkTestCase(BaseViewTestCase):
         for field, obj in AdGroup.properties().iteritems():
             if field in post_data:
                 continue
-            if obj.default_value() and field not in ('geo_predicates',
-                    'active', 'network_type'):
+            if obj.default_value() and field not in ('active', 'network_type'):
                 post_data[field] = obj.default_value()
-            elif field == 'geo_predicates':
-                post_data[field] = '*'
             elif not isinstance(obj.data_type, db.PropertiedClass) and field \
                     not in ('active', 'network_type'):
                 post_data[field] = ''
+        # Set geo default geo targeting values
+        post_data['accept_targeted_locations'] = '1'
+        post_data['targeted_countries'] = []
 
-        # Add publisher IDs, bids, f-cap, etc. 
+        # Add publisher IDs, bids, f-cap, etc.
         for app in apps:
             app_post_key = 'app_%s-%s_pub_id' % (app.key(), network_type)
 
@@ -140,7 +140,7 @@ class NetworkTestCase(BaseViewTestCase):
             for adunit in app.adunits:
                 adunit_post_key = 'adunit_%s-%s_pub_id' % \
                         (adunit.key(), network_type)
-                
+
                 # Similar note as above.
                 if adunit.key() in adunit_pub_ids:
                     post_data[adunit_post_key] = adunit_pub_ids[adunit.key()]
@@ -161,7 +161,7 @@ class NetworkTestCase(BaseViewTestCase):
                     post_data[prefixed_key] = item
 
         print '%s\n%s\n%s\n%s\n' % ('*' * 20,
-                                    'POST body:', 
+                                    'POST body:',
                                     pprint.pformat(post_data),
                                     '*' * 20)
 

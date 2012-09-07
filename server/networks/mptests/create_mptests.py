@@ -288,7 +288,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                         self.account, new_campaign, active=False,
                         bid=DEFAULT_BID, name=NETWORKS[self.network_type],
                         network_type=expected_network_type,
-                        site_keys=[adunit.key()])
+                        site_keys=[adunit.key()], adgroup_type='network')
 
                 model_eq(adgroup, expected_adgroup,
                          exclude=['created', 'last_login', 't'],
@@ -344,7 +344,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 self.account, new_campaign, active=True,
                 bid=DEFAULT_BID, name=NETWORKS[self.network_type],
                 network_type=expected_network_type,
-                site_keys=[adunit.key()])
+                site_keys=[adunit.key()], adgroup_type='network')
 
         model_eq(adgroup, expected_adgroup,
                  exclude=['created', 'last_login', 't'],
@@ -400,7 +400,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                 bid=DEFAULT_BID,
                 name=NETWORKS[self.network_type],
                 network_type=expected_network_type,
-                site_keys=[adunit.key()])
+                site_keys=[adunit.key()],
+                adgroup_type='network')
 
         model_eq(adgroup, expected_adgroup,
                  exclude=['created', 'last_login', 't'],

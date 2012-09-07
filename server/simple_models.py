@@ -310,7 +310,6 @@ class SimpleAdGroup(SimpleModel):
             account=None,
             campaign=None,
 
-
             active=None,
             deleted=None,
 
@@ -356,7 +355,6 @@ class SimpleAdGroup(SimpleModel):
         self.account = account.simplify()  # simplify
         self.campaign = campaign.simplify()  # simplify
         # self.created = created
-        # self.modified = modified
         self.active = active
         self.deleted = deleted
         # self.archived = archived

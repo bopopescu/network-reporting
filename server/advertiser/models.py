@@ -157,7 +157,6 @@ class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name='adgroups')
 
     created = db.DateTimeProperty(auto_now_add=True)
-    modified = db.DateTimeProperty(auto_now=True)
 
     # state of this ad group
     active = db.BooleanProperty(default=True)
@@ -415,7 +414,6 @@ class AdGroup(db.Model):
             account=self.account,
             campaign=self.campaign,
             # created=self.created,
-            # modified=self.modified,
             active=self.active,
             deleted=self.deleted,
             # archived=self.archived,
@@ -726,7 +724,7 @@ class AdGroup(db.Model):
             if self.target_ipod:
                 ios_display.append("iPod")
 
-            if ios_display:                
+            if ios_display:
                 ios_display_all = ", ".join(ios_display) + \
                                   " (iOS version " + self.ios_version_min + \
                                   " to " + self.ios_version_max + ")"

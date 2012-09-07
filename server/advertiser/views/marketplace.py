@@ -15,9 +15,8 @@ from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import tablib
 from common.constants import (
-    IAB_CATEGORIES, CREATIVE_ATTRIBUTES,
-    IAB_CATEGORIES_AND_SUBCATEGORIES,
-    IAB_ATTRIBUTES
+    IAB_CATEGORIES, IAB_ATTRIBUTES,
+    IAB_CATEGORY_VALUES, IAB_ATTRIBUTE_VALUES,
 )
 
 
@@ -72,7 +71,7 @@ class MarketplaceIndexHandler(RequestHandler):
             'category_blocklist': category_blocklist,
             'IAB_CATEGORIES': IAB_CATEGORIES,
             'attribute_blocklist': attribute_blocklist,
-            'CREATIVE_ATTRIBUTES': CREATIVE_ATTRIBUTES,
+            'IAB_ATTRIBUTES': IAB_ATTRIBUTES,
         }
 
 
@@ -169,13 +168,13 @@ class ContentFilterHandler(RequestHandler):
                 attributes = [int(attribute) for attribute in attributes]
 
                 for category in categories:
-                    if category not in IAB_CATEGORIES_AND_SUBCATEGORIES:
+                    if category not in IAB_CATEGORY_VALUES:
                         return JSONResponse({
                             'error': 'Invalid category selected'
                         })
                                 
                 for attribute in attributes:
-                    if attribute not in IAB_ATTRIBUTES:
+                    if attribute not in IAB_ATTRIBUTE_VALUES:
                         return JSONResponse({
                             'error': 'Invalid creative attribute selected'
                         })

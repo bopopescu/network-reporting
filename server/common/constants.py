@@ -616,7 +616,7 @@ IAB_CATEGORIES = (
     ))
 )
 
-CREATIVE_ATTRIBUTES = (
+IAB_ATTRIBUTES = (
     (1, 'Audio Ad (Auto Play)'),
     (2, 'Audio Ad (User Initiated)'),
     (3, 'Expandable (Automatic)'),
@@ -635,10 +635,10 @@ CREATIVE_ATTRIBUTES = (
     (16, 'Ad can be skipped (e.g., skip button on preroll video)')
 )
 
-IAB_CATEGORIES_AND_SUBCATEGORIES = set()
+IAB_CATEGORY_VALUES = set()
 for category in IAB_CATEGORIES:
-    IAB_CATEGORIES_AND_SUBCATEGORIES.add(category[0])
+    IAB_CATEGORY_VALUES.add(category[0])
     for sub_category in category[2]:
-        IAB_CATEGORIES_AND_SUBCATEGORIES.add(sub_category[0])
+        IAB_CATEGORY_VALUES.add(sub_category[0])
 
-IAB_ATTRIBUTES = set([attribute[0] for attribute in CREATIVE_ATTRIBUTES])
+IAB_ATTRIBUTE_VALUES = set([attribute[0] for attribute in IAB_ATTRIBUTES])

@@ -329,7 +329,7 @@
                 <select data-placeholder="Choose a Creative Attribute" class="chzn-select" multiple="" style="width: 350px;" id="attributes">
                     <option value=""></option>
 
-                    {% for attribute in CREATIVE_ATTRIBUTES %}
+                    {% for attribute in IAB_ATTRIBUTES %}
                     <option value="{{ attribute.0 }}" {% if attribute.0 in attribute_blocklist %}selected='selected'{% endif %}>
                         {{ attribute.1 }} ({{ attribute.0}})
                     </option>

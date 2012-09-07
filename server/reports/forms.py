@@ -178,12 +178,17 @@ class ReportForm(forms.ModelForm):
             
             # Unscheduled reports for today can't run because we don't
             # have the data yet.
-            if start == today and end == today:
+            if end == today:
                 message = 'Report data for today has not yet been generated.'
                 raise forms.ValidationError(message)
 
+            # Obviously
+            if end > today:
+                message = 'Report data for the future has not yet been generated.'
+                raise forms.ValidationError(message)
+
             # Same goes for reports for yesterday if the it's before noon PST
-            if (start == yesterday) and (end == yesterday) and current_hour <= 12:
+            if (end == yesterday) and current_hour <= 12:
                 message = 'Report data for yesterday has not yet been generated.'
                 raise forms.ValidationError(message)
             

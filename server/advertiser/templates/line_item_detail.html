@@ -58,9 +58,13 @@
     </div>
   {% endif %}
 
-  {% if not line_item.campaign.active %}
+  {% if not order.active %}
     <div class="alert-message block-message error">
-      This line item's <a href='{% url advertiser_order_detail order_key=order.key %}'>order</a> is not running. This line item will not run until the order is running. 
+      {{ order.name }} is currently {{ order.status }}.
+      This line item will not run until the order is running.      
+      <a href="{% url advertiser_order_detail order_key=order.key %}">
+        Switch {{ order.name }} status to running
+      </a>
     </div>
   {% endif %}
   <div class="btn-well right" style="clear: both; margin-bottom: 10px;">

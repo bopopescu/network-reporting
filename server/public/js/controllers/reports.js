@@ -195,6 +195,18 @@
         var validator = $('#' + prefix + '-reportEditForm').validate({
             errorPlacement: function(error, element) {
                 element.parents('dd').not(':hidden').first().append(error);
+                // HACK: The reports form is pretty screwed up and
+                // doesn't handle multi-field validation very well.
+                // Because of this, all validations for both
+                // start_date and end_date will only highlight
+                // start_date.  So we handle this by highlighting both
+                // fields when either field has an issue. This can probably
+                // be reverted in the future if we change how the form works.
+                if ($(element).attr('id') == 'id_new-start') {
+                    _.delay(function (){
+                        $("#id_new-end").removeClass('valid').addClass('error');
+                    });
+                }
             },
             submitHandler: function(form) {
                 $(form).ajaxSubmit({

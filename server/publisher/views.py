@@ -740,22 +740,26 @@ def enable_networks(adunit, account):
         if adgroups:
             preexisting_adgroup = adgroups[0]
             # Copy over targeting for the NetworkDetails page
-            adgroup.device_targeting = preexisting_adgroup.device_targeting
 
+            adgroup.device_targeting = preexisting_adgroup.device_targeting
             adgroup.target_iphone = preexisting_adgroup.target_iphone
             adgroup.target_ipod = preexisting_adgroup.target_ipod
             adgroup.target_ipad = preexisting_adgroup.target_ipad
-            adgroup.target_android = preexisting_adgroup.target_android
-            adgroup.target_other = preexisting_adgroup.target_other
-
             adgroup.ios_version_min = preexisting_adgroup.ios_version_min
             adgroup.ios_version_max = preexisting_adgroup.ios_version_max
-
+            adgroup.target_android = preexisting_adgroup.target_android
             adgroup.android_version_min = preexisting_adgroup.android_version_min
             adgroup.android_version_max = preexisting_adgroup.android_version_max
+            adgroup.target_other = preexisting_adgroup.target_other
 
-            adgroup.geo_predicates = preexisting_adgroup.geo_predicates
-            adgroup.cities = preexisting_adgroup.cities
+            adgroup.accept_targeted_locations = preexisting_adgroup.accept_targeted_locations
+            adgroup.targeted_countries = preexisting_adgroup.targeted_countries
+            adgroup.targeted_regions = preexisting_adgroup.targeted_regions
+            adgroup.targeted_cities = preexisting_adgroup.targeted_cities
+            adgroup.targeted_zip_codes = preexisting_adgroup.targeted_zip_codes
+
+            adgroup.targeted_carriers = preexisting_adgroup.targeted_carriers
+
             adgroup.keywords = preexisting_adgroup.keywords
 
         creatives.append(adgroup.default_creative())

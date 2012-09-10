@@ -191,6 +191,9 @@ class CreateNetworkPostTestCase(NetworkTestCase):
     def network_type_to_test(self):
         return 'admob'
 
+    def config_network_type(self):
+        return self.network_type_to_test()
+
     def base_network_state(self):
         return NetworkStates.DEFAULT_NETWORK_CAMPAIGN
 
@@ -747,11 +750,11 @@ class CreateNetworkPostTestCase(NetworkTestCase):
             return
 
         for app_key, pub_id in app_pub_ids.iteritems():
-            app_post_key = 'app_%s-%s_pub_id' % (app_key, self.network_type)
+            app_post_key = 'app_%s-%s_pub_id' % (app_key, self.config_network_type())
             self.post_data[app_post_key] = pub_id
 
         for adunit_key, pub_id in adunit_pub_ids.iteritems():
-            adunit_post_key = 'adunit_%s-%s_pub_id' % (adunit_key, self.network_type)
+            adunit_post_key = 'adunit_%s-%s_pub_id' % (adunit_key, self.config_network_type())
             self.post_data[adunit_post_key] = pub_id
 
     def get_expected_config_edits(self, app_pub_ids=None, adunit_pub_ids=None):
@@ -772,7 +775,7 @@ class CreateNetworkPostTestCase(NetworkTestCase):
 
         expected_edits = {}
 
-        pub_id_prop_key = '%s_pub_id' % self.network_type
+        pub_id_prop_key = '%s_pub_id' % self.config_network_type()
 
         for app in self.existing_apps:
             new_app_pub_id = app_pub_ids[app.key()]
@@ -840,6 +843,8 @@ class CreateMillennialS2SNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):
         return 'millennial_s2s'
 
+    def network_type_to_test(self):
+        return 'millennial'
 
 class CreateAdsenseNetworkTestCase(CreateNetworkPostTestCase):
     def network_type_to_test(self):

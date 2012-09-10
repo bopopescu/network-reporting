@@ -132,7 +132,7 @@
                     <label for="id_{{ network.name }}_pub_id">{{ network.pretty_name }} Publisher Alias:</label>
                 </dt>
                 <dd>
-                    <input type="text" name="{% if campaign_key %}{{ account.network_config.key }}-{% endif %}{{ network.name }}_pub_id" id="id_{{ network.name }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
+                    <input type="text" name="{% if campaign_key %}{{ account.network_config.key }}-{% endif %}{{ config_network_type }}_pub_id" id="id_{{ config_network_type }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
                 </dd>
                 {% endif %}
             </dl>
@@ -543,7 +543,7 @@
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
                     <td class="text">
                         <div>
-                            <input name="{% if campaign_key %}{{ app.network_config.key }}{% else %}app_{{ app.key }}{% endif %}-{{ network.name }}_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-{{ network.name }}_pub_id" />
+                            <input name="{% if campaign_key %}{{ app.network_config.key }}{% else %}app_{{ app.key }}{% endif %}-{{ config_network_type }}_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-{{ config_network_type }}_pub_id" />
                         </div>
                     </td>
                     {% endif %}
@@ -612,7 +612,7 @@
                         {% if network.name in NETWORKS_WITH_PUB_IDS %}
                         <div>
                             <div class="pub-id-input hidden">
-                                <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="{% if campaign_key %}{{ adunit.network_config.key }}{% else %}adunit_{{ adunit.key }}{% endif %}-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
+                                <input id="id_adunit_{{ adunit.key }}-{{ config_network_type }}_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="{% if campaign_key %}{{ adunit.network_config.key }}{% else %}adunit_{{ adunit.key }}{% endif %}-{{ config_network_type }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
                                 <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
                             </div>
                             <div class="pub-id-edit editable">

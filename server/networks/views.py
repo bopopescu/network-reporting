@@ -75,7 +75,13 @@ ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
         'site_keys', 'name', 'bid', 'bid_strategy', 'active', 'network_type'])
 
 NETWORKS_WITH_PUB_IDS = set(['admob', 'brightroll', 'ejam', 'jumptap', \
-        'millennial', 'mobfox', 'inmobi'])
+        'millennial', 'mobfox', 'inmobi', 'millennial_s2s'])
+
+# NOTE: millennial native and millennial s2s pub_ids are overloaded and stored
+# as millennial_pub_id in the network_config object
+# 
+# Author: Tiago Bandeira (9/10/2012)
+CONFIG_NETWORK_NAME_TRANSLATION = {'millennial_s2s': 'millennial'}
 
 DEFAULT_BID = 0.05
 
@@ -269,11 +275,14 @@ class EditNetworkHandler(RequestHandler):
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
+                config_network_type = CONFIG_NETWORK_NAME_TRANSLATION.get(network,
+                        network)
+
                 if str(app._network_config) in network_configs_dict:
                     app.network_config = network_configs_dict[
                             str(app._network_config)]
 
-                app.pub_id = getattr(app.network_config, network + '_pub_id',
+                app.pub_id = getattr(app.network_config, config_network_type + '_pub_id',
                         '') or ''
 
             seven_day_stats = AdNetworkStats()
@@ -316,7 +325,7 @@ class EditNetworkHandler(RequestHandler):
                         adunit.network_config = network_configs_dict[
                                 str(adunit._network_config)]
 
-                    adunit_pub_id = getattr(adunit.network_config, network +
+                    adunit_pub_id = getattr(adunit.network_config, config_network_type +
                             '_pub_id', False)
                     if adunit_pub_id != app.pub_id:
                         # only initialize th adunit level pub_id if it
@@ -336,6 +345,8 @@ class EditNetworkHandler(RequestHandler):
                                   'networks/edit_network_form.html',
                                   {
                                       'network': network_data,
+                                      'config_network_type': CONFIG_NETWORK_NAME_TRANSLATION.get(network,
+                                          network),
                                       'account': self.account,
                                       'custom_campaign': custom_campaign,
                                       'campaign_form': campaign_form,
@@ -629,14 +640,17 @@ class EditNetworkHandler(RequestHandler):
                 adunit_network_config = NetworkConfig()
                 AdUnitQueryManager.update_config_and_put(adunit, adunit_network_config)
 
-            pub_id_field = '%s_pub_id' % network_type
+            config_network_type = CONFIG_NETWORK_NAME_TRANSLATION.get(network_type,
+                    network_type)
+
+            pub_id_field = '%s_pub_id' % config_network_type
             pub_id_query_dict = '%s-%s' % (adunit_network_config.key(), pub_id_field)
 
             query_dict = self.request.POST
             if (pub_id_query_dict not in query_dict and (not getattr(adunit_network_config, pub_id_field, None))
                                                          and not getattr(app_network_config, pub_id_field, None)) \
                     or (pub_id_query_dict in query_dict and not query_dict[pub_id_query_dict]):
-                errors['%s-%s_pub_id' % (adunit_network_config.key(), network_type)] = "MoPub requires an" \
+                errors['%s-%s_pub_id' % (adunit_network_config.key(), config_network_type)] = "MoPub requires an" \
                         " ad network id for enabled adunits."
 
     def update_network_configs_and_create_mappers(self, pub_id_fields, network_type):
@@ -798,7 +812,9 @@ class EditNetworkHandler(RequestHandler):
                 default_adgroup.adgroup_type = 'network'
 
                 adgroup_forms_are_valid = True
-                network_config_field = "%s_pub_id" % network
+                config_network_type = CONFIG_NETWORK_NAME_TRANSLATION.get(network,
+                        network)
+                network_config_field = "%s_pub_id" % config_network_type
                 adgroup_forms = []
                 for adunit in adunits:
                     adgroup_form = AdUnitAdGroupForm(query_dict,
@@ -815,9 +831,10 @@ class EditNetworkHandler(RequestHandler):
                     if not pub_id and self.request.POST.get('%s-active' %
                             adunit.key(), False) and network in \
                                     NETWORKS_WITH_PUB_IDS:
+
                         return JSONResponse({
                             'errors': {'adunit_' + str(adunit.key()) + \
-                                '-' + network + '_pub_id': "MoPub requires an" \
+                                '-' + config_network_type + '_pub_id': "MoPub requires an" \
                                 " ad network id for enabled adunits."},
                             'success': False,
                         })
@@ -848,11 +865,8 @@ class EditNetworkHandler(RequestHandler):
                         if field not in ('custom_html', 'custom_method'):
                             setattr(adgroup, field, getattr(tmp_adgroup, field))
 
-                    if network in NETWORK_ADGROUP_TRANSLATION:
-                        adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
-                                network]
-                    else:
-                        adgroup.network_type = network
+                    adgroup.network_type = NETWORK_ADGROUP_TRANSLATION.get(network,
+                            network)
 
                     html_data = None
                     if adgroup.network_type == 'custom':
@@ -924,27 +938,26 @@ class EditNetworkHandler(RequestHandler):
                                             app=app)
 
                     # NetworkConfig for AdUnits
-                    if network in NETWORKS_WITH_PUB_IDS:
-                        for adgroup, adunit in zip(adgroups, adunits):
-                            network_config = adunit.network_config or \
-                                    NetworkConfig()
-                            pub_id = self.request.POST.get("adunit_%s-%s" %
-                                    (adunit.key(), network_config_field), None)
+                    for adgroup, adunit in zip(adgroups, adunits):
+                        network_config = adunit.network_config or \
+                                NetworkConfig()
+                        pub_id = self.request.POST.get("adunit_%s-%s" %
+                                (adunit.key(), network_config_field), None)
 
-                            setattr(network_config, network_config_field,
-                                    pub_id)
-                            AdUnitQueryManager.update_config_and_put(adunit,
-                                    network_config)
+                        setattr(network_config, network_config_field,
+                                pub_id)
+                        AdUnitQueryManager.update_config_and_put(adunit,
+                                network_config)
 
-                        # NetworkConfig for Account
-                        if network == 'jumptap':
-                            network_config = self.account.network_config or \
-                                    NetworkConfig()
-                            setattr(network_config, network_config_field, \
-                                    self.request.POST.get(network +
-                                        '_pub_id', None))
-                            AccountQueryManager.update_config_and_put( \
-                                    self.account, network_config)
+                    # NetworkConfig for Account
+                    if network == 'jumptap':
+                        network_config = self.account.network_config or \
+                                NetworkConfig()
+                        setattr(network_config, network_config_field, \
+                                self.request.POST.get(config_network_type +
+                                    '_pub_id', None))
+                        AccountQueryManager.update_config_and_put( \
+                                self.account, network_config)
 
                 # Delete Cache. We leave this in views.py because we
                 # must delete the adunits that the adgroups used to have as well

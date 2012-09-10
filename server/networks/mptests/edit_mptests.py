@@ -159,13 +159,13 @@ class EditNetworkPostTestCase(NetworkTestCase):
 
         for app_idx, app in enumerate(self.existing_apps):
             pub_id = '%s_%s' % (DEFAULT_PUB_ID, app_idx)
-            setattr(app.network_config, '%s_pub_id' % self.network_type,
+            setattr(app.network_config, '%s_pub_id' % self.config_network_type(),
                     pub_id)
             AppQueryManager.update_config_and_put(app, app.network_config)
 
             for adunit_idx, adunit in enumerate(app.adunits):
                 adunit_pub_id = '%s_%s' % (pub_id, adunit_idx)
-                setattr(adunit.network_config, '%s_pub_id' % self.network_type,
+                setattr(adunit.network_config, '%s_pub_id' % self.config_network_type(),
                         adunit_pub_id)
                 AdUnitQueryManager.update_config_and_put(adunit, adunit.network_config)
 
@@ -180,6 +180,9 @@ class EditNetworkPostTestCase(NetworkTestCase):
 
     def network_type_to_test(self):
         return 'admob'
+
+    def config_network_type(self):
+        return self.network_type_to_test()
 
     def mptest_no_change(self):
         """No change to network campaign
@@ -228,7 +231,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
         adunit = app.adunits[0]
 
         adunit_pub_id_key = '%s-%s_pub_id' % (adunit.network_config.key(),
-                self.network_type)
+                self.config_network_type())
         adunit_active_key = '%s-active' % adunit.key()
         self.post_data[adunit_pub_id_key] = ''
         self.post_data[adunit_active_key] = True
@@ -287,19 +290,19 @@ class EditNetworkPostTestCase(NetworkTestCase):
 
         new_app_pub_id = 'TEST_APP_PUB_ID'
         app_pub_id_key = '%s-%s_pub_id' % (app_to_modify.network_config.key(),
-                self.network_type)
+                self.config_network_type())
         self.post_data[app_pub_id_key] = new_app_pub_id
 
         new_adunit_pub_id = 'TEST_ADUNIT_PUB_ID'
         adunit_pub_id_key = '%s-%s_pub_id' % (adunit_to_modify.network_config.key(),
-                self.network_type)
+                self.config_network_type())
         self.post_data[adunit_pub_id_key] = new_adunit_pub_id
 
         self.edited = {}
         self.edited.update({app_to_modify.network_config.key(): {'%s_pub_id' %
-                    self.network_type: new_app_pub_id},
+                    self.config_network_type(): new_app_pub_id},
                   adunit_to_modify.network_config.key(): {'%s_pub_id' %
-                    self.network_type: new_adunit_pub_id}})
+                    self.config_network_type(): new_adunit_pub_id}})
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -322,7 +325,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
 
         new_app_pub_id = 'TEST_APP_PUB_ID'
         app_pub_id_key = '%s-%s_pub_id' % (app.network_config.key(),
-                self.network_type)
+                self.config_network_type())
         self.post_data[app_pub_id_key] = new_app_pub_id
 
         # Prepare a login
@@ -330,7 +333,7 @@ class EditNetworkPostTestCase(NetworkTestCase):
 
         self.edited = {}
         self.edited[app.network_config.key()] = {'%s_pub_id' %
-                self.network_type: new_app_pub_id}
+                self.config_network_type(): new_app_pub_id}
 
         # Send the request.
         confirm_all_models(self.client.post,
@@ -625,6 +628,9 @@ class EditMillennialNetworkTestCase(EditNetworkPostTestCase):
 class EditMillennialS2SNetworkTestCase(EditNetworkPostTestCase):
     def network_type_to_test(self):
         return 'millennial_s2s'
+
+    def config_network_type(self):
+        return 'millennial'
 
 
 class EditAdsenseNetworkTestCase(EditNetworkPostTestCase):

@@ -188,7 +188,7 @@ class ReportForm(forms.ModelForm):
                 raise forms.ValidationError(message)
 
             # Same goes for reports for yesterday if the it's before noon PST
-            if (end == yesterday) and current_hour <= 12:
+            if (end == yesterday) and current_hour < 12:
                 message = 'Report data for yesterday has not yet been generated.'
                 raise forms.ValidationError(message)
             

@@ -7,7 +7,7 @@
 
   <div class="content-main">
     {% if user.is_admin %}
-      <a class="right btn" href="#" id="add-scheduled-payment-button">
+      <a class="right btn" href="#period-balance-modal" data-toggle="modal">
         <i class="icon-plus-sign"></i>
         Add period balance
       </a>
@@ -51,7 +51,7 @@
     <section>
 
       {% if user.is_admin %}
-        <a class="right btn" href="#" id="add-payment-button">
+        <a class="right btn" href="#payment-modal" data-toggle="modal" role="button">
           <i class="icon-gift"></i>
           Add payment
         </a>
@@ -102,146 +102,186 @@
       {% endif %}
     </section>
     
-    <section>
-      {% if user.is_admin %}
-        <script type="text/javascript">
-          function delete_confirm()
-          {
-              return confirm("Are you sure you want to delete this payment record?");
-          }
-        </script>
+    <section>      
       
-        <script type="text/javascript">
-          (function($){
-              $(document).ready(function() {
-                  $('.payment-datepicker').datepicker();
-                  $('#add-scheduled-payment-button').click(function(e) {
-                      e.preventDefault();
-                    $('#add-scheduled-payment-modal').dialog({
-                        width: 750,
-                        buttons: [
-                            {
-                                text: 'Cancel',
-                                click: function() {
-                                    $(this).dialog('close');
-                                }
-                            },
-                            {
-                                text: 'Save',
-                                click: function() {
-                                    $('#scheduledpaymentForm').submit();;
-                                }
-                            }
-                        ]
-                    });
-                });
-                $('#add-payment-button').click(function(e) {
-                    e.preventDefault();
-                    $('#add-payment-modal').dialog({
-                        width: 750,
-                        buttons: [
-                            {
-                                text: 'Cancel',
-                                click: function() {
-                                    $(this).dialog('close');
-                                }
-                            },
-                            {
-                                text: 'Save',
-                                click: function() {
-                                    $('#paymentForm').submit();;
-                                }
-            }
-                        ]
-                    });
-                });
+    {% if user.is_admin %}
+      <script type="text/javascript">
+        function delete_confirm() {
+            return confirm("Are you sure you want to delete this payment record?");
+        }
+
+        $(function () {
+            $(".datepicker").datepicker();
+            $("#balance-add").click(function () {
+                $("#scheduledpaymentForm").submit();
             });
-        })(this.jQuery);
+            $("#payment-add").click(function () {
+                $("#paymentForm").submit();
+            });
+        });
       </script>
       
-      <div id="add-scheduled-payment-modal" class="hidden">
-        <form id="scheduledpaymentForm" method="POST">
-          <input type="hidden" name="form_type" value="scheduled_payment">
-            <h3>Add Period Balance <span class="muted">(Admin only)</span></h3>
+      <div id="period-balance-modal" class="modal hidden">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h3>Add a Period Balance</h3>
+        </div>
+        <div class="modal-body">
+          <p>Form for adding a period balance goes here.</p>
+          <form id="scheduledpaymentForm" method="POST">          
+            <input type="hidden" name="form_type" value="scheduled_payment" />
             <fieldset>
               <dl class="formFields">
                 <dt>Start Date:</dt>
-                <dd>
+                <dd >
                   <input type="text"
-                         name="period_start"
-                         class="input-text input-text-number number payment-datepicker"
-                         placeholder="MM/DD/YYYY"/>
+                         name="period_start"                         
+                         placeholder="MM/DD/YYYY"
+                         class="datepicker"
+                         data-date-format="mm/dd/yyyy" />
                 </dd>
                 <dt>End Date:</dt>
                 <dd>
                   <input type="text"
                          id="payment-period_end"
                          name="period_end"
-                         class="input-text input-text-number number payment-datepicker"
-                         placeholder="MM/DD/YYYY"/>
+                         class="datepicker"
+                         placeholder="MM/DD/YYYY"
+                         data-date-format="mm/dd/yyyy"/>
                 </dd>
                 <dt>Amount:</dt>
                 <dd>
                   <input type="text"
-                         name="amount"
-                         class="input-text input-text-number number"
+                         name="amount"                         
                          placeholder="$0.00"/>
                 </dd>
               </dl>
             </fieldset>
           </form>
         </div>
-        <div id="add-payment-modal" class="hidden">
-          <form id="paymentForm" method="POST">
-            <input type="hidden" name="form_type" value="payment">
-              <h3>Add Payment <span class="muted">(Admin only)</span></h3>
-              <fieldset>
-                <dl class="formFields">
-                  
-                  <dt>Start Date:</dt>
-                  <dd>
-                    <input type="text"
-                           name="period_start"
-                           class="input-text input-text-number number payment-datepicker"
-                           placeholder="MM/DD/YYYY"/>
-                  </dd>
-                  
-                  <dt>End Date:</dt>
-                  <dd>
-                    <input type="text"
-                           name="period_end"
-                           class="input-text input-text-number number payment-datepicker"
-                           placeholder="MM/DD/YYYY"/>
-                  </dd>
-                  
-                  <dt>Amount:</dt>
-                  <dd>
-                    <input type="text"
-                           name="amount" class="
-                                                input-text input-text-number number"
-                           placeholder="$0.00"/>
-                  </dd>
-                  
-                  <dt>Payment Date:</dt>
-                  <dd>
-                    <input type="text"
-                           name="date_executed"
-                           class="input-text input-text-number number payment-datepicker"
-                           placeholder="MM/DD/YYYY"/>
-                  </dd>
-                  
-                  <dt>Status:</dt>
-                  <dd>
-                    <input type="text"
-                           name="status"
-                           class="input-text input-text-number number"
-                           placeholder="Payment sent via Paypal"/>
-                  </dd>
-                </dl>
-              </fieldset>
-            </form>
+        <div class="modal-footer">
+          <a href="#" class="btn" data-dismiss="modal">Close</a>
+          <a id="balance-add" class="btn btn-primary">Add this balance</a>
         </div>
-      {% endif %}
-    </section>
+      </div>
+
+      <div id="payment-modal" class="modal hidden">
+        
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h3>Add a Payment</h3>
+        </div>
+        
+        <div class="modal-body">
+          
+          <form id="paymentForm" method="POST">
+            <input type="hidden" name="form_type" value="payment" />
+            <fieldset>
+              <dl class="formFields">
+                
+                <dt>Start Date:</dt>
+                <dd>
+                  <input type="text"
+                         name="period_start"
+                         class="datepicker"
+                         placeholder="MM/DD/YYYY"
+                         data-date-format="mm/dd/yyyy"/>
+                </dd>
+                
+                <dt>End Date:</dt>
+                <dd>
+                  <input type="text"
+                         name="period_end"
+                         class="datepicker"
+                         placeholder="MM/DD/YYYY"
+                         data-date-format="mm/dd/yyyy"/>
+                </dd>
+                
+                <dt>Amount:</dt>
+                <dd>
+                  <input type="text"
+                         name="amount"
+                         placeholder="$0.00"/>
+                </dd>
+                
+                <dt>Payment Date:</dt>
+                <dd>
+                  <input type="text"
+                         name="date_executed"
+                         class="datepicker"
+                         placeholder="MM/DD/YYYY"
+                         data-date-format="mm/dd/yyyy"/>
+                </dd>
+                
+                <dt>Status:</dt>
+                <dd>
+                  <input type="text"
+                         name="status"
+                         placeholder="Payment sent via Paypal"/>
+                </dd>
+              </dl>
+            </fieldset>
+          </form>                    
+        </div>
+        
+        <div class="modal-footer">
+          <a href="#" class="btn" data-dismiss="modal">Close</a>
+          <a id="payment-add" class="btn btn-primary">Add this payment</a>
+        </div>
+        
+      </div>
+    {% endif %}
+    
 </div>
 {% endblock content %}
+
+
+{% block extraCSS %}
+  <style>
+    dl.formFields {
+    float: left;
+    margin: -15px 0 0 0;
+    width: 350px; }
+    
+.formFields dt {
+  float: left;
+  clear: both;
+  padding: 3px 0;
+  width: 100px;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 16px;
+  text-align: right;
+  white-space: nowrap; }
+
+.formFields dd {
+  display: inline-block;
+  margin: 10px 0 0 0;
+  padding: 3px 0;
+  width: 220px; }
+
+.formFields .radios {
+  font-size: 14px; }
+
+.formFields .input-text,
+.formFields textarea {
+  margin: -3px 0; }
+
+.formFields .input-text-small {
+  margin: 0; }
+
+.formFields .appData-icon {
+  float: left;
+  padding-right: 11px; }
+
+.formFields .appData-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px; }
+
+.formFields .appData-icon img {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
+  </style>
+{% endblock extraCSS %}

@@ -735,6 +735,10 @@ var mopub = mopub || {};
         url: function () {
             var url = '/api/campaign/' + this.id + '?';
             var app = this.get('app');
+            var date_range = this.get('date_range');
+            if (date_range <= 0) {
+                date_range = 1;
+            }
             if(app) {
                 url += '&app=' + app;
             }
@@ -751,7 +755,7 @@ var mopub = mopub || {};
             if(start_date) {
                 url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
             }
-            url += '&r=' + this.get('date_range');
+            url += '&r=' + date_range;
             url += '&endpoint=' + this.get('stats_endpoint');
             return url;
         },
@@ -1045,15 +1049,20 @@ var mopub = mopub || {};
         url: function () {
             var url = '/api/campaign/' + this.id + '?';
             var app = this.get('app');
-            if(app) {
+            var date_range = this.get('date_range');
+            if (app) {
                 url += '&app=' + app;
-            }
-            else {
+            } else {
                 var adunit = this.get('adunit');
                 if(adunit) {
                     url += '&adunit=' + adunit;
                 }
             }
+
+            if (date_range <= 0) {
+                date_range = 1;
+            }
+            
             url += '&daily=' + (this.get('include_daily') ? '1' : '0');
             url += '&adgroups=' + (this.get('include_adgroups') ? '1' : '0');
             url += '&creatives=' + (this.get('include_creatives') ? '1' : '0');
@@ -1061,7 +1070,7 @@ var mopub = mopub || {};
             if(start_date) {
                 url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
             }
-            url += '&r=' + this.get('date_range');
+            url += '&r=' + date_range;
             return url;
         },
         parse: function(order) {

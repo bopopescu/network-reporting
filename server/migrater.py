@@ -10,9 +10,13 @@ import urllib2
 from common.utils import helpers
 from google.appengine.api import images, files
 from mapreduce import operation as op
-# from reporting.models import StatsModel, MPStatsModel
+
 from account.models import Account
-from publisher.models import App
+from advertiser.models import AdGroup
+from advertiser.query_managers import AdGroupQueryManager
+from publisher.query_managers import PublisherQueryManager
+
+
 def mapper(s):
     # change entity
     props = {}
@@ -157,3 +161,42 @@ def migrate_geo_targeting(adgroup):
     except Exception:
         logging.error("AdGroup %s: %s" % (adgroup.key().id_or_name(),
                                           traceback.format_exc()))
+
+
+def repair_network_geo_targeting(campaign):
+    try:
+        if campaign.campaign_type == 'network' and not campaign.deleted:
+            adgroups = [adgroup for adgroup in campaign.adgroups if not adgroup.deleted]
+            if len(adgroups) > 1:
+                adgroup_key_name = None
+                for app in PublisherQueryManager.get_objects_dict_for_account(account=campaign.account).values():
+                    for adunit in app.adunits:
+                        adgroup_key_name = AdGroupQueryManager._get_network_key_name(campaign.key(), adunit.key())
+                if adgroup_key_name:
+                    authoritative_adgroup = AdGroup.get_by_key_name(adgroup_key_name)
+
+                    # modified_adgroups = []
+                    for adgroup in adgroups:
+                        if (adgroup.accept_targeted_locations != authoritative_adgroup.accept_targeted_locations or
+                            adgroup.targeted_countries != authoritative_adgroup.targeted_countries or
+                            adgroup.targeted_regions != authoritative_adgroup.targeted_regions or
+                            adgroup.targeted_cities != authoritative_adgroup.targeted_cities or
+                            adgroup.targeted_zip_codes != authoritative_adgroup.targeted_zip_codes or
+                            adgroup.targeted_carriers != authoritative_adgroup.targeted_carriers):
+
+                            adgroup.accept_targeted_locations = authoritative_adgroup.accept_targeted_locations
+                            adgroup.targeted_countries = authoritative_adgroup.targeted_countries
+                            adgroup.targeted_regions = authoritative_adgroup.targeted_regions
+                            adgroup.targeted_cities = authoritative_adgroup.targeted_cities
+                            adgroup.targeted_zip_codes = authoritative_adgroup.targeted_zip_codes
+                            adgroup.targeted_carriers = authoritative_adgroup.targeted_carriers
+
+                            yield op.db.Put(adgroup)
+
+                    # if modified_adgroups:
+                    #     logging.error("Campaign %s has mismatching AdGroups: %s" % (
+                    #         campaign.key(), ', '.join([str(adgroup.key()) for adgroup in modified_adgroups])))
+
+    except Exception:
+        logging.error("Exception while repairing Campaign %s: %s" % (
+            campaign.key(), traceback.format_exc()))

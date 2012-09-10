@@ -1,11 +1,29 @@
+# Deployed Monday, September 10, 2012 at 10:58PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-204
+### Bugs Fixed: []
+### Included Commits: 
+ * cf28140 Merge branch 'master' of github.com:mopub/mopub
+ * a95d67c network targeting fix migration
+ * d72c764 Merge branch 'UI-174'
+ * a383138 fixed versions issues
+ * 4f7efbd Merge branch 'master' of github.com:mopub/mopub
+ * 6604fff fixed new network adgroup targeting issue
+ * 22c9228 changed the callout language
+ * 8568c94 fixed a bug where line item stats werent loading
+ * 9e9df55 added a warning message for line items with paused orders
+ * 00e0103 fixed strange alignment issues in firefox
+ * a7382fc Deployed without finding any bug fixes.
+ * 1604814 fixed payment wonk
+ 
 # Deployed Friday, September 07, 2012 at 11:12PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-203
 ### Bugs Fixed: []
-### Included Commits: 
- * b22b68c fixed allocation_percentage in AUCs
- * 6d5ace3 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* b22b68c fixed allocation_percentage in AUCs
+* 6d5ace3 Deployed without finding any bug fixes.
+
 # Deployed Friday, September 07, 2012 at 09:45PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-202

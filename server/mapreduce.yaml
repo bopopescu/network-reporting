@@ -95,3 +95,15 @@ mapreduce:
     - name: shard_count
       default: 100
 
+- name: NetworkGeoTargetingRepairer
+  mapper:
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: migrater.repair_network_geo_targeting
+    params:
+    - name: entity_kind
+      default: advertiser.models.Campaign
+    - name: processing_rate
+      default: 200
+    - name: shard_count
+      default: 100
+

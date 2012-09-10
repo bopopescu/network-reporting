@@ -94,16 +94,20 @@ class Campaign(db.Model):
         return self.campaign_type == 'network'
 
     def simplify(self):
-        return SimpleCampaign(key=str(self.key()),
-                              name=self.name,
-                              advertiser=self.advertiser,
-                              active=self.active,
-                              account=self.account)
+        return SimpleCampaign(
+            key=str(self.key()),
+            name=self.name,
+            advertiser=self.advertiser,
+            active=self.active,
+            account=self.account
+        )
 
     def __repr__(self):
-        return "Campaign: %s, owned by %s, for %s" % (self.name,
-                                                      self.account,
-                                                      self.advertiser)
+        return "Campaign: %s, owned by %s, for %s" % (
+            self.name,
+            self.account,
+            self.advertiser
+        )
 
     @property
     def owner_key(self):
@@ -147,6 +151,15 @@ class Campaign(db.Model):
 
         return "/images/paused.gif"
 
+    @property
+    def status(self):
+        if self.deleted:
+            return "deleted"
+        elif self.archived:
+            return "archived"
+        elif self.active:
+            return "running"
+        return "paused"
 
 Order = Campaign
 

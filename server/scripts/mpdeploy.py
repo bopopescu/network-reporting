@@ -338,7 +338,7 @@ def post_to_hipchat(message, room_id=None):
           "format=json" + \
           "&auth_token=3ec795e1dd7781d59fb5b8731adef1" + \
           "&room_id=" + room_id + \
-          "&from=Alerts" + \
+          "&from=Frontend Deploys" + \
           "&message=" + str(message).replace(' ', '%20')
 
 

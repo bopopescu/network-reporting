@@ -194,18 +194,7 @@
         // Validate report forms
         var validator = $('#' + prefix + '-reportEditForm').validate({
             errorPlacement: function(error, element) {
-                // HACK: The reports form is pretty screwed up and
-                // doesn't handle multi-field validation very well.
-                // Because of this, all validations for both
-                // start_date and end_date will only highlight
-                // start_date.  So we handle this by highlighting
-                // neither fields when either field has an issue, and
-                // just relying on the messaging. This can probably be
-                // reverted in the future if we change how the form
-                // works.
-                if ($(element).attr('id') !== 'id_new-start') {
-                    element.parents('dd').not(':hidden').first().append(error);
-                });                
+                element.parents('dd').not(':hidden').first().append(error);
             },
             submitHandler: function(form) {
                 $(form).ajaxSubmit({
@@ -219,6 +208,18 @@
                             save_btn.attr('disabled', 'disabled');
                         } else {
                             console.log(jsonData.errors);
+                            // HACK: The reports form is pretty screwed up and
+                            // doesn't handle multi-field validation very well.
+                            // Because of this, all validations for both
+                            // start_date and end_date will only highlight
+                            // start_date.  So we handle this by highlighting
+                            // neither fields when either field has an issue, and
+                            // just relying on the messaging. This can probably be
+                            // reverted in the future if we change how the form
+                            // works.
+                            if (jsonData.errors.hasOwnProperty('new-start')) {
+                                jsonData.errors["new-end"] = "";
+                            }
                             validator.showErrors(jsonData.errors);
                             spinner.addClass('hidden');
                             help_text.text("Try Again");

@@ -898,13 +898,23 @@ var mopub = mopub || {};
             // REFACTOR attempts vs requests
             _.each(response, function(adunit) {
 
-                if ((adunit.req === null || adunit.req === undefined) &&
-                    (adunit.att !== null && adunit.att !== undefined)) {
-                    adunit.req = adunit.att;
-                } else if ((adunit.att === null || adunit.att === undefined) &&
-                           (adunit.req !== null || adunit.req !== undefined)) {
-                    adunit.att = adunit.req;
+                if('sum' in adunit) {
+                    if('req' in adunit.sum && adunit.sum.req !== null && !('att' in adunit.sum)) {
+                        adunit.sum.att = adunit.sum.req;
+                    }
+                    else if ('att' in adunit.sum && adunit.sum.att !== null && !('req' in adunit.sum)) {
+                        adunit.sum.req = adunit.sum.att;
+                    }
                 }
+                else {
+                    if('req' in adunit && adunit.req !== null && !('att' in adunit)) {
+                        adunit.att = adunit.req;
+                    }
+                    else if ('att' in adunit && adunit.att !== null && !('req' in adunit)) {
+                        adunit.req = adunit.att;
+                    }
+                }
+
                 _.extend(adunit, { stats_endpoint: collection.stats_endpoint });
             });
 

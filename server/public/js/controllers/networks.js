@@ -47,14 +47,21 @@
         parse: function (response) {
             var app = response[0];
 
-            console.log(app.sum.att);
-            console.log(app.sum.req);
-
-            if('req' in app.sum && app.sum.req !== null && !('att' in app.sum)) {
-                app.sum.att = app.sum.req;
+            if('sum' in app) {
+                if('req' in app.sum && app.sum.req !== null && !('att' in app.sum)) {
+                    app.sum.att = app.sum.req;
+                }
+                else if ('att' in app.sum && app.sum.att !== null && !('req' in app.sum)) {
+                    app.sum.req = app.sum.att;
+                }
             }
-            else if ('att' in app.sum && app.sum.att !== null && !('req' in app.sum)) {
-                app.sum.req = app.sum.att;
+            else {
+                if('req' in app && app.req !== null && !('att' in app)) {
+                    app.att = app.req;
+                }
+                else if ('att' in app && app.att !== null && !('req' in app)) {
+                    app.req = app.att;
+                }
             }
 
             if (app.app_type === 'iphone') {

@@ -1,10 +1,27 @@
+# Deployed Tuesday, September 11, 2012 at 10:29PM PST
+### Deployed by John Pena
+### Tagged deploy-208
+### Bugs Fixed: []
+### Included Commits: 
+ * 1d1bafa fixed some broken/incorrectly merged tests
+ * 126982d versions.yaml
+ * 17c49ab Deployed without finding any bug fixes.
+ * a45389a Renamed IAB constants, uncommented ssl error thing that breaks localhost testing
+ * 17876a3 cleaned up a little
+ * 1d83d1f added custom attributes and categories tests for content filtering
+ * 69257aa updated mpx content filtering tests to use confirm_all_models helper
+ * dfdec8c added creative attribute blocklist for staff
+ * 0164ac4 Merge branch 'master' into iab-categories
+ * e7755f6 Finished IAB Categories. Needs testing
+ * f8b4097 started iab categories
+ 
 # Deployed Tuesday, September 11, 2012 at 05:15PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-207
 ### Bugs Fixed: []
-### Included Commits: 
- * f52017f Deployed without finding any bug fixes.
- 
+### Included Commits:
+* f52017f Deployed without finding any bug fixes.
+
 # Deployed Tuesday, September 11, 2012 at 05:11PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-206

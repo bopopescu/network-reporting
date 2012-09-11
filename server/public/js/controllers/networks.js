@@ -47,19 +47,19 @@
         parse: function (response) {
             var app = response[0];
 
-            if('sum' in app) {
-                if('req' in app.sum && app.sum.req !== null && !('att' in app.sum)) {
+            if(app.hasOwnProperty('sum')) {
+                if(app.sum.hasOwnProperty('req') && app.sum.req !== null && !app.sum.hasOwnProperty('att')) {
                     app.sum.att = app.sum.req;
                 }
-                else if ('att' in app.sum && app.sum.att !== null && !('req' in app.sum)) {
+                else if (app.sum.hasOwnProperty('att') && app.sum.att !== null && !app.sum.hasOwnProperty('req')) {
                     app.sum.req = app.sum.att;
                 }
             }
             else {
-                if('req' in app && app.req !== null && !('att' in app)) {
+                if(app.hasOwnProperty('req') && app.req !== null && !app.hasOwnProperty('att')) {
                     app.att = app.req;
                 }
-                else if ('att' in app && app.att !== null && !('req' in app)) {
+                else if (app.hasOwnProperty('att') && app.att !== null && !app.hasOwnProperty('req')) {
                     app.req = app.att;
                 }
             }

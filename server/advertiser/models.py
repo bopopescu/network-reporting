@@ -453,6 +453,7 @@ class AdGroup(db.Model):
             keywords=self.keywords,
             daily_frequency_cap=self.daily_frequency_cap,
             hourly_frequency_cap=self.hourly_frequency_cap,
+            allocation_percentage=self.allocation_percentage,
             mktplace_price_floor=self.mktplace_price_floor,  # deprecated?
         )
 

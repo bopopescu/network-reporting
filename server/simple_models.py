@@ -348,6 +348,7 @@ class SimpleAdGroup(SimpleModel):
             keywords=None,
             daily_frequency_cap=None,
             hourly_frequency_cap=None,
+            allocation_percentage=None,
             mktplace_price_floor=None,
             *args,
             **kwargs):
@@ -393,6 +394,7 @@ class SimpleAdGroup(SimpleModel):
         self.keywords = keywords
         self.daily_frequency_cap = daily_frequency_cap
         self.hourly_frequency_cap = hourly_frequency_cap
+        self.allocation_percentage = allocation_percentage
         self.mktplace_price_floor = mktplace_price_floor,  # deprecated?
 
     def __str__(self):

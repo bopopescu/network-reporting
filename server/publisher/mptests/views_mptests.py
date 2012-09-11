@@ -684,10 +684,11 @@ class NewCreateAppViewTestCase(BaseViewTestCase):
         adgroup.android_version_min = '1.6'
         adgroup.android_version_max = '2.2'
 
-        adgroup.geo_predicates = [u'country_name=BR']
-        adgroup.cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR', u'-23.5475,-46.63611111:27:Sao Paolo:BR']
+        adgroup.targeted_countries = [u'BR']
+        adgroup.targeted_cities = [u'-22.90277778,-43.2075:21:Rio de Janeiro:BR',
+                                   u'-23.5475,-46.63611111:27:Sao Paolo:BR']
         adgroup.keywords = ['abc', 'de', 'fg']
-
+        
         AdGroupQueryManager.put(adgroup)
 
         confirm_all_models(self.client.post,

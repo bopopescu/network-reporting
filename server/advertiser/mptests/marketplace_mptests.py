@@ -30,6 +30,7 @@ from common.utils.test.fixtures import (
     generate_network_config
 )
 from common.utils.test.test_utils import (
+    confirm_all_models,
     confirm_db,
     dict_eq,
     list_eq,
@@ -187,7 +188,7 @@ class BlocklistViewTestCase(BaseViewTestCase):
 
 class ContentFilterViewTestCase(BaseViewTestCase):
     """
-    author: Ignatius, Peter
+    Author: Tiago (9/5/2012)
     """
 
     def setUp(self):
@@ -202,114 +203,173 @@ class ContentFilterViewTestCase(BaseViewTestCase):
             self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
-    @confirm_db(network_config=EDITED_1)
+        self.post_data = {'filter_level': 'moderate',
+                          'categories[]': [],
+                          'attributes[]': [],}
+
     def mptest_none(self):
         """
         Set the marketplace filtering level to none and confirm that the db
         state was updated correctly.
+
+        Author: Tiago (9/5/2012)
         """
+        self.post_data['filter_level'] = 'none'
 
-        post_response = self.client.post(self.url, {
-            'filter_level': 'none',
-        })
-        ok_(post_response.status_code, 200)
+        edited = {self.account._network_config: {'attribute_blocklist': DEFAULT_ATTRIBUTES,
+                                                 'category_blocklist': DEFAULT_CATEGORIES}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
 
-        dict_eq(json.loads(post_response.content), {'success': 'success'})
-
-        # We expect there to be one network_config associated with this account.
-        network_configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
-        eq_(len(network_configs_dict.values()), 1)
-
-        # We expect the attribute and category blocklists to have been updated
-        # correctly.
-        expected_network_config = generate_network_config(
-            self.account, attribute_blocklist=DEFAULT_ATTRIBUTES,
-            category_blocklist=DEFAULT_CATEGORIES)
-
-        model_eq(network_configs_dict.values()[0], expected_network_config,
-                 check_primary_key=False)
-
-    @confirm_db(network_config=EDITED_1)
     def mptest_low(self):
         """
         Set the marketplace filtering level to low and confirm that the db
         state was updated correctly.
+
+        Author: Tiago (9/5/2012)
         """
+        self.post_data['filter_level'] = 'low'
 
-        post_response = self.client.post(self.url, {
-            'filter_level': 'low',
-        })
-        ok_(post_response.status_code, 200)
+        edited = {self.account._network_config: {'attribute_blocklist': LOW_ATTRIBUTES,
+                                                 'category_blocklist': LOW_CATEGORIES}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
 
-        dict_eq(json.loads(post_response.content), {'success': 'success'})
-
-        # We expect there to be one network_config associated with this account.
-        network_configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
-        eq_(len(network_configs_dict.values()), 1)
-
-        # We expect the attribute and category blocklists to have been updated
-        # correctly.
-        expected_network_config = generate_network_config(
-            self.account, attribute_blocklist=LOW_ATTRIBUTES,
-            category_blocklist=LOW_CATEGORIES)
-
-        model_eq(network_configs_dict.values()[0], expected_network_config,
-                 check_primary_key=False)
-
-    # Nothing changes with this test because moderate is the default.
-    @confirm_db()
     def mptest_moderate(self):
         """
         Set the marketplace filtering level to moderate and confirm that the db
         state was updated correctly.
+
+        Author: Tiago (9/5/2012)
         """
+        # Nothing changes with this test because moderate is the default.
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},)
 
-        post_response = self.client.post(self.url, {
-            'filter_level': 'moderate',
-        })
-        ok_(post_response.status_code, 200)
-
-        dict_eq(json.loads(post_response.content), {'success': 'success'})
-
-        # We expect there to be one network_config associated with this account.
-        network_configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
-        eq_(len(network_configs_dict.values()), 1)
-
-        # We expect the attribute and category blocklists to have been updated
-        # correctly.
-        expected_network_config = generate_network_config(
-            self.account, attribute_blocklist=MODERATE_ATTRIBUTES,
-            category_blocklist=MODERATE_CATEGORIES)
-
-        model_eq(network_configs_dict.values()[0], expected_network_config,
-                 check_primary_key=False)
-
-    @confirm_db(network_config=EDITED_1)
     def mptest_strict(self):
         """
         Set the marketplace filtering level to strict and confirm that the db
         state was updated correctly.
+
+        Author: Tiago (9/5/2012)
         """
+        self.post_data['filter_level'] = 'strict'
 
-        post_response = self.client.post(self.url, {
-            'filter_level': 'strict',
-        })
-        ok_(post_response.status_code, 200)
+        edited = {self.account._network_config: {'attribute_blocklist': STRICT_ATTRIBUTES,
+                                                 'category_blocklist': STRICT_CATEGORIES}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
 
-        dict_eq(json.loads(post_response.content), {'success': 'success'})
+    def mptest_custom_none(self):
+        """
+        Set the marketplace filtering level to custom, clear the attribute and category blocklists
+        and confirm that the db state was updated correctly.
 
-        # We expect there to be one network_config associated with this account.
-        network_configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
-        eq_(len(network_configs_dict.values()), 1)
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data['filter_level'] = 'custom'
 
-        # We expect the attribute and category blocklists to have been updated
-        # correctly.
-        expected_network_config = generate_network_config(
-            self.account, attribute_blocklist=STRICT_ATTRIBUTES,
-            category_blocklist=STRICT_CATEGORIES)
+        edited = {self.account._network_config: {'attribute_blocklist': [0],
+                                                 'category_blocklist': ['']}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
 
-        model_eq(network_configs_dict.values()[0], expected_network_config,
-                 check_primary_key=False)
+    def mptest_custom_attributes(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an arbitrary value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'attributes[]': ['1', '2']})
+
+        edited = {self.account._network_config: {'attribute_blocklist': [1, 2],
+                                                 'category_blocklist': ['']}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
+
+    def mptest_custom_attributes_error(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an arbitrary value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'attributes[]': ['0']})
+
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},)
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error
+        eq_(response_json['error'], 'Invalid creative attribute selected')
+
+    def mptest_custom_categories(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an incorrect value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'categories[]': ['IAB7-39', 'IAB8-5']})
+
+        edited = {self.account._network_config: {'attribute_blocklist': [0],
+                                                 'category_blocklist': ['IAB7-39', 'IAB8-5']}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
+
+    def mptest_custom_categories_error(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an incorrect value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'categories[]': ['']})
+
+        response = confirm_all_models(self.client.post,
+                                      args=[self.url, self.post_data],
+                                      kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},)
+        response_json = json.loads(response.content)
+
+        # Check that the request fails and returns a validation error
+        eq_(response_json['error'], 'Invalid category selected')
+
+    def mptest_custom_both(self):
+        """
+        Set the marketplace filtering level to custom, clear the category blocklist, set the attribute
+        blocklist to an arbitrary value and confirm that the db state was updated correctly.
+
+        Author: Tiago (9/5/2012)
+        """
+        self.post_data.update({'filter_level': 'custom',
+                               'attributes[]': ['1', '2'],
+                               'categories[]': ['IAB7-39', 'IAB8-5']})
+
+        edited = {self.account._network_config: {'attribute_blocklist': [1, 2],
+                                                 'category_blocklist': ['IAB7-39', 'IAB8-5']}}
+        confirm_all_models(self.client.post,
+                           args=[self.url, self.post_data],
+                           kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},
+                           edited=edited,)
 
 
 class MarketplaceOnOffViewTestCase(BaseViewTestCase):
@@ -329,7 +389,8 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
             self.adunit.key(), self.account.key())
         self.marketplace_adgroup.put()
 
-        # Nothing changes with this test because active is the default.
+
+    # Nothing changes with this test because active is the default.
     @confirm_db()
     def mptest_activate_deactivate(self):
         """
@@ -348,7 +409,8 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
         # Check that the db has been updated to reflect marketplace
         # deactivation.
         marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account, from_db=True)
+            self.account, from_db=True
+        )
         ok_(marketplace_campaign.active)
         
         # De-activate marketplace.
@@ -361,7 +423,8 @@ class MarketplaceOnOffViewTestCase(BaseViewTestCase):
         
         # Check that the db has been updated to reflect marketplace activation.
         marketplace_campaign = CampaignQueryManager.get_marketplace(
-            self.account, from_db=True)
+            self.account, from_db=True
+        )
         ok_(not marketplace_campaign.active)
 
         

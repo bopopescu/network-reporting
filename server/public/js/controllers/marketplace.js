@@ -591,14 +591,16 @@ var mopub = mopub || {};
              * ## Content filtering
              */
 
-            $("input.content_level").click(function(){
-                var self = $(this);
-                var filter_level = self.attr('value');
+            function post_categories(filter_level, categories, attributes) {
                 var loading_img = $("#filter-spinner").show();
                 var saving = $("#filter-save-status .saving").show();
+
                 var result = $.post("/advertise/marketplace/settings/content_filter/", {
-                    filter_level: filter_level
+                    filter_level: filter_level,
+                    categories: categories,
+                    attributes: attributes,
                 });
+
 
                 result.success(function(data){
                     loading_img.hide();
@@ -612,7 +614,41 @@ var mopub = mopub || {};
                         setTimeout(function() {errored.fadeOut(); }, 1000);
                     }
                 });
+            }
+
+            $("input.content_level").click(function(){
+                var filter_level = $(this).val();
+                categories = [];
+                attributes = [];
+
+                if(filter_level === 'custom') {
+                    $('#categories_div').show();
+                    categories = $("#categories").val();
+                    attributes = $("#attributes").val();
+                } else {
+                    $('#categories_div').hide();
+                }
+
+                post_categories(filter_level, categories, attributes);
             });
+
+            // initialize chosen multiple select for IAB categories
+            $("#categories")
+                .chosen({no_results_text: "No results matched"})
+                .change(function() {
+                    var categories = $(this).val();
+
+                    post_categories('custom', categories, $("#attributes").val());
+                });
+
+            // initialize chosen multiple select for IAB categories
+            $("#attributes")
+                .chosen({no_results_text: "No results matched"})
+                .change(function() {
+                    var attributes = $(this).val();
+
+                    post_categories('custom', $("#categories").val(), attributes);
+                });
         }
     };
 

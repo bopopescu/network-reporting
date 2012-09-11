@@ -15,6 +15,10 @@ from reporting.query_managers import StatsModelQueryManager
 
 from common.utils import tablib
 from common.utils.string_utils import sanitize
+from common.constants import (
+    IAB_CATEGORIES, IAB_ATTRIBUTES,
+    IAB_CATEGORY_VALUES, IAB_ATTRIBUTE_VALUES,
+)
 
 
 class MarketplaceIndexHandler(RequestHandler):
@@ -42,10 +46,14 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # Set up the blocklist
         blocklist = []
+        category_blocklist = set()
+        attribute_blocklist = set()
         network_config = self.account.network_config
         if network_config:
             blocklist = [str(sanitize(domain)) for domain in network_config.blocklist \
                          if not str(sanitize(domain)) in ("", "#")]
+            category_blocklist = set(network_config.category_blocklist)
+            attribute_blocklist = set(network_config.attribute_blocklist)
 
         try:
             blind = self.account.network_config.blind
@@ -60,7 +68,11 @@ class MarketplaceIndexHandler(RequestHandler):
             'pub_key': self.account.key(),
             'blocklist': blocklist,
             'blind': blind,
-            'network_config': network_config
+            'network_config': network_config,
+            'category_blocklist': category_blocklist,
+            'IAB_CATEGORIES': IAB_CATEGORIES,
+            'attribute_blocklist': attribute_blocklist,
+            'IAB_ATTRIBUTES': IAB_ATTRIBUTES,
         }
 
 
@@ -139,9 +151,7 @@ class ContentFilterHandler(RequestHandler):
         # If the account doesn't have a network config, make one
         if not network_config:
             network_config = NetworkConfig(account=self.account)
-            network_config.put()
-            self.account.network_config = network_config
-            self.account.put()
+            AccountQueryManager.update_config_and_put(self.account, network_config)
 
         # Set the filter level if it was passed
         if filter_level:
@@ -153,6 +163,25 @@ class ContentFilterHandler(RequestHandler):
                 network_config.set_moderate_filter()
             elif filter_level == "strict":
                 network_config.set_strict_filter()
+            elif filter_level == "custom":
+                categories = self.request.POST.getlist('categories[]')
+                attributes = self.request.POST.getlist('attributes[]')
+                attributes = [int(attribute) for attribute in attributes]
+
+                for category in categories:
+                    if category not in IAB_CATEGORY_VALUES:
+                        return JSONResponse({
+                            'error': 'Invalid category selected'
+                        })
+                                
+                for attribute in attributes:
+                    if attribute not in IAB_ATTRIBUTE_VALUES:
+                        return JSONResponse({
+                            'error': 'Invalid creative attribute selected'
+                        })
+
+                network_config.set_custom_filter(categories, attributes)
+                
             else:
                 return JSONResponse({'error': 'Invalid filter level'})
         else:

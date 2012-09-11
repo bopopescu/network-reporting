@@ -275,23 +275,70 @@
 
       <ul id="content_filter_levels">
         <li>
-          <input type="radio" class="content_level level0" value="strict" name="filter" {% ifequal network_config.filter_level 'strict' %}checked='checked'{% endifequal %} />
+          <input type="radio" class="content_level level0" value="strict" name="filter" {% ifequal network_config.filter_level 'strict' %}checked='checked'{% endifequal %} {% if not user.is_staff and network_config.filter_level == 'custom' %}disabled='disabled'{% endif %}/>
           <strong>Strict</strong> - Only allow ads appropriate for family audiences
         </li>
         <li>
-          <input type="radio" class="content_level level1" value="moderate" name="filter" {% ifequal network_config.filter_level 'moderate' %}checked='checked'{% endifequal %} />
+          <input type="radio" class="content_level level1" value="moderate" name="filter" {% ifequal network_config.filter_level 'moderate' %}checked='checked'{% endifequal %} {% if not user.is_staff and network_config.filter_level == 'custom' %}disabled='disabled'{% endif %}/>
           <strong>Moderate</strong> - Allow ads for general audiences
         </li>
         <li>
-          <input type="radio" class="content_level level2" value="low" name="filter" {% ifequal network_config.filter_level 'low' %}checked='checked'{% endifequal %}/>
+          <input type="radio" class="content_level level2" value="low" name="filter" {% ifequal network_config.filter_level 'low' %}checked='checked'{% endifequal %} {% if not user.is_staff and network_config.filter_level == 'custom' %}disabled='disabled'{% endif %}/>
           <strong>Low</strong> - Allow ads for mature audiences, including alcohol and dating ads
         </li>
         <li>
-          <input type="radio" class="content_level level3" value="none" name="filter" {% ifequal network_config.filter_level 'none' %}checked='checked'{% endifequal %}/>
+          <input type="radio" class="content_level level3" value="none" name="filter" {% ifequal network_config.filter_level 'none' %}checked='checked'{% endifequal %} {% if not user.is_staff and network_config.filter_level == 'custom' %}disabled='disabled'{% endif %}/>
           <strong>No filtering</strong> - Allow ads including those with provocative or suggestive imagery.
           MoPub always blocks illegal, pornographic and deceptive ads.
         </li>
+        {% if user.is_staff or network_config.filter_level == 'custom' %}
+        <li>
+          <input type="radio" class="content_level level4" value="custom" name="filter" {% ifequal network_config.filter_level 'custom' %}checked='checked'{% endifequal %} {% if not user.is_staff and network_config.filter_level == 'custom' %}disabled='disabled'{% endif %}/>
+          <strong>Custom</strong> - Staff only setting. Can select specific categories to block.
+          Contact MoPub at <a href="mailto:support@mopub.com">support@mopub.com</a> to change.
+        </li>
+        {% endif %}
       </ul>
+
+      {% if user.is_staff %}
+      <div id="categories_div" {% if network_config.filter_level != 'custom' %}class="hidden"{% endif %}>
+        <ul class='no-bullet'>
+            <li>
+                <span class='blocklist-label'> Category blocklist: </span>
+                <select data-placeholder="Choose a Category" class="chzn-select" multiple="" style="width: 350px;" id="categories">
+                    <option value=""></option>
+
+                    {% for category in IAB_CATEGORIES %}
+                    <optgroup label="{{ category.1 }}">
+                        <option value="{{ category.0 }}" {% if category.0 in category_blocklist %}selected='selected'{% endif %}>
+                            {{ category.1 }} ({{ category.0}})
+                        </option>
+
+                        {% for sub_category in category.2 %}
+                        <option value="{{ sub_category.0 }}" {% if sub_category.0 in category_blocklist %}selected='selected'{% endif %}>
+                            {{ sub_category.1 }} ({{ sub_category.0 }})
+                        </option>
+                        {% endfor %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+            </li>
+
+            <li>
+                <span class='blocklist-label'> Creative attribute blocklist: </span>
+                <select data-placeholder="Choose a Creative Attribute" class="chzn-select" multiple="" style="width: 350px;" id="attributes">
+                    <option value=""></option>
+
+                    {% for attribute in IAB_ATTRIBUTES %}
+                    <option value="{{ attribute.0 }}" {% if attribute.0 in attribute_blocklist %}selected='selected'{% endif %}>
+                        {{ attribute.1 }} ({{ attribute.0}})
+                    </option>
+                    {% endfor %}
+                </select>
+            </li>
+        </ul>
+      </div>
+      {% endif %}
     </div>
 
     <h2>Blocklist</h2>

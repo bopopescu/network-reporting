@@ -45,15 +45,16 @@
             }
         },
         parse: function (response) {
-            // The api returns everything from this url as a list,
-            // so that you can request one or all apps.
             var app = response[0];
 
-            // REFACTOR attempts vs requests
-            if(app.req == null || app.req == undefined) {
-                app.req = app.att;
-            } else if (app.att == null || app.att == undefined) {
-                app.att = app.req;
+            console.log(app.sum.att);
+            console.log(app.sum.req);
+
+            if('req' in app.sum && app.sum.req !== null && !('att' in app.sum)) {
+                app.sum.att = app.sum.req;
+            }
+            else if ('att' in app.sum && app.sum.att !== null && !('req' in app.sum)) {
+                app.sum.req = app.sum.att;
             }
 
             if (app.app_type === 'iphone') {
@@ -65,6 +66,7 @@
             if (app.app_type === 'mweb') {
                 app.app_type = 'Mobile Web';
             }
+
             return app;
         },
         get_summed: function (attr) {
@@ -121,9 +123,9 @@
             }
             var metrics = ['imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
             _.each(metrics, function (metric) {
-                if (this_view.model.get('stats_endpoint') != 'networks'
-                        || this_view.options.network != 'mobfox' || (metric != 'att'
-                        && metric != 'fill_rate')) {
+                if (this_view.model.get('stats_endpoint') != 'networks' ||
+                    this_view.options.network != 'mobfox' ||
+                    (metric != 'att' && metric != 'fill_rate')) {
                     $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
                 }
             });

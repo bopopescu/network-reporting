@@ -19,7 +19,7 @@
 {% endblock dateButtons %}
 
 {% block content %}
-  
+
   {% if not targeted_apps %}
     <div class="alert-message block-message warning">
       This line item is not targeted at any <strong>Ad Units</strong>.
@@ -61,7 +61,7 @@
   {% if not order.active %}
     <div class="alert-message block-message error">
       {{ order.name }} is currently {{ order.status }}.
-      This line item will not run until the order is running.      
+      This line item will not run until the order is running.
       <a href="{% url advertiser_order_detail order_key=order.key %}">
         Switch {{ order.name }} status to running
       </a>
@@ -76,7 +76,7 @@
         Update Budget (Admin)
       </a>
     {% endif %}
-    
+
     <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 5px;">
       {% button_icon "pencil" %}
       Edit Line Item
@@ -268,24 +268,24 @@
 
 {% if user.is_staff %}
   <div class="modal hidden" id="budget-admin-modal">
-    
+
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">×</a>
       <h3> Admin Budget Controls </h3>
     </div>
-    
+
     <div class="modal-body" style='overflow: visible;'>
-      
+
       <div class="alert-message block-message info">
         Manually force an update of the budget for this line item.  If
         'use staging' is checked, the budget will be pushed to the
         staging adserver instead.
       </div>
-      
+
       Use staging?
       <input id="use_staging" type="checkbox"></input>
     </div>
-    
+
     <div class="modal-footer">
       <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
       <a href="#" class="btn" data-dismiss="modal">
@@ -295,7 +295,7 @@
         Update Budget
       </a>
     </div>
-    
+
   </div>
 {% endif %}
 
@@ -316,10 +316,10 @@
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
             line_item_key: "{{ line_item.key }}",
-            start_date:  {{ start_date|js_date }},
+            start_date: {{ start_date|js_date }},
             date_range: {{ date_range }},
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
-            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}]
         });
     });
   </script>

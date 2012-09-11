@@ -174,7 +174,7 @@ var mopub = mopub || {};
             return format_stat(stat, this.get_stat(stat));
         },
 
-        
+
         /*
          * `get_formatted_stat_sum`
          * Returns the summed (or averaged, for some derivative stats)
@@ -191,61 +191,61 @@ var mopub = mopub || {};
 
                 var imp_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('imp');
-                }, 0);                
+                }, 0);
                 var clk_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('clk');
                 }, 0);
                 var total_ctr = calculate_ctr(imp_sum, clk_sum);
-                
+
                 return format_stat('ctr', total_ctr);
-                
+
             } else if (stat === 'fill_rate') {
 
                 var req_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('req');
-                }, 0);                
+                }, 0);
                 var imp_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('imp');
                 }, 0);
                 var total_fill_rate = calculate_fill_rate(req_sum, imp_sum);
-                
-                return format_stat('fill_rate', total_fill_rate);                
-                
+
+                return format_stat('fill_rate', total_fill_rate);
+
             } else if (stat === 'conv_rate') {
 
                 var conv_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('conv');
-                }, 0);                
+                }, 0);
                 var clk_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('clk');
                 }, 0);
                 var total_conv_rate = calculate_conv_rate(conv_sum, clk_sum);
-            
+
                 return format_stat('conv_rate', total_conv_rate);
-                
+
             } else if (stat === 'cpm') {
-                
+
                 var imp_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('imp');
-                }, 0);                
+                }, 0);
                 var rev_sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat('rev');
                 }, 0);
                 var total_cpm = calculate_cpm(imp_sum, rev_sum);
-            
+
                 return format_stat('cpm', total_cpm);
-                
+
             } else {
                 var sum = these_models.reduce(function(memo, model){
                     return memo + model.get_stat(stat);
                 }, 0);
-                
+
                 return format_stat(stat, sum);
-            }            
+            }
         },
 
-        
-        
+
+
         /*
          * `get_formatted_daily_stats`
          * Returns an object with formatted stats for each day
@@ -735,6 +735,10 @@ var mopub = mopub || {};
         url: function () {
             var url = '/api/campaign/' + this.id + '?';
             var app = this.get('app');
+            var date_range = this.get('date_range');
+            if (date_range <= 0) {
+                date_range = 1;
+            }
             if(app) {
                 url += '&app=' + app;
             }
@@ -751,7 +755,7 @@ var mopub = mopub || {};
             if(start_date) {
                 url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
             }
-            url += '&r=' + this.get('date_range');
+            url += '&r=' + date_range;
             url += '&endpoint=' + this.get('stats_endpoint');
             return url;
         },
@@ -817,7 +821,9 @@ var mopub = mopub || {};
             price_floor: 0,
             req: 0,
             rev: 0,
-            stats_endpoint: 'all'
+            stats_endpoint: 'all',
+            start_date: null,
+            date_range: 90
         },
         validate: function(attributes) {
 
@@ -838,19 +844,15 @@ var mopub = mopub || {};
                 }
             }
         },
-        url: function() {
-            // window.location.search.substring(1) is used to preserve
-            // date ranges from the url this makes the fetching work
-            // with the datepicker.
-            var stats_endpoint = this.get('stats_endpoint');
-            return '/api/app/'
-                + this.app_id
-                + '/adunits/'
-                + this.id
-                + '?'
-                + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+        url: function () {
+            var url = '/api/app/' + this.get('app_id') + '/adunits/' + this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=' + this.get('stats_endpoint');
+            return url;
         },
         parse: function(response) {
             for(var i in response) {
@@ -896,13 +898,23 @@ var mopub = mopub || {};
             // REFACTOR attempts vs requests
             _.each(response, function(adunit) {
 
-                if ((adunit.req === null || adunit.req === undefined) &&
-                    (adunit.att !== null && adunit.att !== undefined)) {
-                    adunit.req = adunit.att;
-                } else if ((adunit.att === null || adunit.att === undefined) &&
-                           (adunit.req !== null || adunit.req !== undefined)) {
-                    adunit.att = adunit.req;
+                if(adunit.hasOwnProperty('sum')) {
+                    if (adunit.sum.hasOwnProperty('req') && adunit.sum.req !== null && !adunit.sum.hasOwnProperty('att')) {
+                        adunit.sum.att = adunit.sum.req;
+                    }
+                    else if (adunit.sum.hasOwnProperty('att') && adunit.sum.att !== null && !adunit.sum.hasOwnProperty('req')) {
+                        adunit.sum.req = adunit.sum.att;
+                    }
                 }
+                else {
+                    if (adunit.hasOwnProperty('req') && adunit.req !== null && !adunit.hasOwnProperty('att')) {
+                        adunit.att = adunit.req;
+                    }
+                    else if (adunit.hasOwnProperty('att') && adunit.att !== null && !adunit.hasOwnProperty('req')) {
+                        adunit.req = adunit.att;
+                    }
+                }
+
                 _.extend(adunit, { stats_endpoint: collection.stats_endpoint });
             });
 
@@ -941,27 +953,25 @@ var mopub = mopub || {};
             req: 0,
             rev: 0,
             status: 'Running',
-            stats_endpoint: 'all'
+            stats_endpoint: 'all',
+            start_date: null,
+            date_range: 90
         },
         url: function () {
-            var stats_endpoint = this.get('stats_endpoint');
+            var url = '/api/';
             if (this.get('campaign_id')) {
-                return '/api/campaign/'
-                    + this.get('campaign_id')
-                    + '/apps/'
-                    + this.id
-                    + "?"
-                    + window.location.search.substring(1)
-                    + '&endpoint='
-                    + stats_endpoint;
+                url += 'campaign/' + this.get('campaign_id') + '/apps/';
             } else {
-                return '/api/app/'
-                    + this.id
-                    + "?"
-                    + window.location.search.substring(1)
-                    + '&endpoint='
-                    + stats_endpoint;
+                url += 'app/';
             }
+            url += this.id + '?';
+            var start_date = this.get('start_date');
+            if(start_date) {
+                url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
+            }
+            url += '&r=' + this.get('date_range');
+            url += '&endpoint=' + this.get('stats_endpoint');
+            return url;
         },
         parse: function (response) {
             // The api returns everything from this url as a list,
@@ -1045,15 +1055,20 @@ var mopub = mopub || {};
         url: function () {
             var url = '/api/campaign/' + this.id + '?';
             var app = this.get('app');
-            if(app) {
+            var date_range = this.get('date_range');
+            if (app) {
                 url += '&app=' + app;
-            }
-            else {
+            } else {
                 var adunit = this.get('adunit');
                 if(adunit) {
                     url += '&adunit=' + adunit;
                 }
             }
+
+            if (date_range <= 0) {
+                date_range = 1;
+            }
+
             url += '&daily=' + (this.get('include_daily') ? '1' : '0');
             url += '&adgroups=' + (this.get('include_adgroups') ? '1' : '0');
             url += '&creatives=' + (this.get('include_creatives') ? '1' : '0');
@@ -1061,7 +1076,7 @@ var mopub = mopub || {};
             if(start_date) {
                 url += '&s=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
             }
-            url += '&r=' + this.get('date_range');
+            url += '&r=' + date_range;
             return url;
         },
         parse: function(order) {

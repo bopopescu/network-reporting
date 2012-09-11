@@ -1,11 +1,80 @@
+# Deployed Tuesday, September 11, 2012 at 10:29PM PST
+### Deployed by John Pena
+### Tagged deploy-208
+### Bugs Fixed: []
+### Included Commits: 
+ * 1d1bafa fixed some broken/incorrectly merged tests
+ * 126982d versions.yaml
+ * 17c49ab Deployed without finding any bug fixes.
+ * a45389a Renamed IAB constants, uncommented ssl error thing that breaks localhost testing
+ * 17876a3 cleaned up a little
+ * 1d83d1f added custom attributes and categories tests for content filtering
+ * 69257aa updated mpx content filtering tests to use confirm_all_models helper
+ * dfdec8c added creative attribute blocklist for staff
+ * 0164ac4 Merge branch 'master' into iab-categories
+ * e7755f6 Finished IAB Categories. Needs testing
+ * f8b4097 started iab categories
+ 
+# Deployed Tuesday, September 11, 2012 at 05:15PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-207
+### Bugs Fixed: []
+### Included Commits:
+* f52017f Deployed without finding any bug fixes.
+
+# Deployed Tuesday, September 11, 2012 at 05:11PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-206
+### Bugs Fixed: []
+### Included Commits:
+* 942842d Deployed without finding any bug fixes.
+
+# Deployed Tuesday, September 11, 2012 at 05:06PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-205
+### Bugs Fixed: []
+### Included Commits:
+* c19532a changed in to hasOwnProperty
+* a67eb77 finished
+* 8a4c918 Merge branch 'master' into ui-160
+* ad73051 merged
+* 7659482 first stab
+* 09ea757 fixed UI-158 and UI-182
+* c8f464b fixed versions
+* 877e497 updated versions
+* cb1d0c3 updated versions
+* af81fc4 updated the deploy alert name on mpdeploy
+* f3a8053 Deployed without finding any bug fixes.
+* ef7ff4e better fix for UI-195
+* d3326b3 just going to rely on the messaging and not the field highlighting
+* a9602f5 report form date errors will highlight both start and end inputs in red. also fixed a bug where reports wont be valid until 1pm
+
+# Deployed Monday, September 10, 2012 at 10:58PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-204
+### Bugs Fixed: []
+### Included Commits:
+* cf28140 Merge branch 'master' of github.com:mopub/mopub
+* a95d67c network targeting fix migration
+* d72c764 Merge branch 'UI-174'
+* a383138 fixed versions issues
+* 4f7efbd Merge branch 'master' of github.com:mopub/mopub
+* 6604fff fixed new network adgroup targeting issue
+* 22c9228 changed the callout language
+* 8568c94 fixed a bug where line item stats werent loading
+* 9e9df55 added a warning message for line items with paused orders
+* 00e0103 fixed strange alignment issues in firefox
+* a7382fc Deployed without finding any bug fixes.
+* 1604814 fixed payment wonk
+
 # Deployed Friday, September 07, 2012 at 11:12PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-203
 ### Bugs Fixed: []
-### Included Commits: 
- * b22b68c fixed allocation_percentage in AUCs
- * 6d5ace3 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* b22b68c fixed allocation_percentage in AUCs
+* 6d5ace3 Deployed without finding any bug fixes.
+
 # Deployed Friday, September 07, 2012 at 09:45PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-202

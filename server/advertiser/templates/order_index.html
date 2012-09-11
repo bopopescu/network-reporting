@@ -12,6 +12,13 @@
     <br /><br />
     Learn more about the new features <a href="http://help.mopub.com/customer/portal/articles/692791-creating-orders-line-items">here</a>.
   </div>
+
+    <a class="right btn"
+       href='{% url advertiser_order_and_line_item_form_new %}'>
+         {% button_icon "plus" %}
+         Add a new order
+  </a>
+
   
   <ul class="tabs">
     <li class="active">
@@ -21,7 +28,6 @@
       <a href="#line_items"> Line Items </a>
     </li>
   </ul>
-
 
   {% comment %}
     Order Tab
@@ -67,15 +73,10 @@
         {% endfor %}
       </select>
 
-      <a class="btn"
-         style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
-         href='{% url advertiser_order_and_line_item_form_new %}'>
-        {% button_icon "plus" %}
-        Add a new order
-      </a>
-
     </div>
 
+    <br />
+    
     {% order_table orders %}
 
     <br />
@@ -143,35 +144,28 @@
       </button>
     </div>
 
-    <div class="right">
-      <div class="left">
-      <select data-placeholder="Quick jump to a line item"
-              style=" width:200px; top: -9px;"
-              id="line-item-quick-navigate">
-        <option value=""></option>
-        {% for line_item in line_items %}
-          {% if not line_item.deleted and not line_item.archived %}
-            <option value="{% url advertiser_line_item_detail line_item_key=line_item.key %}">
-              {{line_item.name}} ({{ line_item.campaign.name }})
+    <div class="right" style='margin-left:5px;'>      
+      {% filter_buttons %}
+    </div>
+
+        <div class="right">
+    <select data-placeholder="Quick jump to a line item"
+            style=" width:200px; top: -9px;"
+            id="line-item-quick-navigate">
+      <option value=""></option>
+      {% for line_item in line_items %}
+        {% if not line_item.deleted and not line_item.archived %}
+          <option value="{% url advertiser_line_item_detail line_item_key=line_item.key %}">
+            {{line_item.name}} ({{ line_item.campaign.name }})
             </option>
           {% endif %}
         {% endfor %}
-      </select>
-
-
-      <a class="btn"
-         style='margin-top: -2px;' {# fudging this so it lines up with quick jump #}
-         href='{% url advertiser_order_and_line_item_form_new %}'>
-        {% button_icon "plus" %}
-        Add a new order
-      </a>
-      </div>
-
-      <div class="right" style='margin-left: 5px;'>
-        {% filter_buttons %}
-      </div>
+    </select>
     </div>
 
+
+    <br />
+    
     {% line_item_table line_items %}
 
     <br />

@@ -19,8 +19,9 @@
 {% endblock dateButtons %}
 
 {% block content %}
+
   {% if not targeted_apps %}
-    <div class="alert-message block-message">
+    <div class="alert-message block-message warning">
       This line item is not targeted at any <strong>Ad Units</strong>.
       In order for this line item to deliver, you will need to target
       at least one Ad Unit.
@@ -28,9 +29,9 @@
   {% endif %}
 
   {% if not line_item.creatives.count %}
-    <div class="alert-message block-message">
-      This line item needs to have at least
-      one <strong>Creative</strong> in order to serve.  Set up a
+    <div class="alert-message block-message warning">
+      This line item needs to have <strong>at least
+      one Creative</strong> in order to serve.  Set up a
       creative below.
     </div>
   {% endif %}
@@ -38,7 +39,7 @@
   {% if apps_without_global_id %}
     <div class="alert-message block-message error">
       <p>
-      Error: You must have a complete iTunes URL or Android package
+        <strong>Error</strong>: You must have a complete iTunes URL or Android package
       name for the app(s) that you are using for user targeting.
       Access the apps below and add the iTunes URL or Android package
       name.
@@ -48,10 +49,24 @@
           <li><a href="{% url publisher_app_show app.key %}">{{ app.name }}</a></li>
         {% endfor %}
       </ul>
-      <p>Questions? Get more info on user targeting in the MoPub <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">help center</a>.</p>
+      <p>
+      Questions? Get more info on user targeting in the MoPub
+      <a href="http://help.mopub.com/customer/portal/articles/603579-user-targeting">
+        help center
+        </a>.
+      </p>
     </div>
   {% endif %}
 
+  {% if not order.active %}
+    <div class="alert-message block-message error">
+      {{ order.name }} is currently {{ order.status }}.
+      This line item will not run until the order is running.
+      <a href="{% url advertiser_order_detail order_key=order.key %}">
+        Switch {{ order.name }} status to running
+      </a>
+    </div>
+  {% endif %}
   <div class="btn-well right" style="clear: both; margin-bottom: 10px;">
 
     {% if user.is_staff %}
@@ -61,7 +76,7 @@
         Update Budget (Admin)
       </a>
     {% endif %}
-    
+
     <a class="left btn" href="{% url advertiser_line_item_form_edit line_item.key %}" style="margin-right: 5px;">
       {% button_icon "pencil" %}
       Edit Line Item
@@ -253,24 +268,24 @@
 
 {% if user.is_staff %}
   <div class="modal hidden" id="budget-admin-modal">
-    
+
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">×</a>
       <h3> Admin Budget Controls </h3>
     </div>
-    
+
     <div class="modal-body" style='overflow: visible;'>
-      
+
       <div class="alert-message block-message info">
         Manually force an update of the budget for this line item.  If
         'use staging' is checked, the budget will be pushed to the
         staging adserver instead.
       </div>
-      
+
       Use staging?
       <input id="use_staging" type="checkbox"></input>
     </div>
-    
+
     <div class="modal-footer">
       <img id="modal-loading-img" class="hidden" src="/images/spin-small.gif" />
       <a href="#" class="btn" data-dismiss="modal">
@@ -280,7 +295,7 @@
         Update Budget
       </a>
     </div>
-    
+
   </div>
 {% endif %}
 
@@ -301,10 +316,10 @@
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
             line_item_key: "{{ line_item.key }}",
-            start_date:  {{ start_date|js_date }},
+            start_date: {{ start_date|js_date }},
             date_range: {{ date_range }},
             targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
-            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}]
         });
     });
   </script>

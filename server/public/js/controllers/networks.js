@@ -45,15 +45,23 @@
             }
         },
         parse: function (response) {
-            // The api returns everything from this url as a list,
-            // so that you can request one or all apps.
             var app = response[0];
 
-            // REFACTOR attempts vs requests
-            if(app.req == null || app.req == undefined) {
-                app.req = app.att;
-            } else if (app.att == null || app.att == undefined) {
-                app.att = app.req;
+            if(app.hasOwnProperty('sum')) {
+                if(app.sum.hasOwnProperty('req') && app.sum.req !== null && !app.sum.hasOwnProperty('att')) {
+                    app.sum.att = app.sum.req;
+                }
+                else if (app.sum.hasOwnProperty('att') && app.sum.att !== null && !app.sum.hasOwnProperty('req')) {
+                    app.sum.req = app.sum.att;
+                }
+            }
+            else {
+                if(app.hasOwnProperty('req') && app.req !== null && !app.hasOwnProperty('att')) {
+                    app.att = app.req;
+                }
+                else if (app.hasOwnProperty('att') && app.att !== null && !app.hasOwnProperty('req')) {
+                    app.req = app.att;
+                }
             }
 
             if (app.app_type === 'iphone') {
@@ -65,6 +73,7 @@
             if (app.app_type === 'mweb') {
                 app.app_type = 'Mobile Web';
             }
+
             return app;
         },
         get_summed: function (attr) {
@@ -121,9 +130,9 @@
             }
             var metrics = ['imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
             _.each(metrics, function (metric) {
-                if (this_view.model.get('stats_endpoint') != 'networks'
-                        || this_view.options.network != 'mobfox' || (metric != 'att'
-                        && metric != 'fill_rate')) {
+                if (this_view.model.get('stats_endpoint') != 'networks' ||
+                    this_view.options.network != 'mobfox' ||
+                    (metric != 'att' && metric != 'fill_rate')) {
                     $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
                 }
             });
@@ -192,7 +201,7 @@
         return r;
     }
 
-    function initialize_campaign_data(campaign_data, apps, include_adunits) {
+    function initialize_campaign_data(campaign_data, apps, include_adunits, start_date, date_range) {
 
         // create mopub campaign
         // endpoint=all
@@ -237,7 +246,9 @@
                 var network_app = new App({
                     id: app.id,
                     campaign_id: campaign.id,
-                    stats_endpoint: campaign.get('stats_endpoint')
+                    stats_endpoint: campaign.get('stats_endpoint'),
+                    start_date: start_date,
+                    date_range: date_range
                 });
 
                 var app_view = new AppView({
@@ -356,7 +367,7 @@
             var apps_by_campaign = {};
             _.each(campaigns_data, function(campaign_data) {
 
-                var result = initialize_campaign_data(campaign_data, apps, false);
+                var result = initialize_campaign_data(campaign_data, apps, false, campaign_data.start_date, campaign_data.date_range);
                 all_campaigns = all_campaigns.concat(result[0]);
                 var network_apps = apps_by_campaign[result[0][0].id] = result[1];
             });
@@ -1606,7 +1617,7 @@
 
             initializeDateButtons();
 
-            var result = initialize_campaign_data(campaign_data, apps, true);
+            var result = initialize_campaign_data(campaign_data, apps, true, campaign_data.start_date, campaign_data.date_range);
             var all_campaigns = result[0];
             var network_apps = result[1];
             var adunits = result[2];

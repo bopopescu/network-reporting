@@ -13,7 +13,7 @@
 
 
   {% chart_placeholder start_date end_date %}
-  
+
   <div id="dashboard-appEditForm" class="hidden" style="margin-top: 10px;">
     <a name="appForm" class="hidden">anchor</a>
     <form action="{% url publisher_app_update_ajax app_key=app.key %}"
@@ -42,7 +42,7 @@
       </fieldset>
     </form>
   </div>
-  
+
   <div id="ad-units">
     <div class="btn-well right">
       <a class="btn" id="dashboard-apps-editAppButton" href="#">
@@ -189,7 +189,7 @@
     $(function () {
       DashboardController.initializeAppDetail({
         app_key: '{{ app.key }}',
-        start_date: {{ start_date|js_date }},
+        start_date: {{ start_date|js_date}},
         date_range: {{ date_range }},
         line_item_keys: [{% for line_item in line_items %}'{{ line_item.key }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
         marketplace_campaign_key: '{{ marketplace_campaign.key }}',

@@ -33,14 +33,18 @@ var mopub = mopub || {};
      * them into table rows that have already been created in the
      * page. Useful for decreasing page load time along with `fetchAdUnitsFromAppKeys`.
      */
-    function fetchAppsFromKeys (app_keys) {
+    function fetchAppsFromKeys (app_keys, start_date, date_range) {
         var apps = new AppCollection();
         var fetched_apps = 0;
         _.each(app_keys, function(app_key) {
 
             // Create a new app. When the app is fetched, we'll immediately
             // render it into its contents into a (pre-existing) table row.
-            var app = new App({id: app_key, stats_endpoint: 'all'});
+            var app = new App({
+                id: app_key,
+                start_date: start_date,
+                date_range: date_range
+            });
             app.bind('change', function(current_app) {
                 var appView = new AppView({
                     model: current_app,
@@ -701,7 +705,7 @@ var mopub = mopub || {};
 
             // Fetch all of the app stats from their keys. When all apps
             // are finished loading, we render the chart.
-            var apps = fetchAppsFromKeys(bootstrapping_data.app_keys);
+            var apps = fetchAppsFromKeys(bootstrapping_data.app_keys, bootstrapping_data.start_date, bootstrapping_data.date_range);
             apps.bind('loaded', function() {
 
                 // Load the chart
@@ -733,7 +737,7 @@ var mopub = mopub || {};
             initializeDeleteForm();
             initializeiOSAppSearch();
 
-            var apps = fetchAppsFromKeys([bootstrapping_data.app_key]);
+            var apps = fetchAppsFromKeys([bootstrapping_data.app_key], bootstrapping_data.start_date, bootstrapping_data.date_range);
             fetchAdUnitsFromAppKeys(bootstrapping_data.app_key);
 
             apps.bind('loaded', function() {
@@ -793,6 +797,7 @@ var mopub = mopub || {};
                     url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                 }
                 url += '&r=' + bootstrapping_data.date_range;
+                url += '&endpoint=mpx';
                 return url;
             };
             marketplace.parse = function (response) {
@@ -869,9 +874,12 @@ var mopub = mopub || {};
                     .attr('src', $('#adserverTest-iFrame-src').text()).show();
             });
 
-            var adunit = new AdUnit();
-            adunit.id = bootstrapping_data.adunit_key;
-            adunit.app_id = bootstrapping_data.app_key;
+            var adunit = new AdUnit({
+                id: bootstrapping_data.adunit_key,
+                app_id: bootstrapping_data.app_key,
+                start_date: bootstrapping_data.start_date,
+                date_range: bootstrapping_data.date_range
+            });
 
             adunit.bind('change', function () {
 
@@ -938,6 +946,7 @@ var mopub = mopub || {};
                     url += 's=' + start_date.getFullYear() + '-' + (start_date.getMonth() + 1) + '-' + start_date.getDate();
                 }
                 url += '&r=' + bootstrapping_data.date_range;
+                url += '&endpoint=mpx';
                 return url;
             };
             marketplace.parse = function (response) {

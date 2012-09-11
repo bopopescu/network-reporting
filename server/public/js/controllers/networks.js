@@ -192,7 +192,7 @@
         return r;
     }
 
-    function initialize_campaign_data(campaign_data, apps, include_adunits) {
+    function initialize_campaign_data(campaign_data, apps, include_adunits, start_date, date_range) {
 
         // create mopub campaign
         // endpoint=all
@@ -237,7 +237,9 @@
                 var network_app = new App({
                     id: app.id,
                     campaign_id: campaign.id,
-                    stats_endpoint: campaign.get('stats_endpoint')
+                    stats_endpoint: campaign.get('stats_endpoint'),
+                    start_date: start_date,
+                    date_range: date_range
                 });
 
                 var app_view = new AppView({
@@ -356,7 +358,7 @@
             var apps_by_campaign = {};
             _.each(campaigns_data, function(campaign_data) {
 
-                var result = initialize_campaign_data(campaign_data, apps, false);
+                var result = initialize_campaign_data(campaign_data, apps, false, campaign_data.start_date, campaign_data.date_range);
                 all_campaigns = all_campaigns.concat(result[0]);
                 var network_apps = apps_by_campaign[result[0][0].id] = result[1];
             });
@@ -1605,7 +1607,7 @@
 
             initializeDateButtons();
 
-            var result = initialize_campaign_data(campaign_data, apps, true);
+            var result = initialize_campaign_data(campaign_data, apps, true, campaign_data.start_date, campaign_data.date_range);
             var all_campaigns = result[0];
             var network_apps = result[1];
             var adunits = result[2];

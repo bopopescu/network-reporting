@@ -576,20 +576,16 @@
             // and fill in their stats in the targeted table.
             _.each(bootstrapping_data.targeted_apps, function(app_key) {
                 var app = new App({
-                    id: app_key,
-                    stats_endpoint: 'direct'
+                    id: app_key
                 });
 
                 app.url = function () {
-                    var stats_endpoint = this.get('stats_endpoint');
-                    return '/api/adgroup/'
-                        + bootstrapping_data.line_item_key
-                        + '/apps/'
-                        + this.id
-                        + "?"
-                        + window.location.search.substring(1)
-                        + '&endpoint='
-                        + stats_endpoint;
+                    var url = '/api/adgroup/' + bootstrapping_data.line_item_key + '/apps/' + this.id + "?";
+                    if(bootstrapping_data.start_date) {
+                        url += '&s=' + bootstrapping_data.start_date.getFullYear() + '-' + (bootstrapping_data.start_date.getMonth() + 1) + '-' + bootstrapping_data.start_date.getDate();
+                    }
+                    url += '&r=' + bootstrapping_data.date_range;
+                    return url;
                 };
 
                 app.bind('change', function(current_app){
@@ -608,16 +604,12 @@
                 });
 
                 adunit.url = function () {
-                    var stats_endpoint = this.get('stats_endpoint');
-                    return '/api/adgroup/'
-                        + bootstrapping_data.line_item_key
-                        + '/adunits/'
-                        + this.id
-                        + "?"
-                        + window.location.search.substring(1)
-                        + '&endpoint='
-
-                        + stats_endpoint;
+                    var url = '/api/adgroup/' + bootstrapping_data.line_item_key + '/adunits/' + this.id + "?";
+                    if(bootstrapping_data.start_date) {
+                        url += '&s=' + bootstrapping_data.start_date.getFullYear() + '-' + (bootstrapping_data.start_date.getMonth() + 1) + '-' + bootstrapping_data.start_date.getDate();
+                    }
+                    url += '&r=' + bootstrapping_data.date_range;
+                    return url;
                 };
 
                 adunit.bind('change', function(current_adunit){

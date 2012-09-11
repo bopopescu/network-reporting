@@ -24,12 +24,17 @@ var mopub = mopub || {};
      * them into table rows that have already been created in the
      * page. Useful for decreasing page load time along with `fetchAdunitsFromAppKey`.
      */
-    function fetchAppsFromKeys (app_keys) {
+    function fetchAppsFromKeys (app_keys, start_date, date_range) {
         var apps = new AppCollection();
         var fetched_apps = 0;
 
         _.each(app_keys, function(app_key) {
-            var app = new App({id: app_key, stats_endpoint: 'mpx'});
+            var app = new App({
+                id: app_key,
+                start_date: start_date,
+                date_range: date_range,
+                stats_endpoint: 'mpx'
+            });
             app.bind('change', function(current_app) {
                 var appView = new AppView({
                     model: current_app,
@@ -219,13 +224,13 @@ var mopub = mopub || {};
      * Converts a date to a string in the form MM-DD-YYYY
      * e.g. dateToMDYString(new Date()) (assuming today is July 25 2012)
      * will produce "07-25-2012".
-     */      
+     */
     function dateToMDYString(date) {
         var d = date.getDate();
         var m = date.getMonth()+1;
         var y = date.getFullYear();
         return '' + (m <= 9 ? '0' + m : m) + // MM
-        '-' + (d <= 9 ? '0' + d : d) + // DD        
+        '-' + (d <= 9 ? '0' + d : d) + // DD
         '-' + y; // YYYY
     }
 
@@ -246,7 +251,7 @@ var mopub = mopub || {};
         // MM-DD-YYYY
         var start_date_str = dateToMDYString(start_date);
         var end_date_str = dateToMDYString(end_date);
-        
+
         var creative_data_url = origin
             + "/advertise/marketplace/creatives/";
         var table = $("#report-table").dataTable({
@@ -400,7 +405,7 @@ var mopub = mopub || {};
 
             // Fill in the stats data for each of the apps and
             // each of their adunits
-            var apps = fetchAppsFromKeys(bootstrapping_data.app_keys);
+            var apps = fetchAppsFromKeys(bootstrapping_data.app_keys, bootstrapping_data.start_date, bootstrapping_data.date_range);
             _.each(bootstrapping_data.app_keys, function(app_key) {
                 fetchAdunitsFromAppKey(app_key, bootstrapping_data.marketplace_active);
             });

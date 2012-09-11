@@ -110,8 +110,9 @@
     $(function() {
         DashboardController.initializeIndex({
             start_date: {{ start_date|js_date}},
+            date_range: {{ date_range }},
             end_date: {{ end_date|js_date}},
-            app_keys: {{ app_keys|safe }},
+            app_keys: {{ app_keys|safe }}
         });
     });
 </script>

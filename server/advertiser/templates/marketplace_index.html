@@ -171,7 +171,7 @@
     {% endfor %}
 
     <br />
-    
+
     <div class="right">
       <div class="dropdown" id="marketplace-export">
         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#marketplace-export">
@@ -346,12 +346,13 @@
     $(document).ready(function() {
 
       var bootstrapping_data = {
-         app_keys: {{ app_keys|safe }},
-         marketplace_active: {% if marketplace.active %}true{% else %}false{% endif %},
-         blocklist: {{ blocklist|safe }},
-         pub_key: "{{ pub_key }}",
-         start_date: {{start_date|js_date}},
-         end_date: {{end_date|js_date}}
+        app_keys: {{ app_keys|safe }},
+        marketplace_active: {% if marketplace.active %}true{% else %}false{% endif %},
+        blocklist: {{ blocklist|safe }},
+        pub_key: "{{ pub_key }}",
+        start_date: {{ start_date|js_date}},
+        date_range: {{ date_range }},
+        end_date: {{end_date|js_date}}
       };
 
       MarketplaceController.initializeIndex(bootstrapping_data);

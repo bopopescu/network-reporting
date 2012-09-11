@@ -513,7 +513,8 @@
                 'inmobi': 'inmobi_pub_id',
                 'jumptap': 'jumptap_pub_id',
                 'millennial': 'millennial_pub_id',
-                'mobfox': 'mobfox_pub_id'
+                'mobfox': 'mobfox_pub_id',
+                'millennial_s2s': 'millennial_pub_id',
             };
 
             var pub_id = pub_ids[network_type];

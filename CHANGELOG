@@ -1,10 +1,17 @@
+# Deployed Tuesday, September 11, 2012 at 05:15PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-207
+### Bugs Fixed: []
+### Included Commits: 
+ * f52017f Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, September 11, 2012 at 05:11PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-206
 ### Bugs Fixed: []
-### Included Commits: 
- * 942842d Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 942842d Deployed without finding any bug fixes.
+
 # Deployed Tuesday, September 11, 2012 at 05:06PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-205

@@ -50,7 +50,36 @@ LOGINS = 'logins'
 ACCOUNTS = 'accounts'
 
 
-class CreateMappersHandler(RequestHandler):
+class LoginStateHandler(RequestHandler):
+    def post(self):
+        """Return the login state given the account key and network_type
+
+        Args:
+            account_key: an account key
+            network_type: a string, the base name of the network being modified, must be in NETWORKS
+
+        Return:
+            an integer: AdNetworkLoginCredentials.state
+	    
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
+        account_key = db.Key(self.request.POST.get('account_key'))
+        network_type = self.request.POST.get('network_type')
+
+	login_state = 0
+        if network_type in REPORTING_NETWORKS:
+            login = AdNetworkLoginManager.get_logins(self.account, network_type).get()
+            if login:
+                login_state = login.state
+
+        return TextResponse(login_state)
+
+def login_state(request, *args, **kwargs):
+    return LoginStateHandler()(request, *args, **kwargs)
+
+
+class CreateMapperHandler(RequestHandler):
     def post(self):
         """Create mapper for the given network_type, app, and pub_id. Delete existing mappers
         with the same network_type and app if they don't have stats.
@@ -88,8 +117,8 @@ class CreateMappersHandler(RequestHandler):
 
         return TextResponse()
 
-def create_mappers(request, *args, **kwargs):
-    return CreateMappersHandler()(request, *args, **kwargs)
+def create_mapper(request, *args, **kwargs):
+    return CreateMapperHandler()(request, *args, **kwargs)
 
 
 class AdNetworkSettingsHandler(RequestHandler):

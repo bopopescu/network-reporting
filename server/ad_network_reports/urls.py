@@ -2,9 +2,13 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('ad_network_reports.views',
-        url(r'^create_mappers/$',
-            'create_mappers',
-            name='create_mappers'),
+        url(r'^login_state/$',
+            'login_state',
+            name='login_state'),
+
+        url(r'^create_mapper/$',
+            'create_mapper',
+            name='create_mapper'),
 
         url(r'^settings/$',
             'ad_network_settings',

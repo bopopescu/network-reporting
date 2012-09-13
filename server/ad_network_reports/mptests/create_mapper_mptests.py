@@ -12,7 +12,6 @@ from nose.tools import ok_, \
 from django.core.urlresolvers import reverse
 from common.utils.test.test_utils import confirm_all_models, \
         model_eq
-from common.utils.test.views import BaseViewTestCase
 
 from networks.mptests.network_test_case import NetworkTestCase, \
         DEFAULT_PUB_ID
@@ -28,7 +27,7 @@ class ContentFilterViewTestCase(NetworkTestCase):
     def setUp(self):
         super(ContentFilterViewTestCase, self).setUp()
 
-        self.url = reverse('create_mappers')
+        self.url = reverse('create_mapper')
 
         self.network_type = 'admob'
         self.set_up_existing_apps_and_adunits()

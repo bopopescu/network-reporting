@@ -681,7 +681,7 @@ class EditNetworkHandler(RequestHandler):
 
         Args:
             network_type: a string, the base name of the network being modified, must be in NETWORKS
-            app: an Application
+            app: an application
             pub_id: a string, the value of the new publisher id
 
         Author:

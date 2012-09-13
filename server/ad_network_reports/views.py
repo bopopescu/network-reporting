@@ -50,11 +50,45 @@ LOGINS = 'logins'
 ACCOUNTS = 'accounts'
 
 
-class CreateMappersHandler(RequesHandler):
+class CreateMappersHandler(RequestHandler):
     def post(self):
+        """Create mapper for the given network_type, app, and pub_id. Delete existing mappers
+        with the same network_type and app if they don't have stats.
 
+        Args:
+            network_type: a string, the base name of the network being modified, must be in NETWORKS
+            app_key: an application key
+            pub_id: a string, the value of the new publisher id
 
-class create_mappers(request, *args, **kwargs):
+        Author:
+            Tiago Bandeira (7/17/2012)
+        """
+        network_type = self.request.POST.get('network_type')
+        app_key = db.Key(self.request.POST.get('app_key'))
+        pub_id = self.request.POST.get('pub_id')
+
+        if network_type in REPORTING_NETWORKS:
+            # Create an AdNetworkAppMapper if there exists a
+            # login for the network (safe to re-create if it
+            # already exists)
+            login = AdNetworkLoginManager.get_logins(
+                    self.account, network_type).get()
+            if login:
+                mappers = AdNetworkMapperManager.get_mappers_for_app(login=login, app=app_key)
+                # Delete the existing mappers if there are no scrape
+                # stats for them.
+                for mapper in mappers:
+                    if mapper:
+                        stats = mapper.ad_network_stats
+                        if not stats.count(1):
+                            mapper.delete()
+                if pub_id:
+                    AdNetworkMapperManager.create(network=network_type,
+                            pub_id=pub_id, login=login, app=app_key)
+
+        return TextResponse()
+
+def create_mappers(request, *args, **kwargs):
     return CreateMappersHandler()(request, *args, **kwargs)
 
 

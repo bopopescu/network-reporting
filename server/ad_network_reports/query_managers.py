@@ -221,10 +221,12 @@ class AdNetworkMapperManager(CachedQueryManager):
         """
         Create an AdNetworkAppMapper for the given input data
         """
-        AdNetworkAppMapper(ad_network_name=network,
+        mapper = AdNetworkAppMapper(ad_network_name=network,
                            publisher_id=pub_id,
                            ad_network_login=login,
-                           application=app).put()
+                           application=app)
+        mapper.put()
+        return mapper
 
     @classmethod
     def find_app_for_stats(cls,

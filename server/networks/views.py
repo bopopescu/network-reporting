@@ -243,17 +243,12 @@ class EditNetworkHandler(RequestHandler):
         login = None
         if not custom_campaign and network in REPORTING_NETWORKS:
             # Create the login credentials form
+            login_form = LoginCredentialsForm(network=network,
+                    prefix=network)
             login = AdNetworkLoginManager.get_logins(self.account,
                     network).get()
             if login:
-                # Can't initialize username or password because it's encrypted
-                # and can only be decrypted on EC2
-                login_form = LoginCredentialsForm(instance=login,
-                        network=network, prefix=network)
                 network_data['login_state'] = login.state
-            else:
-                login_form = LoginCredentialsForm(network=network,
-                        prefix=network)
 
         network_configs_dict = NetworkConfigQueryManager. \
                 get_network_configs_dict_for_account(self.account)

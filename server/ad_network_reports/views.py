@@ -18,7 +18,9 @@ from ad_network_reports.query_managers import ADMOB, \
         create_fake_data
 
 from common.utils.decorators import staff_login_required
-from common.ragendja.template import render_to_response, TextResponse
+from common.ragendja.template import render_to_response, \
+        TextResponse, \
+        JSONResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 from common.constants import NETWORKS, \
@@ -67,13 +69,13 @@ class LoginStateHandler(RequestHandler):
         account_key = db.Key(self.request.POST.get('account_key'))
         network_type = self.request.POST.get('network_type')
 
-	login_state = 0
+        login_state = 0
         if network_type in REPORTING_NETWORKS:
             login = AdNetworkLoginManager.get_logins(self.account, network_type).get()
             if login:
                 login_state = login.state
 
-        return TextResponse(login_state)
+        return JSONResponse({'login_state': login_state})
 
 def login_state(request, *args, **kwargs):
     return LoginStateHandler()(request, *args, **kwargs)

@@ -3,6 +3,7 @@ import sys
 sys.path.append(os.environ['PWD'])
 
 from datetime import date
+import simplejson as json
 
 import common.utils.test.setup
 
@@ -28,7 +29,7 @@ class ContentFilterViewTestCase(NetworkTestCase):
     def setUp(self):
         super(ContentFilterViewTestCase, self).setUp()
 
-        self.url = reverse('create_mapper')
+        self.url = reverse('login_state')
 
         self.network_type = 'admob'
 
@@ -43,8 +44,9 @@ class ContentFilterViewTestCase(NetworkTestCase):
         response = confirm_all_models(self.client.post,
                                       args=[self.url, self.post_data],
                                       kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},)
-        print response.content
-        eq_(response.content, 0)
+
+        response_json = json.loads(response.content)
+        eq_(response_json['login_state'], LoginStates.NOT_SETUP)
 
     def mptest_login_working(self):
         """Test that a set login state is returned
@@ -57,5 +59,7 @@ class ContentFilterViewTestCase(NetworkTestCase):
         response = confirm_all_models(self.client.post,
                                       args=[self.url, self.post_data],
                                       kwargs={'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'},)
-        eq_(response.content, LoginStates.WORKING)
+
+        response_json = json.loads(response.content)
+        eq_(response_json['login_state'], LoginStates.NOT_SETUP)
 

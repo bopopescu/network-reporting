@@ -7,10 +7,12 @@ sys.path.append('/home/ubuntu/mopub/server/')
 import tornado.ioloop
 import tornado.web
 
-from request_handlers.check_login_credentials_handler import CheckLoginCredentialsHandler
+from request_handlers.check_login_credentials_handler import CheckCredentialsHandler
+from request_handlers.pull_stats_handler import PullStatsHandler
 
 application = tornado.web.Application([
-        (r'/(.*)', CheckLoginCredentialsHandler),
+        (r'/check/$', CheckCredentialsHandler),
+        (r'/pull/$', PullStatsHandler),
 ], debug=False)
 
 if __name__ == "__main__":

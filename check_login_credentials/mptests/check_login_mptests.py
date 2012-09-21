@@ -6,11 +6,8 @@ import tornado.web
 from tornado.ioloop import IOLoop
 from tornado.testing import AsyncHTTPTestCase
 
-from request_handlers.check_login_credentials_handler import \
-        CheckLoginCredentialsHandler
+from request_handlers.check_login_handler import CheckLoginHandler
 
-#TODO: Make path universal
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 import common.utils.test.setup
 from google.appengine.ext import db
 from ad_network_reports.models import AdNetworkLoginCredentials, \
@@ -44,9 +41,9 @@ JUMPTAP_PASSWORD = 'JR.7x89re0'
 MOBFOX = 'mobfox'
 
 ADMOB = 'admob'
-ADMOB_USERNAME = 'adnetwork@com2usamerica.com'
-ADMOB_PASSWORD = '4w47m82l5jfdqw1x'
-ADMOB_CLIENT_KEY = 'ka820827f7daaf94826ce4cee343837a'
+ADMOB_USERNAME = 'developers@animoca.com'
+ADMOB_PASSWORD = '5zfy6wmbx4kcgflq'
+ADMOB_CLIENT_KEY = 'k0df241c82bfe3c34d8fe7750c1705e6'
 
 INMOBI_USERNAME = '4028cb972fe21753012ffb7680350267'
 INMOBI_PASSWORD = '0588884947763'
@@ -54,7 +51,7 @@ INMOBI_PASSWORD = '0588884947763'
 class TestRequestHandlers(AsyncHTTPTestCase):
     def get_app(self):
         application = tornado.web.Application([
-                (r'/check', CheckLoginCredentialsHandler),
+                (r'/check/$', CheckLoginHandler),
                 ], debug=True)
         return application
 
@@ -71,7 +68,7 @@ class TestRequestHandlers(AsyncHTTPTestCase):
 
     def handler_empty_mptest(self):
         try:
-            response = self.fetch('/check')
+            response = self.fetch('/check/')
         except:
             assert False
 
@@ -113,40 +110,34 @@ class TestRequestHandlers(AsyncHTTPTestCase):
 
     ## Helper functions:
 
-    def _make_request(self, network, username=None, password=None,
+    def _make_request(self, network_type, username=None, password=None,
             client_key=None, email=False):
-        # create test models
+        # CREATE TEST MODELS
+        #
+        # these are stored in sql and won't be on GAE
+        # implication: we can't access the model we can only use their keys
+        # for references
         user = User(username=USERNAME, email=USER_EMAIL)
         user.put()
         account = Account(all_mpusers=[user.key()])
         account.put()
 
-        network_config = NetworkConfig(jumptap_pub_id=JUMPTAP_PUB_ID,
-                admob_pub_id=ADMOB_PUB_ID, iad_pub_id=IAD_PUB_ID,
-                inmobi_pub_id=INMOBI_PUB_ID,
-                mobfox_pub_id=MOBFOX_PUB_ID)
-        network_config.put()
-
-        app = App(account=account, name=APP_NAME, network_config=
-                network_config)
-        app.put()
-
         data = {'account_key': str(account.key()),
                 'callback': CALLBACK,
-                'network': network}
+                'network_type': network_type}
         if username:
-            data['%s-username' % network] = username
+            data['%s-username' % network_type] = username
         if password:
-            data['%s-password' % network] = password
+            data['%s-password' % network_type] = password
         if client_key:
-            data['%s-client_key' % network] = client_key
+            data['%s-client_key' % network_type] = client_key
         if email:
             data['email'] = True
 
         # Don't send email when testing is = True
         data['testing'] = True
 
-        self.http_client.fetch(self.get_url('/check?' +
+        self.http_client.fetch(self.get_url('/check/?' +
             urllib.urlencode(data)), self.stop)
         # Return the response
         return self.wait(timeout=20)

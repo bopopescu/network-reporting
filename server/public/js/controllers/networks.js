@@ -717,9 +717,9 @@
                             $('#loading').hide();
                             if(jsonData.success) {
                                 if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
-                                    var data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
+                                    var data = "&account_key=" + account_key + "&network_type=" + network_type;
 
-                                    $.ajax({url: 'https://checklogincredentials.mopub.com',
+                                    $.ajax({url: 'https://checklogincredentials.mopub.com/pull/',
                                         data: data,
                                         crossDomain: true,
                                         dataType: "jsonp",
@@ -818,14 +818,14 @@
                             // Remove the form.
                             $('#form-to-submit').remove();
                         }
-                    data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
+                    data += ("&account_key=" + account_key + "&network_type=" + network_type);
 
                         // Check if data submitted in the form is valid login
                         // information for the ad network
                         var message = $('.login-credentials-message');
                         $(message).html("Verifying login credentials...");
 
-                        $.ajax({url: 'https://checklogincredentials.mopub.com',
+                        $.ajax({url: 'https://checklogincredentials.mopub.com/check/',
                             data: data,
                             crossDomain: true,
                             dataType: "jsonp",

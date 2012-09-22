@@ -147,8 +147,6 @@ def _check_response(resp, check_string):
         assert resp.body.find(VALID_REQUEST) != -1
         assert AdNetworkLoginCredentials.all().count() == 1
 
-        assert AdNetworkAppMapper.all().count() == 1
-
         children = multiprocessing.active_children()
         print children
         if children:
@@ -163,8 +161,6 @@ def _check_response(resp, check_string):
     else:
         assert resp.body.find(INVALID_REQUEST) != -1
         assert AdNetworkLoginCredentials.all().count() == 0
-
-        assert AdNetworkAppMapper.all().count() == 0
 
 def _clear_db():
     db.delete(Account.all())

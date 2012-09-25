@@ -52,6 +52,7 @@ LOGINS = 'logins'
 ACCOUNTS = 'accounts'
 
 
+# TODO: the request handler needs an account_key property, since it won't have an account anymore
 class LoginStateHandler(RequestHandler):
     def post(self):
         """Return the login state given the account key and network_type
@@ -71,7 +72,7 @@ class LoginStateHandler(RequestHandler):
 
         login_state = 0
         if network_type in REPORTING_NETWORKS:
-            login = AdNetworkLoginManager.get_logins(self.account, network_type).get()
+            login = AdNetworkLoginManager.get_logins(self.account_key, network_type).get()
             if login:
                 login_state = login.state
 
@@ -103,7 +104,7 @@ class CreateMapperHandler(RequestHandler):
             # login for the network (safe to re-create if it
             # already exists)
             login = AdNetworkLoginManager.get_logins(
-                    self.account, network_type).get()
+                    self.account_key, network_type).get()
             if login:
                 mappers = AdNetworkMapperManager.get_mappers_for_app(login=login, app=app_key)
                 # Delete the existing mappers if there are no scrape
@@ -125,16 +126,13 @@ def create_mapper(request, *args, **kwargs):
 
 class AdNetworkSettingsHandler(RequestHandler):
     def post(self):
-        email = self.request.POST.get('email', False) and True
-        recipients = [recipient.strip() for recipient in self.request.POST.get(
+        account_settings = AdNetworkAccountSettingsManager.get_by_account_key(self.account_key)# TODO
+
+        account_settings.email = self.request.POST.get('email', False) and True
+        account_settings.recipients = [recipient.strip() for recipient in self.request.POST.get(
             'recipients').split(',')]
 
-        # Don't send a put to the db unless something changed
-        if email != self.account.ad_network_email or recipients != \
-                self.account.ad_network_recipients:
-            self.account.ad_network_email = email
-            self.account.ad_network_recipients = recipients
-            self.account.put()
+        AdNetworkAccountSettingsManager.put(account_settings)
 
         return TextResponse('done')
 

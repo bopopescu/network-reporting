@@ -51,7 +51,7 @@ class TestUpdate(unittest.TestCase):
         # Call the method we are testing.
         update_account_stats(account, yesterday, False, testing=True)
 
-        mappers = list(AdNetworkMapperManager.get_mappers(account))
+        mappers = list(AdNetworkMapperManager.get_mappers_for_account(account))
         print 'App Mapper\'s len: %d' % len(mappers)
         assert len(mappers) > 0
 
@@ -78,7 +78,7 @@ class TestUpdate(unittest.TestCase):
         # Call the method we are testing.
         multiprocess_update_all(processes=3, testing=True)
 
-        mappers = list(AdNetworkMapperManager.get_mappers(account))
+        mappers = list(AdNetworkMapperManager.get_mappers_for_account(account))
         print 'App Mapper\'s len: %d' % len(mappers)
         assert len(mappers) > 0
 
@@ -97,7 +97,7 @@ class TestUpdate(unittest.TestCase):
                 processes=3, testing=True)
 
         mappers = list(AdNetworkMapperManager.
-                get_mappers(account))
+                get_mappers_for_account(account))
         print 'App Mapper\'s len: %d' % len(mappers)
         assert len(mappers) > 0
 

@@ -39,11 +39,8 @@ class JumpTapAdNetwork(AdNetwork):
         """
         super(self.__class__, self).append_extra_info()
         account = self.login_credentials.account
-        self.login_credentials = (self.login_credentials,
-                AdNetworkReportManager.get_app_publisher_ids(account,
-                    self.login_credentials.ad_network_name),
-                AdNetworkReportManager.get_adunit_publisher_ids(account,
-                    self.login_credentials.ad_network_name))
+        self.login_credentials = (self.login_credentials, [mapper.publisher_id
+            for mapper in self.login_credentials.ad_network_app_mappers])
 
 class IAdAdNetwork(AdNetwork):
     scraper = IAdScraper
@@ -61,9 +58,8 @@ class MobFoxAdNetwork(AdNetwork):
         """
         super(self.__class__, self).append_extra_info()
         account = self.login_credentials.account
-        self.login_credentials = (self.login_credentials,
-                AdNetworkReportManager.get_app_publisher_ids(account,
-                    self.login_credentials.ad_network_name))
+        self.login_credentials = (self.login_credentials, [mapper.publisher_id
+            for mapper in self.login_credentials.ad_network_app_mappers])
 
 # dictionary of supported ad networks
 AD_NETWORKS = {'admob' : AdMobAdNetwork,

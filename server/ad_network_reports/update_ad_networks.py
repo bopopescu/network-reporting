@@ -92,12 +92,13 @@ def multiprocess_update_all(start_day=None,
         start_day -= timedelata(days=3)
         end_day -= timedelata(days=3)
 
+    # TODO: yield a tuple of logins for a specific account
     def get_all_accounts_with_logins():
-        logins_query = AdNetworkLoginManager.get_all_logins(
+        logins_query = AdNetworkLoginManager.get_logins(
                 network=network, order_by_account=True)
         last_account = None
         for login in logins_query:
-            if login.account.key() != last_account:
+            if login._accountekey() != last_account:
                 last_account = login.account.key()
                 yield login.account
 
@@ -117,6 +118,7 @@ def multiprocess_update_all(start_day=None,
 
             # Assign process in pool calling update_all and giving it it's
             # appropriate account
+            # TODO: create a NetworkAccountSettings model with the email property
             email_account = email and account.ad_network_email
             results.append((account, day, pool.apply_async(update_account_stats,
                     args=(account, day, email_account, testing))))
@@ -129,6 +131,7 @@ def multiprocess_update_all(start_day=None,
         # Save management stats
         logging.info("Updating management stats...")
         stats_dict = {}
+        # TODO use account key instead
         for account, day, result in results:
             if result.successful():
                 stats = result.get()
@@ -145,6 +148,7 @@ def multiprocess_update_all(start_day=None,
     logging.info("Finished.")
 
 
+# TODO: take in account_settings
 def update_account_stats(account,
                          day,
                          email,
@@ -182,12 +186,15 @@ def update_account_stats(account,
             all_stats += stats_list
 
             # Create network roll up stats
+            # TODO: this shit is weird could switch it to account_key but...
             aggregate_stats.append(AdNetworkAggregateManager.create_stats(
                 login.account, day, stats_list, network=login.ad_network_name))
 
         # Put changes to login credentials
+        # TODO: wtf use query_managers
         db.put(account.login_credentials)
 
+        # TODO: don't need application, just use app_key
         app_stats = {}
         apps_by_key = {}
         # Update app stats
@@ -199,6 +206,7 @@ def update_account_stats(account,
                 app_stats[key] = [stats]
                 apps_by_key[key] = mapper.application
 
+        #TODO: use account_key
         # Save all app level roll up stats to the db
         for app_key, stats_list in app_stats.iteritems():
             aggregate_stats.append(AdNetworkAggregateManager.create_stats(account,
@@ -454,7 +462,7 @@ def update_login_stats(login,
 
     # Get all mappers for login and put them in a dict for quick access
     mappers = {}
-    for mapper in AdNetworkMapperManager.get_mappers_by_login(
+    for mapper in AdNetworkMapperManager.get_mappers(
             login).fetch(MAX):
         mappers[mapper.publisher_id] = mapper
 
@@ -464,6 +472,8 @@ def update_login_stats(login,
             management_stats.increment(login.ad_network_name,
                     'found')
 
+        # TODO: remove this, iad pub_id should just be the app.name
+        # NOTE: will require a migration
         if login.ad_network_name == IAD:
             publisher_id = AppQueryManager.get_iad_pub_id(
                     login.account, stats.app_tag)
@@ -519,26 +529,6 @@ def update_login_stats(login,
 
 ## Helpers
 #
-def bulk_get(query, last_object, limit=MAX):
-    return query.filter('__key__ >', last_object).fetch(limit)
-
-
-def send_emails(day):
-    logins_query = AdNetworkLoginManager.get_all_logins(
-            order_by_account=True)
-
-    last_account = None
-    for login in logins_query:
-        if login.account.key() != last_account:
-            last_account = login.account.key()
-            if login.account.ad_network_email:
-                mappers = AdNetworkMapperManager.get_mappers(login.account)
-                stats_list = [(mapper, AdNetworkStatsManager. \
-                        get_stats_for_mapper_and_days(mapper, (day,))[0]) for
-                        mapper in mappers]
-                send_stats_mail(login.account, day, stats_list)
-
-
 CONTROL_CHARS = ''.join(map(unichr, range(0,32) + range(127,160)))
 CONTROL_CHAR_RE = re.compile('[%s]' % re.escape(CONTROL_CHARS))
 
@@ -557,8 +547,10 @@ def send_stats_mail(account, day, stats_list):
     emails = getattr(account, 'ad_network_recipients', [])
 
     if emails and stats_list:
+        # TODO: use sum wtf roll_up_stats???
         aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for
             mapper, stats in stats_list])
+        # TODO: application name should be stored on the mapper o
         stats_list = sorted(stats_list, key = lambda stats:
                 '%s-%s-%s' % (stats[0].application.name.lower(),
                 stats[0].application.type.lower(),

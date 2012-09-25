@@ -25,12 +25,24 @@ class LoginStates:
     WORKING = 2
     ERROR = 3
 
+class AdNetworkAccountSettings(db.Model):
+    """
+    key:
+    account
+    """
+    # TODO: migrate account.ad_network_email
+    email = db.BooleanProperty(default=False)
+    # TODO: migrate account.ad_network_recipients
+    recipients = db.StringListProperty()
 
+# TODO: rename NetworkLogin
 class AdNetworkLoginCredentials(db.Model):
     """
     key:
     (account,ad_network_name)
     """
+    account_settings = db.ReferenceProperty(NetworkAccountSettings, required=True,
+            collection_name='login_credentials')
     account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')
     ad_network_name = db.StringProperty(required=True)
@@ -111,6 +123,7 @@ class AdNetworkLoginCredentials(db.Model):
     def get_by_ad_network_name(cls, account, ad_network_name):
         return cls.get_by_key_name('k:%s:%s' % (account.key(), ad_network_name))
 
+# TODO: rename NetworkMapper
 class AdNetworkAppMapper(db.Model):
     """
     key:
@@ -150,6 +163,7 @@ class AdNetworkAppMapper(db.Model):
 
         return stats == None
 
+# TODO: rename NetworkStats
 class AdNetworkStats(db.Model):
     date = db.DateProperty()
 

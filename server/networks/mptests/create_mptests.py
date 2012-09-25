@@ -531,8 +531,8 @@ class CreateNetworkPostTestCase(NetworkTestCase):
                            edited=expected_edits)
 
         # Verify the contents of the new mapper(s) that were created.
-        mappers = list(AdNetworkMapperManager.get_mappers(self.account,
-                                                          self.network_type))
+        mappers = list(AdNetworkMapperManager.get_mappers_for_account(self.account,
+                                                                      self.network_type))
         mappers_by_app_key = defaultdict(list)
         for mapper in mappers:
             mappers_by_app_key[mapper.application.key()].append(mapper)

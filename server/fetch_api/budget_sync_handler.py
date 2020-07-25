@@ -42,24 +42,24 @@ class BudgetSyncCronHandler(webapp.RequestHandler):
 
     def get(self):
         # There is only one!
-        master_counter = BudgetSliceCounter.all().get()
+        main_counter = BudgetSliceCounter.all().get()
         statuses = BudgetSliceSyncStatus.all().filter('slice_num >', \
-            master_counter.last_synced_slice).fetch(master_counter.unsynced_slices)
+            main_counter.last_synced_slice).fetch(main_counter.unsynced_slices)
         status_dict = {}
         # Build dict of statuses so we cna sort and updated the last_synced_slice
         for status in statuses:
             status_dict[status.slice_num] = status.synced
 
-        last_synced_slice = master_counter.last_synced_slice
+        last_synced_slice = main_counter.last_synced_slice
         for key in sorted(status_dict.keys()):
             if not status_dict[key]:
                 break
             last_synced_slice = key
 
-        master_counter.last_synced_slice = last_synced_slice
-        master_counter.put()
+        main_counter.last_synced_slice = last_synced_slice
+        main_counter.put()
         # range over all unsynced completed slices
-        for slice_num in range(last_synced_slice+1, master_counter.slice_num):
+        for slice_num in range(last_synced_slice+1, main_counter.slice_num):
             taskqueue.add(url='/fetch_api/budget/sync/worker',
                           method='GET',
                           queue_name='budget-api',

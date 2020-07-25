@@ -72,9 +72,9 @@ def get_waiting_jobflow():
 
 
 def launch_monthly_mpx_rev_hivejob(year, month, num_machines=NUM_MACHINES):
-    # create master and core instance groups
+    # create main and core instance groups
     instance_groups = [
-        InstanceGroup(num_instances=1, role='MASTER', type='m1.large', market='ON_DEMAND', name='master-group'),
+        InstanceGroup(num_instances=1, role='MASTER', type='m1.large', market='ON_DEMAND', name='main-group'),
         InstanceGroup(num_instances=num_machines, role='CORE', type='m1.large', market='ON_DEMAND', name='core-group'),
     ]
 

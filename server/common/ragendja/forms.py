@@ -174,8 +174,8 @@ class CachedQuerySet(object):
         return self.queryset_results
 
 class FormWithSetsInstance(object):
-    def __init__(self, master, form, formsets):
-        self.master = master
+    def __init__(self, main, form, formsets):
+        self.main = main
         self.form = form
         self.formsets = formsets
         self.instance = form.instance

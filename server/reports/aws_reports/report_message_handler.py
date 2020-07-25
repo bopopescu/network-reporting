@@ -939,8 +939,8 @@ class ReportMessageHandler(MessageHandler):
                     steps = steps_to_add,
                     log_uri = LOG_URI,
                     num_instances = instances,
-                    master_instance_type = MASTER_INSTANCE_TYPE,
-                    slave_instance_type = SLAVE_INSTANCE_TYPE,
+                    main_instance_type = MASTER_INSTANCE_TYPE,
+                    subordinate_instance_type = SLAVE_INSTANCE_TYPE,
                     keep_alive=KEEP_ALIVE,
                     enable_debugging=True,
                     )

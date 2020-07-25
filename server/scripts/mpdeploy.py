@@ -418,9 +418,9 @@ def main():
             deployer = git_get_user()
 
 
-            # Warn if the current branch isn't master
-            if active_branch_name != "master" and deploy_server in PRODUCTION_SERVERS:
-                puts(colored.yellow("Careful! You're deploying a non-master branch."))
+            # Warn if the current branch isn't main
+            if active_branch_name != "main" and deploy_server in PRODUCTION_SERVERS:
+                puts(colored.yellow("Careful! You're deploying a non-main branch."))
                 y_or_n = raw_input('Are you sure you want to deploy ' + active_branch_name + '? (y/n) >> ')
                 if y_or_n == 'n':
                     sys.exit(1)

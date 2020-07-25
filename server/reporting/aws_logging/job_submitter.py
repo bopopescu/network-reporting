@@ -125,8 +125,8 @@ def main():
             bootstrap_actions=[bootstrap_step],
             log_uri=LOG_URI,
             num_instances=options.num_instances,
-            master_instance_type=MASTER_INSTANCE_TYPE,
-            slave_instance_type=SLAVE_INSTANCE_TYPE,
+            main_instance_type=MASTER_INSTANCE_TYPE,
+            subordinate_instance_type=SLAVE_INSTANCE_TYPE,
             keep_alive=KEEP_ALIVE,
             enable_debugging=True,
         )
